@@ -27,7 +27,7 @@ function Landing() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <div className="flex items-center gap-2">
             <Wine className="h-6 w-6 text-primary" />
-            <span className="text-lg font-semibold tracking-tight">Cava</span>
+            <span className="page-title">Cava</span>
           </div>
           <nav className="flex items-center gap-3">
             <Link

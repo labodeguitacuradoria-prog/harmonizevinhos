@@ -50,7 +50,7 @@ function Landing() {
       <main className="mx-auto max-w-6xl px-6">
         <section className="py-20 md:py-28">
           <h1 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">
-            A gestão da sua carta de vinhos, sem planilha.
+            A gestão da sua carta de vinhos, <span className="text-primary">sem planilha</span>.
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
             Cadastre rótulos, controle adega, monitore vendas e dê visibilidade

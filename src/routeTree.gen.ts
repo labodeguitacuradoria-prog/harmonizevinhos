@@ -10,11 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.index'
+import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
+import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
+import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
+import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
+import { Route as AppAppSalesRouteImport } from './routes/_app.app.sales'
+import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,30 +34,117 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppSupplierIndexRoute = AppSupplierIndexRouteImport.update({
+  id: '/supplier/',
+  path: '/supplier/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppIndexRoute = AppAppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppWinesRoute = AppAppWinesRouteImport.update({
+  id: '/app/wines',
+  path: '/app/wines',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSharingRoute = AppAppSharingRouteImport.update({
+  id: '/app/sharing',
+  path: '/app/sharing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSalesRoute = AppAppSalesRouteImport.update({
+  id: '/app/sales',
+  path: '/app/sales',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminSuppliersRoute = AppAdminSuppliersRouteImport.update({
+  id: '/admin/suppliers',
+  path: '/admin/suppliers',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/app/sales': typeof AppAppSalesRoute
+  '/app/sharing': typeof AppAppSharingRoute
+  '/app/wines': typeof AppAppWinesRoute
+  '/admin/': typeof AppAdminIndexRoute
+  '/app/': typeof AppAppIndexRoute
+  '/supplier/': typeof AppSupplierIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/app/sales': typeof AppAppSalesRoute
+  '/app/sharing': typeof AppAppSharingRoute
+  '/app/wines': typeof AppAppWinesRoute
+  '/admin': typeof AppAdminIndexRoute
+  '/app': typeof AppAppIndexRoute
+  '/supplier': typeof AppSupplierIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/_app/app/sales': typeof AppAppSalesRoute
+  '/_app/app/sharing': typeof AppAppSharingRoute
+  '/_app/app/wines': typeof AppAppWinesRoute
+  '/_app/admin/': typeof AppAdminIndexRoute
+  '/_app/app/': typeof AppAppIndexRoute
+  '/_app/supplier/': typeof AppSupplierIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/admin/suppliers'
+    | '/app/sales'
+    | '/app/sharing'
+    | '/app/wines'
+    | '/admin/'
+    | '/app/'
+    | '/supplier/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth'
-  id: '__root__' | '/' | '/auth'
+  to:
+    | '/'
+    | '/auth'
+    | '/admin/suppliers'
+    | '/app/sales'
+    | '/app/sharing'
+    | '/app/wines'
+    | '/admin'
+    | '/app'
+    | '/supplier'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/auth'
+    | '/_app/admin/suppliers'
+    | '/_app/app/sales'
+    | '/_app/app/sharing'
+    | '/_app/app/wines'
+    | '/_app/admin/'
+    | '/_app/app/'
+    | '/_app/supplier/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
 }
 
@@ -58,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -65,11 +171,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/supplier/': {
+      id: '/_app/supplier/'
+      path: '/supplier'
+      fullPath: '/supplier/'
+      preLoaderRoute: typeof AppSupplierIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/': {
+      id: '/_app/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppAppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/': {
+      id: '/_app/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/wines': {
+      id: '/_app/app/wines'
+      path: '/app/wines'
+      fullPath: '/app/wines'
+      preLoaderRoute: typeof AppAppWinesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/sharing': {
+      id: '/_app/app/sharing'
+      path: '/app/sharing'
+      fullPath: '/app/sharing'
+      preLoaderRoute: typeof AppAppSharingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/sales': {
+      id: '/_app/app/sales'
+      path: '/app/sales'
+      fullPath: '/app/sales'
+      preLoaderRoute: typeof AppAppSalesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/suppliers': {
+      id: '/_app/admin/suppliers'
+      path: '/admin/suppliers'
+      fullPath: '/admin/suppliers'
+      preLoaderRoute: typeof AppAdminSuppliersRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
+  AppAppSalesRoute: typeof AppAppSalesRoute
+  AppAppSharingRoute: typeof AppAppSharingRoute
+  AppAppWinesRoute: typeof AppAppWinesRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
+  AppAppIndexRoute: typeof AppAppIndexRoute
+  AppSupplierIndexRoute: typeof AppSupplierIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAdminSuppliersRoute: AppAdminSuppliersRoute,
+  AppAppSalesRoute: AppAppSalesRoute,
+  AppAppSharingRoute: AppAppSharingRoute,
+  AppAppWinesRoute: AppAppWinesRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
+  AppAppIndexRoute: AppAppIndexRoute,
+  AppSupplierIndexRoute: AppSupplierIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport

@@ -49,6 +49,7 @@ function SharingPage() {
   access.forEach((a) => { enabledMap[a.supplier_id] = a.enabled; });
 
   async function toggle(supplier_id: string, enabled: boolean) {
+    if (!restaurantId) return;
     const { error } = await supabase
       .from("restaurant_supplier_access")
       .upsert(

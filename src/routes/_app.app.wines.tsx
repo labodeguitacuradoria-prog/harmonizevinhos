@@ -332,10 +332,15 @@ function WineForm({
             {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </label>
-        <div className="mt-2 flex justify-end gap-2 sm:col-span-2">
+        <div className="mt-2 flex flex-wrap justify-end gap-2 sm:col-span-2">
+          {isEdit && (
+            <button type="button" onClick={remove} disabled={deleting} className="mr-auto rounded-md border border-destructive/40 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 disabled:opacity-50">
+              {deleting ? "Excluindo..." : "Excluir"}
+            </button>
+          )}
           <button type="button" onClick={onClose} className="rounded-md border border-input px-4 py-2 text-sm">Cancelar</button>
           <button type="submit" disabled={saving} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
-            {saving ? "Salvando..." : "Salvar"}
+            {saving ? "Salvando..." : isEdit ? "Atualizar" : "Salvar"}
           </button>
         </div>
       </form>

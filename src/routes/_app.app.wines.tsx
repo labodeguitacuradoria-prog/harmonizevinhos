@@ -374,6 +374,7 @@ function MovementForm({
       movement_type: type,
       quantity: Number(qty),
       unit_price: unit,
+      unit_cost: Number(wine.cost_price),
     });
     setSaving(false);
     if (error) return toast.error(error.message);

@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      glasses: {
+        Row: {
+          brand: string | null
+          capacity_ml: number | null
+          cost_price: number
+          created_at: string
+          id: string
+          image_url: string | null
+          material: string | null
+          name: string
+          notes: string | null
+          restaurant_id: string
+          stock_quantity: number
+          updated_at: string
+          wine_type_recommended: string | null
+        }
+        Insert: {
+          brand?: string | null
+          capacity_ml?: number | null
+          cost_price?: number
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          material?: string | null
+          name: string
+          notes?: string | null
+          restaurant_id: string
+          stock_quantity?: number
+          updated_at?: string
+          wine_type_recommended?: string | null
+        }
+        Update: {
+          brand?: string | null
+          capacity_ml?: number | null
+          cost_price?: number
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          material?: string | null
+          name?: string
+          notes?: string | null
+          restaurant_id?: string
+          stock_quantity?: number
+          updated_at?: string
+          wine_type_recommended?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "glasses_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           created_at: string
@@ -70,6 +126,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      product_categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          icon: string | null
+          label_pt: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          icon?: string | null
+          label_pt: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          icon?: string | null
+          label_pt?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -267,55 +350,100 @@ export type Database = {
       }
       wines: {
         Row: {
+          acidity: string | null
+          aging: string | null
+          alcohol_pct: number | null
+          awards: string[] | null
+          body: string | null
           cost_price: number
           country: string | null
           created_at: string
+          gallery_urls: string[] | null
           grape: string | null
           id: string
+          image_url: string | null
           internal_code: string | null
           name: string
+          pairing_notes: string | null
           producer: string | null
           region: string | null
           restaurant_id: string
           sale_price: number
+          serving_temp_max: number | null
+          serving_temp_min: number | null
+          sugar_level: string | null
           supplier_id: string | null
+          tannin: string | null
+          tasting_notes: string | null
+          tech_sheet_url: string | null
           updated_at: string
+          video_url: string | null
           vintage: number | null
           volume: string | null
           wine_type: string | null
         }
         Insert: {
+          acidity?: string | null
+          aging?: string | null
+          alcohol_pct?: number | null
+          awards?: string[] | null
+          body?: string | null
           cost_price?: number
           country?: string | null
           created_at?: string
+          gallery_urls?: string[] | null
           grape?: string | null
           id?: string
+          image_url?: string | null
           internal_code?: string | null
           name: string
+          pairing_notes?: string | null
           producer?: string | null
           region?: string | null
           restaurant_id: string
           sale_price?: number
+          serving_temp_max?: number | null
+          serving_temp_min?: number | null
+          sugar_level?: string | null
           supplier_id?: string | null
+          tannin?: string | null
+          tasting_notes?: string | null
+          tech_sheet_url?: string | null
           updated_at?: string
+          video_url?: string | null
           vintage?: number | null
           volume?: string | null
           wine_type?: string | null
         }
         Update: {
+          acidity?: string | null
+          aging?: string | null
+          alcohol_pct?: number | null
+          awards?: string[] | null
+          body?: string | null
           cost_price?: number
           country?: string | null
           created_at?: string
+          gallery_urls?: string[] | null
           grape?: string | null
           id?: string
+          image_url?: string | null
           internal_code?: string | null
           name?: string
+          pairing_notes?: string | null
           producer?: string | null
           region?: string | null
           restaurant_id?: string
           sale_price?: number
+          serving_temp_max?: number | null
+          serving_temp_min?: number | null
+          sugar_level?: string | null
           supplier_id?: string | null
+          tannin?: string | null
+          tasting_notes?: string | null
+          tech_sheet_url?: string | null
           updated_at?: string
+          video_url?: string | null
           vintage?: number | null
           volume?: string | null
           wine_type?: string | null

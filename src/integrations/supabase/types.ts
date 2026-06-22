@@ -242,7 +242,8 @@ export type Database = {
           supplier_id: string | null
           updated_at: string
           vintage: number | null
-          wine_type: Database["public"]["Enums"]["wine_type"] | null
+          volume: string | null
+          wine_type: string | null
         }
         Insert: {
           cost_price?: number
@@ -258,7 +259,8 @@ export type Database = {
           supplier_id?: string | null
           updated_at?: string
           vintage?: number | null
-          wine_type?: Database["public"]["Enums"]["wine_type"] | null
+          volume?: string | null
+          wine_type?: string | null
         }
         Update: {
           cost_price?: number
@@ -274,7 +276,8 @@ export type Database = {
           supplier_id?: string | null
           updated_at?: string
           vintage?: number | null
-          wine_type?: Database["public"]["Enums"]["wine_type"] | null
+          volume?: string | null
+          wine_type?: string | null
         }
         Relationships: [
           {

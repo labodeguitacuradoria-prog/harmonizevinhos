@@ -16,11 +16,20 @@ type Wine = {
   producer: string | null;
   vintage: number | null;
   region: string | null;
+  country: string | null;
   wine_type: string | null;
   grape: string | null;
+  volume: string | null;
   cost_price: number;
   sale_price: number;
   supplier_id: string | null;
+};
+
+const DEFAULT_TYPES = ["Tinto", "Branco", "Rosé", "Espumante", "Sobremesa", "Fortificado"];
+const DEFAULT_VOLUMES = ["750 ml", "375 ml", "187 ml", "Taça"];
+const LEGACY_TYPE_MAP: Record<string, string> = {
+  red: "Tinto", white: "Branco", rose: "Rosé",
+  sparkling: "Espumante", dessert: "Sobremesa", fortified: "Fortificado",
 };
 
 function WinesPage() {

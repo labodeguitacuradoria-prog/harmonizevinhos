@@ -23,6 +23,7 @@ type Wine = {
   cost_price: number;
   sale_price: number;
   supplier_id: string | null;
+  internal_code: string | null;
 };
 
 const DEFAULT_TYPES = ["Tinto", "Branco", "Rosé", "Espumante", "Sobremesa", "Fortificado"];
@@ -222,6 +223,7 @@ function WineForm({
     cost_price: wine ? String(wine.cost_price) : "",
     sale_price: wine ? String(wine.sale_price) : "",
     supplier_id: wine?.supplier_id ?? "",
+    internal_code: wine?.internal_code ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -244,6 +246,7 @@ function WineForm({
       cost_price: Number(f.cost_price) || 0,
       sale_price: Number(f.sale_price) || 0,
       supplier_id: f.supplier_id || null,
+      internal_code: f.internal_code.trim() || null,
     };
     const { error } = isEdit
       ? await supabase.from("wines").update(payload).eq("id", wine!.id)
@@ -274,6 +277,7 @@ function WineForm({
       )}
       <form onSubmit={save} className="grid gap-3 sm:grid-cols-2">
         <Field label="Nome*" required value={f.name} onChange={(v) => setF({ ...f, name: v })} />
+        <Field label="Código no restaurante" value={f.internal_code} onChange={(v) => setF({ ...f, internal_code: v })} />
         <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} />
         <Field label="Safra" type="text" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} />
         <Field label="Região" value={f.region} onChange={(v) => setF({ ...f, region: v })} />

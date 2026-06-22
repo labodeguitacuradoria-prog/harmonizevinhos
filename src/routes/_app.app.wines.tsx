@@ -36,6 +36,7 @@ function WinesPage() {
   const { restaurantId } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [editWine, setEditWine] = useState<Wine | null>(null);
   const [moveWine, setMoveWine] = useState<Wine | null>(null);
 
   const { data: wines = [], isLoading } = useQuery({

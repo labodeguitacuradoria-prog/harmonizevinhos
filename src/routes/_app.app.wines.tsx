@@ -155,14 +155,16 @@ function WinesPage() {
         </table>
       </div>
 
-      {showForm && (
+      {(showForm || editWine) && (
         <WineForm
+          wine={editWine}
           suppliers={suppliers}
           restaurantId={restaurantId!}
-          onClose={() => setShowForm(false)}
+          onClose={() => { setShowForm(false); setEditWine(null); }}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["wines"] });
             setShowForm(false);
+            setEditWine(null);
           }}
         />
       )}

@@ -128,6 +128,7 @@ function WinesPage() {
                   </td>
                   <td className="px-4 py-3">{w.vintage ?? "-"}</td>
                   <td className="px-4 py-3">{wineTypeLabel(w.wine_type)}</td>
+                  <td className="px-4 py-3">{w.volume ?? "-"}</td>
                   <td className="px-4 py-3">R$ {Number(w.cost_price).toFixed(2)}</td>
                   <td className="px-4 py-3">R$ {Number(w.sale_price).toFixed(2)}</td>
                   <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>

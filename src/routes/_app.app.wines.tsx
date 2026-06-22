@@ -124,8 +124,14 @@ function WinesPage() {
               return (
                 <tr key={w.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3">
-                    <div className="font-medium">{w.name}</div>
-                    <div className="text-xs text-muted-foreground">{w.producer ?? ""}</div>
+                    <button
+                      type="button"
+                      onClick={() => setEditWine(w)}
+                      className="text-left hover:text-primary"
+                    >
+                      <div className="font-medium underline-offset-2 hover:underline">{w.name}</div>
+                      <div className="text-xs text-muted-foreground">{w.producer ?? ""}</div>
+                    </button>
                   </td>
                   <td className="px-4 py-3">{w.vintage ?? "-"}</td>
                   <td className="px-4 py-3">{wineTypeLabel(w.wine_type)}</td>

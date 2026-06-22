@@ -17,6 +17,7 @@ import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
 import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
+import { Route as AppAppSalesMonthlyRouteImport } from './routes/_app.app.sales-monthly'
 import { Route as AppAppSalesRouteImport } from './routes/_app.app.sales'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
 
@@ -59,6 +60,11 @@ const AppAppSharingRoute = AppAppSharingRouteImport.update({
   path: '/app/sharing',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppSalesMonthlyRoute = AppAppSalesMonthlyRouteImport.update({
+  id: '/app/sales-monthly',
+  path: '/app/sales-monthly',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAppSalesRoute = AppAppSalesRouteImport.update({
   id: '/app/sales',
   path: '/app/sales',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/sales': typeof AppAppSalesRoute
+  '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
   '/app/sharing': typeof AppAppSharingRoute
   '/app/wines': typeof AppAppWinesRoute
   '/admin/': typeof AppAdminIndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/sales': typeof AppAppSalesRoute
+  '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
   '/app/sharing': typeof AppAppSharingRoute
   '/app/wines': typeof AppAppWinesRoute
   '/admin': typeof AppAdminIndexRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
   '/_app/app/sales': typeof AppAppSalesRoute
+  '/_app/app/sales-monthly': typeof AppAppSalesMonthlyRoute
   '/_app/app/sharing': typeof AppAppSharingRoute
   '/_app/app/wines': typeof AppAppWinesRoute
   '/_app/admin/': typeof AppAdminIndexRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin/suppliers'
     | '/app/sales'
+    | '/app/sales-monthly'
     | '/app/sharing'
     | '/app/wines'
     | '/admin/'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin/suppliers'
     | '/app/sales'
+    | '/app/sales-monthly'
     | '/app/sharing'
     | '/app/wines'
     | '/admin'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_app/admin/suppliers'
     | '/_app/app/sales'
+    | '/_app/app/sales-monthly'
     | '/_app/app/sharing'
     | '/_app/app/wines'
     | '/_app/admin/'
@@ -206,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppSharingRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/sales-monthly': {
+      id: '/_app/app/sales-monthly'
+      path: '/app/sales-monthly'
+      fullPath: '/app/sales-monthly'
+      preLoaderRoute: typeof AppAppSalesMonthlyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/sales': {
       id: '/_app/app/sales'
       path: '/app/sales'
@@ -226,6 +245,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
   AppAppSalesRoute: typeof AppAppSalesRoute
+  AppAppSalesMonthlyRoute: typeof AppAppSalesMonthlyRoute
   AppAppSharingRoute: typeof AppAppSharingRoute
   AppAppWinesRoute: typeof AppAppWinesRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
@@ -236,6 +256,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminSuppliersRoute: AppAdminSuppliersRoute,
   AppAppSalesRoute: AppAppSalesRoute,
+  AppAppSalesMonthlyRoute: AppAppSalesMonthlyRoute,
   AppAppSharingRoute: AppAppSharingRoute,
   AppAppWinesRoute: AppAppWinesRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,

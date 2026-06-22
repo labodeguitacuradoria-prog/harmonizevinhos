@@ -194,8 +194,12 @@ function WineForm({
     producer: "",
     vintage: "",
     region: "",
+    country: "",
     grape: "",
-    wine_type: "red",
+    wine_type: "Tinto",
+    wine_type_custom: "",
+    volume: "750 ml",
+    volume_custom: "",
     cost_price: "",
     sale_price: "",
     supplier_id: "",
@@ -205,14 +209,18 @@ function WineForm({
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    const wineType = f.wine_type === "__custom" ? f.wine_type_custom.trim() : f.wine_type;
+    const volume = f.volume === "__custom" ? f.volume_custom.trim() : f.volume;
     const { error } = await supabase.from("wines").insert({
       restaurant_id: restaurantId,
       name: f.name,
       producer: f.producer || null,
       vintage: f.vintage ? Number(f.vintage) : null,
       region: f.region || null,
+      country: f.country || null,
       grape: f.grape || null,
-      wine_type: f.wine_type as "red",
+      wine_type: wineType || null,
+      volume: volume || null,
       cost_price: Number(f.cost_price) || 0,
       sale_price: Number(f.sale_price) || 0,
       supplier_id: f.supplier_id || null,
@@ -230,7 +238,8 @@ function WineForm({
         <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} />
         <Field label="Safra" type="number" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} />
         <Field label="Região" value={f.region} onChange={(v) => setF({ ...f, region: v })} />
-        <Field label="Uva" value={f.grape} onChange={(v) => setF({ ...f, grape: v })} />
+        <Field label="País" value={f.country} onChange={(v) => setF({ ...f, country: v })} />
+        <Field label="Uvas" value={f.grape} onChange={(v) => setF({ ...f, grape: v })} />
         <label className="block">
           <span className="text-sm font-medium">Tipo</span>
           <select
@@ -238,16 +247,41 @@ function WineForm({
             onChange={(e) => setF({ ...f, wine_type: e.target.value })}
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="red">Tinto</option>
-            <option value="white">Branco</option>
-            <option value="rose">Rosé</option>
-            <option value="sparkling">Espumante</option>
-            <option value="dessert">Sobremesa</option>
-            <option value="fortified">Fortificado</option>
+            {DEFAULT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            <option value="__custom">Outro (personalizado)…</option>
           </select>
+          {f.wine_type === "__custom" && (
+            <input
+              autoFocus
+              placeholder="Digite o tipo"
+              value={f.wine_type_custom}
+              onChange={(e) => setF({ ...f, wine_type_custom: e.target.value })}
+              className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          )}
         </label>
-        <Field label="Custo (R$)" type="number" value={f.cost_price} onChange={(v) => setF({ ...f, cost_price: v })} />
-        <Field label="Venda (R$)" type="number" value={f.sale_price} onChange={(v) => setF({ ...f, sale_price: v })} />
+        <label className="block">
+          <span className="text-sm font-medium">Volume</span>
+          <select
+            value={f.volume}
+            onChange={(e) => setF({ ...f, volume: e.target.value })}
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            {DEFAULT_VOLUMES.map((v) => <option key={v} value={v}>{v}</option>)}
+            <option value="__custom">Outro (personalizado)…</option>
+          </select>
+          {f.volume === "__custom" && (
+            <input
+              autoFocus
+              placeholder="Ex.: 1 L, 500 ml"
+              value={f.volume_custom}
+              onChange={(e) => setF({ ...f, volume_custom: e.target.value })}
+              className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          )}
+        </label>
+        <Field label="Preço de Custo (R$)" type="number" value={f.cost_price} onChange={(v) => setF({ ...f, cost_price: v })} />
+        <Field label="Preço de Venda (R$)" type="number" value={f.sale_price} onChange={(v) => setF({ ...f, sale_price: v })} />
         <label className="block sm:col-span-2">
           <span className="text-sm font-medium">Fornecedor</span>
           <select

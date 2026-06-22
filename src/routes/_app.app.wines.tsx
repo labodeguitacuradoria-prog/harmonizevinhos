@@ -111,10 +111,10 @@ function WinesPage() {
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && wines.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
                 Nenhum vinho cadastrado ainda.
               </td></tr>
             )}

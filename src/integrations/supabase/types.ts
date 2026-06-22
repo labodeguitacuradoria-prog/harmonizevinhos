@@ -95,6 +95,30 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_groups: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       restaurant_supplier_access: {
         Row: {
           created_at: string
@@ -141,6 +165,7 @@ export type Database = {
         Row: {
           city: string | null
           created_at: string
+          group_id: string | null
           id: string
           name: string
           owner_id: string
@@ -149,6 +174,7 @@ export type Database = {
         Insert: {
           city?: string | null
           created_at?: string
+          group_id?: string | null
           id?: string
           name: string
           owner_id: string
@@ -157,12 +183,21 @@ export type Database = {
         Update: {
           city?: string | null
           created_at?: string
+          group_id?: string | null
           id?: string
           name?: string
           owner_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "restaurants_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suppliers: {
         Row: {
@@ -307,6 +342,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      belongs_to_group: {
+        Args: { _restaurant_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -326,7 +365,7 @@ export type Database = {
       supplier_id_of: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "restaurant" | "supplier"
+      app_role: "admin" | "restaurant" | "supplier" | "owner" | "staff"
       movement_type: "entry" | "sale" | "adjustment"
       wine_type:
         | "red"
@@ -462,7 +501,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "restaurant", "supplier"],
+      app_role: ["admin", "restaurant", "supplier", "owner", "staff"],
       movement_type: ["entry", "sale", "adjustment"],
       wine_type: ["red", "white", "rose", "sparkling", "dessert", "fortified"],
     },

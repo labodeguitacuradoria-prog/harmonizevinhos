@@ -237,6 +237,7 @@ export type Database = {
           created_at: string
           grape: string | null
           id: string
+          internal_code: string | null
           name: string
           producer: string | null
           region: string | null
@@ -254,6 +255,7 @@ export type Database = {
           created_at?: string
           grape?: string | null
           id?: string
+          internal_code?: string | null
           name: string
           producer?: string | null
           region?: string | null
@@ -271,6 +273,7 @@ export type Database = {
           created_at?: string
           grape?: string | null
           id?: string
+          internal_code?: string | null
           name?: string
           producer?: string | null
           region?: string | null

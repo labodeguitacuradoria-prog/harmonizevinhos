@@ -1,105 +1,81 @@
-Ajuste rápido incluído: **renomear Cava → "Gestão de Vinhos para Restaurantes"** em todos os pontos do app (logo, títulos, meta tags, footer, tela de login). Essa mudança será feita logo no início da primeira fase de build.
+# Fase 1 — Cadastro de Produtos: Vinhos e Taças
 
----
+Vamos introduzir o conceito de **categorias de produto** e começar com duas: **Vinhos** (expandindo a tabela atual com novos campos) e **Taças** (categoria nova).
 
-## Visão geral
+## 1. Estrutura de dados
 
-O **Gestão de Vinhos para Restaurantes** será uma plataforma com 4 perfis (Admin, Owner, Staff, Fornecedor) e 7 módulos. Hoje já existem: cadastro de vinhos, vendas avulsas, venda mensal, compartilhamento com fornecedores e papéis admin/restaurant/supplier.
+### Tabela `product_categories` (catálogo fixo)
+Lista de categorias disponíveis no sistema. Começa com `wine` e `glass`; novas categorias entram aqui sem mudar código.
 
-## Perfis e permissões
+| Campo | Tipo |
+|---|---|
+| `slug` | text PK (`wine`, `glass`, …) |
+| `label_pt` | text |
+| `icon` | text |
+| `sort_order` | int |
 
-- **Admin do sistema** — gerencia tudo (papel atual `admin`).
-- **Owner (Proprietário)** — dono de 1 ou N restaurantes (grupo). Vê dashboards consolidados e por unidade. *Novo papel `owner` + tabela `restaurant_groups`.*
-- **Staff** — funcionário do restaurante. Faz contagem de estoque, registra vendas, consome treinamentos. *Novo papel `staff` vinculado a `restaurant_id`.*
-- **Fornecedor** — já existe (`supplier`). Ganha acesso a performance dos próprios rótulos.
+### Tabela `wines` (expandida)
+Mantemos a tabela existente e adicionamos:
 
-## Mapa dos módulos
+**Características**
+- `alcohol_pct` (numeric) — teor alcoólico %
+- `sugar_level` (text) — seco / meio-seco / suave / doce
+- `body` (text) — leve / médio / encorpado
+- `tannin` (text) — baixo / médio / alto
+- `acidity` (text) — baixa / média / alta
+- `aging` (text) — descrição do envelhecimento (ex.: "12 meses em carvalho francês")
+- `serving_temp_min` / `serving_temp_max` (int) — °C
+- `pairing_notes` (text) — harmonização sugerida
+- `tasting_notes` (text) — notas de degustação
+- `awards` (text[]) — premiações
 
-```text
-┌──────────────────────────────────────────────────────────┐
-│  GESTÃO DE VINHOS PARA RESTAURANTES                     │
-├──────────────────────────────────────────────────────────┤
-│ 1. Cadastro (multi-categoria)                             │
-│    • Vinhos  • Taças  • Decanters  • Acessórios  • Cartas │
-│ 2. Painel de Resultados (por unidade + consolidado)       │
-│ 3. Gestão de Estoques (contagem semanal do staff)         │
-│ 4. Treinamentos (mídia + quizzes + ranking)               │
-│ 5. Fornecedores (portal de performance)                   │
-│ 6. Harmonizações                                          │
-│ 7. Precificação (baseada em ticket médio)                 │
-└──────────────────────────────────────────────────────────┘
-                  ↓ Fase 2 (futuro)
-       Integração com PDV / ERP do restaurante
-```
+**Mídia**
+- `image_url` (text) — foto principal do rótulo
+- `gallery_urls` (text[]) — fotos adicionais
+- `tech_sheet_url` (text) — PDF da ficha técnica
+- `video_url` (text) — vídeo do produtor / apresentação
 
-## Fases de implementação
+Bucket de Storage `product-media` (público para leitura, escrita restrita por RLS ao restaurante dono).
 
-### Fase 0 — Fundação (papéis e grupos)
-- Renomear marca de "Cava" para "Gestão de Vinhos para Restaurantes" em todo o app.
-- Adicionar papéis `owner` e `staff` ao enum `app_role`.
-- Criar `restaurant_groups` (Owner pode ter N restaurantes).
-- Adicionar `group_id` em `restaurants`.
-- Ajustar menu por papel e middleware de autorização.
+### Tabela `glasses` (nova)
+| Campo | Tipo |
+|---|---|
+| `restaurant_id` | uuid FK |
+| `name` | text |
+| `brand` | text |
+| `capacity_ml` | int |
+| `wine_type_recommended` | text (tinto / branco / espumante / universal / …) |
+| `material` | text (cristal / vidro) |
+| `cost_price` | numeric |
+| `stock_quantity` | int |
+| `image_url` | text |
+| `notes` | text |
 
-### Fase 1 — Cadastro multi-categoria
-- Tabela `product_categories` (vinhos, taças, decanters, saca-rolhas, cartas, acessórios…).
-- Tabela genérica `products` com `category_id` + JSONB `attributes` (campos específicos por categoria).
-- UI: tela "Cadastro" com abas por categoria; formulário dinâmico.
+RLS: admin total; owner vê seu grupo (`belongs_to_group`); restaurant vê o próprio (`owns_restaurant`).
 
-### Fase 2 — Painel de Resultados
-- Seletor: **um restaurante** ou **grupo consolidado**.
-- Cards: Vendas, CMV, Lucratividade, Preço médio, Giro do estoque, Custo do estoque, % da meta, Comparativo vs ano anterior.
-- Ranking de vinhos mais vendidos; quando consolidado: ranking de restaurantes do grupo.
-- Tabela `goals` (meta mensal por restaurante/grupo).
+## 2. UI
 
-### Fase 3 — Gestão de Estoques
-- Tabela `inventory_counts` (cabeçalho: semana, restaurante, staff) + `inventory_count_items`.
-- Tela "Contagem semanal" para staff: lista todos produtos com input numérico.
-- Divergência automática (esperado vs contado) e alertas de reposição/excesso.
+### Tela "Cadastro de Produtos"
+- **Seletor de categoria no topo** (cards/tabs: Vinhos · Taças). As demais categorias aparecem como "em breve".
+- Cada categoria tem sua própria listagem, formulário e filtros.
 
-### Fase 4 — Treinamentos
-- Tabelas: `trainings`, `training_modules`, `quizzes`, `quiz_attempts`.
-- Storage bucket `training-media`.
-- Tela staff: catálogo + player + quiz.
-- Tela owner/admin: relatório "Quem foi treinado e nível de conhecimento".
+### Formulário de Vinho — abas
+1. **Geral** — campos atuais (nome, tipo, país, região, uva, produtor, safra, volume, preços, código)
+2. **Características** — novos campos sensoriais e técnicos
+3. **Mídia** — upload da foto principal, galeria, ficha técnica PDF, link de vídeo
+4. **Estoque** — quantidade atual, mínimo
 
-### Fase 5 — Portal do Fornecedor
-- Dashboard do fornecedor: vendas e estoque dos rótulos dele em cada restaurante liberado.
-- Ranking de performance do rótulo entre restaurantes.
+### Formulário de Taça
+Formulário simples com os campos da tabela `glasses` + upload de imagem.
 
-### Fase 6 — Harmonizações
-- Tabela `pairings` (vinho ↔ prato + notas).
-- Tela de consulta rápida para staff.
+## 3. Fora do escopo desta fase
+- Demais categorias (Decanters, Saca-rolhas, Cartas, Acessórios) — entram nas próximas fases reutilizando o mesmo padrão.
+- Indicadores, treinamentos, precificação, harmonização — fases seguintes do roadmap.
 
-### Fase 7 — Precificação
-- Input do **ticket médio** do restaurante.
-- Metodologia para calcular preço sugerido de cada rótulo (baseado em ticket + custo).
-- Comparar preço atual vs sugerido, mostrar margem.
+## Detalhes técnicos
+- Migrations criam `product_categories` (com seed `wine`/`glass`), adicionam colunas a `wines`, criam `glasses` + RLS + GRANTs, e criam bucket `product-media` com policies.
+- Tipos do Supabase serão regenerados após aprovação.
+- Componentes novos: `ProductCategoryPicker`, `WineFormTabs` (refatora o form atual), `GlassForm`, `GlassList`, `MediaUploader` (reutilizável).
 
-### Fase 8 (futuro) — Integração PDV/ERP
-- Importação automática de vendas, NF de entrada para custo, sincronização de estoque.
-
-## Banco — novas tabelas previstas
-
-```text
-restaurant_groups (id, owner_id, name)
-product_categories (id, slug, name, attribute_schema jsonb)
-products (id, restaurant_id, category_id, name, attributes jsonb, ...)
-goals (id, restaurant_id|group_id, period, target_revenue, target_units)
-inventory_counts + inventory_count_items
-trainings + training_modules + quizzes + quiz_attempts
-pairings (wine_id, dish_name, notes)
-pricing_settings (restaurant_id, avg_ticket, methodology_params jsonb)
-```
-
-## Ordem sugerida
-
-1. **Fase 0** (renomeação + papéis + grupos) — base para tudo
-2. **Fase 1** (cadastro multi-categoria) — desbloqueia estoque e portal
-3. **Fase 2** (painel consolidado) — dá valor imediato ao Owner
-4. **Fase 3** (estoque semanal) — fecha o loop de gestão
-5. **Fases 4–7** conforme prioridade do negócio
-
-## Próximo passo
-
-Se aprovar, começamos pela **Fase 0 + Fase 1** (renomeação, fundação de papéis/grupos e cadastro multi-categoria). Antes de codar a Fase 1 preciso que você defina os campos específicos de cada categoria (ex: Taça = capacidade ml, tipo de vinho indicado; Decanter = material, capacidade…).
+## Pergunta antes de implementar
+Confirma os campos de **Características** do vinho acima, ou quer ajustar/remover algum? E para **Taças**, quer que eu inclua também controle de **quebra/perda** (registro de taças quebradas) já nesta fase ou deixamos para depois?

@@ -101,6 +101,7 @@ function WinesPage() {
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Safra</th>
               <th className="px-4 py-3">Tipo</th>
+              <th className="px-4 py-3">Volume</th>
               <th className="px-4 py-3">Custo</th>
               <th className="px-4 py-3">Venda</th>
               <th className="px-4 py-3">Markup</th>

@@ -36,7 +36,7 @@ function AppLayout() {
       <aside className="border-b border-border bg-card md:w-60 md:border-b-0 md:border-r md:overflow-y-auto">
         <div className="flex items-center gap-2 border-b border-border px-5 py-5">
           <Wine className="h-6 w-6 text-primary" />
-          <span className="page-title text-base">Cava</span>
+          <span className="page-title text-base leading-tight">Gestão de Vinhos<br/><span className="text-xs text-muted-foreground font-normal">para Restaurantes</span></span>
         </div>
         <nav className="flex flex-row gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:gap-1 md:overflow-visible md:pb-0">
           {role === "restaurant" && (

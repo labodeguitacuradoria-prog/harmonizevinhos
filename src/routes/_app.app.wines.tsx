@@ -174,15 +174,8 @@ function WinesPage() {
 }
 
 function wineTypeLabel(t: string | null) {
-  const m: Record<string, string> = {
-    red: "Tinto",
-    white: "Branco",
-    rose: "Rosé",
-    sparkling: "Espumante",
-    dessert: "Sobremesa",
-    fortified: "Fortificado",
-  };
-  return t ? m[t] ?? t : "-";
+  if (!t) return "-";
+  return LEGACY_TYPE_MAP[t] ?? t;
 }
 
 function WineForm({

@@ -24,6 +24,7 @@ export type Database = {
           occurred_at: string
           quantity: number
           restaurant_id: string
+          unit_cost: number | null
           unit_price: number | null
           wine_id: string
         }
@@ -36,6 +37,7 @@ export type Database = {
           occurred_at?: string
           quantity: number
           restaurant_id: string
+          unit_cost?: number | null
           unit_price?: number | null
           wine_id: string
         }
@@ -48,6 +50,7 @@ export type Database = {
           occurred_at?: string
           quantity?: number
           restaurant_id?: string
+          unit_cost?: number | null
           unit_price?: number | null
           wine_id?: string
         }

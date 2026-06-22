@@ -1,0 +1,1 @@
+ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS unit_cost numeric(10,2);

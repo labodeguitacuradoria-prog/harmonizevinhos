@@ -36,6 +36,7 @@ function WinesPage() {
   const { restaurantId } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [editWine, setEditWine] = useState<Wine | null>(null);
   const [moveWine, setMoveWine] = useState<Wine | null>(null);
 
   const { data: wines = [], isLoading } = useQuery({
@@ -123,8 +124,14 @@ function WinesPage() {
               return (
                 <tr key={w.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3">
-                    <div className="font-medium">{w.name}</div>
-                    <div className="text-xs text-muted-foreground">{w.producer ?? ""}</div>
+                    <button
+                      type="button"
+                      onClick={() => setEditWine(w)}
+                      className="text-left hover:text-primary"
+                    >
+                      <div className="font-medium underline-offset-2 hover:underline">{w.name}</div>
+                      <div className="text-xs text-muted-foreground">{w.producer ?? ""}</div>
+                    </button>
                   </td>
                   <td className="px-4 py-3">{w.vintage ?? "-"}</td>
                   <td className="px-4 py-3">{wineTypeLabel(w.wine_type)}</td>
@@ -148,14 +155,16 @@ function WinesPage() {
         </table>
       </div>
 
-      {showForm && (
+      {(showForm || editWine) && (
         <WineForm
+          wine={editWine}
           suppliers={suppliers}
           restaurantId={restaurantId!}
-          onClose={() => setShowForm(false)}
+          onClose={() => { setShowForm(false); setEditWine(null); }}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["wines"] });
             setShowForm(false);
+            setEditWine(null);
           }}
         />
       )}
@@ -181,39 +190,48 @@ function wineTypeLabel(t: string | null) {
 }
 
 function WineForm({
+  wine,
   suppliers,
   restaurantId,
   onClose,
   onSaved,
 }: {
+  wine?: Wine | null;
   suppliers: { id: string; name: string }[];
   restaurantId: string;
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const isEdit = !!wine;
+  const initialType = wine?.wine_type ? (LEGACY_TYPE_MAP[wine.wine_type] ?? wine.wine_type) : "Tinto";
+  const typeInList = DEFAULT_TYPES.includes(initialType);
+  const initialVolume = wine?.volume ?? "750 ml";
+  const volumeInList = DEFAULT_VOLUMES.includes(initialVolume);
+
   const [f, setF] = useState({
-    name: "",
-    producer: "",
-    vintage: "",
-    region: "",
-    country: "",
-    grape: "",
-    wine_type: "Tinto",
-    wine_type_custom: "",
-    volume: "750 ml",
-    volume_custom: "",
-    cost_price: "",
-    sale_price: "",
-    supplier_id: "",
+    name: wine?.name ?? "",
+    producer: wine?.producer ?? "",
+    vintage: wine?.vintage ? String(wine.vintage) : "",
+    region: wine?.region ?? "",
+    country: wine?.country ?? "",
+    grape: wine?.grape ?? "",
+    wine_type: typeInList ? initialType : "__custom",
+    wine_type_custom: typeInList ? "" : initialType,
+    volume: volumeInList ? initialVolume : "__custom",
+    volume_custom: volumeInList ? "" : initialVolume,
+    cost_price: wine ? String(wine.cost_price) : "",
+    sale_price: wine ? String(wine.sale_price) : "",
+    supplier_id: wine?.supplier_id ?? "",
   });
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     const wineType = f.wine_type === "__custom" ? f.wine_type_custom.trim() : f.wine_type;
     const volume = f.volume === "__custom" ? f.volume_custom.trim() : f.volume;
-    const { error } = await supabase.from("wines").insert({
+    const payload = {
       restaurant_id: restaurantId,
       name: f.name,
       producer: f.producer || null,
@@ -226,15 +244,34 @@ function WineForm({
       cost_price: Number(f.cost_price) || 0,
       sale_price: Number(f.sale_price) || 0,
       supplier_id: f.supplier_id || null,
-    });
+    };
+    const { error } = isEdit
+      ? await supabase.from("wines").update(payload).eq("id", wine!.id)
+      : await supabase.from("wines").insert(payload);
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Vinho cadastrado");
+    toast.success(isEdit ? "Vinho atualizado" : "Vinho cadastrado");
+    onSaved();
+  }
+
+  async function remove() {
+    if (!wine) return;
+    if (!confirm(`Excluir "${wine.name}"? Movimentos passados serão removidos.`)) return;
+    setDeleting(true);
+    const { error } = await supabase.from("wines").delete().eq("id", wine.id);
+    setDeleting(false);
+    if (error) return toast.error(error.message);
+    toast.success("Vinho excluído");
     onSaved();
   }
 
   return (
-    <Modal title="Novo vinho" onClose={onClose}>
+    <Modal title={isEdit ? `Editar — ${wine!.name}` : "Novo vinho"} onClose={onClose}>
+      {isEdit && (
+        <p className="mb-3 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+          Alterar Preço de Custo ou Preço de Venda afeta apenas vendas e entradas <strong>futuras</strong>. O histórico de faturamento e os indicadores dos dashboards continuam usando os preços registrados em cada movimento.
+        </p>
+      )}
       <form onSubmit={save} className="grid gap-3 sm:grid-cols-2">
         <Field label="Nome*" required value={f.name} onChange={(v) => setF({ ...f, name: v })} />
         <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} />
@@ -295,10 +332,15 @@ function WineForm({
             {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </label>
-        <div className="mt-2 flex justify-end gap-2 sm:col-span-2">
+        <div className="mt-2 flex flex-wrap justify-end gap-2 sm:col-span-2">
+          {isEdit && (
+            <button type="button" onClick={remove} disabled={deleting} className="mr-auto rounded-md border border-destructive/40 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 disabled:opacity-50">
+              {deleting ? "Excluindo..." : "Excluir"}
+            </button>
+          )}
           <button type="button" onClick={onClose} className="rounded-md border border-input px-4 py-2 text-sm">Cancelar</button>
           <button type="submit" disabled={saving} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
-            {saving ? "Salvando..." : "Salvar"}
+            {saving ? "Salvando..." : isEdit ? "Atualizar" : "Salvar"}
           </button>
         </div>
       </form>
@@ -332,6 +374,7 @@ function MovementForm({
       movement_type: type,
       quantity: Number(qty),
       unit_price: unit,
+      unit_cost: Number(wine.cost_price),
     });
     setSaving(false);
     if (error) return toast.error(error.message);

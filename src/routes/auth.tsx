@@ -12,8 +12,8 @@ export const Route = createFileRoute("/auth")({
   validateSearch: search,
   head: () => ({
     meta: [
-      { title: "Entrar — Cava" },
-      { name: "description", content: "Acesse sua conta Cava." },
+      { title: "Entrar — Gestão de Vinhos para Restaurantes" },
+      { name: "description", content: "Acesse sua conta." },
     ],
   }),
   component: AuthPage,
@@ -81,7 +81,7 @@ function AuthPage() {
       <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-sm">
         <div className="mb-6 flex items-center gap-2">
           <Wine className="h-6 w-6 text-primary" />
-          <span className="text-lg font-semibold">Cava</span>
+          <span className="text-lg font-semibold">Gestão de Vinhos</span>
         </div>
         <h1 className="text-2xl font-semibold">
           {mode === "signin" ? "Entrar" : "Criar conta"}

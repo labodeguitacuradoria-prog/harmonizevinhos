@@ -4,13 +4,13 @@ import { Wine, BarChart3, Users, Shield } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Cava — Gestão de Vinhos para Restaurantes" },
+      { title: "Gestão de Vinhos para Restaurantes" },
       {
         name: "description",
         content:
           "Plataforma completa para gestão da carta de vinhos, estoque e relacionamento com fornecedores.",
       },
-      { property: "og:title", content: "Cava — Gestão de Vinhos para Restaurantes" },
+      { property: "og:title", content: "Gestão de Vinhos para Restaurantes" },
       {
         property: "og:description",
         content: "Gestão de adega, vendas e portal para fornecedores em um só lugar.",
@@ -27,7 +27,7 @@ function Landing() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <div className="flex items-center gap-2">
             <Wine className="h-6 w-6 text-primary" />
-            <span className="page-title">Cava</span>
+            <span className="page-title">Gestão de Vinhos para Restaurantes</span>
           </div>
           <nav className="flex items-center gap-3">
             <Link
@@ -110,7 +110,7 @@ function Landing() {
 
       <footer className="mt-16 border-t border-border">
         <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Cava — Gestão de Vinhos
+          © {new Date().getFullYear()} Gestão de Vinhos para Restaurantes
         </div>
       </footer>
     </div>

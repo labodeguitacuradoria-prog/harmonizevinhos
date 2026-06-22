@@ -32,13 +32,13 @@ function AppLayout() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground md:flex-row">
-      <aside className="border-b border-border bg-card md:w-60 md:border-b-0 md:border-r">
+    <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground md:flex-row">
+      <aside className="border-b border-border bg-card md:w-60 md:border-b-0 md:border-r md:overflow-y-auto">
         <div className="flex items-center gap-2 border-b border-border px-5 py-5">
           <Wine className="h-6 w-6 text-primary" />
           <span className="page-title text-base">Cava</span>
         </div>
-        <nav className="flex flex-row gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:gap-1 md:pb-0">
+        <nav className="flex flex-row gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:gap-1 md:overflow-visible md:pb-0">
           {role === "restaurant" && (
             <>
               <NavLink to="/app" icon={<Home className="h-4 w-4" />}>Início</NavLink>
@@ -72,7 +72,7 @@ function AppLayout() {
           </div>
         </div>
       </aside>
-      <main className="flex-1 overflow-x-hidden">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden">
         <Outlet />
       </main>
     </div>

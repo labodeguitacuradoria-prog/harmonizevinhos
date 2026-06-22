@@ -275,7 +275,7 @@ function WineForm({
       <form onSubmit={save} className="grid gap-3 sm:grid-cols-2">
         <Field label="Nome*" required value={f.name} onChange={(v) => setF({ ...f, name: v })} />
         <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} />
-        <Field label="Safra" type="number" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} />
+        <Field label="Safra" type="text" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} />
         <Field label="Região" value={f.region} onChange={(v) => setF({ ...f, region: v })} />
         <Field label="País" value={f.country} onChange={(v) => setF({ ...f, country: v })} />
         <Field label="Uvas" value={f.grape} onChange={(v) => setF({ ...f, grape: v })} />

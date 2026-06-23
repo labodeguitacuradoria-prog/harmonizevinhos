@@ -236,18 +236,6 @@ function WinesSection() {
           }}
         />
       )}
-      {moveWine && (
-        <MovementForm
-          wine={moveWine}
-          restaurantId={restaurantId!}
-          onClose={() => setMoveWine(null)}
-          onSaved={() => {
-            qc.invalidateQueries({ queryKey: ["stock-map"] });
-            qc.invalidateQueries({ queryKey: ["restaurant-stats"] });
-            setMoveWine(null);
-          }}
-        />
-      )}
     </div>
   );
 }

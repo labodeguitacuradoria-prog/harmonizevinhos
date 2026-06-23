@@ -184,15 +184,14 @@ function WinesSection() {
               <th className="px-4 py-3">Venda</th>
               <th className="px-4 py-3">Markup</th>
               <th className="px-4 py-3">Estoque</th>
-              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && wines.length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                 Nenhum vinho cadastrado ainda.
               </td></tr>
             )}
@@ -216,20 +215,13 @@ function WinesSection() {
                   <td className="px-4 py-3">R$ {Number(w.sale_price).toFixed(2)}</td>
                   <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>
                   <td className="px-4 py-3">{stockMap[w.id] ?? 0}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => setMoveWine(w)}
-                      className="rounded-md border border-input px-3 py-1 text-xs hover:bg-accent"
-                    >
-                      Movimento
-                    </button>
-                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
 
       {(showForm || editWine) && (
         <WineForm

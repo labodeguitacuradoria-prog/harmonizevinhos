@@ -4,8 +4,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Package, Minus, Wine as WineIcon, GlassWater } from "lucide-react";
+import { Plus, X, Wine as WineIcon, GlassWater, ScanLine } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
 
 export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,
@@ -40,6 +41,7 @@ type Wine = {
   gallery_urls: string[] | null;
   tech_sheet_url: string | null;
   video_url: string | null;
+  barcode: string | null;
 };
 
 type Glass = {
@@ -119,7 +121,6 @@ function WinesSection() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editWine, setEditWine] = useState<Wine | null>(null);
-  const [moveWine, setMoveWine] = useState<Wine | null>(null);
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wines", restaurantId],
@@ -183,15 +184,14 @@ function WinesSection() {
               <th className="px-4 py-3">Venda</th>
               <th className="px-4 py-3">Markup</th>
               <th className="px-4 py-3">Estoque</th>
-              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && wines.length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                 Nenhum vinho cadastrado ainda.
               </td></tr>
             )}
@@ -215,20 +215,13 @@ function WinesSection() {
                   <td className="px-4 py-3">R$ {Number(w.sale_price).toFixed(2)}</td>
                   <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>
                   <td className="px-4 py-3">{stockMap[w.id] ?? 0}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => setMoveWine(w)}
-                      className="rounded-md border border-input px-3 py-1 text-xs hover:bg-accent"
-                    >
-                      Movimento
-                    </button>
-                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
 
       {(showForm || editWine) && (
         <WineForm
@@ -240,18 +233,6 @@ function WinesSection() {
             qc.invalidateQueries({ queryKey: ["wines"] });
             setShowForm(false);
             setEditWine(null);
-          }}
-        />
-      )}
-      {moveWine && (
-        <MovementForm
-          wine={moveWine}
-          restaurantId={restaurantId!}
-          onClose={() => setMoveWine(null)}
-          onSaved={() => {
-            qc.invalidateQueries({ queryKey: ["stock-map"] });
-            qc.invalidateQueries({ queryKey: ["restaurant-stats"] });
-            setMoveWine(null);
           }}
         />
       )}
@@ -311,7 +292,9 @@ function WineForm({
     pairing_notes: wine?.pairing_notes ?? "",
     tasting_notes: wine?.tasting_notes ?? "",
     awards: (wine?.awards ?? []).join(", "),
+    barcode: wine?.barcode ?? "",
   });
+  const [scanOpen, setScanOpen] = useState(false);
   const [image, setImage] = useState<string | null>(wine?.image_url ?? null);
   const [gallery, setGallery] = useState<string[]>(wine?.gallery_urls ?? []);
   const [techSheet, setTechSheet] = useState<string | null>(wine?.tech_sheet_url ?? null);
@@ -353,6 +336,7 @@ function WineForm({
       gallery_urls: gallery.length ? gallery : null,
       tech_sheet_url: techSheet,
       video_url: videoUrl.trim() || null,
+      barcode: f.barcode.trim() || null,
     };
     const { error } = isEdit
       ? await supabase.from("wines").update(payload).eq("id", wine!.id)
@@ -425,7 +409,31 @@ function WineForm({
                 {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </label>
+            <label className="block sm:col-span-2">
+              <span className="text-sm font-medium">Código de barras</span>
+              <div className="mt-1 flex gap-2">
+                <input
+                  value={f.barcode}
+                  onChange={(e) => setF({ ...f, barcode: e.target.value })}
+                  placeholder="EAN / UPC"
+                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                />
+                <button
+                  type="button"
+                  onClick={() => setScanOpen(true)}
+                  className="flex items-center gap-2 rounded-md border border-input px-3 py-2 text-sm hover:bg-accent"
+                >
+                  <ScanLine className="h-4 w-4" /> Escanear
+                </button>
+              </div>
+            </label>
           </div>
+        )}
+        {scanOpen && (
+          <BarcodeScanner
+            onDetected={(code) => { setF((prev) => ({ ...prev, barcode: code.trim() })); setScanOpen(false); }}
+            onClose={() => setScanOpen(false)}
+          />
         )}
 
         {tab === "carac" && (
@@ -476,70 +484,8 @@ function WineForm({
   );
 }
 
-function MovementForm({
-  wine,
-  restaurantId,
-  onClose,
-  onSaved,
-}: {
-  wine: Wine;
-  restaurantId: string;
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const [type, setType] = useState<"entry" | "sale">("entry");
-  const [qty, setQty] = useState("1");
-  const [price, setPrice] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    const unit = price ? Number(price) : type === "sale" ? Number(wine.sale_price) : Number(wine.cost_price);
-    const { error } = await supabase.from("inventory_movements").insert({
-      wine_id: wine.id,
-      restaurant_id: restaurantId,
-      movement_type: type,
-      quantity: Number(qty),
-      unit_price: unit,
-      unit_cost: Number(wine.cost_price),
-    });
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Movimento registrado");
-    onSaved();
-  }
-
-  return (
-    <Modal title={wine.name} onClose={onClose}>
-      <form onSubmit={save} className="space-y-4">
-        <div className="flex gap-2">
-          <button type="button" onClick={() => setType("entry")} className={`flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm ${type === "entry" ? "border-primary bg-primary/10" : "border-input"}`}>
-            <Package className="h-4 w-4" /> Entrada
-          </button>
-          <button type="button" onClick={() => setType("sale")} className={`flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm ${type === "sale" ? "border-primary bg-primary/10" : "border-input"}`}>
-            <Minus className="h-4 w-4" /> Venda
-          </button>
-        </div>
-        <Field label="Quantidade" type="number" value={qty} onChange={setQty} required />
-        <Field
-          label={`Preço unitário (R$) — padrão R$ ${Number(type === "sale" ? wine.sale_price : wine.cost_price).toFixed(2)}`}
-          type="number"
-          value={price}
-          onChange={setPrice}
-        />
-        <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-md border border-input px-4 py-2 text-sm">Cancelar</button>
-          <button type="submit" disabled={saving} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
-            {saving ? "Salvando..." : "Registrar"}
-          </button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
 // ===== GLASSES =====
+
 
 function GlassesSection() {
   const { restaurantId } = useAuth();

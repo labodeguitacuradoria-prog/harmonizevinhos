@@ -409,7 +409,31 @@ function WineForm({
                 {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </label>
+            <label className="block sm:col-span-2">
+              <span className="text-sm font-medium">Código de barras</span>
+              <div className="mt-1 flex gap-2">
+                <input
+                  value={f.barcode}
+                  onChange={(e) => setF({ ...f, barcode: e.target.value })}
+                  placeholder="EAN / UPC"
+                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                />
+                <button
+                  type="button"
+                  onClick={() => setScanOpen(true)}
+                  className="flex items-center gap-2 rounded-md border border-input px-3 py-2 text-sm hover:bg-accent"
+                >
+                  <ScanLine className="h-4 w-4" /> Escanear
+                </button>
+              </div>
+            </label>
           </div>
+        )}
+        {scanOpen && (
+          <BarcodeScanner
+            onDetected={(code) => { setF((prev) => ({ ...prev, barcode: code.trim() })); setScanOpen(false); }}
+            onClose={() => setScanOpen(false)}
+          />
         )}
 
         {tab === "carac" && (

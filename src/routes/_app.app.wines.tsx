@@ -41,6 +41,7 @@ type Wine = {
   gallery_urls: string[] | null;
   tech_sheet_url: string | null;
   video_url: string | null;
+  barcode: string | null;
 };
 
 type Glass = {

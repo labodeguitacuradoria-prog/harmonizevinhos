@@ -282,6 +282,107 @@ export type Database = {
           },
         ]
       }
+      stock_count_items: {
+        Row: {
+          counted_at: string | null
+          counted_by: string | null
+          counted_qty: number | null
+          created_at: string
+          id: string
+          previous_qty: number
+          session_id: string
+          updated_at: string
+          wine_id: string
+        }
+        Insert: {
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_qty?: number | null
+          created_at?: string
+          id?: string
+          previous_qty?: number
+          session_id: string
+          updated_at?: string
+          wine_id: string
+        }
+        Update: {
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_qty?: number | null
+          created_at?: string
+          id?: string
+          previous_qty?: number
+          session_id?: string
+          updated_at?: string
+          wine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_count_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "stock_count_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_items_wine_id_fkey"
+            columns: ["wine_id"]
+            isOneToOne: false
+            referencedRelation: "wines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_count_sessions: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          reference_date: string
+          restaurant_id: string
+          started_at: string
+          started_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reference_date?: string
+          restaurant_id: string
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reference_date?: string
+          restaurant_id?: string
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_count_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           contact_email: string | null
@@ -354,6 +455,7 @@ export type Database = {
           aging: string | null
           alcohol_pct: number | null
           awards: string[] | null
+          barcode: string | null
           body: string | null
           cost_price: number
           country: string | null
@@ -387,6 +489,7 @@ export type Database = {
           aging?: string | null
           alcohol_pct?: number | null
           awards?: string[] | null
+          barcode?: string | null
           body?: string | null
           cost_price?: number
           country?: string | null
@@ -420,6 +523,7 @@ export type Database = {
           aging?: string | null
           alcohol_pct?: number | null
           awards?: string[] | null
+          barcode?: string | null
           body?: string | null
           cost_price?: number
           country?: string | null

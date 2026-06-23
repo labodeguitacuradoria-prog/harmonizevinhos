@@ -471,3 +471,44 @@ function CountSessionView({ session }: { session: Session }) {
     </div>
   );
 }
+
+const TYPE_ORDER = ["Espumante", "Branco", "Rosé", "Tinto", "Sobremesa", "Fortificado"];
+
+function GroupedList({
+  items,
+  grouped,
+  renderRow,
+}: {
+  items: SessionItem[];
+  grouped: boolean;
+  renderRow: (item: SessionItem) => React.ReactNode;
+}) {
+  if (!grouped) {
+    return <div className="space-y-1.5">{items.map(renderRow)}</div>;
+  }
+  const groups: Record<string, SessionItem[]> = {};
+  for (const it of items) {
+    const t = normalizeType(it.wine.wine_type) ?? "Outros";
+    (groups[t] ??= []).push(it);
+  }
+  const keys = Object.keys(groups).sort((a, b) => {
+    const ai = TYPE_ORDER.indexOf(a);
+    const bi = TYPE_ORDER.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+  return (
+    <div className="space-y-4">
+      {keys.map((k) => (
+        <section key={k}>
+          <h2 className="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {k} <span className="text-muted-foreground/60">({groups[k].length})</span>
+          </h2>
+          <div className="space-y-1.5">{groups[k].map(renderRow)}</div>
+        </section>
+      ))}
+    </div>
+  );
+}

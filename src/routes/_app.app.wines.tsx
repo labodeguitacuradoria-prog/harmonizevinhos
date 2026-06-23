@@ -4,8 +4,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Package, Minus, Wine as WineIcon, GlassWater } from "lucide-react";
+import { Plus, X, Wine as WineIcon, GlassWater, ScanLine } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
 
 export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,

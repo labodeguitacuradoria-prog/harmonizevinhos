@@ -303,12 +303,12 @@ function CountSessionView({ session }: { session: Session }) {
         </div>
 
         {/* Filter chips */}
-        <div className="mt-3 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:-mx-6 md:px-6">
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {TYPE_FILTERS.map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium ${
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
                 filter === f.key
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-input bg-card text-muted-foreground hover:text-foreground"
@@ -321,73 +321,70 @@ function CountSessionView({ session }: { session: Session }) {
       </div>
 
       {/* List */}
-      <div className="flex-1 space-y-3 overflow-y-auto p-4 pb-28 md:p-6">
+      <div className="flex-1 p-3 pb-24 md:p-6">
         {isLoading && <p className="text-sm text-muted-foreground">Carregando rótulos...</p>}
         {!isLoading && visibleItems.length === 0 && (
           <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
             Nenhum rótulo neste filtro.
           </p>
         )}
-        {visibleItems.map((item) => {
-          const done = item.counted_qty !== null;
-          const flashing = flashItemId === item.id;
-          return (
-            <div
-              key={item.id}
-              ref={(el) => { cardRefs.current[item.wine_id] = el; }}
-              className={`rounded-xl border-2 bg-card p-3 transition-all duration-300 ${
-                done
-                  ? "border-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.15)]"
-                  : "border-border"
-              } ${flashing ? "scale-[1.01] shadow-[0_0_0_6px_hsl(var(--primary)/0.25)]" : ""}`}
-            >
-              <div className="flex gap-3">
-                {/* Thumbnail */}
-                <button
-                  type="button"
-                  onClick={() => item.wine.image_url && setZoomImg(item.wine.image_url)}
-                  className="relative flex h-20 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted"
+        {!isLoading && visibleItems.length > 0 && (
+          <GroupedList
+            items={visibleItems}
+            grouped={filter === "all"}
+            renderRow={(item) => {
+              const done = item.counted_qty !== null;
+              const flashing = flashItemId === item.id;
+              return (
+                <div
+                  key={item.id}
+                  ref={(el) => { cardRefs.current[item.wine_id] = el; }}
+                  className={`flex items-center gap-2 rounded-lg border bg-card px-3 py-2 transition-all ${
+                    done
+                      ? "border-primary/60 bg-primary/[0.03]"
+                      : "border-border"
+                  } ${flashing ? "ring-2 ring-primary" : ""}`}
                 >
-                  {item.wine.image_url ? (
-                    <img
-                      src={item.wine.image_url}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                  )}
-                  {done && (
-                    <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <Check className="h-4 w-4" />
-                    </span>
-                  )}
-                </button>
-
-                {/* Info + controls */}
-                <div className="flex flex-1 flex-col gap-2">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-semibold leading-tight">{item.wine.name}</span>
-                    {item.wine.volume && (
-                      <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
-                        {item.wine.volume}
+                  {/* Info */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      {done && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
+                      <span className="truncate text-sm font-medium leading-tight">
+                        {item.wine.name}
                       </span>
-                    )}
-                  </div>
-                  {(item.wine.producer || item.wine.vintage) && (
-                    <div className="text-xs text-muted-foreground">
-                      {[item.wine.producer, item.wine.vintage].filter(Boolean).join(" · ")}
                     </div>
+                    <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      {[
+                        item.wine.volume,
+                        item.wine.producer,
+                        item.wine.vintage,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "—"}
+                    </div>
+                  </div>
+
+                  {/* Image icon (optional) */}
+                  {item.wine.image_url && (
+                    <button
+                      type="button"
+                      onClick={() => setZoomImg(item.wine.image_url!)}
+                      className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      aria-label="Ver rótulo"
+                    >
+                      <ImageIcon className="h-3.5 w-3.5" />
+                    </button>
                   )}
 
-                  <div className="mt-1 flex items-center gap-2">
+                  {/* Discrete controls */}
+                  <div className="flex shrink-0 items-center gap-1">
                     <button
                       type="button"
                       onClick={() => setQty(item, Math.max(0, (item.counted_qty ?? 0) - 1))}
-                      className="flex h-11 w-11 items-center justify-center rounded-md border border-input bg-background text-lg hover:bg-accent"
+                      className="flex h-7 w-7 items-center justify-center rounded border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
                       aria-label="Diminuir"
                     >
-                      <Minus className="h-5 w-5" />
+                      <Minus className="h-3.5 w-3.5" />
                     </button>
                     <input
                       ref={(el) => { inputRefs.current[item.wine_id] = el; }}
@@ -399,7 +396,6 @@ function CountSessionView({ session }: { session: Session }) {
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v === "") {
-                          // allow clearing locally but don't persist null
                           qc.setQueryData<SessionItem[]>(
                             ["stock-count-items", session.id],
                             (prev) =>
@@ -412,27 +408,22 @@ function CountSessionView({ session }: { session: Session }) {
                         const n = Math.max(0, parseInt(v, 10) || 0);
                         setQty(item, n);
                       }}
-                      onBlur={(e) => {
-                        if (e.target.value === "" && item.counted_qty === null) {
-                          // do nothing — staff must enter a number
-                        }
-                      }}
-                      className="h-11 w-20 rounded-md border border-input bg-background text-center text-lg font-semibold outline-none focus:ring-2 focus:ring-ring"
+                      className="h-7 w-12 rounded border border-input bg-background text-center text-sm font-semibold outline-none focus:ring-2 focus:ring-ring [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     />
                     <button
                       type="button"
                       onClick={() => setQty(item, (item.counted_qty ?? 0) + 1)}
-                      className="flex h-11 w-11 items-center justify-center rounded-md border border-input bg-background text-lg hover:bg-accent"
+                      className="flex h-7 w-7 items-center justify-center rounded border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
                       aria-label="Aumentar"
                     >
-                      <Plus className="h-5 w-5" />
+                      <Plus className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
+              );
+            }}
+          />
+        )}
       </div>
 
       {/* Footer */}
@@ -477,6 +468,47 @@ function CountSessionView({ session }: { session: Session }) {
           <img src={zoomImg} alt="" className="max-h-full max-w-full object-contain" />
         </div>
       )}
+    </div>
+  );
+}
+
+const TYPE_ORDER = ["Espumante", "Branco", "Rosé", "Tinto", "Sobremesa", "Fortificado"];
+
+function GroupedList({
+  items,
+  grouped,
+  renderRow,
+}: {
+  items: SessionItem[];
+  grouped: boolean;
+  renderRow: (item: SessionItem) => React.ReactNode;
+}) {
+  if (!grouped) {
+    return <div className="space-y-1.5">{items.map(renderRow)}</div>;
+  }
+  const groups: Record<string, SessionItem[]> = {};
+  for (const it of items) {
+    const t = normalizeType(it.wine.wine_type) ?? "Outros";
+    (groups[t] ??= []).push(it);
+  }
+  const keys = Object.keys(groups).sort((a, b) => {
+    const ai = TYPE_ORDER.indexOf(a);
+    const bi = TYPE_ORDER.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+  return (
+    <div className="space-y-4">
+      {keys.map((k) => (
+        <section key={k}>
+          <h2 className="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {k} <span className="text-muted-foreground/60">({groups[k].length})</span>
+          </h2>
+          <div className="space-y-1.5">{groups[k].map(renderRow)}</div>
+        </section>
+      ))}
     </div>
   );
 }

@@ -413,7 +413,7 @@ function CountSessionView({ session }: { session: Session }) {
                     />
                     <button
                       type="button"
-                      onClick={() => setQty(item, (item.counted_qty ?? 0) + 1)}
+                      onClick={() => setQty(item, item.counted_qty === null ? 0 : item.counted_qty + 1)}
                       className="flex h-7 w-7 items-center justify-center rounded border border-input bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
                       aria-label="Aumentar"
                     >

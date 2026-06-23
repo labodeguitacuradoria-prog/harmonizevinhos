@@ -148,6 +148,12 @@
     color: var(--color-foreground);
     font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
   }
 
   .page-title {
@@ -168,4 +174,13 @@
     padding-bottom: 8px;
     margin-bottom: 15px;
   }
+}
+
+/* Hide scrollbars on mobile while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -369,10 +369,11 @@ function CountSessionView({ session }: { session: Session }) {
                     <button
                       type="button"
                       onClick={() => setZoomImg(item.wine.image_url!)}
-                      className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      className="shrink-0 rounded p-1 text-primary hover:bg-accent hover:text-foreground"
+                      title="Ver rótulo"
                       aria-label="Ver rótulo"
                     >
-                      <ImageIcon className="h-3.5 w-3.5" />
+                      <ImageIcon className="h-4 w-4" />
                     </button>
                   )}
 

@@ -292,7 +292,9 @@ function WineForm({
     pairing_notes: wine?.pairing_notes ?? "",
     tasting_notes: wine?.tasting_notes ?? "",
     awards: (wine?.awards ?? []).join(", "),
+    barcode: wine?.barcode ?? "",
   });
+  const [scanOpen, setScanOpen] = useState(false);
   const [image, setImage] = useState<string | null>(wine?.image_url ?? null);
   const [gallery, setGallery] = useState<string[]>(wine?.gallery_urls ?? []);
   const [techSheet, setTechSheet] = useState<string | null>(wine?.tech_sheet_url ?? null);

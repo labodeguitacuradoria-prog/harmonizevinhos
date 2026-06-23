@@ -457,70 +457,8 @@ function WineForm({
   );
 }
 
-function MovementForm({
-  wine,
-  restaurantId,
-  onClose,
-  onSaved,
-}: {
-  wine: Wine;
-  restaurantId: string;
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const [type, setType] = useState<"entry" | "sale">("entry");
-  const [qty, setQty] = useState("1");
-  const [price, setPrice] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    const unit = price ? Number(price) : type === "sale" ? Number(wine.sale_price) : Number(wine.cost_price);
-    const { error } = await supabase.from("inventory_movements").insert({
-      wine_id: wine.id,
-      restaurant_id: restaurantId,
-      movement_type: type,
-      quantity: Number(qty),
-      unit_price: unit,
-      unit_cost: Number(wine.cost_price),
-    });
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Movimento registrado");
-    onSaved();
-  }
-
-  return (
-    <Modal title={wine.name} onClose={onClose}>
-      <form onSubmit={save} className="space-y-4">
-        <div className="flex gap-2">
-          <button type="button" onClick={() => setType("entry")} className={`flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm ${type === "entry" ? "border-primary bg-primary/10" : "border-input"}`}>
-            <Package className="h-4 w-4" /> Entrada
-          </button>
-          <button type="button" onClick={() => setType("sale")} className={`flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm ${type === "sale" ? "border-primary bg-primary/10" : "border-input"}`}>
-            <Minus className="h-4 w-4" /> Venda
-          </button>
-        </div>
-        <Field label="Quantidade" type="number" value={qty} onChange={setQty} required />
-        <Field
-          label={`Preço unitário (R$) — padrão R$ ${Number(type === "sale" ? wine.sale_price : wine.cost_price).toFixed(2)}`}
-          type="number"
-          value={price}
-          onChange={setPrice}
-        />
-        <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-md border border-input px-4 py-2 text-sm">Cancelar</button>
-          <button type="submit" disabled={saving} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
-            {saving ? "Salvando..." : "Registrar"}
-          </button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
 // ===== GLASSES =====
+
 
 function GlassesSection() {
   const { restaurantId } = useAuth();

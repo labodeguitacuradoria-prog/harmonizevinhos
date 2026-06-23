@@ -184,3 +184,12 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@utility no-spin {
+  appearance: textfield;
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}

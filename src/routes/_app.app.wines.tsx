@@ -336,6 +336,7 @@ function WineForm({
       gallery_urls: gallery.length ? gallery : null,
       tech_sheet_url: techSheet,
       video_url: videoUrl.trim() || null,
+      barcode: f.barcode.trim() || null,
     };
     const { error } = isEdit
       ? await supabase.from("wines").update(payload).eq("id", wine!.id)

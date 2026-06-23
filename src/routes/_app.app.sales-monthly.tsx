@@ -180,7 +180,7 @@ function MonthlySalesPage() {
                       value={qty[w.id] ?? ""}
                       onChange={(e) => setQty({ ...qty, [w.id]: e.target.value })}
                       placeholder="0"
-                      className="w-24 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring"
+                      className="w-24 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring no-spin"
                     />
                   </td>
                   <td className="px-4 py-2 text-muted-foreground">

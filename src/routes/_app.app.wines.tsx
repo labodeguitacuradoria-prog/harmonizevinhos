@@ -116,7 +116,8 @@ function CategoryTab({ active, onClick, icon, children }: { active: boolean; onC
 
 // ===== WINES =====
 
-const WINE_TYPES = ["Todos", "Tinto", "Branco", "Rosé", "Espumante", "Fortificado"];
+const WINE_TYPES = ["Todos", "Espumante", "Branco", "Rosé", "Tinto", "Fortificado", "Outros"];
+const CORE_WINE_TYPES = ["Espumante", "Branco", "Rosé", "Tinto", "Fortificado"];
 
 function WinesSection() {
   const { restaurantId } = useAuth();
@@ -188,7 +189,12 @@ function WinesSection() {
 
   const filteredWines = typeFilter === "Todos"
     ? wines
-    : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter);
+    : typeFilter === "Outros"
+      ? wines.filter((w) => {
+          const label = wineTypeLabel(w.wine_type);
+          return label !== "-" && !CORE_WINE_TYPES.includes(label);
+        })
+      : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter);
 
   return (
     <div>

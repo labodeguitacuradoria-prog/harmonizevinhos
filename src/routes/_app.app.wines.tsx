@@ -186,9 +186,28 @@ function WinesSection() {
     },
   });
 
+  const filteredWines = typeFilter === "Todos"
+    ? wines
+    : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter);
+
   return (
     <div>
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {WINE_TYPES.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                typeFilter === t
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"

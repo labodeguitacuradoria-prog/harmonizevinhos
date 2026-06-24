@@ -116,11 +116,14 @@ function CategoryTab({ active, onClick, icon, children }: { active: boolean; onC
 
 // ===== WINES =====
 
+const WINE_TYPES = ["Todos", "Tinto", "Branco", "Rosé", "Espumante", "Sobremesa", "Fortificado"];
+
 function WinesSection() {
   const { restaurantId } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editWine, setEditWine] = useState<Wine | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string>("Todos");
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wines", restaurantId],

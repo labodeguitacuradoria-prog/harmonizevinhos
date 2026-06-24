@@ -189,7 +189,12 @@ function WinesSection() {
 
   const filteredWines = typeFilter === "Todos"
     ? wines
-    : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter);
+    : typeFilter === "Outros"
+      ? wines.filter((w) => {
+          const label = wineTypeLabel(w.wine_type);
+          return label !== "-" && !CORE_WINE_TYPES.includes(label);
+        })
+      : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter);
 
   return (
     <div>

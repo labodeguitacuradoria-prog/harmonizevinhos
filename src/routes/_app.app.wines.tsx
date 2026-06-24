@@ -194,7 +194,55 @@ function WinesSection() {
         </button>
       </div>
 
-      <div className="mt-4 overflow-auto rounded-lg border border-border bg-card max-h-[calc(100vh-220px)]">
+      {/* Mobile: card list */}
+      <div className="mt-4 space-y-2 sm:hidden">
+        {isLoading && (
+          <div className="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+            Carregando...
+          </div>
+        )}
+        {!isLoading && wines.length === 0 && (
+          <div className="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+            Nenhum vinho cadastrado ainda.
+          </div>
+        )}
+        {wines.map((w) => {
+          const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
+          return (
+            <button
+              key={w.id}
+              type="button"
+              onClick={() => setEditWine(w)}
+              className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-left active:bg-muted/40"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{w.name}</div>
+                  <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                    {[w.internal_code, w.producer, w.vintage].filter(Boolean).join(" · ") || "-"}
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                    <span>{wineTypeLabel(w.wine_type)}</span>
+                    {w.volume && <span>{w.volume}</span>}
+                    <span>R$ {Number(w.sale_price).toFixed(2)}</span>
+                    {markup !== "-" && <span>mk {markup}%</span>}
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Estoque</div>
+                  <div className="text-base font-semibold leading-none">{stockMap[w.id] ?? 0}</div>
+                  <div className="mt-1 text-[10px] text-muted-foreground">
+                    Mês: <span className="font-medium text-foreground">{monthlySalesMap[w.id] ?? 0}</span>
+                  </div>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="no-scrollbar mt-4 hidden overflow-auto rounded-lg border border-border bg-card max-h-[calc(100vh-220px)] sm:block">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>

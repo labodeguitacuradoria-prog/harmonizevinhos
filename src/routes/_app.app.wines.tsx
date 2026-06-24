@@ -592,7 +592,46 @@ function GlassesSection() {
         </button>
       </div>
 
-      <div className="mt-4 overflow-auto rounded-lg border border-border bg-card max-h-[calc(100vh-220px)]">
+      {/* Mobile: card list */}
+      <div className="mt-4 space-y-2 sm:hidden">
+        {isLoading && (
+          <div className="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+            Carregando...
+          </div>
+        )}
+        {!isLoading && glasses.length === 0 && (
+          <div className="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+            Nenhuma taça cadastrada ainda.
+          </div>
+        )}
+        {glasses.map((g) => (
+          <button
+            key={g.id}
+            type="button"
+            onClick={() => setEditGlass(g)}
+            className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-left active:bg-muted/40"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">{g.name}</div>
+                <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                  {[g.brand, g.capacity_ml ? `${g.capacity_ml} ml` : null, g.material].filter(Boolean).join(" · ") || "-"}
+                </div>
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  {g.wine_type_recommended ?? "Universal"} · R$ {Number(g.cost_price).toFixed(2)}
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Estoque</div>
+                <div className="text-base font-semibold leading-none">{g.stock_quantity}</div>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="no-scrollbar mt-4 hidden overflow-auto rounded-lg border border-border bg-card max-h-[calc(100vh-220px)] sm:block">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>

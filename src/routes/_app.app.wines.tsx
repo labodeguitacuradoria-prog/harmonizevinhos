@@ -198,6 +198,7 @@ function WinesSection() {
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
+              <th className="px-4 py-3">Código</th>
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Safra</th>
               <th className="px-4 py-3">Tipo</th>
@@ -206,14 +207,15 @@ function WinesSection() {
               <th className="px-4 py-3">Venda</th>
               <th className="px-4 py-3">Markup</th>
               <th className="px-4 py-3">Estoque</th>
+              <th className="px-4 py-3">Venda mensal</th>
             </tr>
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && wines.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
                 Nenhum vinho cadastrado ainda.
               </td></tr>
             )}
@@ -221,6 +223,7 @@ function WinesSection() {
               const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
               return (
                 <tr key={w.id} className="border-b border-border last:border-0">
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{w.internal_code ?? "-"}</td>
                   <td className="px-4 py-3">
                     <button type="button" onClick={() => setEditWine(w)} className="flex items-center gap-2 text-left hover:text-primary">
                       {w.image_url && <img src={w.image_url} alt="" className="h-8 w-8 rounded object-cover" />}
@@ -237,6 +240,7 @@ function WinesSection() {
                   <td className="px-4 py-3">R$ {Number(w.sale_price).toFixed(2)}</td>
                   <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>
                   <td className="px-4 py-3">{stockMap[w.id] ?? 0}</td>
+                  <td className="px-4 py-3">{monthlySalesMap[w.id] ?? 0}</td>
                 </tr>
               );
             })}

@@ -57,16 +57,16 @@ type Glass = {
   notes: string | null;
 };
 
-const DEFAULT_TYPES = ["Tinto", "Branco", "Rosé", "Espumante", "Sobremesa", "Fortificado"];
+const DEFAULT_TYPES = ["Tinto", "Branco", "Rosé", "Espumante", "Fortificado"];
 const DEFAULT_VOLUMES = ["750 ml", "375 ml", "187 ml", "Taça"];
 const LEGACY_TYPE_MAP: Record<string, string> = {
   red: "Tinto", white: "Branco", rose: "Rosé",
-  sparkling: "Espumante", dessert: "Sobremesa", fortified: "Fortificado",
+  sparkling: "Espumante", dessert: "Fortificado", fortified: "Fortificado",
 };
 const SUGAR_LEVELS = ["Seco", "Meio-seco", "Suave", "Doce"];
 const INTENSITY = ["Baixo", "Médio", "Alto"];
 const BODY = ["Leve", "Médio", "Encorpado"];
-const GLASS_WINE_TYPES = ["Universal", "Tinto", "Branco", "Espumante", "Sobremesa", "Outro"];
+const GLASS_WINE_TYPES = ["Universal", "Tinto", "Branco", "Espumante", "Fortificado", "Outro"];
 const GLASS_MATERIALS = ["Cristal", "Vidro", "Outro"];
 
 function ProductsPage() {
@@ -116,7 +116,7 @@ function CategoryTab({ active, onClick, icon, children }: { active: boolean; onC
 
 // ===== WINES =====
 
-const WINE_TYPES = ["Todos", "Tinto", "Branco", "Rosé", "Espumante", "Sobremesa", "Fortificado"];
+const WINE_TYPES = ["Todos", "Tinto", "Branco", "Rosé", "Espumante", "Fortificado"];
 
 function WinesSection() {
   const { restaurantId } = useAuth();

@@ -116,7 +116,8 @@ function CategoryTab({ active, onClick, icon, children }: { active: boolean; onC
 
 // ===== WINES =====
 
-const WINE_TYPES = ["Todos", "Tinto", "Branco", "Rosé", "Espumante", "Fortificado"];
+const WINE_TYPES = ["Todos", "Espumante", "Branco", "Rosé", "Tinto", "Fortificado", "Outros"];
+const CORE_WINE_TYPES = ["Espumante", "Branco", "Rosé", "Tinto", "Fortificado"];
 
 function WinesSection() {
   const { restaurantId } = useAuth();

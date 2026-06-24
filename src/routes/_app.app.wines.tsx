@@ -116,11 +116,14 @@ function CategoryTab({ active, onClick, icon, children }: { active: boolean; onC
 
 // ===== WINES =====
 
+const WINE_TYPES = ["Todos", "Tinto", "Branco", "Rosé", "Espumante", "Sobremesa", "Fortificado"];
+
 function WinesSection() {
   const { restaurantId } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editWine, setEditWine] = useState<Wine | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string>("Todos");
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wines", restaurantId],
@@ -183,9 +186,28 @@ function WinesSection() {
     },
   });
 
+  const filteredWines = typeFilter === "Todos"
+    ? wines
+    : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter);
+
   return (
     <div>
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {WINE_TYPES.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                typeFilter === t
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
@@ -201,12 +223,12 @@ function WinesSection() {
             Carregando...
           </div>
         )}
-        {!isLoading && wines.length === 0 && (
+        {!isLoading && filteredWines.length === 0 && (
           <div className="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
-            Nenhum vinho cadastrado ainda.
+            {typeFilter === "Todos" ? "Nenhum vinho cadastrado ainda." : "Nenhum vinho encontrado para este tipo."}
           </div>
         )}
-        {wines.map((w) => {
+        {filteredWines.map((w) => {
           const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
           return (
             <button
@@ -262,12 +284,12 @@ function WinesSection() {
             {isLoading && (
               <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
-            {!isLoading && wines.length === 0 && (
+            {!isLoading && filteredWines.length === 0 && (
               <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
-                Nenhum vinho cadastrado ainda.
+                {typeFilter === "Todos" ? "Nenhum vinho cadastrado ainda." : "Nenhum vinho encontrado para este tipo."}
               </td></tr>
             )}
-            {wines.map((w) => {
+            {filteredWines.map((w) => {
               const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
               return (
                 <tr key={w.id} className="border-b border-border last:border-0">

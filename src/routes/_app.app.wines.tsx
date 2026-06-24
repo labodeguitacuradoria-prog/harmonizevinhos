@@ -161,6 +161,28 @@ function WinesSection() {
     },
   });
 
+  const { data: monthlySalesMap = {} } = useQuery({
+    queryKey: ["monthly-sales-map", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+      const { data } = await supabase
+        .from("inventory_movements")
+        .select("wine_id, quantity")
+        .eq("restaurant_id", restaurantId!)
+        .eq("movement_type", "sale")
+        .gte("occurred_at", start)
+        .lte("occurred_at", end);
+      const map: Record<string, number> = {};
+      for (const m of data ?? []) {
+        map[m.wine_id] = (map[m.wine_id] ?? 0) + m.quantity;
+      }
+      return map;
+    },
+  });
+
   return (
     <div>
       <div className="flex justify-end">

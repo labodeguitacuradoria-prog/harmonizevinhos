@@ -284,12 +284,12 @@ function WinesSection() {
             {isLoading && (
               <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
-            {!isLoading && wines.length === 0 && (
+            {!isLoading && filteredWines.length === 0 && (
               <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
-                Nenhum vinho cadastrado ainda.
+                {typeFilter === "Todos" ? "Nenhum vinho cadastrado ainda." : "Nenhum vinho encontrado para este tipo."}
               </td></tr>
             )}
-            {wines.map((w) => {
+            {filteredWines.map((w) => {
               const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
               return (
                 <tr key={w.id} className="border-b border-border last:border-0">

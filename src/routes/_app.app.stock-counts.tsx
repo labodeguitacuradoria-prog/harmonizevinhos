@@ -39,7 +39,7 @@ type SessionItem = {
 
 const LEGACY_TYPE_MAP: Record<string, string> = {
   red: "Tinto", white: "Branco", rose: "Rosé",
-  sparkling: "Espumante", dessert: "Sobremesa", fortified: "Fortificado",
+  sparkling: "Espumante", dessert: "Fortificado", fortified: "Fortificado",
 };
 
 const TYPE_FILTERS: { key: string; label: string; match: (t: string | null) => boolean }[] = [
@@ -49,7 +49,7 @@ const TYPE_FILTERS: { key: string; label: string; match: (t: string | null) => b
   { key: "Branco", label: "Brancos", match: (t) => normalizeType(t) === "Branco" },
   { key: "Rosé", label: "Rosés", match: (t) => normalizeType(t) === "Rosé" },
   { key: "Espumante", label: "Espumantes", match: (t) => normalizeType(t) === "Espumante" },
-  { key: "Sobremesa", label: "Sobremesa", match: (t) => normalizeType(t) === "Sobremesa" },
+  
   { key: "Fortificado", label: "Fortificados", match: (t) => normalizeType(t) === "Fortificado" },
 ];
 
@@ -473,7 +473,7 @@ function CountSessionView({ session }: { session: Session }) {
   );
 }
 
-const TYPE_ORDER = ["Espumante", "Branco", "Rosé", "Tinto", "Sobremesa", "Fortificado"];
+const TYPE_ORDER = ["Espumante", "Branco", "Rosé", "Tinto", "Fortificado"];
 
 function GroupedList({
   items,

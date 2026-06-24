@@ -194,9 +194,9 @@ function WinesSection() {
         </button>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-border bg-card">
+      <div className="mt-4 overflow-auto rounded-lg border border-border bg-card max-h-[calc(100vh-220px)]">
         <table className="w-full text-sm">
-          <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Código</th>
               <th className="px-4 py-3">Rótulo</th>
@@ -544,9 +544,9 @@ function GlassesSection() {
         </button>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-border bg-card">
+      <div className="mt-4 overflow-auto rounded-lg border border-border bg-card max-h-[calc(100vh-220px)]">
         <table className="w-full text-sm">
-          <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Taça</th>
               <th className="px-4 py-3">Marca</th>

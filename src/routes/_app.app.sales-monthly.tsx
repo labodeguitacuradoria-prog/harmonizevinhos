@@ -31,7 +31,7 @@ type Mode = "current" | "historic";
 function MonthlySalesPage() {
   const { restaurantId } = useAuth();
   const [month, setMonth] = useState(todayMonth());
-  const [mode, setMode] = useState<Mode>("current");
+  const mode: Mode = month === todayMonth() ? "current" : "historic";
   const [search, setSearch] = useState("");
   const [qty, setQty] = useState<Record<string, string>>({});
   const [revenue, setRevenue] = useState<Record<string, string>>({});

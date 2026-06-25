@@ -132,7 +132,8 @@ function MonthlySalesPage() {
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Stat label="Linhas preenchidas" value={String(filled.length)} />
         <Stat label="Unidades totais" value={String(totalUnits)} />
-        <Stat label="Receita estimada" value={`R$ ${totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
+        <Stat label="Faturamento total" value={`R$ ${totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
+
       </div>
 
       <div className="mt-6 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2">

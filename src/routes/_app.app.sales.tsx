@@ -72,7 +72,7 @@ function SalesPage() {
     .sort((a, b) => {
       const [ma, ya] = a.split("/").map(Number);
       const [mb, yb] = b.split("/").map(Number);
-      return (ya - yb) || (ma - mb);
+      return (yb - ya) || (mb - ma);
     });
 
   const filtered = selectedMonth === "all" ? sales : sales.filter((s) => formatMonth(s.occurred_at) === selectedMonth);

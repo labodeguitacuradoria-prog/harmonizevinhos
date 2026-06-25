@@ -139,7 +139,7 @@ function SalesPage() {
           <tbody>
             {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
             {!isLoading && sales.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhuma venda registrada.</td></tr>}
-            {sales.map((s) => {
+            {filtered.map((s) => {
               const isEditing = editingId === s.id;
               const revenue = s.quantity * Number(s.unit_price ?? 0);
               return (

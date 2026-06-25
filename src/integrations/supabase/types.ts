@@ -449,6 +449,125 @@ export type Database = {
           },
         ]
       }
+      wine_catalog: {
+        Row: {
+          acidity: string | null
+          aging: string | null
+          alcohol_pct: number | null
+          approved_at: string | null
+          approved_by: string | null
+          awards: string[] | null
+          barcode: string | null
+          body: string | null
+          country: string | null
+          created_at: string
+          gallery_urls: string[] | null
+          grape: string | null
+          id: string
+          image_url: string | null
+          name: string
+          pairing_notes: string | null
+          producer: string | null
+          region: string | null
+          rejection_reason: string | null
+          serving_temp_max: number | null
+          serving_temp_min: number | null
+          source_restaurant_id: string | null
+          status: Database["public"]["Enums"]["catalog_status"]
+          submitted_by: string | null
+          sugar_level: string | null
+          tannin: string | null
+          tasting_notes: string | null
+          tech_sheet_url: string | null
+          updated_at: string
+          video_url: string | null
+          vintage: number | null
+          volume: string | null
+          volume_ml: number | null
+          wine_type: string | null
+        }
+        Insert: {
+          acidity?: string | null
+          aging?: string | null
+          alcohol_pct?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          awards?: string[] | null
+          barcode?: string | null
+          body?: string | null
+          country?: string | null
+          created_at?: string
+          gallery_urls?: string[] | null
+          grape?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          pairing_notes?: string | null
+          producer?: string | null
+          region?: string | null
+          rejection_reason?: string | null
+          serving_temp_max?: number | null
+          serving_temp_min?: number | null
+          source_restaurant_id?: string | null
+          status?: Database["public"]["Enums"]["catalog_status"]
+          submitted_by?: string | null
+          sugar_level?: string | null
+          tannin?: string | null
+          tasting_notes?: string | null
+          tech_sheet_url?: string | null
+          updated_at?: string
+          video_url?: string | null
+          vintage?: number | null
+          volume?: string | null
+          volume_ml?: number | null
+          wine_type?: string | null
+        }
+        Update: {
+          acidity?: string | null
+          aging?: string | null
+          alcohol_pct?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          awards?: string[] | null
+          barcode?: string | null
+          body?: string | null
+          country?: string | null
+          created_at?: string
+          gallery_urls?: string[] | null
+          grape?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          pairing_notes?: string | null
+          producer?: string | null
+          region?: string | null
+          rejection_reason?: string | null
+          serving_temp_max?: number | null
+          serving_temp_min?: number | null
+          source_restaurant_id?: string | null
+          status?: Database["public"]["Enums"]["catalog_status"]
+          submitted_by?: string | null
+          sugar_level?: string | null
+          tannin?: string | null
+          tasting_notes?: string | null
+          tech_sheet_url?: string | null
+          updated_at?: string
+          video_url?: string | null
+          vintage?: number | null
+          volume?: string | null
+          volume_ml?: number | null
+          wine_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wine_catalog_source_restaurant_id_fkey"
+            columns: ["source_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wines: {
         Row: {
           acidity: string | null
@@ -457,6 +576,7 @@ export type Database = {
           awards: string[] | null
           barcode: string | null
           body: string | null
+          catalog_id: string | null
           cost_price: number
           country: string | null
           created_at: string
@@ -491,6 +611,7 @@ export type Database = {
           awards?: string[] | null
           barcode?: string | null
           body?: string | null
+          catalog_id?: string | null
           cost_price?: number
           country?: string | null
           created_at?: string
@@ -525,6 +646,7 @@ export type Database = {
           awards?: string[] | null
           barcode?: string | null
           body?: string | null
+          catalog_id?: string | null
           cost_price?: number
           country?: string | null
           created_at?: string
@@ -554,6 +676,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "wines_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "wine_catalog"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "wines_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
@@ -578,6 +707,10 @@ export type Database = {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
       }
+      can_manage_restaurant: {
+        Args: { _restaurant_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -590,6 +723,8 @@ export type Database = {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       supplier_can_see_restaurant: {
         Args: { _restaurant_id: string; _supplier_id: string }
         Returns: boolean
@@ -597,7 +732,15 @@ export type Database = {
       supplier_id_of: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "restaurant" | "supplier" | "owner" | "staff"
+      app_role:
+        | "admin"
+        | "restaurant"
+        | "supplier"
+        | "owner"
+        | "staff"
+        | "rest_admin"
+        | "rest_owner"
+      catalog_status: "pending" | "approved" | "rejected"
       movement_type: "entry" | "sale" | "adjustment"
       wine_type:
         | "red"
@@ -733,7 +876,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "restaurant", "supplier", "owner", "staff"],
+      app_role: [
+        "admin",
+        "restaurant",
+        "supplier",
+        "owner",
+        "staff",
+        "rest_admin",
+        "rest_owner",
+      ],
+      catalog_status: ["pending", "approved", "rejected"],
       movement_type: ["entry", "sale", "adjustment"],
       wine_type: ["red", "white", "rose", "sparkling", "dessert", "fortified"],
     },

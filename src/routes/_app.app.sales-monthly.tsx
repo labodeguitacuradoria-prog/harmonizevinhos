@@ -31,6 +31,7 @@ function MonthlySalesPage() {
   const [month, setMonth] = useState(todayMonth());
   const [search, setSearch] = useState("");
   const [qty, setQty] = useState<Record<string, string>>({});
+  const [revenue, setRevenue] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const { data: wines = [], isLoading } = useQuery({
@@ -57,32 +58,34 @@ function MonthlySalesPage() {
     );
   }, [wines, search]);
 
-  const filled = Object.entries(qty).filter(([, v]) => Number(v) > 0);
+  const filled = Object.entries(qty).filter(([id, v]) => Number(v) > 0 && Number(revenue[id] || 0) > 0);
   const totalUnits = filled.reduce((s, [, v]) => s + Number(v || 0), 0);
-  const totalRevenue = filled.reduce((s, [id, v]) => {
-    const w = wines.find((x) => x.id === id);
-    return s + Number(v || 0) * Number(w?.sale_price ?? 0);
-  }, 0);
+  const totalRevenue = filled.reduce((s, [id]) => s + Number(revenue[id] || 0), 0);
 
   async function saveAll() {
     if (!restaurantId) return;
-    if (filled.length === 0) return toast.error("Preencha ao menos uma quantidade.");
+    const qtyOnly = Object.entries(qty).filter(([, v]) => Number(v) > 0);
+    if (qtyOnly.length === 0) return toast.error("Preencha ao menos uma quantidade.");
+    const missing = qtyOnly.filter(([id]) => !(Number(revenue[id] || 0) > 0));
+    if (missing.length > 0) return toast.error("Informe o faturamento de cada rótulo com quantidade preenchida.");
+
     setSaving(true);
-    // End of month timestamp
     const [y, m] = month.split("-").map(Number);
     const occurredAt = new Date(y, m, 0, 23, 59, 59).toISOString();
 
-    const rows = filled.map(([wine_id, q]) => {
+    const rows = qtyOnly.map(([wine_id, q]) => {
       const w = wines.find((x) => x.id === wine_id)!;
+      const rev = Number(revenue[wine_id]);
+      const quantity = Number(q);
       return {
         wine_id,
         restaurant_id: restaurantId,
         movement_type: "sale" as const,
-        quantity: Number(q),
-        unit_price: Number(w.sale_price),
+        quantity,
+        unit_price: rev / quantity,
         unit_cost: Number(w.cost_price),
         occurred_at: occurredAt,
-        notes: `Venda mensal ${month}`,
+        notes: `Venda mensal ${month} · faturamento R$ ${rev.toFixed(2)}`,
       };
     });
 
@@ -91,7 +94,9 @@ function MonthlySalesPage() {
     if (error) return toast.error(error.message);
     toast.success(`${rows.length} venda(s) registrada(s) para ${month}.`);
     setQty({});
+    setRevenue({});
   }
+
 
   return (
     <div className="p-6 md:p-10">

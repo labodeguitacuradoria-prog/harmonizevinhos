@@ -266,9 +266,9 @@ function WinesSection() {
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Estoque</div>
-                  <div className="text-base font-semibold leading-none">{stockMap[w.id] ?? 0}</div>
+                  <div className="text-base font-semibold leading-none">{isGlassVol(w.volume) ? "—" : (stockMap[w.id] ?? 0)}</div>
                   <div className="mt-1 text-[10px] text-muted-foreground">
-                    Mês: <span className="font-medium text-foreground">{monthlySalesMap[w.id] ?? 0}</span>
+                    Mês: <span className="font-medium text-foreground">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</span>
                   </div>
                 </div>
               </div>

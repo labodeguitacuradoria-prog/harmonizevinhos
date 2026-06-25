@@ -26,9 +26,12 @@ function todayMonth() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+type Mode = "current" | "historic";
+
 function MonthlySalesPage() {
   const { restaurantId } = useAuth();
   const [month, setMonth] = useState(todayMonth());
+  const [mode, setMode] = useState<Mode>("current");
   const [search, setSearch] = useState("");
   const [qty, setQty] = useState<Record<string, string>>({});
   const [revenue, setRevenue] = useState<Record<string, string>>({});
@@ -58,34 +61,50 @@ function MonthlySalesPage() {
     );
   }, [wines, search]);
 
-  const filled = Object.entries(qty).filter(([id, v]) => Number(v) > 0 && Number(revenue[id] || 0) > 0);
+  const filled = Object.entries(qty).filter(([id, v]) => {
+    if (!(Number(v) > 0)) return false;
+    if (mode === "historic") return Number(revenue[id] || 0) > 0;
+    return true;
+  });
   const totalUnits = filled.reduce((s, [, v]) => s + Number(v || 0), 0);
-  const totalRevenue = filled.reduce((s, [id]) => s + Number(revenue[id] || 0), 0);
+  const totalRevenue = filled.reduce((s, [id, v]) => {
+    if (mode === "historic") return s + Number(revenue[id] || 0);
+    const w = wines.find((x) => x.id === id);
+    return s + Number(v || 0) * Number(w?.sale_price ?? 0);
+  }, 0);
 
   async function saveAll() {
     if (!restaurantId) return;
     const qtyOnly = Object.entries(qty).filter(([, v]) => Number(v) > 0);
     if (qtyOnly.length === 0) return toast.error("Preencha ao menos uma quantidade.");
-    const missing = qtyOnly.filter(([id]) => !(Number(revenue[id] || 0) > 0));
-    if (missing.length > 0) return toast.error("Informe o faturamento de cada rótulo com quantidade preenchida.");
-
+    if (mode === "historic") {
+      const missing = qtyOnly.filter(([id]) => !(Number(revenue[id] || 0) > 0));
+      if (missing.length > 0) return toast.error("Informe o faturamento de cada rótulo com quantidade preenchida.");
+    }
     setSaving(true);
     const [y, m] = month.split("-").map(Number);
     const occurredAt = new Date(y, m, 0, 23, 59, 59).toISOString();
 
     const rows = qtyOnly.map(([wine_id, q]) => {
       const w = wines.find((x) => x.id === wine_id)!;
-      const rev = Number(revenue[wine_id]);
       const quantity = Number(q);
+      const unit_price =
+        mode === "historic"
+          ? Number(revenue[wine_id]) / quantity
+          : Number(w.sale_price);
+      const notes =
+        mode === "historic"
+          ? `Venda histórica ${month} · faturamento R$ ${(unit_price * quantity).toFixed(2)}`
+          : `Venda mensal ${month} · preço cadastrado`;
       return {
         wine_id,
         restaurant_id: restaurantId,
         movement_type: "sale" as const,
         quantity,
-        unit_price: rev / quantity,
+        unit_price,
         unit_cost: Number(w.cost_price),
         occurred_at: occurredAt,
-        notes: `Venda mensal ${month} · faturamento R$ ${rev.toFixed(2)}`,
+        notes,
       };
     });
 
@@ -98,17 +117,33 @@ function MonthlySalesPage() {
   }
 
 
+
   return (
     <div className="p-6 md:p-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Vendas mensais</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Lance, para cada rótulo, a quantidade vendida no mês e o faturamento correspondente. O sistema usa esses dois números para calcular o preço médio histórico e a venda média mensal de cada rótulo — sem depender do preço atual.
+            {mode === "current"
+              ? "Lance a quantidade vendida de cada rótulo no mês. O faturamento é calculado pelo preço de venda atual cadastrado."
+              : "Carga histórica: informe quantidade e faturamento real do mês. O preço médio é calculado por rótulo (faturamento ÷ quantidade)."}
           </p>
-
         </div>
         <div className="flex flex-wrap items-end gap-3">
+          <div className="flex rounded-md border border-input bg-background p-0.5">
+            <button
+              onClick={() => setMode("current")}
+              className={`px-3 py-1.5 text-xs rounded ${mode === "current" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              Mês corrente
+            </button>
+            <button
+              onClick={() => setMode("historic")}
+              className={`px-3 py-1.5 text-xs rounded ${mode === "historic" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              Mês histórico
+            </button>
+          </div>
           <label className="block">
             <span className="text-xs text-muted-foreground">Mês de referência</span>
             <input
@@ -128,6 +163,7 @@ function MonthlySalesPage() {
           </button>
         </div>
       </div>
+
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Stat label="Linhas preenchidas" value={String(filled.length)} />
@@ -154,8 +190,17 @@ function MonthlySalesPage() {
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Volume</th>
               <th className="px-4 py-3 w-32">Qtd. vendida</th>
-              <th className="px-4 py-3 w-40">Faturamento (R$)</th>
-              <th className="px-4 py-3">Preço médio</th>
+              {mode === "historic" ? (
+                <>
+                  <th className="px-4 py-3 w-40">Faturamento (R$)</th>
+                  <th className="px-4 py-3">Preço médio</th>
+                </>
+              ) : (
+                <>
+                  <th className="px-4 py-3">Preço atual</th>
+                  <th className="px-4 py-3">Faturamento</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -169,6 +214,7 @@ function MonthlySalesPage() {
               const q = Number(qty[w.id] || 0);
               const rev = Number(revenue[w.id] || 0);
               const avg = q > 0 && rev > 0 ? rev / q : 0;
+              const currentRev = q * Number(w.sale_price);
               return (
                 <tr key={w.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{w.internal_code ?? "-"}</td>
@@ -190,31 +236,46 @@ function MonthlySalesPage() {
                       className="w-24 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring no-spin"
                     />
                   </td>
-                  <td className="px-4 py-2">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      inputMode="decimal"
-                      value={revenue[w.id] ?? ""}
-                      onChange={(e) => setRevenue({ ...revenue, [w.id]: e.target.value })}
-                      placeholder="0,00"
-                      className="w-32 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring no-spin"
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-muted-foreground">
-                    {avg > 0 ? `R$ ${avg.toFixed(2)}` : "-"}
-                  </td>
+                  {mode === "historic" ? (
+                    <>
+                      <td className="px-4 py-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          inputMode="decimal"
+                          value={revenue[w.id] ?? ""}
+                          onChange={(e) => setRevenue({ ...revenue, [w.id]: e.target.value })}
+                          placeholder="0,00"
+                          className="w-32 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring no-spin"
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        {avg > 0 ? `R$ ${avg.toFixed(2)}` : "-"}
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-2 text-muted-foreground">R$ {Number(w.sale_price).toFixed(2)}</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        {q > 0 ? `R$ ${currentRev.toFixed(2)}` : "-"}
+                      </td>
+                    </>
+                  )}
                 </tr>
               );
             })}
+
           </tbody>
         </table>
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        O lançamento usa o último dia do mês selecionado. O preço unitário gravado é <strong>faturamento ÷ quantidade</strong> daquele mês, então lançamentos antigos preservam o preço real praticado na época. A venda média mensal de cada rótulo é calculada a partir desses lançamentos.
+        {mode === "current"
+          ? "Use este modo no fechamento do mês recém-encerrado. O preço unitário gravado é o preço de venda atual cadastrado em cada rótulo. Alterar preços no futuro não muda lançamentos já salvos."
+          : "Use o modo histórico apenas para carregar meses anteriores ao uso do sistema, quando os preços da época podem ser diferentes dos atuais. O preço unitário gravado é faturamento ÷ quantidade."}
       </p>
+
     </div>
   );
 }

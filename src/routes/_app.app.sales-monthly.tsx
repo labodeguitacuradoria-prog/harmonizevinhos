@@ -31,6 +31,7 @@ function MonthlySalesPage() {
   const [month, setMonth] = useState(todayMonth());
   const [search, setSearch] = useState("");
   const [qty, setQty] = useState<Record<string, string>>({});
+  const [revenue, setRevenue] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const { data: wines = [], isLoading } = useQuery({
@@ -57,32 +58,34 @@ function MonthlySalesPage() {
     );
   }, [wines, search]);
 
-  const filled = Object.entries(qty).filter(([, v]) => Number(v) > 0);
+  const filled = Object.entries(qty).filter(([id, v]) => Number(v) > 0 && Number(revenue[id] || 0) > 0);
   const totalUnits = filled.reduce((s, [, v]) => s + Number(v || 0), 0);
-  const totalRevenue = filled.reduce((s, [id, v]) => {
-    const w = wines.find((x) => x.id === id);
-    return s + Number(v || 0) * Number(w?.sale_price ?? 0);
-  }, 0);
+  const totalRevenue = filled.reduce((s, [id]) => s + Number(revenue[id] || 0), 0);
 
   async function saveAll() {
     if (!restaurantId) return;
-    if (filled.length === 0) return toast.error("Preencha ao menos uma quantidade.");
+    const qtyOnly = Object.entries(qty).filter(([, v]) => Number(v) > 0);
+    if (qtyOnly.length === 0) return toast.error("Preencha ao menos uma quantidade.");
+    const missing = qtyOnly.filter(([id]) => !(Number(revenue[id] || 0) > 0));
+    if (missing.length > 0) return toast.error("Informe o faturamento de cada rótulo com quantidade preenchida.");
+
     setSaving(true);
-    // End of month timestamp
     const [y, m] = month.split("-").map(Number);
     const occurredAt = new Date(y, m, 0, 23, 59, 59).toISOString();
 
-    const rows = filled.map(([wine_id, q]) => {
+    const rows = qtyOnly.map(([wine_id, q]) => {
       const w = wines.find((x) => x.id === wine_id)!;
+      const rev = Number(revenue[wine_id]);
+      const quantity = Number(q);
       return {
         wine_id,
         restaurant_id: restaurantId,
         movement_type: "sale" as const,
-        quantity: Number(q),
-        unit_price: Number(w.sale_price),
+        quantity,
+        unit_price: rev / quantity,
         unit_cost: Number(w.cost_price),
         occurred_at: occurredAt,
-        notes: `Venda mensal ${month}`,
+        notes: `Venda mensal ${month} · faturamento R$ ${rev.toFixed(2)}`,
       };
     });
 
@@ -91,7 +94,9 @@ function MonthlySalesPage() {
     if (error) return toast.error(error.message);
     toast.success(`${rows.length} venda(s) registrada(s) para ${month}.`);
     setQty({});
+    setRevenue({});
   }
+
 
   return (
     <div className="p-6 md:p-10">
@@ -99,8 +104,9 @@ function MonthlySalesPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Vendas mensais</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Lance as quantidades vendidas no mês (garrafas, taças etc.) por rótulo.
+            Lance, para cada rótulo, a quantidade vendida no mês e o faturamento correspondente. O sistema usa esses dois números para calcular o preço médio histórico e a venda média mensal de cada rótulo — sem depender do preço atual.
           </p>
+
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <label className="block">
@@ -126,7 +132,8 @@ function MonthlySalesPage() {
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Stat label="Linhas preenchidas" value={String(filled.length)} />
         <Stat label="Unidades totais" value={String(totalUnits)} />
-        <Stat label="Receita estimada" value={`R$ ${totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
+        <Stat label="Faturamento total" value={`R$ ${totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
+
       </div>
 
       <div className="mt-6 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2">
@@ -146,9 +153,9 @@ function MonthlySalesPage() {
               <th className="px-4 py-3">Código</th>
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Volume</th>
-              <th className="px-4 py-3">Preço</th>
               <th className="px-4 py-3 w-32">Qtd. vendida</th>
-              <th className="px-4 py-3">Subtotal</th>
+              <th className="px-4 py-3 w-40">Faturamento (R$)</th>
+              <th className="px-4 py-3">Preço médio</th>
             </tr>
           </thead>
           <tbody>
@@ -160,7 +167,8 @@ function MonthlySalesPage() {
             )}
             {filtered.map((w) => {
               const q = Number(qty[w.id] || 0);
-              const subtotal = q * Number(w.sale_price);
+              const rev = Number(revenue[w.id] || 0);
+              const avg = q > 0 && rev > 0 ? rev / q : 0;
               return (
                 <tr key={w.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{w.internal_code ?? "-"}</td>
@@ -171,7 +179,6 @@ function MonthlySalesPage() {
                     </div>
                   </td>
                   <td className="px-4 py-2">{w.volume ?? "-"}</td>
-                  <td className="px-4 py-2">R$ {Number(w.sale_price).toFixed(2)}</td>
                   <td className="px-4 py-2">
                     <input
                       type="number"
@@ -183,8 +190,20 @@ function MonthlySalesPage() {
                       className="w-24 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring no-spin"
                     />
                   </td>
+                  <td className="px-4 py-2">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      inputMode="decimal"
+                      value={revenue[w.id] ?? ""}
+                      onChange={(e) => setRevenue({ ...revenue, [w.id]: e.target.value })}
+                      placeholder="0,00"
+                      className="w-32 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring no-spin"
+                    />
+                  </td>
                   <td className="px-4 py-2 text-muted-foreground">
-                    {q > 0 ? `R$ ${subtotal.toFixed(2)}` : "-"}
+                    {avg > 0 ? `R$ ${avg.toFixed(2)}` : "-"}
                   </td>
                 </tr>
               );
@@ -194,11 +213,12 @@ function MonthlySalesPage() {
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        As vendas são registradas com a data do último dia do mês selecionado e usam o preço atual do rótulo. Alterações futuras de preço não afetam os lançamentos já salvos.
+        O lançamento usa o último dia do mês selecionado. O preço unitário gravado é <strong>faturamento ÷ quantidade</strong> daquele mês, então lançamentos antigos preservam o preço real praticado na época. A venda média mensal de cada rótulo é calculada a partir desses lançamentos.
       </p>
     </div>
   );
 }
+
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (

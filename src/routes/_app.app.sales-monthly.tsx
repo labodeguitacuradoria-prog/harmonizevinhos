@@ -104,8 +104,9 @@ function MonthlySalesPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Vendas mensais</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Lance as quantidades vendidas no mês (garrafas, taças etc.) por rótulo.
+            Lance, para cada rótulo, a quantidade vendida no mês e o faturamento correspondente. O sistema usa esses dois números para calcular o preço médio histórico e a venda média mensal de cada rótulo — sem depender do preço atual.
           </p>
+
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <label className="block">

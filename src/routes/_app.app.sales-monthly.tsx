@@ -190,8 +190,17 @@ function MonthlySalesPage() {
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Volume</th>
               <th className="px-4 py-3 w-32">Qtd. vendida</th>
-              <th className="px-4 py-3 w-40">Faturamento (R$)</th>
-              <th className="px-4 py-3">Preço médio</th>
+              {mode === "historic" ? (
+                <>
+                  <th className="px-4 py-3 w-40">Faturamento (R$)</th>
+                  <th className="px-4 py-3">Preço médio</th>
+                </>
+              ) : (
+                <>
+                  <th className="px-4 py-3">Preço atual</th>
+                  <th className="px-4 py-3">Faturamento</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -205,6 +214,7 @@ function MonthlySalesPage() {
               const q = Number(qty[w.id] || 0);
               const rev = Number(revenue[w.id] || 0);
               const avg = q > 0 && rev > 0 ? rev / q : 0;
+              const currentRev = q * Number(w.sale_price);
               return (
                 <tr key={w.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{w.internal_code ?? "-"}</td>
@@ -226,24 +236,36 @@ function MonthlySalesPage() {
                       className="w-24 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring no-spin"
                     />
                   </td>
-                  <td className="px-4 py-2">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      inputMode="decimal"
-                      value={revenue[w.id] ?? ""}
-                      onChange={(e) => setRevenue({ ...revenue, [w.id]: e.target.value })}
-                      placeholder="0,00"
-                      className="w-32 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring no-spin"
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-muted-foreground">
-                    {avg > 0 ? `R$ ${avg.toFixed(2)}` : "-"}
-                  </td>
+                  {mode === "historic" ? (
+                    <>
+                      <td className="px-4 py-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          inputMode="decimal"
+                          value={revenue[w.id] ?? ""}
+                          onChange={(e) => setRevenue({ ...revenue, [w.id]: e.target.value })}
+                          placeholder="0,00"
+                          className="w-32 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring no-spin"
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        {avg > 0 ? `R$ ${avg.toFixed(2)}` : "-"}
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-2 text-muted-foreground">R$ {Number(w.sale_price).toFixed(2)}</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        {q > 0 ? `R$ ${currentRev.toFixed(2)}` : "-"}
+                      </td>
+                    </>
+                  )}
                 </tr>
               );
             })}
+
           </tbody>
         </table>
       </div>

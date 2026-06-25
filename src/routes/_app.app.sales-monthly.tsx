@@ -271,8 +271,11 @@ function MonthlySalesPage() {
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        O lançamento usa o último dia do mês selecionado. O preço unitário gravado é <strong>faturamento ÷ quantidade</strong> daquele mês, então lançamentos antigos preservam o preço real praticado na época. A venda média mensal de cada rótulo é calculada a partir desses lançamentos.
+        {mode === "current"
+          ? "Use este modo no fechamento do mês recém-encerrado. O preço unitário gravado é o preço de venda atual cadastrado em cada rótulo. Alterar preços no futuro não muda lançamentos já salvos."
+          : "Use o modo histórico apenas para carregar meses anteriores ao uso do sistema, quando os preços da época podem ser diferentes dos atuais. O preço unitário gravado é faturamento ÷ quantidade."}
       </p>
+
     </div>
   );
 }

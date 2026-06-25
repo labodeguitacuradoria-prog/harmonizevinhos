@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -7,10 +8,29 @@ export const Route = createFileRoute("/_app/app/sales")({
   component: SalesPage,
 });
 
+type SaleRow = {
+  id: string;
+  quantity: number;
+  unit_price: number | null;
+  occurred_at: string;
+  wines: { name?: string; producer?: string; vintage?: number } | null;
+};
+
+function formatMonth(iso: string) {
+  const d = new Date(iso);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${mm}/${yy}`;
+}
+
 function SalesPage() {
   const { restaurantId } = useAuth();
+  const qc = useQueryClient();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editQty, setEditQty] = useState<string>("");
+  const [editRevenue, setEditRevenue] = useState<string>("");
 
-  const { data: sales = [], isLoading } = useQuery({
+  const { data: sales = [], isLoading } = useQuery<SaleRow[]>({
     queryKey: ["sales", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
@@ -21,12 +41,48 @@ function SalesPage() {
         .eq("movement_type", "sale")
         .order("occurred_at", { ascending: false })
         .limit(200);
-      return data ?? [];
+      return (data ?? []) as SaleRow[];
     },
+  });
+
+  const updateMut = useMutation({
+    mutationFn: async ({ id, quantity, unit_price }: { id: string; quantity: number; unit_price: number }) => {
+      const { error } = await supabase
+        .from("inventory_movements")
+        .update({ quantity, unit_price })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sales", restaurantId] });
+      setEditingId(null);
+    },
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("inventory_movements").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sales", restaurantId] }),
   });
 
   const total = sales.reduce((s, m) => s + m.quantity * Number(m.unit_price ?? 0), 0);
   const bottles = sales.reduce((s, m) => s + m.quantity, 0);
+
+  const startEdit = (s: SaleRow) => {
+    setEditingId(s.id);
+    setEditQty(String(s.quantity));
+    setEditRevenue((s.quantity * Number(s.unit_price ?? 0)).toFixed(2));
+  };
+
+  const saveEdit = (id: string) => {
+    const q = Number(editQty);
+    const rev = Number(editRevenue);
+    if (!q || q <= 0) return;
+    const up = rev > 0 ? rev / q : 0;
+    updateMut.mutate({ id, quantity: q, unit_price: up });
+  };
 
   return (
     <div className="p-6 md:p-10">
@@ -48,31 +104,94 @@ function SalesPage() {
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th className="px-4 py-3">Data</th>
+              <th className="px-4 py-3">Mês</th>
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Qtd</th>
+              <th className="px-4 py-3">Faturamento</th>
               <th className="px-4 py-3">Preço unit.</th>
-              <th className="px-4 py-3">Total</th>
+              <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
-            {!isLoading && sales.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Nenhuma venda registrada.</td></tr>}
-            {sales.map((s) => (
-              <tr key={s.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-3">{new Date(s.occurred_at).toLocaleDateString("pt-BR")}</td>
-                <td className="px-4 py-3">
-                  <div className="font-medium">{(s.wines as { name?: string } | null)?.name ?? "-"}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {(s.wines as { producer?: string; vintage?: number } | null)?.producer}
-                    {(s.wines as { vintage?: number } | null)?.vintage ? ` · ${(s.wines as { vintage?: number } | null)?.vintage}` : ""}
-                  </div>
-                </td>
-                <td className="px-4 py-3">{s.quantity}</td>
-                <td className="px-4 py-3">R$ {Number(s.unit_price ?? 0).toFixed(2)}</td>
-                <td className="px-4 py-3">R$ {(s.quantity * Number(s.unit_price ?? 0)).toFixed(2)}</td>
-              </tr>
-            ))}
+            {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
+            {!isLoading && sales.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhuma venda registrada.</td></tr>}
+            {sales.map((s) => {
+              const isEditing = editingId === s.id;
+              const revenue = s.quantity * Number(s.unit_price ?? 0);
+              return (
+                <tr key={s.id} className="border-b border-border last:border-0">
+                  <td className="px-4 py-3">{formatMonth(s.occurred_at)}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{s.wines?.name ?? "-"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {s.wines?.producer}
+                      {s.wines?.vintage ? ` · ${s.wines.vintage}` : ""}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        value={editQty}
+                        onChange={(e) => setEditQty(e.target.value)}
+                        className="no-spin w-20 rounded border border-border bg-background px-2 py-1"
+                      />
+                    ) : (
+                      s.quantity
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editRevenue}
+                        onChange={(e) => setEditRevenue(e.target.value)}
+                        className="no-spin w-28 rounded border border-border bg-background px-2 py-1"
+                      />
+                    ) : (
+                      `R$ ${revenue.toFixed(2)}`
+                    )}
+                  </td>
+                  <td className="px-4 py-3">R$ {Number(s.unit_price ?? 0).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right">
+                    {isEditing ? (
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => saveEdit(s.id)}
+                          className="rounded bg-primary px-3 py-1 text-xs text-primary-foreground"
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="rounded border border-border px-3 py-1 text-xs"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => startEdit(s)}
+                          className="rounded border border-border px-3 py-1 text-xs hover:bg-muted"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm("Excluir este lançamento de venda?")) deleteMut.mutate(s.id);
+                          }}
+                          className="rounded border border-destructive/40 px-3 py-1 text-xs text-destructive hover:bg-destructive/10"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -597,7 +597,14 @@ export type Database = {
       supplier_id_of: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "restaurant" | "supplier" | "owner" | "staff"
+      app_role:
+        | "admin"
+        | "restaurant"
+        | "supplier"
+        | "owner"
+        | "staff"
+        | "rest_admin"
+        | "rest_owner"
       movement_type: "entry" | "sale" | "adjustment"
       wine_type:
         | "red"
@@ -733,7 +740,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "restaurant", "supplier", "owner", "staff"],
+      app_role: [
+        "admin",
+        "restaurant",
+        "supplier",
+        "owner",
+        "staff",
+        "rest_admin",
+        "rest_owner",
+      ],
       movement_type: ["entry", "sale", "adjustment"],
       wine_type: ["red", "white", "rose", "sparkling", "dessert", "fortified"],
     },

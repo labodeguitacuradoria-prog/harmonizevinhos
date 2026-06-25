@@ -26,9 +26,12 @@ function todayMonth() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+type Mode = "current" | "historic";
+
 function MonthlySalesPage() {
   const { restaurantId } = useAuth();
   const [month, setMonth] = useState(todayMonth());
+  const [mode, setMode] = useState<Mode>("current");
   const [search, setSearch] = useState("");
   const [qty, setQty] = useState<Record<string, string>>({});
   const [revenue, setRevenue] = useState<Record<string, string>>({});
@@ -58,34 +61,50 @@ function MonthlySalesPage() {
     );
   }, [wines, search]);
 
-  const filled = Object.entries(qty).filter(([id, v]) => Number(v) > 0 && Number(revenue[id] || 0) > 0);
+  const filled = Object.entries(qty).filter(([id, v]) => {
+    if (!(Number(v) > 0)) return false;
+    if (mode === "historic") return Number(revenue[id] || 0) > 0;
+    return true;
+  });
   const totalUnits = filled.reduce((s, [, v]) => s + Number(v || 0), 0);
-  const totalRevenue = filled.reduce((s, [id]) => s + Number(revenue[id] || 0), 0);
+  const totalRevenue = filled.reduce((s, [id, v]) => {
+    if (mode === "historic") return s + Number(revenue[id] || 0);
+    const w = wines.find((x) => x.id === id);
+    return s + Number(v || 0) * Number(w?.sale_price ?? 0);
+  }, 0);
 
   async function saveAll() {
     if (!restaurantId) return;
     const qtyOnly = Object.entries(qty).filter(([, v]) => Number(v) > 0);
     if (qtyOnly.length === 0) return toast.error("Preencha ao menos uma quantidade.");
-    const missing = qtyOnly.filter(([id]) => !(Number(revenue[id] || 0) > 0));
-    if (missing.length > 0) return toast.error("Informe o faturamento de cada rótulo com quantidade preenchida.");
-
+    if (mode === "historic") {
+      const missing = qtyOnly.filter(([id]) => !(Number(revenue[id] || 0) > 0));
+      if (missing.length > 0) return toast.error("Informe o faturamento de cada rótulo com quantidade preenchida.");
+    }
     setSaving(true);
     const [y, m] = month.split("-").map(Number);
     const occurredAt = new Date(y, m, 0, 23, 59, 59).toISOString();
 
     const rows = qtyOnly.map(([wine_id, q]) => {
       const w = wines.find((x) => x.id === wine_id)!;
-      const rev = Number(revenue[wine_id]);
       const quantity = Number(q);
+      const unit_price =
+        mode === "historic"
+          ? Number(revenue[wine_id]) / quantity
+          : Number(w.sale_price);
+      const notes =
+        mode === "historic"
+          ? `Venda histórica ${month} · faturamento R$ ${(unit_price * quantity).toFixed(2)}`
+          : `Venda mensal ${month} · preço cadastrado`;
       return {
         wine_id,
         restaurant_id: restaurantId,
         movement_type: "sale" as const,
         quantity,
-        unit_price: rev / quantity,
+        unit_price,
         unit_cost: Number(w.cost_price),
         occurred_at: occurredAt,
-        notes: `Venda mensal ${month} · faturamento R$ ${rev.toFixed(2)}`,
+        notes,
       };
     });
 
@@ -96,6 +115,7 @@ function MonthlySalesPage() {
     setQty({});
     setRevenue({});
   }
+
 
 
   return (

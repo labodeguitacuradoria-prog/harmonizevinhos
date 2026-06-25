@@ -29,6 +29,7 @@ function SalesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState<string>("");
   const [editRevenue, setEditRevenue] = useState<string>("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
 
   const { data: sales = [], isLoading } = useQuery<SaleRow[]>({
     queryKey: ["sales", restaurantId],
@@ -67,8 +68,17 @@ function SalesPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sales", restaurantId] }),
   });
 
-  const total = sales.reduce((s, m) => s + m.quantity * Number(m.unit_price ?? 0), 0);
-  const bottles = sales.reduce((s, m) => s + m.quantity, 0);
+  const months = Array.from(new Set(sales.map((s) => formatMonth(s.occurred_at))))
+    .sort((a, b) => {
+      const [ma, ya] = a.split("/").map(Number);
+      const [mb, yb] = b.split("/").map(Number);
+      return (yb - ya) || (mb - ma);
+    });
+
+  const filtered = selectedMonth === "all" ? sales : sales.filter((s) => formatMonth(s.occurred_at) === selectedMonth);
+
+  const total = filtered.reduce((s, m) => s + m.quantity * Number(m.unit_price ?? 0), 0);
+  const bottles = filtered.reduce((s, m) => s + m.quantity, 0);
 
   const startEdit = (s: SaleRow) => {
     setEditingId(s.id);
@@ -86,12 +96,26 @@ function SalesPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Vendas</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Histórico de saídas registradas.</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Vendas</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Histórico de saídas registradas.</p>
+        </div>
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="rounded-md border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+        >
+          <option value="all">Todos os meses</option>
+          {months.map((m) => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-5">
-          <div className="text-xs uppercase text-muted-foreground">Garrafas vendidas (últimas 200)</div>
+          <div className="text-xs uppercase text-muted-foreground">Garrafas vendidas</div>
           <div className="mt-2 text-2xl font-semibold">{bottles}</div>
         </div>
         <div className="rounded-lg border border-border bg-card p-5">
@@ -115,7 +139,7 @@ function SalesPage() {
           <tbody>
             {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
             {!isLoading && sales.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhuma venda registrada.</td></tr>}
-            {sales.map((s) => {
+            {filtered.map((s) => {
               const isEditing = editingId === s.id;
               const revenue = s.quantity * Number(s.unit_price ?? 0);
               return (

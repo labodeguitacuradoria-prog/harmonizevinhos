@@ -1,84 +1,129 @@
-## Contagem de Estoque — Vinhos
 
-Tela mobile-first para o staff contar garrafas rótulo por rótulo. O sistema garante que nada fica para trás e mostra só o essencial durante a contagem, com apoio visual (foto + moldura) e leitura de código de barras.
+# Papéis, Onboarding Self-Service, Catálogo Global e Cadastro com Busca
 
-### 1. Fluxo
+## 1. Hierarquia de papéis
 
-1. Staff abre **Contagem de Estoque** → toca **Iniciar contagem**.
-2. Sistema cria sessão `draft` com a **data de hoje** e gera um item pendente para cada rótulo ativo do restaurante.
-3. Staff percorre a lista, identifica o rótulo (visualmente ou via código de barras) e digita a quantidade. Campo começa **em branco** — para estoque zero, é obrigatório digitar `0`.
-4. Pode pausar; ao voltar, retoma a mesma sessão `draft`.
-5. **Fechar contagem** só habilita com 100% contado. Se tentar fechar antes, mostra a lista dos rótulos pendentes e leva direto até eles.
-6. Ao fechar: para cada diferença entre contado e estoque atual, grava `inventory_movement` do tipo `adjustment`; sessão vira `closed` (read-only).
+| Papel | Quem é | Como entra no sistema | O que faz |
+|---|---|---|---|
+| **System Owner** (`admin`) | Você | Conta fixa, criada manualmente | Aprova catálogo global; intervém sob demanda em contas de restaurantes |
+| **Restaurant Admin** (`rest_admin`) | Profissional operacional | **Self-signup** (email + senha) | Cadastra rótulos, preços, fornecedores; cria contas de Staff e do Owner do restaurante |
+| **Restaurant Owner** (`rest_owner`) | Chef / proprietário | Criado pelo Restaurant Admin do seu restaurante | **Padrão: só visualiza** dashboards. Pode ativar "Modo Admin" ou "Modo Staff" sem segunda conta |
+| **Staff** (`staff`) | Garçom / sommelier | Criado pelo Restaurant Admin | Contagem de estoque, treinamentos |
+| **Fornecedor** (`supplier`) | Externo | Já existente | Portal de fornecedor |
 
-### 2. UX da contagem (o que o staff vê)
+### Fluxo de onboarding (sem intervenção sua)
+1. Usuário acessa `/auth` e faz signup com email + senha + nome do restaurante.
+2. Trigger `handle_new_user` (já existe) é atualizada para:
+   - Criar `profiles`
+   - Criar `restaurants` com `owner_id = novo_usuario`
+   - Atribuir papel **`rest_admin`** (em vez de `restaurant`) ao novo usuário
+3. Esse Restaurant Admin entra no sistema e, dentro de "Equipe", cria:
+   - 0 ou 1 conta de **Restaurant Owner** (chef/proprietário) com email e senha
+   - N contas de **Staff** com email e senha
+4. Em restaurantes pequenos, o próprio Admin acumula os papéis — não precisa criar mais ninguém.
 
-Card por rótulo, **somente**:
+### Sua intervenção (System Owner)
+- Painel `/app/admin/accounts` (só visível para `admin`):
+  - Listar restaurantes e usuários
+  - Resetar senha de qualquer usuário
+  - Criar conta de Restaurant Admin manualmente para um restaurante (caso o cliente peça ajuda)
+  - Transferir propriedade do restaurante para outro email
+- Tudo sob demanda. O fluxo normal não passa por você.
 
-- **Foto/thumbnail do rótulo** (de `wines.image_url`) — toque amplia em modal full-screen para tirar dúvida visual
-- Nome do rótulo
-- **Volume** destacado ao lado do nome (ex.: 750 ml / 375 ml) — diferencia rótulos de mesmo nome
-- Produtor / safra em texto secundário pequeno
-- Campo numérico + botões −/+ grandes (≥44px)
-- **Botão de scanner de código de barras** no topo da tela (e atalho dentro do card) — abre câmera, lê EAN/UPC, encontra o rótulo correspondente, rola até ele e foca o campo
+### "Modo Admin / Modo Staff" do Restaurant Owner
+- Quando logado como Owner, header mostra: `[ 👁 Visualização ] [ ⚙ Modo Admin ] [ 📋 Modo Staff ]`
+- Trava de UX apenas: por padrão Owner vê dashboards limpos; ao ativar um modo, libera os menus correspondentes na sessão.
+- Sem segunda conta, sem segunda senha.
 
-**Confirmação visual ao contar:** assim que o campo recebe um valor (inclusive `0`), o card ganha uma **moldura iluminada** (borda colorida + leve glow + ícone de check) marcando "contado". Pendentes ficam com borda neutra/apagada. Efeito é o sinal principal de progresso.
+### Migração de papéis
+- Enum `app_role`: adicionar `rest_admin` e `rest_owner`.
+- Usuários atuais com papel `restaurant` → migrados para `rest_admin` (eles eram quem cadastrava as coisas).
+- Helper `can_manage_restaurant(user, restaurant)`: true para `admin`, `rest_admin` daquele restaurante, ou `rest_owner` daquele restaurante.
 
-**Não mostrar** durante a contagem: estoque atual, contagem anterior, média de vendas, preços. Esses dados aparecem só nos relatórios pós-fechamento.
+---
 
-### 3. Filtros no topo (chips horizontais roláveis)
+## 2. Catálogo Global de Rótulos
 
-- **Todos** (padrão) · **Pendentes** · **Tintos** · **Brancos** · **Rosés** · **Espumantes** · **Sobremesa** · **Fortificados**
+### Estrutura
 
-Contador "X de Y contados" + botão **Fechar contagem** fixos no rodapé.
+**`wine_catalog` (global, compartilhado)** — só dados intrínsecos do rótulo:
+- Identidade: `name`, `producer`, `vintage`, `region`, `country`, `grape`, `wine_type`, `volume_ml`, `barcode`
+- Sensorial: `alcohol`, `body`, `tannins`, `acidity`, `sweetness`, `tasting_notes`, `pairing_notes`
+- Mídia: `image_url`, `tech_sheet_url`, `video_url`
+- Curadoria: `status` (`pending` / `approved` / `rejected`), `submitted_by`, `source_restaurant_id`, `approved_by`, `approved_at`, `rejection_reason`
 
-### 4. Leitura de código de barras
+**RLS:**
+- SELECT: qualquer autenticado vê `approved`; submitter vê os próprios `pending`/`rejected`.
+- INSERT: qualquer autenticado (entra como `pending`).
+- UPDATE/DELETE: apenas System Owner.
 
-- Biblioteca client-side (ex.: `@zxing/browser`) — sem dependência de servidor.
-- Novo campo `wines.barcode` (text, nullable, índice único por `restaurant_id`).
-- **No cadastro do rótulo (tela de Vinhos):** botão "Escanear código de barras" que preenche o campo `barcode`. Edição manual também permitida.
-- **Na contagem:** botão de scanner persistente. Ao ler:
-  - Se achar o rótulo na sessão → rola até o card, abre teclado numérico, destaca a moldura em estado "pronto pra contar".
-  - Se não achar → toast "Código não cadastrado neste restaurante" com atalho para abrir o cadastro do rótulo.
-- Permissão de câmera tratada com fallback amigável (texto explicando como liberar).
+**`restaurant_wines` (local, comercial)** — substitui a tabela `wines` atual:
+- `restaurant_id`, `catalog_id` (FK opcional)
+- `internal_code`, `supplier_id`, `cost_price`, `sale_price`
+- Overrides opcionais (`*_override`) para campos do catálogo que o restaurante queira personalizar
+- `catalog_id` nulo = rótulo 100% local
 
-### 5. Modelo de dados
+Estoque, contagens, vendas mensais e movimentos passam a referenciar `restaurant_wines.id`.
+
+### Painel de Curadoria (System Owner)
+Rota `/app/admin/catalog`:
+- **Pendentes**: cards com foto, dados, restaurante de origem. Aprovar / Editar e aprovar / Rejeitar (com motivo).
+- **Aprovados**: edição posterior.
+- **Rejeitados**: histórico.
+- Alerta de duplicata: se um `pending` bate nome+produtor+safra de um aprovado, mostra comparação lado a lado.
+
+---
+
+## 3. Cadastro de Rótulos com Busca (estilo Wine-Searcher)
+
+Ao clicar "Novo rótulo":
 
 ```text
-wines  (alteração)
-  + barcode (text, nullable)
-  índice único parcial (restaurant_id, barcode) where barcode is not null
-
-stock_count_sessions
-  id, restaurant_id, reference_date (default CURRENT_DATE),
-  status ('draft'|'closed'), started_by, started_at,
-  closed_by, closed_at, notes, timestamps
-  (índice único parcial: 1 draft por restaurante)
-
-stock_count_items
-  id, session_id, wine_id,
-  previous_qty (snapshot ao iniciar — usado só no fechamento),
-  counted_qty (NULL = pendente),
-  counted_at, counted_by, timestamps
+┌─────────────────────────────────────────────────────┐
+│  🔍 Buscar rótulo...                    📷 Scanner  │
+│  ─────────────────────────────────────────────────  │
+│  Digitando "marg..." →                              │
+│  🖼  Chateau Margaux 2019    Bordeaux / FR  ✓       │
+│  🖼  Margaux 2018            Bordeaux / FR  ✓       │
+│  🖼  Pavillon Rouge 2020     Bordeaux / FR  ✓       │
+│  ─────────────────────────────────────────────────  │
+│  + Não encontrei — cadastrar novo rótulo            │
+└─────────────────────────────────────────────────────┘
 ```
 
-RLS: staff/restaurant leem e editam drafts do próprio restaurante; owner/admin leem tudo; sessão fechada é read-only (exceto admin).
+1. Autocomplete debounced (300ms) em `wine_catalog` por nome + produtor (ILIKE + trigram) e barcode exato. Top 8 com foto, safra, região.
+2. **📷 Scanner**: EAN existente vincula direto.
+3. Selecionar rótulo: abre o formulário **pré-preenchido**. O usuário só preenche código interno, fornecedor, custo e venda. Aviso "Dados vindos do catálogo global". Botão "Editar dados do rótulo" cria overrides locais.
+4. **"Cadastrar novo rótulo"**: formulário em branco. Ao salvar, cria:
+   - `wine_catalog` com `status='pending'` (vai para sua fila)
+   - `restaurant_wines` vinculado, já operacional para o restaurante imediatamente
 
-### 6. Server functions (`src/lib/stock-counts.functions.ts`)
+### Foto e ficha técnica
+Vão junto da submissão. Se você editar/rejeitar na curadoria, o restaurante mantém os arquivos como override local.
 
-- `getOrStartDraftSession()` — retorna draft existente ou cria nova com snapshot.
-- `getSessionItems(sessionId)` — devolve `wine.name`, `wine.volume`, `wine.wine_type`, `wine.producer`, `wine.vintage`, `wine.image_url`, `wine.barcode`, `counted_qty`. **Não retorna** `previous_qty`, média, estoque atual.
-- `updateStockCountItem(itemId, counted_qty)`.
-- `closeStockCount(sessionId)` — valida 100% contado, grava `inventory_movements` para diferenças, fecha sessão.
-- `findWineByBarcode(code)` — usada pelo cadastro (validar duplicidade) e pela contagem (lookup do scanner).
+---
 
-### 7. Rotas e remoções
+## 4. Migração dos vinhos existentes
 
-- **Nova rota**: `src/routes/_app.app.stock-counts.tsx` (componente `StockCountSession`).
-- **Atualizar** tela de cadastro de Vinhos: campo `barcode` + botão "Escanear".
-- **Remover** aba/links "Movimento" do menu staff/restaurant em `src/routes/_app.tsx` e arquivos relacionados.
-- Tela de Vinhos (gestão) continua mostrando estoque, média de vendas e histórico — fora da tela de contagem.
+Registros atuais de `wines` viram `restaurant_wines` **sem `catalog_id`** (locais puros). Nada é compartilhado automaticamente; você decide na curadoria, depois, quais promover ao catálogo global.
 
-### Fora de escopo nesta etapa
+---
 
-Taças, refinamento de Vendas, contagem parcial por seção/área da adega, foto por garrafa contada, notificações.
+## 5. Detalhes técnicos
+
+- **Enum `app_role`**: adicionar `rest_admin`, `rest_owner`; manter `restaurant` como deprecado por compatibilidade; migrar registros existentes para `rest_admin`.
+- **Trigger `handle_new_user`**: atualizar para atribuir `rest_admin` no signup.
+- **Funções**: `can_manage_restaurant(user, restaurant)`, `is_system_owner(user)`, manter `has_role` e `owns_restaurant`.
+- **Tela "Equipe"** (apenas Restaurant Admin): listar/criar/desativar contas de Owner e Staff do próprio restaurante. Criação usa Supabase Admin API via `createServerFn` autenticado que valida `rest_admin` antes de chamar `supabaseAdmin.auth.admin.createUser`.
+- **Painel `/app/admin/accounts`** (System Owner): mesma mecânica, mas global.
+- **Busca catálogo**: índice GIN `pg_trgm` em `name`/`producer`; índice único parcial em `barcode WHERE barcode IS NOT NULL`.
+- **Modo Owner**: estado em `localStorage` (`owner_active_mode`). RLS continua liberando tudo; controle é só de UX.
+
+---
+
+## 6. Fora de escopo desta fase
+- Reputação/uso de rótulos no catálogo
+- Notificações quando rótulo submetido é aprovado/rejeitado
+- Import em massa de catálogos externos
+- Aplicar lógica de catálogo global às outras categorias (Taças, Drinks)
+- Sugestões de melhoria de rótulos já aprovados

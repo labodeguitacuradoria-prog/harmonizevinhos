@@ -8,6 +8,13 @@ import { Plus, X, Wine as WineIcon, GlassWater, ScanLine } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 
+function isGlassVol(v: string | null | undefined) {
+  if (!v) return false;
+  const s = v.toLowerCase();
+  return s.includes("taça") || s.includes("taca");
+}
+
+
 export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,
 });
@@ -266,9 +273,9 @@ function WinesSection() {
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Estoque</div>
-                  <div className="text-base font-semibold leading-none">{stockMap[w.id] ?? 0}</div>
+                  <div className="text-base font-semibold leading-none">{isGlassVol(w.volume) ? "—" : (stockMap[w.id] ?? 0)}</div>
                   <div className="mt-1 text-[10px] text-muted-foreground">
-                    Mês: <span className="font-medium text-foreground">{monthlySalesMap[w.id] ?? 0}</span>
+                    Mês: <span className="font-medium text-foreground">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</span>
                   </div>
                 </div>
               </div>
@@ -323,8 +330,8 @@ function WinesSection() {
                   <td className="px-4 py-3">R$ {Number(w.cost_price).toFixed(2)}</td>
                   <td className="px-4 py-3">R$ {Number(w.sale_price).toFixed(2)}</td>
                   <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>
-                  <td className="px-4 py-3">{stockMap[w.id] ?? 0}</td>
-                  <td className="px-4 py-3">{monthlySalesMap[w.id] ?? 0}</td>
+                  <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (stockMap[w.id] ?? 0)}</td>
+                  <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</td>
                 </tr>
               );
             })}

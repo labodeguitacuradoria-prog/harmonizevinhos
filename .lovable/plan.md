@@ -1,22 +1,37 @@
-## Mudança
+## Correções na Contagem de Estoque
 
-Na página `/app/wines`, a coluna "Venda mensal" (e o card mobile "Mês") passa a mostrar a **média mensal de vendas dos últimos 12 meses** em vez do total do mês corrente.
+### a) Excluir produtos servidos por taça
+- Itens cujo `volume` contém "Taça" / "Taca" são consumo aberto, não rótulo fechado.
+- Em `startSession()` filtrar `wines` excluindo esses volumes antes de gerar `stock_count_items`.
+- Em "Cadastro de Produtos" também esconder a coluna estoque para esses itens (apenas visual).
 
-## Regra de cálculo
+### b) Código do restaurante visível no card de contagem
+- Mostrar `internal_code` (se houver) como pílula compacta no canto esquerdo do nome do rótulo: `[A12] Nome do vinho`.
+- Mesma pílula no topo do scanner-jump e quando contado.
 
-Para cada rótulo:
+### c) Histórico das últimas 8 contagens lado a lado
+- Buscar as 8 sessões `closed` mais recentes do restaurante + a sessão atual em draft.
+- Para cada item exibir minicolunas à direita com a quantidade contada em cada data (cabeçalho = `dd/MM`), permitindo o staff já enxergar variações estranhas durante a contagem.
+- Layout horizontal com scroll-x apenas nessa faixa de números (não afeta o scroll vertical da página).
 
-1. Buscar em `inventory_movements` todos os registros com `movement_type = 'sale'` dos últimos 12 meses (a partir do 1º dia do mês 11 meses atrás até hoje).
-2. Agrupar as quantidades por mês (`YYYY-MM` de `occurred_at`).
-3. `média = soma das quantidades ÷ número de meses distintos com lançamento`.
-   - 1 mês lançado → mostra esse mês.
-   - 2 meses lançados → soma ÷ 2.
-   - 24 meses no banco → considera só os últimos 12 e divide por 12.
-   - Nenhum lançamento → mostra 0.
-4. Exibir arredondado (sem casas decimais) para manter visual limpo da tabela.
+### d) Rolagem + ordem/comportamento dos filtros
+- Causa do "não rola até o fim": footer `fixed` cobre os últimos itens. Trocar por `sticky bottom-0` dentro do container scrollável e o container raiz vira `h-full overflow-y-auto` (sem scroll preso em `flex-1` aninhado). Garante que todos os itens fiquem acessíveis.
+- Nova ordem dos chips: **Todos / Pendentes / Espumantes / Brancos / Rosés / Tintos / Fortificados / Outros**.
+- Adicionar "Outros" = qualquer `wine_type` que não seja um dos 5 tipos canônicos.
+- Em "Pendentes": ao apertar +/− pela primeira vez o item é marcado como contado mas **permanece visível na lista filtrada** até o staff trocar de filtro ou recarregar. Implementação: manter um `Set<string>` local de "ids tocados nesta visão" que sobrepõe o filtro `pending`. Assim apertar 0 não faz o card sumir.
 
-## Arquivo afetado
+### e) Reportar problemas durante a contagem
+Sem precisar abortar a contagem, o staff marca o item com um motivo e segue:
+- Adicionar coluna `flag` (`null | 'not_registered' | 'duplicate' | 'should_not_count' | 'other'`) e `flag_note` (texto) em `stock_count_items`.
+- Adicionar tabela `stock_count_issues` para problemas avulsos sem item correspondente (ex.: "achei rótulo X sem cadastro"), com `session_id`, `description`, `created_by`.
+- No card: ícone de bandeira (⚑) abre um popover pequeno com as opções acima + campo livre. Item sinalizado conta como "resolvido" para fins de fechamento (não bloqueia encerrar) e fica destacado em amarelo.
+- Botão "Reportar item não cadastrado" no header abre modal que grava em `stock_count_issues`.
+- Ao encerrar contagem: resumo mostrando todas as flags + issues para o gestor revisar; itens marcados como `should_not_count` ou `duplicate` **não geram movimento de ajuste** em `inventory_movements`.
 
-- `src/routes/_app.app.wines.tsx` — substituir a `useQuery` de `monthlySalesMap` pela nova lógica (janela de 12 meses + agrupamento por mês + média sobre meses distintos com dados).
+### Resumo técnico
+- **Migração**: `ALTER TABLE stock_count_items ADD COLUMN flag text, ADD COLUMN flag_note text;` + nova tabela `stock_count_issues` com RLS espelhando `stock_count_sessions` + GRANTs.
+- **`startSession`**: filtra wines com volume tipo taça.
+- **`CountSessionView`**: novo layout de scroll (sem `fixed` footer), filtros reordenados + "Outros", pendente com sticky-visible, colunas de histórico, pílula de código, popover de flag, modal de issue.
+- **Página "Produtos"**: ocultar coluna estoque / venda mensal? Não — manter, apenas excluir da contagem (item a).
 
-Sem mudanças de banco, sem mudanças em outras telas.
+Confirma para eu implementar?

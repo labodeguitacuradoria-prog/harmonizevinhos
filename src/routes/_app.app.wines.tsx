@@ -166,26 +166,34 @@ function WinesSection() {
   });
 
   const { data: monthlySalesMap = {} } = useQuery({
-    queryKey: ["monthly-sales-map", restaurantId],
+    queryKey: ["monthly-sales-avg-12m", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
       const now = new Date();
-      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+      const start = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString();
       const { data } = await supabase
         .from("inventory_movements")
-        .select("wine_id, quantity")
+        .select("wine_id, quantity, occurred_at")
         .eq("restaurant_id", restaurantId!)
         .eq("movement_type", "sale")
-        .gte("occurred_at", start)
-        .lte("occurred_at", end);
-      const map: Record<string, number> = {};
+        .gte("occurred_at", start);
+      const byWine: Record<string, Record<string, number>> = {};
       for (const m of data ?? []) {
-        map[m.wine_id] = (map[m.wine_id] ?? 0) + m.quantity;
+        const d = new Date(m.occurred_at as string);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        if (!byWine[m.wine_id]) byWine[m.wine_id] = {};
+        byWine[m.wine_id][key] = (byWine[m.wine_id][key] ?? 0) + m.quantity;
+      }
+      const map: Record<string, number> = {};
+      for (const wineId of Object.keys(byWine)) {
+        const months = Object.values(byWine[wineId]);
+        const total = months.reduce((a, b) => a + b, 0);
+        map[wineId] = months.length ? Math.round(total / months.length) : 0;
       }
       return map;
     },
   });
+
 
   const filteredWines = typeFilter === "Todos"
     ? wines

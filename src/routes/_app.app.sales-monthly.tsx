@@ -124,11 +124,26 @@ function MonthlySalesPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Vendas mensais</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Lance, para cada rótulo, a quantidade vendida no mês e o faturamento correspondente. O sistema usa esses dois números para calcular o preço médio histórico e a venda média mensal de cada rótulo — sem depender do preço atual.
+            {mode === "current"
+              ? "Lance a quantidade vendida de cada rótulo no mês. O faturamento é calculado pelo preço de venda atual cadastrado."
+              : "Carga histórica: informe quantidade e faturamento real do mês. O preço médio é calculado por rótulo (faturamento ÷ quantidade)."}
           </p>
-
         </div>
         <div className="flex flex-wrap items-end gap-3">
+          <div className="flex rounded-md border border-input bg-background p-0.5">
+            <button
+              onClick={() => setMode("current")}
+              className={`px-3 py-1.5 text-xs rounded ${mode === "current" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              Mês corrente
+            </button>
+            <button
+              onClick={() => setMode("historic")}
+              className={`px-3 py-1.5 text-xs rounded ${mode === "historic" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              Mês histórico
+            </button>
+          </div>
           <label className="block">
             <span className="text-xs text-muted-foreground">Mês de referência</span>
             <input
@@ -148,6 +163,7 @@ function MonthlySalesPage() {
           </button>
         </div>
       </div>
+
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Stat label="Linhas preenchidas" value={String(filled.length)} />

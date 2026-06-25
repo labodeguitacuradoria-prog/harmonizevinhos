@@ -130,20 +130,6 @@ function MonthlySalesPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-3">
-          <div className="flex rounded-md border border-input bg-background p-0.5">
-            <button
-              onClick={() => setMode("current")}
-              className={`px-3 py-1.5 text-xs rounded ${mode === "current" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-            >
-              Mês corrente
-            </button>
-            <button
-              onClick={() => setMode("historic")}
-              className={`px-3 py-1.5 text-xs rounded ${mode === "historic" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-            >
-              Mês histórico
-            </button>
-          </div>
           <label className="block">
             <span className="text-xs text-muted-foreground">Mês de referência</span>
             <input

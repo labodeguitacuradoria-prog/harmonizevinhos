@@ -8,6 +8,13 @@ import { Plus, X, Wine as WineIcon, GlassWater, ScanLine } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 
+function isGlassVol(v: string | null | undefined) {
+  if (!v) return false;
+  const s = v.toLowerCase();
+  return s.includes("taça") || s.includes("taca");
+}
+
+
 export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,
 });

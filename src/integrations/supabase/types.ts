@@ -282,12 +282,46 @@ export type Database = {
           },
         ]
       }
+      stock_count_issues: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_count_issues_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "stock_count_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_count_items: {
         Row: {
           counted_at: string | null
           counted_by: string | null
           counted_qty: number | null
           created_at: string
+          flag: string | null
+          flag_note: string | null
           id: string
           previous_qty: number
           session_id: string
@@ -299,6 +333,8 @@ export type Database = {
           counted_by?: string | null
           counted_qty?: number | null
           created_at?: string
+          flag?: string | null
+          flag_note?: string | null
           id?: string
           previous_qty?: number
           session_id: string
@@ -310,6 +346,8 @@ export type Database = {
           counted_by?: string | null
           counted_qty?: number | null
           created_at?: string
+          flag?: string | null
+          flag_note?: string | null
           id?: string
           previous_qty?: number
           session_id?: string

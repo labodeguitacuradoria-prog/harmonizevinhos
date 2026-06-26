@@ -188,6 +188,50 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_contacts: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          restaurant_id: string
+          role: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          restaurant_id: string
+          role?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          restaurant_id?: string
+          role?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_contacts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_groups: {
         Row: {
           created_at: string
@@ -254,33 +298,107 @@ export type Database = {
           },
         ]
       }
+      restaurant_wine_lists: {
+        Row: {
+          created_at: string
+          file_url: string
+          id: string
+          is_current: boolean | null
+          restaurant_id: string
+          version_label: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_url: string
+          id?: string
+          is_current?: boolean | null
+          restaurant_id: string
+          version_label?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_url?: string
+          id?: string
+          is_current?: boolean | null
+          restaurant_id?: string
+          version_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_wine_lists_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip_code: string | null
+          business_hours: string | null
           city: string | null
+          cnpj: string | null
           created_at: string
+          delivery_instructions: string | null
           group_id: string | null
           id: string
+          instagram: string | null
+          legal_name: string | null
           name: string
           owner_id: string
           updated_at: string
+          website: string | null
         }
         Insert: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip_code?: string | null
+          business_hours?: string | null
           city?: string | null
+          cnpj?: string | null
           created_at?: string
+          delivery_instructions?: string | null
           group_id?: string | null
           id?: string
+          instagram?: string | null
+          legal_name?: string | null
           name: string
           owner_id: string
           updated_at?: string
+          website?: string | null
         }
         Update: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip_code?: string | null
+          business_hours?: string | null
           city?: string | null
+          cnpj?: string | null
           created_at?: string
+          delivery_instructions?: string | null
           group_id?: string | null
           id?: string
+          instagram?: string | null
+          legal_name?: string | null
           name?: string
           owner_id?: string
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {
@@ -770,6 +888,13 @@ export type Database = {
       can_manage_restaurant: {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
+      }
+      get_last_closed_stock: {
+        Args: { p_restaurant_id: string }
+        Returns: {
+          last_qty: number
+          wine_id: string
+        }[]
       }
       has_role: {
         Args: {

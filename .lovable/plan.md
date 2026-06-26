@@ -1,37 +1,58 @@
-## Correções na Contagem de Estoque
+## Mudanças no fluxo de contagem e no cadastro de rótulos
 
-### a) Excluir produtos servidos por taça
-- Itens cujo `volume` contém "Taça" / "Taca" são consumo aberto, não rótulo fechado.
-- Em `startSession()` filtrar `wines` excluindo esses volumes antes de gerar `stock_count_items`.
-- Em "Cadastro de Produtos" também esconder a coluna estoque para esses itens (apenas visual).
+### Parte 1 — Admin pode revisar e corrigir contagens
 
-### b) Código do restaurante visível no card de contagem
-- Mostrar `internal_code` (se houver) como pílula compacta no canto esquerdo do nome do rótulo: `[A12] Nome do vinho`.
-- Mesma pílula no topo do scanner-jump e quando contado.
+A tela do staff (`/app/stock-counts`) **não muda**. Continua mobile, minimalista, salva e some.
 
-### c) Histórico das últimas 8 contagens lado a lado
-- Buscar as 8 sessões `closed` mais recentes do restaurante + a sessão atual em draft.
-- Para cada item exibir minicolunas à direita com a quantidade contada em cada data (cabeçalho = `dd/MM`), permitindo o staff já enxergar variações estranhas durante a contagem.
-- Layout horizontal com scroll-x apenas nessa faixa de números (não afeta o scroll vertical da página).
+Nova tela para admin: **`/app/stock-counts-admin`** (ou aba "Gerenciar contagens" dentro da página atual, visível só para rest_admin / rest_owner / admin).
 
-### d) Rolagem + ordem/comportamento dos filtros
-- Causa do "não rola até o fim": footer `fixed` cobre os últimos itens. Trocar por `sticky bottom-0` dentro do container scrollável e o container raiz vira `h-full overflow-y-auto` (sem scroll preso em `flex-1` aninhado). Garante que todos os itens fiquem acessíveis.
-- Nova ordem dos chips: **Todos / Pendentes / Espumantes / Brancos / Rosés / Tintos / Fortificados / Outros**.
-- Adicionar "Outros" = qualquer `wine_type` que não seja um dos 5 tipos canônicos.
-- Em "Pendentes": ao apertar +/− pela primeira vez o item é marcado como contado mas **permanece visível na lista filtrada** até o staff trocar de filtro ou recarregar. Implementação: manter um `Set<string>` local de "ids tocados nesta visão" que sobrepõe o filtro `pending`. Assim apertar 0 não faz o card sumir.
+O que ela faz:
 
-### e) Reportar problemas durante a contagem
-Sem precisar abortar a contagem, o staff marca o item com um motivo e segue:
-- Adicionar coluna `flag` (`null | 'not_registered' | 'duplicate' | 'should_not_count' | 'other'`) e `flag_note` (texto) em `stock_count_items`.
-- Adicionar tabela `stock_count_issues` para problemas avulsos sem item correspondente (ex.: "achei rótulo X sem cadastro"), com `session_id`, `description`, `created_by`.
-- No card: ícone de bandeira (⚑) abre um popover pequeno com as opções acima + campo livre. Item sinalizado conta como "resolvido" para fins de fechamento (não bloqueia encerrar) e fica destacado em amarelo.
-- Botão "Reportar item não cadastrado" no header abre modal que grava em `stock_count_issues`.
-- Ao encerrar contagem: resumo mostrando todas as flags + issues para o gestor revisar; itens marcados como `should_not_count` ou `duplicate` **não geram movimento de ajuste** em `inventory_movements`.
+- **Lista de sessões** — todas as contagens do restaurante (draft + closed), ordenadas por data, com colunas: data, status, quem fez, nº de itens contados, nº de flags/issues abertas.
+- **Abrir uma sessão** — mostra a contagem completa item por item (mesmo formato da tela do staff, mas em layout desktop tabular), com:
+  - editar quantidade inline (sobrescreve direto, sem log)
+  - remover a flag de um item (resolver "duplicado", "não cadastrado" etc.)
+  - excluir item da sessão (caso tenha entrado errado)
+  - excluir a sessão inteira
+- **Reabrir sessão fechada** — botão "Reabrir" muda status de `closed` para `draft`; admin corrige; fecha de novo. Ao fechar de novo, os movimentos de ajuste em `inventory_movements` são recalculados a partir das quantidades atuais (deleta os movimentos antigos da sessão e recria).
+- **Issues** — lista de `stock_count_issues` reportadas pelo staff, com botão "marcar como resolvida".
 
-### Resumo técnico
-- **Migração**: `ALTER TABLE stock_count_items ADD COLUMN flag text, ADD COLUMN flag_note text;` + nova tabela `stock_count_issues` com RLS espelhando `stock_count_sessions` + GRANTs.
-- **`startSession`**: filtra wines com volume tipo taça.
-- **`CountSessionView`**: novo layout de scroll (sem `fixed` footer), filtros reordenados + "Outros", pendente com sticky-visible, colunas de histórico, pílula de código, popover de flag, modal de issue.
-- **Página "Produtos"**: ocultar coluna estoque / venda mensal? Não — manter, apenas excluir da contagem (item a).
+### Parte 2 — Status do rótulo: dois flags separados
+
+Adicionar duas colunas em `wines`:
+
+- `active_on_menu` (boolean, default true) — aparece como ativo na carta do restaurante.
+- `count_in_stock` (boolean, default true) — entra na lista de contagem do staff.
+
+No formulário de cadastro/edição de produto (`/app/wines`), nova seção "Status":
+
+- ☑ Ativo na carta
+- ☑ Contar no estoque
+
+Comportamento em cada tela:
+
+| Tela | Filtro |
+|---|---|
+| **Lista de produtos** | Mostra todos, com chip extra "Apenas ativos na carta" ligado por padrão. Coluna visual indicando inativo/arquivado. |
+| **Contagem do staff** | Só `count_in_stock = true` E volume ≠ taça (regra atual continua). |
+| **Contagem admin** | Igual ao staff (não faz sentido mostrar item que ninguém vai contar). |
+| **Venda mensal** | Mostra todos sempre, conforme decidido. Itens inativos/arquivados ganham marcador visual discreto ("arquivado") para o usuário saber. |
+| **Vendas / Dashboards** | Sem filtro — venda histórica de qualquer rótulo continua valendo. |
+
+### Detalhes técnicos
+
+**Migração:**
+- `ALTER TABLE public.wines ADD COLUMN active_on_menu boolean NOT NULL DEFAULT true, ADD COLUMN count_in_stock boolean NOT NULL DEFAULT true;`
+- Novas policies em `stock_count_sessions` e `stock_count_items` permitindo UPDATE/DELETE para `can_manage_restaurant(auth.uid(), restaurant_id)` (hoje só o autor edita).
+- Policy de UPDATE em `stock_count_issues` para admin marcar como resolvida (adicionar coluna `resolved_at timestamptz`).
+
+**Frontend:**
+- Nova rota `src/routes/_app.app.stock-counts-admin.tsx` (ou um modo "admin view" dentro da rota existente, com base no role do usuário) — lista de sessões + visão detalhada editável + ação de reabrir/fechar.
+- Ao **fechar** uma sessão reaberta: deletar movimentos de ajuste antigos vinculados a essa sessão e gerar novos a partir das quantidades atuais.
+- `src/routes/_app.app.wines.tsx`: adicionar checkboxes "Ativo na carta" / "Contar no estoque" no formulário; chip de filtro "Apenas ativos na carta" na lista; badge "arquivado" quando ambos falsos.
+- `src/routes/_app.app.sales-monthly.tsx`: badge visual discreto em rótulos com `active_on_menu = false`.
+- `src/routes/_app.app.stock-counts.tsx` (staff): adicionar filtro `count_in_stock = true` ao gerar `stock_count_items` na `startSession`.
+
+**Sidebar:** novo link "Gerenciar contagens" visível só para admin/owner.
 
 Confirma para eu implementar?

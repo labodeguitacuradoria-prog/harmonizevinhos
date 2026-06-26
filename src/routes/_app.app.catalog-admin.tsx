@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Database, Search, Plus, Edit, Trash2, Filter } from "lucide-react";
+import { Database, Search, Plus, Edit, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/catalog-admin")({
   component: CatalogAdmin,
@@ -13,10 +13,10 @@ type WineCatalog = {
   producer: string | null;
   region: string | null;
   country: string | null;
-  grapes: string | null;
+  grape: string | null;
   wine_type: string | null;
   volume: string | null;
-  sensory_notes: string | null;
+  tasting_notes: string | null;
   pairing_notes: string | null;
   aging: string | null;
   image_url: string | null;
@@ -35,18 +35,18 @@ function CatalogAdmin() {
   async function fetchCatalog() {
     setLoading(true);
     const { data, error } = await supabase.from("wine_catalog").select("*").order("name", { ascending: true });
-    if (data) setItems(data);
+    if (data) setItems(data as WineCatalog[]);
     setLoading(false);
   }
 
   async function handleSave() {
-    if (!editingItem) return;
+    if (!editingItem || !editingItem.name) return;
     
     if (editingItem.id) {
-      const { error } = await supabase.from("wine_catalog").update(editingItem).eq("id", editingItem.id);
+      const { error } = await supabase.from("wine_catalog").update(editingItem as any).eq("id", editingItem.id);
       if (error) alert(error.message);
     } else {
-      const { error } = await supabase.from("wine_catalog").insert(editingItem);
+      const { error } = await supabase.from("wine_catalog").insert([editingItem as any]);
       if (error) alert(error.message);
     }
     
@@ -110,7 +110,7 @@ function CatalogAdmin() {
                 <td className="px-4 py-3 font-medium">{item.name}</td>
                 <td className="px-4 py-3">{item.producer}</td>
                 <td className="px-4 py-3">{item.region}, {item.country}</td>
-                <td className="px-4 py-3">{item.grapes}</td>
+                <td className="px-4 py-3">{item.grape}</td>
                 <td className="px-4 py-3">{item.volume}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-2">
@@ -141,7 +141,15 @@ function CatalogAdmin() {
       {editingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-lg">
-            <h3 className="mb-6 text-xl font-bold">{editingItem.id ? "Editar Rótulo" : "Novo Rótulo"}</h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold">{editingItem.id ? "Editar Rótulo" : "Novo Rótulo"}</h3>
+              <button 
+                onClick={() => setEditingItem(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="grid gap-2">
                 <label className="text-xs font-medium uppercase text-muted-foreground">Nome do Rótulo</label>
@@ -178,8 +186,8 @@ function CatalogAdmin() {
               <div className="grid gap-2">
                 <label className="text-xs font-medium uppercase text-muted-foreground">Uvas</label>
                 <input 
-                  value={editingItem.grapes || ""} 
-                  onChange={e => setEditingItem({ ...editingItem, grapes: e.target.value })}
+                  value={editingItem.grape || ""} 
+                  onChange={e => setEditingItem({ ...editingItem, grape: e.target.value })}
                   className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
               </div>
@@ -217,10 +225,10 @@ function CatalogAdmin() {
                 />
               </div>
               <div className="col-span-2 grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">Notas Sensoriais</label>
+                <label className="text-xs font-medium uppercase text-muted-foreground">Notas de Degustação</label>
                 <textarea 
-                  value={editingItem.sensory_notes || ""} 
-                  onChange={e => setEditingItem({ ...editingItem, sensory_notes: e.target.value })}
+                  value={editingItem.tasting_notes || ""} 
+                  onChange={e => setEditingItem({ ...editingItem, tasting_notes: e.target.value })}
                   className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
               </div>
@@ -229,6 +237,14 @@ function CatalogAdmin() {
                 <textarea 
                   value={editingItem.pairing_notes || ""} 
                   onChange={e => setEditingItem({ ...editingItem, pairing_notes: e.target.value })}
+                  className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="col-span-2 grid gap-2">
+                <label className="text-xs font-medium uppercase text-muted-foreground">Elaboração e Maturação</label>
+                <textarea 
+                  value={editingItem.aging || ""} 
+                  onChange={e => setEditingItem({ ...editingItem, aging: e.target.value })}
                   className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
               </div>

@@ -14,6 +14,22 @@ function isGlassVol(v: string | null | undefined) {
   return s.includes("taça") || s.includes("taca");
 }
 
+function WineStatusBadge({ wine }: { wine: { active_on_menu: boolean; count_in_stock: boolean } }) {
+  if (wine.active_on_menu) return null;
+  const archived = !wine.count_in_stock;
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+        archived
+          ? "bg-muted text-muted-foreground"
+          : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+      }`}
+    >
+      {archived ? "Arquivado" : "Fora da carta"}
+    </span>
+  );
+}
+
 
 export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,

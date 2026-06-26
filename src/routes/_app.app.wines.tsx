@@ -567,6 +567,35 @@ function WineForm({
                 </button>
               </div>
             </label>
+            <div className="sm:col-span-2 mt-2 rounded-md border border-border bg-muted/30 p-3">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={f.active_on_menu}
+                    onChange={(e) => setF({ ...f, active_on_menu: e.target.checked })}
+                    className="mt-0.5 h-4 w-4"
+                  />
+                  <span>
+                    <span className="font-medium">Ativo na carta</span>
+                    <span className="block text-xs text-muted-foreground">Aparece como rótulo disponível para venda.</span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={f.count_in_stock}
+                    onChange={(e) => setF({ ...f, count_in_stock: e.target.checked })}
+                    className="mt-0.5 h-4 w-4"
+                  />
+                  <span>
+                    <span className="font-medium">Contar no estoque</span>
+                    <span className="block text-xs text-muted-foreground">Entra na lista da contagem do staff.</span>
+                  </span>
+                </label>
+              </div>
+            </div>
           </div>
         )}
         {scanOpen && (

@@ -241,7 +241,7 @@ function CatalogAdmin() {
                 />
               </div>
               <div className="col-span-2 grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">Elaboração e Maturação</label>
+                <span className="text-xs font-medium uppercase text-muted-foreground">Elaboração e Maturação</span>
                 <textarea 
                   value={editingItem.aging || ""} 
                   onChange={e => setEditingItem({ ...editingItem, aging: e.target.value })}

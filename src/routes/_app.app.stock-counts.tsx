@@ -114,14 +114,16 @@ function StockCountPage() {
     const [{ data: wines }, { data: movs }] = await Promise.all([
       supabase
         .from("wines")
-        .select("id, volume")
+        .select("id, volume, count_in_stock")
         .eq("restaurant_id", restaurantId),
       supabase
         .from("inventory_movements")
         .select("wine_id, movement_type, quantity")
         .eq("restaurant_id", restaurantId),
     ]);
-    const countable = (wines ?? []).filter((w) => !isGlassVolume(w.volume));
+    const countable = (wines ?? []).filter(
+      (w) => !isGlassVolume(w.volume) && w.count_in_stock !== false,
+    );
     if (countable.length === 0) {
       toast.error(
         "Nenhum rótulo de garrafa cadastrado. Itens vendidos em taça não entram na contagem.",
@@ -408,6 +410,7 @@ function CountSessionView({ session }: { session: Session }) {
               quantity: diff,
               notes: `Ajuste por contagem (${session.reference_date})`,
               created_by: user?.id ?? null,
+              source_session_id: session.id,
             }
           : null;
       })

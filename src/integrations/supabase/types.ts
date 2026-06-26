@@ -80,6 +80,7 @@ export type Database = {
           occurred_at: string
           quantity: number
           restaurant_id: string
+          source_session_id: string | null
           unit_cost: number | null
           unit_price: number | null
           wine_id: string
@@ -93,6 +94,7 @@ export type Database = {
           occurred_at?: string
           quantity: number
           restaurant_id: string
+          source_session_id?: string | null
           unit_cost?: number | null
           unit_price?: number | null
           wine_id: string
@@ -106,6 +108,7 @@ export type Database = {
           occurred_at?: string
           quantity?: number
           restaurant_id?: string
+          source_session_id?: string | null
           unit_cost?: number | null
           unit_price?: number | null
           wine_id?: string
@@ -116,6 +119,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_source_session_id_fkey"
+            columns: ["source_session_id"]
+            isOneToOne: false
+            referencedRelation: "stock_count_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -288,6 +298,8 @@ export type Database = {
           created_by: string | null
           description: string
           id: string
+          resolved_at: string | null
+          resolved_by: string | null
           session_id: string
         }
         Insert: {
@@ -295,6 +307,8 @@ export type Database = {
           created_by?: string | null
           description: string
           id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
           session_id: string
         }
         Update: {
@@ -302,6 +316,8 @@ export type Database = {
           created_by?: string | null
           description?: string
           id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
           session_id?: string
         }
         Relationships: [
@@ -609,6 +625,7 @@ export type Database = {
       wines: {
         Row: {
           acidity: string | null
+          active_on_menu: boolean
           aging: string | null
           alcohol_pct: number | null
           awards: string[] | null
@@ -616,6 +633,7 @@ export type Database = {
           body: string | null
           catalog_id: string | null
           cost_price: number
+          count_in_stock: boolean
           country: string | null
           created_at: string
           gallery_urls: string[] | null
@@ -644,6 +662,7 @@ export type Database = {
         }
         Insert: {
           acidity?: string | null
+          active_on_menu?: boolean
           aging?: string | null
           alcohol_pct?: number | null
           awards?: string[] | null
@@ -651,6 +670,7 @@ export type Database = {
           body?: string | null
           catalog_id?: string | null
           cost_price?: number
+          count_in_stock?: boolean
           country?: string | null
           created_at?: string
           gallery_urls?: string[] | null
@@ -679,6 +699,7 @@ export type Database = {
         }
         Update: {
           acidity?: string | null
+          active_on_menu?: boolean
           aging?: string | null
           alcohol_pct?: number | null
           awards?: string[] | null
@@ -686,6 +707,7 @@ export type Database = {
           body?: string | null
           catalog_id?: string | null
           cost_price?: number
+          count_in_stock?: boolean
           country?: string | null
           created_at?: string
           gallery_urls?: string[] | null

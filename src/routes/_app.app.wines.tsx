@@ -14,6 +14,22 @@ function isGlassVol(v: string | null | undefined) {
   return s.includes("taça") || s.includes("taca");
 }
 
+function WineStatusBadge({ wine }: { wine: { active_on_menu: boolean; count_in_stock: boolean } }) {
+  if (wine.active_on_menu) return null;
+  const archived = !wine.count_in_stock;
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+        archived
+          ? "bg-muted text-muted-foreground"
+          : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+      }`}
+    >
+      {archived ? "Arquivado" : "Fora da carta"}
+    </span>
+  );
+}
+
 
 export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,
@@ -49,6 +65,8 @@ type Wine = {
   tech_sheet_url: string | null;
   video_url: string | null;
   barcode: string | null;
+  active_on_menu: boolean;
+  count_in_stock: boolean;
 };
 
 type Glass = {
@@ -132,6 +150,7 @@ function WinesSection() {
   const [showForm, setShowForm] = useState(false);
   const [editWine, setEditWine] = useState<Wine | null>(null);
   const [typeFilter, setTypeFilter] = useState<string>("Todos");
+  const [onlyActive, setOnlyActive] = useState<boolean>(true);
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wines", restaurantId],
@@ -202,14 +221,15 @@ function WinesSection() {
   });
 
 
-  const filteredWines = typeFilter === "Todos"
+  const filteredWines = (typeFilter === "Todos"
     ? wines
     : typeFilter === "Outros"
       ? wines.filter((w) => {
           const label = wineTypeLabel(w.wine_type);
           return label !== "-" && !CORE_WINE_TYPES.includes(label);
         })
-      : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter);
+      : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter)
+  ).filter((w) => (onlyActive ? w.active_on_menu : true));
 
   return (
     <div>
@@ -228,6 +248,15 @@ function WinesSection() {
               {t}
             </button>
           ))}
+          <label className="ml-2 flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={onlyActive}
+              onChange={(e) => setOnlyActive(e.target.checked)}
+              className="h-3.5 w-3.5"
+            />
+            Apenas ativos na carta
+          </label>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -260,7 +289,10 @@ function WinesSection() {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{w.name}</div>
+                  <div className="flex items-center gap-1.5 truncate text-sm font-medium">
+                    <span className="truncate">{w.name}</span>
+                    {!w.active_on_menu && <WineStatusBadge wine={w} />}
+                  </div>
                   <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
                     {[w.internal_code, w.producer, w.vintage].filter(Boolean).join(" · ") || "-"}
                   </div>
@@ -319,7 +351,10 @@ function WinesSection() {
                     <button type="button" onClick={() => setEditWine(w)} className="flex items-center gap-2 text-left hover:text-primary">
                       {w.image_url && <img src={w.image_url} alt="" className="h-8 w-8 rounded object-cover" />}
                       <div>
-                        <div className="font-medium underline-offset-2 hover:underline">{w.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium underline-offset-2 hover:underline">{w.name}</span>
+                          {!w.active_on_menu && <WineStatusBadge wine={w} />}
+                        </div>
                         <div className="text-xs text-muted-foreground">{w.producer ?? ""}</div>
                       </div>
                     </button>
@@ -410,6 +445,8 @@ function WineForm({
     tasting_notes: wine?.tasting_notes ?? "",
     awards: (wine?.awards ?? []).join(", "),
     barcode: wine?.barcode ?? "",
+    active_on_menu: wine?.active_on_menu ?? true,
+    count_in_stock: wine?.count_in_stock ?? true,
   });
   const [scanOpen, setScanOpen] = useState(false);
   const [image, setImage] = useState<string | null>(wine?.image_url ?? null);
@@ -454,6 +491,8 @@ function WineForm({
       tech_sheet_url: techSheet,
       video_url: videoUrl.trim() || null,
       barcode: f.barcode.trim() || null,
+      active_on_menu: f.active_on_menu,
+      count_in_stock: f.count_in_stock,
     };
     const { error } = isEdit
       ? await supabase.from("wines").update(payload).eq("id", wine!.id)
@@ -544,6 +583,35 @@ function WineForm({
                 </button>
               </div>
             </label>
+            <div className="sm:col-span-2 mt-2 rounded-md border border-border bg-muted/30 p-3">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={f.active_on_menu}
+                    onChange={(e) => setF({ ...f, active_on_menu: e.target.checked })}
+                    className="mt-0.5 h-4 w-4"
+                  />
+                  <span>
+                    <span className="font-medium">Ativo na carta</span>
+                    <span className="block text-xs text-muted-foreground">Aparece como rótulo disponível para venda.</span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={f.count_in_stock}
+                    onChange={(e) => setF({ ...f, count_in_stock: e.target.checked })}
+                    className="mt-0.5 h-4 w-4"
+                  />
+                  <span>
+                    <span className="font-medium">Contar no estoque</span>
+                    <span className="block text-xs text-muted-foreground">Entra na lista da contagem do staff.</span>
+                  </span>
+                </label>
+              </div>
+            </div>
           </div>
         )}
         {scanOpen && (

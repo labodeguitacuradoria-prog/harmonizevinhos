@@ -111,16 +111,13 @@ function StockCountPage() {
 
   async function startSession() {
     if (!restaurantId || !user) return;
-    const [{ data: wines }, { data: movs }] = await Promise.all([
-      supabase
+    const { data: wines } = await supabase
         .from("wines")
         .select("id, volume, count_in_stock")
-        .eq("restaurant_id", restaurantId),
-      supabase
-        .from("inventory_movements")
-        .select("wine_id, movement_type, quantity")
-        .eq("restaurant_id", restaurantId),
-    ]);
+        .eq("restaurant_id", restaurantId);
+        
+    const { data: lastStock } = await supabase.rpc('get_last_closed_stock', { p_restaurant_id: restaurantId });
+    
     const countable = (wines ?? []).filter(
       (w) => !isGlassVolume(w.volume) && w.count_in_stock !== false,
     );
@@ -131,10 +128,10 @@ function StockCountPage() {
       return;
     }
     const stock: Record<string, number> = {};
-    for (const m of movs ?? []) {
-      const sign = m.movement_type === "sale" ? -1 : 1;
-      stock[m.wine_id] = (stock[m.wine_id] ?? 0) + sign * m.quantity;
-    }
+    (lastStock || []).forEach((row: any) => {
+      stock[row.wine_id] = row.last_qty;
+    });
+
     const { data: newSession, error } = await supabase
       .from("stock_count_sessions")
       .insert({ restaurant_id: restaurantId, started_by: user.id })

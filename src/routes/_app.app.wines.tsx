@@ -628,7 +628,7 @@ function WineForm({
             <SelectField label="Corpo" value={f.body} options={BODY} onChange={(v) => setF({ ...f, body: v })} />
             <SelectField label="Taninos" value={f.tannin} options={INTENSITY} onChange={(v) => setF({ ...f, tannin: v })} />
             <SelectField label="Acidez" value={f.acidity} options={INTENSITY} onChange={(v) => setF({ ...f, acidity: v })} />
-            <Field label="Envelhecimento" value={f.aging} onChange={(v) => setF({ ...f, aging: v })} />
+            <Field label="Elaboração e Maturação" value={f.aging} onChange={(v) => setF({ ...f, aging: v })} />
             <Field label="Temp. mín. serviço (°C)" type="number" value={f.serving_temp_min} onChange={(v) => setF({ ...f, serving_temp_min: v })} />
             <Field label="Temp. máx. serviço (°C)" type="number" value={f.serving_temp_max} onChange={(v) => setF({ ...f, serving_temp_max: v })} />
             <TextArea label="Notas de degustação" value={f.tasting_notes} onChange={(v) => setF({ ...f, tasting_notes: v })} className="sm:col-span-2" />

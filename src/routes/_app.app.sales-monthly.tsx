@@ -19,6 +19,7 @@ type WineRow = {
   internal_code: string | null;
   sale_price: number;
   cost_price: number;
+  active_on_menu: boolean;
 };
 
 function todayMonth() {
@@ -43,7 +44,7 @@ function MonthlySalesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("wines")
-        .select("id, name, producer, vintage, volume, internal_code, sale_price, cost_price")
+        .select("id, name, producer, vintage, volume, internal_code, sale_price, cost_price, active_on_menu")
         .eq("restaurant_id", restaurantId!)
         .order("name");
       if (error) throw error;
@@ -205,7 +206,14 @@ function MonthlySalesPage() {
                 <tr key={w.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{w.internal_code ?? "-"}</td>
                   <td className="px-4 py-2">
-                    <div className="font-medium">{w.name}</div>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span>{w.name}</span>
+                      {!w.active_on_menu && (
+                        <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          Arquivado
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {w.producer ?? ""}{w.vintage ? ` · ${w.vintage}` : ""}
                     </div>

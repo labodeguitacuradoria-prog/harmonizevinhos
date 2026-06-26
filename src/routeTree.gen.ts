@@ -16,6 +16,7 @@ import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.ind
 import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
+import { Route as AppAppStockCountsAdminRouteImport } from './routes/_app.app.stock-counts-admin'
 import { Route as AppAppStockCountsRouteImport } from './routes/_app.app.stock-counts'
 import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
 import { Route as AppAppSalesMonthlyRouteImport } from './routes/_app.app.sales-monthly'
@@ -56,6 +57,11 @@ const AppAppWinesRoute = AppAppWinesRouteImport.update({
   path: '/app/wines',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppStockCountsAdminRoute = AppAppStockCountsAdminRouteImport.update({
+  id: '/app/stock-counts-admin',
+  path: '/app/stock-counts-admin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAppStockCountsRoute = AppAppStockCountsRouteImport.update({
   id: '/app/stock-counts',
   path: '/app/stock-counts',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
   '/app/sharing': typeof AppAppSharingRoute
   '/app/stock-counts': typeof AppAppStockCountsRoute
+  '/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
   '/app/wines': typeof AppAppWinesRoute
   '/admin/': typeof AppAdminIndexRoute
   '/app/': typeof AppAppIndexRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
   '/app/sharing': typeof AppAppSharingRoute
   '/app/stock-counts': typeof AppAppStockCountsRoute
+  '/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
   '/app/wines': typeof AppAppWinesRoute
   '/admin': typeof AppAdminIndexRoute
   '/app': typeof AppAppIndexRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_app/app/sales-monthly': typeof AppAppSalesMonthlyRoute
   '/_app/app/sharing': typeof AppAppSharingRoute
   '/_app/app/stock-counts': typeof AppAppStockCountsRoute
+  '/_app/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
   '/_app/app/wines': typeof AppAppWinesRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/app/': typeof AppAppIndexRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/app/sales-monthly'
     | '/app/sharing'
     | '/app/stock-counts'
+    | '/app/stock-counts-admin'
     | '/app/wines'
     | '/admin/'
     | '/app/'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/app/sales-monthly'
     | '/app/sharing'
     | '/app/stock-counts'
+    | '/app/stock-counts-admin'
     | '/app/wines'
     | '/admin'
     | '/app'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/_app/app/sales-monthly'
     | '/_app/app/sharing'
     | '/_app/app/stock-counts'
+    | '/_app/app/stock-counts-admin'
     | '/_app/app/wines'
     | '/_app/admin/'
     | '/_app/app/'
@@ -223,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppWinesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/stock-counts-admin': {
+      id: '/_app/app/stock-counts-admin'
+      path: '/app/stock-counts-admin'
+      fullPath: '/app/stock-counts-admin'
+      preLoaderRoute: typeof AppAppStockCountsAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/stock-counts': {
       id: '/_app/app/stock-counts'
       path: '/app/stock-counts'
@@ -267,6 +286,7 @@ interface AppRouteChildren {
   AppAppSalesMonthlyRoute: typeof AppAppSalesMonthlyRoute
   AppAppSharingRoute: typeof AppAppSharingRoute
   AppAppStockCountsRoute: typeof AppAppStockCountsRoute
+  AppAppStockCountsAdminRoute: typeof AppAppStockCountsAdminRoute
   AppAppWinesRoute: typeof AppAppWinesRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppAppIndexRoute: typeof AppAppIndexRoute
@@ -279,6 +299,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppSalesMonthlyRoute: AppAppSalesMonthlyRoute,
   AppAppSharingRoute: AppAppSharingRoute,
   AppAppStockCountsRoute: AppAppStockCountsRoute,
+  AppAppStockCountsAdminRoute: AppAppStockCountsAdminRoute,
   AppAppWinesRoute: AppAppWinesRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
   AppAppIndexRoute: AppAppIndexRoute,

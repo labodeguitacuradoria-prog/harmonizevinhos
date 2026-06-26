@@ -22,6 +22,7 @@ import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
 import { Route as AppAppSalesMonthlyRouteImport } from './routes/_app.app.sales-monthly'
 import { Route as AppAppSalesRouteImport } from './routes/_app.app.sales'
 import { Route as AppAppRestaurantProfileRouteImport } from './routes/_app.app.restaurant-profile'
+import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
 
 const AuthRoute = AuthRouteImport.update({
@@ -88,6 +89,11 @@ const AppAppRestaurantProfileRoute = AppAppRestaurantProfileRouteImport.update({
   path: '/app/restaurant-profile',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppCatalogAdminRoute = AppAppCatalogAdminRouteImport.update({
+  id: '/app/catalog-admin',
+  path: '/app/catalog-admin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminSuppliersRoute = AppAdminSuppliersRouteImport.update({
   id: '/admin/suppliers',
   path: '/admin/suppliers',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/_app/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/_app/app/sales': typeof AppAppSalesRoute
   '/_app/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin/suppliers'
+    | '/app/catalog-admin'
     | '/app/restaurant-profile'
     | '/app/sales'
     | '/app/sales-monthly'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin/suppliers'
+    | '/app/catalog-admin'
     | '/app/restaurant-profile'
     | '/app/sales'
     | '/app/sales-monthly'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/auth'
     | '/_app/admin/suppliers'
+    | '/_app/app/catalog-admin'
     | '/_app/app/restaurant-profile'
     | '/_app/app/sales'
     | '/_app/app/sales-monthly'
@@ -289,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppRestaurantProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/catalog-admin': {
+      id: '/_app/app/catalog-admin'
+      path: '/app/catalog-admin'
+      fullPath: '/app/catalog-admin'
+      preLoaderRoute: typeof AppAppCatalogAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin/suppliers': {
       id: '/_app/admin/suppliers'
       path: '/admin/suppliers'
@@ -301,6 +320,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
+  AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
   AppAppRestaurantProfileRoute: typeof AppAppRestaurantProfileRoute
   AppAppSalesRoute: typeof AppAppSalesRoute
   AppAppSalesMonthlyRoute: typeof AppAppSalesMonthlyRoute
@@ -315,6 +335,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdminSuppliersRoute: AppAdminSuppliersRoute,
+  AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,
   AppAppRestaurantProfileRoute: AppAppRestaurantProfileRoute,
   AppAppSalesRoute: AppAppSalesRoute,
   AppAppSalesMonthlyRoute: AppAppSalesMonthlyRoute,

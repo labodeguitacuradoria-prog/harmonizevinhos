@@ -49,6 +49,8 @@ type Wine = {
   tech_sheet_url: string | null;
   video_url: string | null;
   barcode: string | null;
+  active_on_menu: boolean;
+  count_in_stock: boolean;
 };
 
 type Glass = {
@@ -132,6 +134,7 @@ function WinesSection() {
   const [showForm, setShowForm] = useState(false);
   const [editWine, setEditWine] = useState<Wine | null>(null);
   const [typeFilter, setTypeFilter] = useState<string>("Todos");
+  const [onlyActive, setOnlyActive] = useState<boolean>(true);
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wines", restaurantId],
@@ -202,14 +205,15 @@ function WinesSection() {
   });
 
 
-  const filteredWines = typeFilter === "Todos"
+  const filteredWines = (typeFilter === "Todos"
     ? wines
     : typeFilter === "Outros"
       ? wines.filter((w) => {
           const label = wineTypeLabel(w.wine_type);
           return label !== "-" && !CORE_WINE_TYPES.includes(label);
         })
-      : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter);
+      : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter)
+  ).filter((w) => (onlyActive ? w.active_on_menu : true));
 
   return (
     <div>

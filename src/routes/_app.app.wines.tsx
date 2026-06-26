@@ -273,7 +273,10 @@ function WinesSection() {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{w.name}</div>
+                  <div className="flex items-center gap-1.5 truncate text-sm font-medium">
+                    <span className="truncate">{w.name}</span>
+                    {!w.active_on_menu && <WineStatusBadge wine={w} />}
+                  </div>
                   <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
                     {[w.internal_code, w.producer, w.vintage].filter(Boolean).join(" · ") || "-"}
                   </div>
@@ -332,7 +335,10 @@ function WinesSection() {
                     <button type="button" onClick={() => setEditWine(w)} className="flex items-center gap-2 text-left hover:text-primary">
                       {w.image_url && <img src={w.image_url} alt="" className="h-8 w-8 rounded object-cover" />}
                       <div>
-                        <div className="font-medium underline-offset-2 hover:underline">{w.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium underline-offset-2 hover:underline">{w.name}</span>
+                          {!w.active_on_menu && <WineStatusBadge wine={w} />}
+                        </div>
                         <div className="text-xs text-muted-foreground">{w.producer ?? ""}</div>
                       </div>
                     </button>

@@ -232,6 +232,15 @@ function WinesSection() {
               {t}
             </button>
           ))}
+          <label className="ml-2 flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={onlyActive}
+              onChange={(e) => setOnlyActive(e.target.checked)}
+              className="h-3.5 w-3.5"
+            />
+            Apenas ativos na carta
+          </label>
         </div>
         <button
           onClick={() => setShowForm(true)}

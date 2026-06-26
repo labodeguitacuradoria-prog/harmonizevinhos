@@ -21,6 +21,7 @@ import { Route as AppAppStockCountsRouteImport } from './routes/_app.app.stock-c
 import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
 import { Route as AppAppSalesMonthlyRouteImport } from './routes/_app.app.sales-monthly'
 import { Route as AppAppSalesRouteImport } from './routes/_app.app.sales'
+import { Route as AppAppRestaurantProfileRouteImport } from './routes/_app.app.restaurant-profile'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
 
 const AuthRoute = AuthRouteImport.update({
@@ -82,6 +83,11 @@ const AppAppSalesRoute = AppAppSalesRouteImport.update({
   path: '/app/sales',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppRestaurantProfileRoute = AppAppRestaurantProfileRouteImport.update({
+  id: '/app/restaurant-profile',
+  path: '/app/restaurant-profile',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminSuppliersRoute = AppAdminSuppliersRouteImport.update({
   id: '/admin/suppliers',
   path: '/admin/suppliers',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
   '/app/sharing': typeof AppAppSharingRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
   '/app/sharing': typeof AppAppSharingRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/_app/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/_app/app/sales': typeof AppAppSalesRoute
   '/_app/app/sales-monthly': typeof AppAppSalesMonthlyRoute
   '/_app/app/sharing': typeof AppAppSharingRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin/suppliers'
+    | '/app/restaurant-profile'
     | '/app/sales'
     | '/app/sales-monthly'
     | '/app/sharing'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin/suppliers'
+    | '/app/restaurant-profile'
     | '/app/sales'
     | '/app/sales-monthly'
     | '/app/sharing'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/auth'
     | '/_app/admin/suppliers'
+    | '/_app/app/restaurant-profile'
     | '/_app/app/sales'
     | '/_app/app/sales-monthly'
     | '/_app/app/sharing'
@@ -270,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppSalesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/restaurant-profile': {
+      id: '/_app/app/restaurant-profile'
+      path: '/app/restaurant-profile'
+      fullPath: '/app/restaurant-profile'
+      preLoaderRoute: typeof AppAppRestaurantProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin/suppliers': {
       id: '/_app/admin/suppliers'
       path: '/admin/suppliers'
@@ -282,6 +301,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
+  AppAppRestaurantProfileRoute: typeof AppAppRestaurantProfileRoute
   AppAppSalesRoute: typeof AppAppSalesRoute
   AppAppSalesMonthlyRoute: typeof AppAppSalesMonthlyRoute
   AppAppSharingRoute: typeof AppAppSharingRoute
@@ -295,6 +315,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdminSuppliersRoute: AppAdminSuppliersRoute,
+  AppAppRestaurantProfileRoute: AppAppRestaurantProfileRoute,
   AppAppSalesRoute: AppAppSalesRoute,
   AppAppSalesMonthlyRoute: AppAppSalesMonthlyRoute,
   AppAppSharingRoute: AppAppSharingRoute,

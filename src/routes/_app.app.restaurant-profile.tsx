@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Building2, Save, Plus, Trash2, Mail, Phone, Globe, Instagram, FileText, Clock, MapPin } from "lucide-react";
+import { Building2, Save, Plus, Trash2, Mail, Phone, Globe, Instagram, FileText, Clock, MapPin, Users } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/restaurant-profile")({
   component: RestaurantProfile,
@@ -58,19 +58,20 @@ function RestaurantProfile() {
   }, [restaurantId]);
 
   async function fetchData() {
+    if (!restaurantId) return;
     setLoading(true);
     const { data: rest } = await supabase.from("restaurants").select("*").eq("id", restaurantId).single();
     const { data: cont } = await supabase.from("restaurant_contacts").select("*").eq("restaurant_id", restaurantId).order("created_at", { ascending: true });
-    const { data: lists } = await supabase.from("restaurant_wine_lists").select("*").eq("restaurant_id", restaurantId).order("created_at", { descending: true });
+    const { data: lists } = await supabase.from("restaurant_wine_lists").select("*").eq("restaurant_id", restaurantId).order("created_at", { ascending: false });
 
-    if (rest) setRestaurant(rest);
-    if (cont) setContacts(cont);
-    if (lists) setWineLists(lists);
+    if (rest) setRestaurant(rest as Restaurant);
+    if (cont) setContacts(cont as Contact[]);
+    if (lists) setWineLists(lists.map(l => ({ ...l, is_current: !!l.is_current })) as WineList[]);
     setLoading(false);
   }
 
   async function handleSaveRestaurant() {
-    if (!restaurant) return;
+    if (!restaurant || !restaurantId) return;
     setSaving(true);
     const { error } = await supabase.from("restaurants").update(restaurant).eq("id", restaurantId);
     if (error) alert("Erro ao salvar: " + error.message);
@@ -78,6 +79,7 @@ function RestaurantProfile() {
   }
 
   async function handleAddContact() {
+    if (!restaurantId) return;
     const newContact = {
       restaurant_id: restaurantId,
       name: "Novo Contato",
@@ -87,7 +89,7 @@ function RestaurantProfile() {
       whatsapp: "",
     };
     const { data, error } = await supabase.from("restaurant_contacts").insert(newContact).select().single();
-    if (data) setContacts([...contacts, data]);
+    if (data) setContacts([...contacts, data as Contact]);
   }
 
   async function handleUpdateContact(id: string, updates: Partial<Contact>) {
@@ -131,7 +133,8 @@ function RestaurantProfile() {
     }).select().single();
 
     if (data) {
-      setWineLists([data, ...wineLists.map(l => ({ ...l, is_current: false }))]);
+      const newList = { ...data, is_current: !!data.is_current } as WineList;
+      setWineLists([newList, ...wineLists.map(l => ({ ...l, is_current: false }))]);
     }
   }
 

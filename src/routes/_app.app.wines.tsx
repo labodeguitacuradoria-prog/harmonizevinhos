@@ -429,6 +429,8 @@ function WineForm({
     tasting_notes: wine?.tasting_notes ?? "",
     awards: (wine?.awards ?? []).join(", "),
     barcode: wine?.barcode ?? "",
+    active_on_menu: wine?.active_on_menu ?? true,
+    count_in_stock: wine?.count_in_stock ?? true,
   });
   const [scanOpen, setScanOpen] = useState(false);
   const [image, setImage] = useState<string | null>(wine?.image_url ?? null);
@@ -473,6 +475,8 @@ function WineForm({
       tech_sheet_url: techSheet,
       video_url: videoUrl.trim() || null,
       barcode: f.barcode.trim() || null,
+      active_on_menu: f.active_on_menu,
+      count_in_stock: f.count_in_stock,
     };
     const { error } = isEdit
       ? await supabase.from("wines").update(payload).eq("id", wine!.id)

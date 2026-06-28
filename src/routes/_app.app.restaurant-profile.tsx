@@ -92,11 +92,12 @@ function RestaurantProfile() {
     if (data) setContacts([...contacts, data as Contact]);
   }
 
-  async function handleUpdateContact(id: string, updates: Partial<Contact>) {
-    const { error } = await supabase.from("restaurant_contacts").update(updates).eq("id", id);
-    if (!error) {
-      setContacts(contacts.map(c => c.id === id ? { ...c, ...updates } : c));
-    }
+  function handleUpdateContactLocal(id: string, updates: Partial<Contact>) {
+    setContacts(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+  }
+
+  async function handleSaveContact(id: string, updates: Partial<Contact>) {
+    await supabase.from("restaurant_contacts").update(updates).eq("id", id);
   }
 
   async function handleDeleteContact(id: string) {
@@ -105,6 +106,7 @@ function RestaurantProfile() {
       setContacts(contacts.filter(c => c.id !== id));
     }
   }
+
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

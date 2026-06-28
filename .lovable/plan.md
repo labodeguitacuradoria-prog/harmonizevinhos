@@ -1,28 +1,13 @@
-## Migração dos 63 rótulos para o Catálogo Global
+## Correções
 
-Copiar os rótulos hoje cadastrados em `wines` para a tabela `wine_catalog`, criando uma base inicial compartilhada entre restaurantes.
+### 1. Inputs dos contatos não respondem
+**Causa:** cada tecla digitada dispara um `UPDATE` no banco e o estado local só muda depois que a resposta volta. Isso bloqueia a digitação e perde caracteres.
 
-### O que será migrado (campos compartilháveis)
-- Nome, Produtor, Safra, Região, País, Uvas, Tipo, Volume
-- Características sensoriais (notas, harmonização, elaboração e maturação, etc.)
-- Mídia (foto do rótulo) e código de barras
+**Correção em `src/routes/_app.app.restaurant-profile.tsx`:**
+- Separar atualização local (instantânea, a cada tecla) do salvamento (no `onBlur` do campo).
+- Aplicar o mesmo padrão também aos campos do restaurante (Nome Fantasia, CNPJ, Endereço, etc.) — hoje só salvam ao clicar em "Salvar Alterações", o que funciona, mas vou padronizar para salvar no `onBlur` para evitar perda de dados.
 
-### O que NÃO será migrado (dados privados do restaurante)
-- Código interno do restaurante
-- Fornecedor
-- Preço de custo e preço de venda
-- Status (ativo na carta / conta no estoque)
-- Estoque e vendas
+### 2. Acesso ao Catálogo Global no menu lateral
+Hoje o link "Catálogo Global" só aparece para `role === "admin"`. Adicionar também para `role === "restaurant"` em `src/routes/_app.tsx`, com o ícone `Database`, posicionado logo acima de "Perfil do Restaurante".
 
-### Regras da migração
-- **Deduplicação**: rótulos com mesmo Nome + Produtor + Safra + Volume são considerados o mesmo item — apenas um vai ao catálogo.
-- **Atribuição**: cada item ficará marcado como "contribuído por" o restaurante de origem (`contributed_by_restaurant_id`), para histórico.
-- **Sem impacto no restaurante**: a tabela `wines` continua intacta. Nenhum preço, código ou vinculação local muda.
-- **Operação única**: é um INSERT no `wine_catalog`. Não cria vínculo permanente — se você editar um rótulo no seu restaurante depois, o catálogo global não muda automaticamente (e vice-versa).
-
-### Comportamento futuro (já existente)
-Quando outro restaurante cadastrar um novo rótulo, ao digitar o nome o sistema sugere itens do catálogo global e preenche automaticamente as características — restando apenas inserir código interno, fornecedor e preços.
-
-### Confirmação necessária
-1. Confirma que posso migrar **todos os 63** rótulos, inclusive os marcados como "inativos na carta"?
-2. Posso seguir com a regra de deduplicação acima (Nome + Produtor + Safra + Volume)?
+O restaurante já tem permissão de leitura no `wine_catalog` (RLS atual), então pode navegar e consultar. A tela `/app/catalog-admin` permite edição — vou ajustar para que restaurantes vejam em modo somente-leitura (sem botões "Novo", "Editar", "Excluir") e admins continuem com CRUD completo.

@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { Database, Search, Plus, Edit, Trash2 } from "lucide-react";
+
 
 export const Route = createFileRoute("/_app/app/catalog-admin")({
   component: CatalogAdmin,
@@ -23,10 +25,13 @@ type WineCatalog = {
 };
 
 function CatalogAdmin() {
+  const { role } = useAuth();
+  const canEdit = role === "admin";
   const [items, setItems] = useState<WineCatalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingItem, setEditingItem] = useState<Partial<WineCatalog> | null>(null);
+
 
   useEffect(() => {
     fetchCatalog();
@@ -72,12 +77,15 @@ function CatalogAdmin() {
           <Database className="h-8 w-8 text-primary" />
           <h1 className="page-title text-3xl font-bold tracking-tight">Catálogo Global</h1>
         </div>
-        <button 
-          onClick={() => setEditingItem({ name: "" })}
-          className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" /> Novo Rótulo
-        </button>
+        {canEdit && (
+          <button 
+            onClick={() => setEditingItem({ name: "" })}
+            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" /> Novo Rótulo
+          </button>
+        )}
+
       </header>
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
@@ -113,21 +121,24 @@ function CatalogAdmin() {
                 <td className="px-4 py-3">{item.grape}</td>
                 <td className="px-4 py-3">{item.volume}</td>
                 <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button 
-                      onClick={() => setEditingItem(item)}
-                      className="rounded p-1 hover:bg-accent"
-                    >
-                      <Edit className="h-4 w-4 text-primary" />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(item.id)}
-                      className="rounded p-1 hover:bg-accent"
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </button>
-                  </div>
+                  {canEdit && (
+                    <div className="flex justify-end gap-2">
+                      <button 
+                        onClick={() => setEditingItem(item)}
+                        className="rounded p-1 hover:bg-accent"
+                      >
+                        <Edit className="h-4 w-4 text-primary" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(item.id)}
+                        className="rounded p-1 hover:bg-accent"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </button>
+                    </div>
+                  )}
                 </td>
+
               </tr>
             ))}
           </tbody>

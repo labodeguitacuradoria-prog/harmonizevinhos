@@ -92,11 +92,12 @@ function RestaurantProfile() {
     if (data) setContacts([...contacts, data as Contact]);
   }
 
-  async function handleUpdateContact(id: string, updates: Partial<Contact>) {
-    const { error } = await supabase.from("restaurant_contacts").update(updates).eq("id", id);
-    if (!error) {
-      setContacts(contacts.map(c => c.id === id ? { ...c, ...updates } : c));
-    }
+  function handleUpdateContactLocal(id: string, updates: Partial<Contact>) {
+    setContacts(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+  }
+
+  async function handleSaveContact(id: string, updates: Partial<Contact>) {
+    await supabase.from("restaurant_contacts").update(updates).eq("id", id);
   }
 
   async function handleDeleteContact(id: string) {
@@ -105,6 +106,7 @@ function RestaurantProfile() {
       setContacts(contacts.filter(c => c.id !== id));
     }
   }
+
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -340,14 +342,16 @@ function RestaurantProfile() {
               </button>
               <input 
                 value={contact.name} 
-                onChange={e => handleUpdateContact(contact.id, { name: e.target.value })}
-                className="w-full border-none bg-transparent p-0 text-sm font-semibold focus:ring-0"
+                onChange={e => handleUpdateContactLocal(contact.id, { name: e.target.value })}
+                onBlur={e => handleSaveContact(contact.id, { name: e.target.value })}
+                className="w-full border-none bg-transparent p-0 text-sm font-semibold focus:ring-0 focus:outline-none"
                 placeholder="Nome"
               />
               <input 
                 value={contact.role || ""} 
-                onChange={e => handleUpdateContact(contact.id, { role: e.target.value })}
-                className="w-full border-none bg-transparent p-0 text-xs text-muted-foreground focus:ring-0"
+                onChange={e => handleUpdateContactLocal(contact.id, { role: e.target.value })}
+                onBlur={e => handleSaveContact(contact.id, { role: e.target.value })}
+                className="w-full border-none bg-transparent p-0 text-xs text-muted-foreground focus:ring-0 focus:outline-none"
                 placeholder="Cargo (ex: Financeiro, Gerente)"
               />
               <div className="space-y-2 pt-2">
@@ -355,8 +359,9 @@ function RestaurantProfile() {
                   <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                   <input 
                     value={contact.email || ""} 
-                    onChange={e => handleUpdateContact(contact.id, { email: e.target.value })}
-                    className="w-full border-none bg-transparent p-0 text-xs focus:ring-0"
+                    onChange={e => handleUpdateContactLocal(contact.id, { email: e.target.value })}
+                    onBlur={e => handleSaveContact(contact.id, { email: e.target.value })}
+                    className="w-full border-none bg-transparent p-0 text-xs focus:ring-0 focus:outline-none"
                     placeholder="email@exemplo.com"
                   />
                 </div>
@@ -364,12 +369,14 @@ function RestaurantProfile() {
                   <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                   <input 
                     value={contact.phone || ""} 
-                    onChange={e => handleUpdateContact(contact.id, { phone: e.target.value })}
-                    className="w-full border-none bg-transparent p-0 text-xs focus:ring-0"
+                    onChange={e => handleUpdateContactLocal(contact.id, { phone: e.target.value })}
+                    onBlur={e => handleSaveContact(contact.id, { phone: e.target.value })}
+                    className="w-full border-none bg-transparent p-0 text-xs focus:ring-0 focus:outline-none"
                     placeholder="Telefone"
                   />
                 </div>
               </div>
+
             </div>
           ))}
         </div>

@@ -77,12 +77,15 @@ function CatalogAdmin() {
           <Database className="h-8 w-8 text-primary" />
           <h1 className="page-title text-3xl font-bold tracking-tight">Catálogo Global</h1>
         </div>
-        <button 
-          onClick={() => setEditingItem({ name: "" })}
-          className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" /> Novo Rótulo
-        </button>
+        {canEdit && (
+          <button 
+            onClick={() => setEditingItem({ name: "" })}
+            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" /> Novo Rótulo
+          </button>
+        )}
+
       </header>
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center">

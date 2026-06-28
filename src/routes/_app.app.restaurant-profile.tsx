@@ -187,9 +187,11 @@ function RestaurantProfile() {
               <label className="text-sm font-medium">CNPJ</label>
               <input 
                 value={restaurant?.cnpj || ""} 
-                onChange={e => setRestaurant({ ...restaurant!, cnpj: e.target.value })}
+                onChange={e => setRestaurant({ ...restaurant!, cnpj: formatCNPJ(e.target.value) })}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 placeholder="00.000.000/0000-00"
+                maxLength={18}
+                inputMode="numeric"
               />
             </div>
           </div>

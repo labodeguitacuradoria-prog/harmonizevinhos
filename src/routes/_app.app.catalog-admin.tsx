@@ -121,21 +121,24 @@ function CatalogAdmin() {
                 <td className="px-4 py-3">{item.grape}</td>
                 <td className="px-4 py-3">{item.volume}</td>
                 <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-2">
-                    <button 
-                      onClick={() => setEditingItem(item)}
-                      className="rounded p-1 hover:bg-accent"
-                    >
-                      <Edit className="h-4 w-4 text-primary" />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(item.id)}
-                      className="rounded p-1 hover:bg-accent"
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </button>
-                  </div>
+                  {canEdit && (
+                    <div className="flex justify-end gap-2">
+                      <button 
+                        onClick={() => setEditingItem(item)}
+                        className="rounded p-1 hover:bg-accent"
+                      >
+                        <Edit className="h-4 w-4 text-primary" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(item.id)}
+                        className="rounded p-1 hover:bg-accent"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </button>
+                    </div>
+                  )}
                 </td>
+
               </tr>
             ))}
           </tbody>

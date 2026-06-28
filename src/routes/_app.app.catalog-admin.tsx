@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { Database, Search, Plus, Edit, Trash2 } from "lucide-react";
+
 
 export const Route = createFileRoute("/_app/app/catalog-admin")({
   component: CatalogAdmin,

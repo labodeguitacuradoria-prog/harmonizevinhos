@@ -8,6 +8,16 @@ export const Route = createFileRoute("/_app/app/restaurant-profile")({
   component: RestaurantProfile,
 });
 
+function formatCNPJ(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 14);
+  let out = d;
+  if (d.length > 2) out = d.slice(0, 2) + "." + d.slice(2);
+  if (d.length > 5) out = d.slice(0, 2) + "." + d.slice(2, 5) + "." + d.slice(5);
+  if (d.length > 8) out = d.slice(0, 2) + "." + d.slice(2, 5) + "." + d.slice(5, 8) + "/" + d.slice(8);
+  if (d.length > 12) out = d.slice(0, 2) + "." + d.slice(2, 5) + "." + d.slice(5, 8) + "/" + d.slice(8, 12) + "-" + d.slice(12);
+  return out;
+}
+
 type Restaurant = {
   id: string;
   name: string;
@@ -187,9 +197,11 @@ function RestaurantProfile() {
               <label className="text-sm font-medium">CNPJ</label>
               <input 
                 value={restaurant?.cnpj || ""} 
-                onChange={e => setRestaurant({ ...restaurant!, cnpj: e.target.value })}
+                onChange={e => setRestaurant({ ...restaurant!, cnpj: formatCNPJ(e.target.value) })}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 placeholder="00.000.000/0000-00"
+                maxLength={18}
+                inputMode="numeric"
               />
             </div>
           </div>

@@ -25,10 +25,13 @@ type WineCatalog = {
 };
 
 function CatalogAdmin() {
+  const { role } = useAuth();
+  const canEdit = role === "admin";
   const [items, setItems] = useState<WineCatalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingItem, setEditingItem] = useState<Partial<WineCatalog> | null>(null);
+
 
   useEffect(() => {
     fetchCatalog();

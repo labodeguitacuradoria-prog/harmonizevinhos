@@ -531,15 +531,16 @@ function WineForm({
       <form onSubmit={save} className="space-y-4">
         {tab === "geral" && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Nome*" required value={f.name} onChange={(v) => setF({ ...f, name: v })} />
-            <Field label="Código no restaurante" value={f.internal_code} onChange={(v) => setF({ ...f, internal_code: v })} />
-            <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} />
-            <Field label="Safra" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} />
-            <Field label="Região" value={f.region} onChange={(v) => setF({ ...f, region: v })} />
-            <Field label="País" value={f.country} onChange={(v) => setF({ ...f, country: v })} />
-            <Field label="Uvas" value={f.grape} onChange={(v) => setF({ ...f, grape: v })} />
+            <Field label="Nome*" required value={f.name} onChange={(v) => setF({ ...f, name: v })} hint="Nome do rótulo como aparece no contra-rótulo, sem incluir produtor ou safra." placeholder="Ex: Alpha Cabernet Sauvignon" />
+            <Field label="Código no restaurante" value={f.internal_code} onChange={(v) => setF({ ...f, internal_code: v })} hint="Código interno usado pelo restaurante para identificar o rótulo (PDV, carta, planilha)." placeholder="Ex: V-014" />
+            <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} hint="Vinícola ou produtor responsável pela elaboração do vinho." placeholder="Ex: Viña Montes" />
+            <Field label="Safra" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} hint="Ano da colheita das uvas. Deixe em branco para vinhos sem safra (NV)." placeholder="Ex: 2020" />
+            <Field label="Região" value={f.region} onChange={(v) => setF({ ...f, region: v })} hint="Região vitivinícola, denominação ou apelação de origem." placeholder="Ex: Vale do Colchagua" />
+            <Field label="País" value={f.country} onChange={(v) => setF({ ...f, country: v })} hint="País de origem do vinho, por extenso e em português." placeholder="Ex: Chile" />
+            <Field label="Uvas" value={f.grape} onChange={(v) => setF({ ...f, grape: v })} hint="Castas/uvas e seus percentuais quando houver corte. Separe por vírgula." placeholder="Ex: Cabernet Sauvignon 85%, Merlot 15%" />
             <SelectWithCustom
               label="Tipo"
+              hint="Categoria geral do vinho. Use 'Outro' apenas quando nenhuma das opções padrão se aplicar."
               value={f.wine_type}
               custom={f.wine_type_custom}
               options={DEFAULT_TYPES}
@@ -547,13 +548,14 @@ function WineForm({
             />
             <SelectWithCustom
               label="Volume"
+              hint="Capacidade da garrafa ou medida da dose (Taça). Use 'Outro' para volumes não listados."
               value={f.volume}
               custom={f.volume_custom}
               options={DEFAULT_VOLUMES}
               onChange={(v, c) => setF({ ...f, volume: v, volume_custom: c })}
             />
-            <Field label="Preço de Custo (R$)" type="number" value={f.cost_price} onChange={(v) => setF({ ...f, cost_price: v })} />
-            <Field label="Preço de Venda (R$)" type="number" value={f.sale_price} onChange={(v) => setF({ ...f, sale_price: v })} />
+            <Field label="Preço de Custo (R$)" type="number" value={f.cost_price} onChange={(v) => setF({ ...f, cost_price: v })} hint="Valor pago ao fornecedor por unidade (garrafa/dose). Usado para cálculo de margem." placeholder="Ex: 85.00" />
+            <Field label="Preço de Venda (R$)" type="number" value={f.sale_price} onChange={(v) => setF({ ...f, sale_price: v })} hint="Preço cobrado do cliente final, conforme a carta do restaurante." placeholder="Ex: 220.00" />
             <label className="block sm:col-span-2">
               <span className="text-sm font-medium">Fornecedor</span>
               <select

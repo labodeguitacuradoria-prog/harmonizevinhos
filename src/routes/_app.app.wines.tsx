@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Wine as WineIcon, GlassWater, ScanLine } from "lucide-react";
+import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 
@@ -531,15 +531,16 @@ function WineForm({
       <form onSubmit={save} className="space-y-4">
         {tab === "geral" && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Nome*" required value={f.name} onChange={(v) => setF({ ...f, name: v })} />
-            <Field label="Código no restaurante" value={f.internal_code} onChange={(v) => setF({ ...f, internal_code: v })} />
-            <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} />
-            <Field label="Safra" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} />
-            <Field label="Região" value={f.region} onChange={(v) => setF({ ...f, region: v })} />
-            <Field label="País" value={f.country} onChange={(v) => setF({ ...f, country: v })} />
-            <Field label="Uvas" value={f.grape} onChange={(v) => setF({ ...f, grape: v })} />
+            <Field label="Nome*" required value={f.name} onChange={(v) => setF({ ...f, name: v })} hint="Nome do rótulo como aparece no contra-rótulo, sem incluir produtor ou safra." placeholder="Ex: Alpha Cabernet Sauvignon" />
+            <Field label="Código no restaurante" value={f.internal_code} onChange={(v) => setF({ ...f, internal_code: v })} hint="Código interno usado pelo restaurante para identificar o rótulo (PDV, carta, planilha)." placeholder="Ex: V-014" />
+            <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} hint="Vinícola ou produtor responsável pela elaboração do vinho." placeholder="Ex: Viña Montes" />
+            <Field label="Safra" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} hint="Ano da colheita das uvas. Deixe em branco para vinhos sem safra (NV)." placeholder="Ex: 2020" />
+            <Field label="Região" value={f.region} onChange={(v) => setF({ ...f, region: v })} hint="Região vitivinícola, denominação ou apelação de origem." placeholder="Ex: Vale do Colchagua" />
+            <Field label="País" value={f.country} onChange={(v) => setF({ ...f, country: v })} hint="País de origem do vinho, por extenso e em português." placeholder="Ex: Chile" />
+            <Field label="Uvas" value={f.grape} onChange={(v) => setF({ ...f, grape: v })} hint="Castas/uvas e seus percentuais quando houver corte. Separe por vírgula." placeholder="Ex: Cabernet Sauvignon 85%, Merlot 15%" />
             <SelectWithCustom
               label="Tipo"
+              hint="Categoria geral do vinho. Use 'Outro' apenas quando nenhuma das opções padrão se aplicar."
               value={f.wine_type}
               custom={f.wine_type_custom}
               options={DEFAULT_TYPES}
@@ -547,13 +548,14 @@ function WineForm({
             />
             <SelectWithCustom
               label="Volume"
+              hint="Capacidade da garrafa ou medida da dose (Taça). Use 'Outro' para volumes não listados."
               value={f.volume}
               custom={f.volume_custom}
               options={DEFAULT_VOLUMES}
               onChange={(v, c) => setF({ ...f, volume: v, volume_custom: c })}
             />
-            <Field label="Preço de Custo (R$)" type="number" value={f.cost_price} onChange={(v) => setF({ ...f, cost_price: v })} />
-            <Field label="Preço de Venda (R$)" type="number" value={f.sale_price} onChange={(v) => setF({ ...f, sale_price: v })} />
+            <Field label="Preço de Custo (R$)" type="number" value={f.cost_price} onChange={(v) => setF({ ...f, cost_price: v })} hint="Valor pago ao fornecedor por unidade (garrafa/dose). Usado para cálculo de margem." placeholder="Ex: 85.00" />
+            <Field label="Preço de Venda (R$)" type="number" value={f.sale_price} onChange={(v) => setF({ ...f, sale_price: v })} hint="Preço cobrado do cliente final, conforme a carta do restaurante." placeholder="Ex: 220.00" />
             <label className="block sm:col-span-2">
               <span className="text-sm font-medium">Fornecedor</span>
               <select
@@ -623,17 +625,17 @@ function WineForm({
 
         {tab === "carac" && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Teor alcoólico (%)" type="number" value={f.alcohol_pct} onChange={(v) => setF({ ...f, alcohol_pct: v })} />
-            <SelectField label="Açúcar" value={f.sugar_level} options={SUGAR_LEVELS} onChange={(v) => setF({ ...f, sugar_level: v })} />
-            <SelectField label="Corpo" value={f.body} options={BODY} onChange={(v) => setF({ ...f, body: v })} />
-            <SelectField label="Taninos" value={f.tannin} options={INTENSITY} onChange={(v) => setF({ ...f, tannin: v })} />
-            <SelectField label="Acidez" value={f.acidity} options={INTENSITY} onChange={(v) => setF({ ...f, acidity: v })} />
-            <Field label="Elaboração e Maturação" value={f.aging} onChange={(v) => setF({ ...f, aging: v })} />
-            <Field label="Temp. mín. serviço (°C)" type="number" value={f.serving_temp_min} onChange={(v) => setF({ ...f, serving_temp_min: v })} />
-            <Field label="Temp. máx. serviço (°C)" type="number" value={f.serving_temp_max} onChange={(v) => setF({ ...f, serving_temp_max: v })} />
-            <TextArea label="Notas de degustação" value={f.tasting_notes} onChange={(v) => setF({ ...f, tasting_notes: v })} className="sm:col-span-2" />
-            <TextArea label="Harmonização" value={f.pairing_notes} onChange={(v) => setF({ ...f, pairing_notes: v })} className="sm:col-span-2" />
-            <Field label="Premiações (separadas por vírgula)" value={f.awards} onChange={(v) => setF({ ...f, awards: v })} />
+            <Field label="Teor alcoólico (%)" type="number" value={f.alcohol_pct} onChange={(v) => setF({ ...f, alcohol_pct: v })} hint="Porcentagem de álcool em volume, conforme rótulo." placeholder="Ex: 13.5" />
+            <SelectField label="Açúcar" value={f.sugar_level} options={SUGAR_LEVELS} onChange={(v) => setF({ ...f, sugar_level: v })} hint="Nível de açúcar residual (seco, meio-seco, demi-sec, doce...)." />
+            <SelectField label="Corpo" value={f.body} options={BODY} onChange={(v) => setF({ ...f, body: v })} hint="Sensação de peso/estrutura do vinho na boca." />
+            <SelectField label="Taninos" value={f.tannin} options={INTENSITY} onChange={(v) => setF({ ...f, tannin: v })} hint="Intensidade dos taninos (adstringência). Mais relevante em tintos." />
+            <SelectField label="Acidez" value={f.acidity} options={INTENSITY} onChange={(v) => setF({ ...f, acidity: v })} hint="Percepção de acidez/frescor no paladar." />
+            <Field label="Elaboração e Maturação" value={f.aging} onChange={(v) => setF({ ...f, aging: v })} hint="Como o vinho foi vinificado e envelhecido: fermentação, barricas, tempo em garrafa, etc." placeholder="Ex: 12 meses em barrica de carvalho francês (30% novas)" />
+            <Field label="Temp. mín. serviço (°C)" type="number" value={f.serving_temp_min} onChange={(v) => setF({ ...f, serving_temp_min: v })} hint="Temperatura mínima recomendada para servir." placeholder="Ex: 16" />
+            <Field label="Temp. máx. serviço (°C)" type="number" value={f.serving_temp_max} onChange={(v) => setF({ ...f, serving_temp_max: v })} hint="Temperatura máxima recomendada para servir." placeholder="Ex: 18" />
+            <TextArea label="Notas de degustação" value={f.tasting_notes} onChange={(v) => setF({ ...f, tasting_notes: v })} className="sm:col-span-2" hint="Descrição sensorial: cor, aromas, sabor, corpo, taninos e final de boca." placeholder="Ex: Rubi intenso. Aromas de frutas negras maduras, especiarias e notas de baunilha. Taninos firmes, corpo médio e final persistente." />
+            <TextArea label="Harmonização" value={f.pairing_notes} onChange={(v) => setF({ ...f, pairing_notes: v })} className="sm:col-span-2" hint="Sugestões gastronômicas: pratos, proteínas, queijos e temperos que combinam." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro e queijos curados." />
+            <Field label="Premiações (separadas por vírgula)" value={f.awards} onChange={(v) => setF({ ...f, awards: v })} hint="Lista de prêmios e pontuações relevantes, separados por vírgula." placeholder="Ex: 92 pts Wine Spectator, Decanter Silver 2022" />
           </div>
         )}
 
@@ -907,44 +909,63 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
+function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+      <span>{children}</span>
+      {hint && (
+        <span
+          title={hint}
+          aria-label={hint}
+          className="inline-flex h-3.5 w-3.5 cursor-help items-center justify-center rounded-full text-muted-foreground/60 hover:text-primary"
+        >
+          <Info className="h-3 w-3" />
+        </span>
+      )}
+    </span>
+  );
+}
+
 function Field({
-  label, type = "text", value, onChange, required,
+  label, type = "text", value, onChange, required, hint, placeholder,
 }: {
-  label: string; type?: string; value: string; onChange: (v: string) => void; required?: boolean;
+  label: string; type?: string; value: string; onChange: (v: string) => void; required?: boolean; hint?: string; placeholder?: string;
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium">{label}</span>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
       <input
         type={type}
         step="0.01"
         required={required}
         value={value}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-ring"
       />
     </label>
   );
 }
 
-function TextArea({ label, value, onChange, className = "" }: { label: string; value: string; onChange: (v: string) => void; className?: string }) {
+function TextArea({ label, value, onChange, className = "", hint, placeholder }: { label: string; value: string; onChange: (v: string) => void; className?: string; hint?: string; placeholder?: string }) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-sm font-medium">{label}</span>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={3}
-        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        placeholder={placeholder}
+        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-ring"
       />
     </label>
   );
 }
 
-function SelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
+function SelectField({ label, value, options, onChange, hint }: { label: string; value: string; options: string[]; onChange: (v: string) => void; hint?: string }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium">{label}</span>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -958,13 +979,13 @@ function SelectField({ label, value, options, onChange }: { label: string; value
 }
 
 function SelectWithCustom({
-  label, value, custom, options, onChange,
+  label, value, custom, options, onChange, hint,
 }: {
-  label: string; value: string; custom: string; options: string[]; onChange: (v: string, c: string) => void;
+  label: string; value: string; custom: string; options: string[]; onChange: (v: string, c: string) => void; hint?: string;
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium">{label}</span>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value, custom)}
@@ -979,7 +1000,7 @@ function SelectWithCustom({
           placeholder="Digite o valor"
           value={custom}
           onChange={(e) => onChange(value, e.target.value)}
-          className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
         />
       )}
     </label>

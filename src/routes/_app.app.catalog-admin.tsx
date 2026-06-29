@@ -2,7 +2,22 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Database, Search, Plus, Edit, Trash2 } from "lucide-react";
+import { Database, Search, Plus, Edit, Trash2, Info } from "lucide-react";
+
+function FieldLabel({ children, hint }: { children: React.ReactNode; hint: string }) {
+  return (
+    <label className="flex items-center gap-1.5 text-xs font-medium uppercase text-muted-foreground">
+      <span>{children}</span>
+      <span
+        title={hint}
+        className="inline-flex h-3.5 w-3.5 cursor-help items-center justify-center rounded-full text-muted-foreground/60 hover:text-primary"
+        aria-label={hint}
+      >
+        <Info className="h-3 w-3" />
+      </span>
+    </label>
+  );
+}
 
 
 export const Route = createFileRoute("/_app/app/catalog-admin")({

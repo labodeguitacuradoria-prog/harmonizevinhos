@@ -907,44 +907,63 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
+function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+      <span>{children}</span>
+      {hint && (
+        <span
+          title={hint}
+          aria-label={hint}
+          className="inline-flex h-3.5 w-3.5 cursor-help items-center justify-center rounded-full text-muted-foreground/60 hover:text-primary"
+        >
+          <Info className="h-3 w-3" />
+        </span>
+      )}
+    </span>
+  );
+}
+
 function Field({
-  label, type = "text", value, onChange, required,
+  label, type = "text", value, onChange, required, hint, placeholder,
 }: {
-  label: string; type?: string; value: string; onChange: (v: string) => void; required?: boolean;
+  label: string; type?: string; value: string; onChange: (v: string) => void; required?: boolean; hint?: string; placeholder?: string;
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium">{label}</span>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
       <input
         type={type}
         step="0.01"
         required={required}
         value={value}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-ring"
       />
     </label>
   );
 }
 
-function TextArea({ label, value, onChange, className = "" }: { label: string; value: string; onChange: (v: string) => void; className?: string }) {
+function TextArea({ label, value, onChange, className = "", hint, placeholder }: { label: string; value: string; onChange: (v: string) => void; className?: string; hint?: string; placeholder?: string }) {
   return (
     <label className={`block ${className}`}>
-      <span className="text-sm font-medium">{label}</span>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={3}
-        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        placeholder={placeholder}
+        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-ring"
       />
     </label>
   );
 }
 
-function SelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
+function SelectField({ label, value, options, onChange, hint }: { label: string; value: string; options: string[]; onChange: (v: string) => void; hint?: string }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium">{label}</span>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -958,13 +977,13 @@ function SelectField({ label, value, options, onChange }: { label: string; value
 }
 
 function SelectWithCustom({
-  label, value, custom, options, onChange,
+  label, value, custom, options, onChange, hint,
 }: {
-  label: string; value: string; custom: string; options: string[]; onChange: (v: string, c: string) => void;
+  label: string; value: string; custom: string; options: string[]; onChange: (v: string, c: string) => void; hint?: string;
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium">{label}</span>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value, custom)}
@@ -979,7 +998,7 @@ function SelectWithCustom({
           placeholder="Digite o valor"
           value={custom}
           onChange={(e) => onChange(value, e.target.value)}
-          className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
         />
       )}
     </label>

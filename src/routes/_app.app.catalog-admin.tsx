@@ -176,51 +176,71 @@ function CatalogAdmin() {
                 ✕
               </button>
             </div>
+            <p className="mb-4 text-xs italic text-muted-foreground/70">
+              Os textos em cinza claro dentro dos campos são apenas exemplos. Passe o mouse no ícone <Info className="inline h-3 w-3" /> ao lado de cada rótulo para ver a explicação.
+            </p>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">Nome do Rótulo</label>
-                <input 
-                  value={editingItem.name || ""} 
+                <FieldLabel hint="Nome completo do rótulo como aparece no contra-rótulo, sem incluir produtor ou safra. Ex.: 'Alpha Cabernet Sauvignon', 'Brut Réserve'.">
+                  Nome do Rótulo
+                </FieldLabel>
+                <input
+                  value={editingItem.name || ""}
                   onChange={e => setEditingItem({ ...editingItem, name: e.target.value })}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  placeholder="Ex: Alpha Cabernet Sauvignon"
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
                 />
               </div>
               <div className="grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">Produtor</label>
-                <input 
-                  value={editingItem.producer || ""} 
+                <FieldLabel hint="Vinícola ou produtor responsável pela elaboração. Ex.: 'Viña Montes', 'Moët & Chandon'.">
+                  Produtor
+                </FieldLabel>
+                <input
+                  value={editingItem.producer || ""}
                   onChange={e => setEditingItem({ ...editingItem, producer: e.target.value })}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  placeholder="Ex: Viña Montes"
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
                 />
               </div>
               <div className="grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">País</label>
-                <input 
-                  value={editingItem.country || ""} 
+                <FieldLabel hint="País de origem do vinho, por extenso e em português. Ex.: 'Chile', 'França', 'Itália'.">
+                  País
+                </FieldLabel>
+                <input
+                  value={editingItem.country || ""}
                   onChange={e => setEditingItem({ ...editingItem, country: e.target.value })}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  placeholder="Ex: Chile"
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
                 />
               </div>
               <div className="grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">Região</label>
-                <input 
-                  value={editingItem.region || ""} 
+                <FieldLabel hint="Região vitivinícola, denominação ou apelação de origem. Ex.: 'Vale do Colchagua', 'Bordeaux', 'Mendoza'.">
+                  Região
+                </FieldLabel>
+                <input
+                  value={editingItem.region || ""}
                   onChange={e => setEditingItem({ ...editingItem, region: e.target.value })}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  placeholder="Ex: Vale do Colchagua"
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
                 />
               </div>
               <div className="grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">Uvas</label>
-                <input 
-                  value={editingItem.grape || ""} 
+                <FieldLabel hint="Castas/uvas e seus percentuais quando houver corte. Separe por vírgula. Ex.: 'Cabernet Sauvignon 85%, Merlot 15%'.">
+                  Uvas
+                </FieldLabel>
+                <input
+                  value={editingItem.grape || ""}
                   onChange={e => setEditingItem({ ...editingItem, grape: e.target.value })}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  placeholder="Ex: Cabernet Sauvignon 85%, Merlot 15%"
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
                 />
               </div>
               <div className="grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">Tipo</label>
-                <select 
-                  value={editingItem.wine_type || ""} 
+                <FieldLabel hint="Categoria geral do vinho. Use 'Outros' apenas quando nenhuma das opções padrão se aplicar.">
+                  Tipo
+                </FieldLabel>
+                <select
+                  value={editingItem.wine_type || ""}
                   onChange={e => setEditingItem({ ...editingItem, wine_type: e.target.value })}
                   className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
@@ -234,55 +254,69 @@ function CatalogAdmin() {
                 </select>
               </div>
               <div className="grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">Volume</label>
-                <input 
-                  value={editingItem.volume || ""} 
+                <FieldLabel hint="Capacidade da garrafa em mililitros, com a unidade. Padrões comuns: 750ml, 375ml, 187ml, 1500ml (magnum).">
+                  Volume
+                </FieldLabel>
+                <input
+                  value={editingItem.volume || ""}
                   onChange={e => setEditingItem({ ...editingItem, volume: e.target.value })}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                   placeholder="Ex: 750ml"
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
                 />
               </div>
               <div className="grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">URL da Imagem</label>
-                <input 
-                  value={editingItem.image_url || ""} 
+                <FieldLabel hint="Endereço (URL) público da foto do rótulo. Deve iniciar com https:// e apontar diretamente para uma imagem (.jpg, .png, .webp).">
+                  URL da Imagem
+                </FieldLabel>
+                <input
+                  value={editingItem.image_url || ""}
                   onChange={e => setEditingItem({ ...editingItem, image_url: e.target.value })}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  placeholder="https://exemplo.com/rotulo.jpg"
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
                 />
               </div>
               <div className="col-span-2 grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">Notas de Degustação</label>
-                <textarea 
-                  value={editingItem.tasting_notes || ""} 
+                <FieldLabel hint="Descrição sensorial: cor, aromas, sabor, corpo, taninos e final de boca. Texto corrido, 2 a 4 linhas.">
+                  Notas de Degustação
+                </FieldLabel>
+                <textarea
+                  value={editingItem.tasting_notes || ""}
                   onChange={e => setEditingItem({ ...editingItem, tasting_notes: e.target.value })}
-                  className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  placeholder="Ex: Rubi intenso. Aromas de frutas negras maduras, especiarias e notas de baunilha. Em boca apresenta taninos firmes, corpo médio e final persistente."
+                  className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
                 />
               </div>
               <div className="col-span-2 grid gap-2">
-                <label className="text-xs font-medium uppercase text-muted-foreground">Harmonização</label>
-                <textarea 
-                  value={editingItem.pairing_notes || ""} 
+                <FieldLabel hint="Sugestões gastronômicas: pratos, proteínas, queijos e temperos que combinam com o vinho.">
+                  Harmonização
+                </FieldLabel>
+                <textarea
+                  value={editingItem.pairing_notes || ""}
                   onChange={e => setEditingItem({ ...editingItem, pairing_notes: e.target.value })}
-                  className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  placeholder="Ex: Carnes vermelhas grelhadas, cordeiro, massas com molhos encorpados e queijos curados."
+                  className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
                 />
               </div>
               <div className="col-span-2 grid gap-2">
-                <span className="text-xs font-medium uppercase text-muted-foreground">Elaboração e Maturação</span>
-                <textarea 
-                  value={editingItem.aging || ""} 
+                <FieldLabel hint="Como o vinho foi vinificado e envelhecido: tipo de fermentação, tempo e tipo de barrica, guarda em garrafa, etc.">
+                  Elaboração e Maturação
+                </FieldLabel>
+                <textarea
+                  value={editingItem.aging || ""}
                   onChange={e => setEditingItem({ ...editingItem, aging: e.target.value })}
-                  className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  placeholder="Ex: Fermentação em tanques de inox, maturação por 12 meses em barricas de carvalho francês (30% novas) e 6 meses adicionais em garrafa."
+                  className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
                 />
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-3">
-              <button 
+              <button
                 onClick={() => setEditingItem(null)}
                 className="rounded-md px-4 py-2 text-sm font-medium hover:bg-accent"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={handleSave}
                 className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
               >

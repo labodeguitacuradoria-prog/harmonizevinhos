@@ -625,17 +625,17 @@ function WineForm({
 
         {tab === "carac" && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Teor alcoólico (%)" type="number" value={f.alcohol_pct} onChange={(v) => setF({ ...f, alcohol_pct: v })} />
-            <SelectField label="Açúcar" value={f.sugar_level} options={SUGAR_LEVELS} onChange={(v) => setF({ ...f, sugar_level: v })} />
-            <SelectField label="Corpo" value={f.body} options={BODY} onChange={(v) => setF({ ...f, body: v })} />
-            <SelectField label="Taninos" value={f.tannin} options={INTENSITY} onChange={(v) => setF({ ...f, tannin: v })} />
-            <SelectField label="Acidez" value={f.acidity} options={INTENSITY} onChange={(v) => setF({ ...f, acidity: v })} />
-            <Field label="Elaboração e Maturação" value={f.aging} onChange={(v) => setF({ ...f, aging: v })} />
-            <Field label="Temp. mín. serviço (°C)" type="number" value={f.serving_temp_min} onChange={(v) => setF({ ...f, serving_temp_min: v })} />
-            <Field label="Temp. máx. serviço (°C)" type="number" value={f.serving_temp_max} onChange={(v) => setF({ ...f, serving_temp_max: v })} />
-            <TextArea label="Notas de degustação" value={f.tasting_notes} onChange={(v) => setF({ ...f, tasting_notes: v })} className="sm:col-span-2" />
-            <TextArea label="Harmonização" value={f.pairing_notes} onChange={(v) => setF({ ...f, pairing_notes: v })} className="sm:col-span-2" />
-            <Field label="Premiações (separadas por vírgula)" value={f.awards} onChange={(v) => setF({ ...f, awards: v })} />
+            <Field label="Teor alcoólico (%)" type="number" value={f.alcohol_pct} onChange={(v) => setF({ ...f, alcohol_pct: v })} hint="Porcentagem de álcool em volume, conforme rótulo." placeholder="Ex: 13.5" />
+            <SelectField label="Açúcar" value={f.sugar_level} options={SUGAR_LEVELS} onChange={(v) => setF({ ...f, sugar_level: v })} hint="Nível de açúcar residual (seco, meio-seco, demi-sec, doce...)." />
+            <SelectField label="Corpo" value={f.body} options={BODY} onChange={(v) => setF({ ...f, body: v })} hint="Sensação de peso/estrutura do vinho na boca." />
+            <SelectField label="Taninos" value={f.tannin} options={INTENSITY} onChange={(v) => setF({ ...f, tannin: v })} hint="Intensidade dos taninos (adstringência). Mais relevante em tintos." />
+            <SelectField label="Acidez" value={f.acidity} options={INTENSITY} onChange={(v) => setF({ ...f, acidity: v })} hint="Percepção de acidez/frescor no paladar." />
+            <Field label="Elaboração e Maturação" value={f.aging} onChange={(v) => setF({ ...f, aging: v })} hint="Como o vinho foi vinificado e envelhecido: fermentação, barricas, tempo em garrafa, etc." placeholder="Ex: 12 meses em barrica de carvalho francês (30% novas)" />
+            <Field label="Temp. mín. serviço (°C)" type="number" value={f.serving_temp_min} onChange={(v) => setF({ ...f, serving_temp_min: v })} hint="Temperatura mínima recomendada para servir." placeholder="Ex: 16" />
+            <Field label="Temp. máx. serviço (°C)" type="number" value={f.serving_temp_max} onChange={(v) => setF({ ...f, serving_temp_max: v })} hint="Temperatura máxima recomendada para servir." placeholder="Ex: 18" />
+            <TextArea label="Notas de degustação" value={f.tasting_notes} onChange={(v) => setF({ ...f, tasting_notes: v })} className="sm:col-span-2" hint="Descrição sensorial: cor, aromas, sabor, corpo, taninos e final de boca." placeholder="Ex: Rubi intenso. Aromas de frutas negras maduras, especiarias e notas de baunilha. Taninos firmes, corpo médio e final persistente." />
+            <TextArea label="Harmonização" value={f.pairing_notes} onChange={(v) => setF({ ...f, pairing_notes: v })} className="sm:col-span-2" hint="Sugestões gastronômicas: pratos, proteínas, queijos e temperos que combinam." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro e queijos curados." />
+            <Field label="Premiações (separadas por vírgula)" value={f.awards} onChange={(v) => setF({ ...f, awards: v })} hint="Lista de prêmios e pontuações relevantes, separados por vírgula." placeholder="Ex: 92 pts Wine Spectator, Decanter Silver 2022" />
           </div>
         )}
 

@@ -531,6 +531,37 @@ function WineForm({
       <form onSubmit={save} className="space-y-4">
         {tab === "geral" && (
           <div className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <CatalogSearch
+                onPick={(c) => {
+                  setF((prev) => ({
+                    ...prev,
+                    name: prev.name || c.name || "",
+                    producer: prev.producer || c.producer || "",
+                    vintage: prev.vintage || (c.vintage ? String(c.vintage) : ""),
+                    region: prev.region || c.region || "",
+                    country: prev.country || c.country || "",
+                    grape: prev.grape || c.grape || "",
+                    wine_type: prev.wine_type === "Tinto" && c.wine_type
+                      ? (DEFAULT_TYPES.includes(c.wine_type) ? c.wine_type : "__custom")
+                      : prev.wine_type,
+                    wine_type_custom: !DEFAULT_TYPES.includes(c.wine_type ?? "") ? (c.wine_type ?? "") : prev.wine_type_custom,
+                    alcohol_pct: prev.alcohol_pct || (c.alcohol_pct != null ? String(c.alcohol_pct) : ""),
+                    sugar_level: prev.sugar_level || c.sugar_level || "",
+                    body: prev.body || c.body || "",
+                    tannin: prev.tannin || c.tannin || "",
+                    acidity: prev.acidity || c.acidity || "",
+                    aging: prev.aging || c.aging || "",
+                    serving_temp_min: prev.serving_temp_min || (c.serving_temp_min != null ? String(c.serving_temp_min) : ""),
+                    serving_temp_max: prev.serving_temp_max || (c.serving_temp_max != null ? String(c.serving_temp_max) : ""),
+                    pairing_notes: prev.pairing_notes || c.pairing_notes || "",
+                    tasting_notes: prev.tasting_notes || c.tasting_notes || "",
+                    barcode: prev.barcode || c.barcode || "",
+                  }));
+                  if (!image && c.image_url) setImage(c.image_url);
+                }}
+              />
+            </div>
             <Field label="Nome*" required value={f.name} onChange={(v) => setF({ ...f, name: v })} hint="Nome do rótulo como aparece no contra-rótulo, sem incluir produtor ou safra." placeholder="Ex: Alpha Cabernet Sauvignon" />
             <Field label="Código no restaurante" value={f.internal_code} onChange={(v) => setF({ ...f, internal_code: v })} hint="Código interno usado pelo restaurante para identificar o rótulo (PDV, carta, planilha)." placeholder="Ex: V-014" />
             <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} hint="Vinícola ou produtor responsável pela elaboração do vinho." placeholder="Ex: Viña Montes" />

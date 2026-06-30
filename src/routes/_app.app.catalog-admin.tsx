@@ -3,8 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban } from "lucide-react";
-import MediaUploader from "@/components/MediaUploader";
-import MediaGallery from "@/components/MediaGallery";
+import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 
 export const Route = createFileRoute("/_app/app/catalog-admin")({
   component: CatalogAdmin,

@@ -1,118 +1,181 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Database, Search, Plus, Edit, Trash2, Info } from "lucide-react";
+import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban } from "lucide-react";
+import MediaUploader from "@/components/MediaUploader";
+import MediaGallery from "@/components/MediaGallery";
+
+export const Route = createFileRoute("/_app/app/catalog-admin")({
+  component: CatalogAdmin,
+});
+
+type CatalogStatus = "pending" | "approved" | "rejected";
+
+const TYPES = ["Espumante", "Branco", "Rosé", "Tinto", "Fortificado", "Sobremesa", "Outros"];
+const STYLES = [
+  "ESPUMANTE",
+  "BRANCO LEVE",
+  "BRANCO AROMÁTICO",
+  "BRANCO ENCORPADO",
+  "ROSÉ",
+  "TINTO LEVE",
+  "TINTO MÉDIO",
+  "TINTO ENCORPADO",
+  "FORTIFICADO",
+];
+const SUGAR_LEVELS = ["Seco", "Meio-seco", "Suave", "Doce"];
+const INTENSITY = ["Baixo", "Médio", "Alto"];
+const BODY = ["Leve", "Médio", "Encorpado"];
+const VOLUMES = ["750 ml", "375 ml", "187 ml", "1500 ml", "Outro"];
+
+type Video = { title: string; url: string };
+
+type WineCatalog = {
+  id: string;
+  name: string;
+  producer: string | null;
+  vintage: number | null;
+  region: string | null;
+  country: string | null;
+  grape: string | null;
+  wine_type: string | null;
+  style: string | null;
+  volume: string | null;
+  suppliers: string[] | null;
+  barcode: string | null;
+  alcohol_pct: number | null;
+  sugar_level: string | null;
+  sugar_g_l: number | null;
+  body: string | null;
+  tannin: string | null;
+  acidity: string | null;
+  acidity_g_l: number | null;
+  acidity_ph: number | null;
+  elaboration: string | null;
+  aging: string | null;
+  serving_temp_min: number | null;
+  serving_temp_max: number | null;
+  tasting_notes: string | null;
+  pairing_notes: string | null;
+  awards: string[] | null;
+  image_url: string | null;
+  gallery_urls: string[] | null;
+  tech_sheet_url: string | null;
+  videos: Video[] | null;
+  status: CatalogStatus;
+  rejection_reason: string | null;
+};
 
 function FieldLabel({ children, hint }: { children: React.ReactNode; hint: string }) {
   return (
-    <label className="flex items-center gap-1.5 text-xs font-medium uppercase text-muted-foreground">
+    <label className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
       <span>{children}</span>
-      <span
-        title={hint}
-        className="inline-flex h-3.5 w-3.5 cursor-help items-center justify-center rounded-full text-muted-foreground/60 hover:text-primary"
-        aria-label={hint}
-      >
+      <span title={hint} className="inline-flex h-3.5 w-3.5 cursor-help items-center justify-center text-muted-foreground/60 hover:text-primary">
         <Info className="h-3 w-3" />
       </span>
     </label>
   );
 }
 
-
-export const Route = createFileRoute("/_app/app/catalog-admin")({
-  component: CatalogAdmin,
-});
-
-type WineCatalog = {
-  id: string;
-  name: string;
-  producer: string | null;
-  region: string | null;
-  country: string | null;
-  grape: string | null;
-  wine_type: string | null;
-  volume: string | null;
-  tasting_notes: string | null;
-  pairing_notes: string | null;
-  aging: string | null;
-  image_url: string | null;
-};
-
 function CatalogAdmin() {
   const { role } = useAuth();
-  const canEdit = role === "admin";
+  const isAdmin = role === "admin";
   const [items, setItems] = useState<WineCatalog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [editingItem, setEditingItem] = useState<Partial<WineCatalog> | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusTab, setStatusTab] = useState<CatalogStatus>("pending");
+  const [editing, setEditing] = useState<Partial<WineCatalog> | null>(null);
 
-
-  useEffect(() => {
-    fetchCatalog();
-  }, []);
+  useEffect(() => { fetchCatalog(); }, []);
 
   async function fetchCatalog() {
     setLoading(true);
-    const { data, error } = await supabase.from("wine_catalog").select("*").order("name", { ascending: true });
-    if (data) setItems(data as WineCatalog[]);
+    const { data } = await supabase.from("wine_catalog").select("*").order("created_at", { ascending: false });
+    if (data) setItems(data as any);
     setLoading(false);
   }
 
   async function handleSave() {
-    if (!editingItem || !editingItem.name) return;
-    
-    if (editingItem.id) {
-      const { error } = await supabase.from("wine_catalog").update(editingItem as any).eq("id", editingItem.id);
-      if (error) alert(error.message);
+    if (!editing || !editing.name) return;
+    const payload = { ...editing };
+    if (editing.id) {
+      const { error } = await supabase.from("wine_catalog").update(payload as any).eq("id", editing.id);
+      if (error) return alert(error.message);
     } else {
-      const { error } = await supabase.from("wine_catalog").insert([editingItem as any]);
-      if (error) alert(error.message);
+      const { error } = await supabase.from("wine_catalog").insert([{ ...payload, status: "approved" } as any]);
+      if (error) return alert(error.message);
     }
-    
-    setEditingItem(null);
+    setEditing(null);
+    fetchCatalog();
+  }
+
+  async function setStatus(id: string, status: CatalogStatus, reason?: string) {
+    const patch: any = { status, rejection_reason: reason ?? null };
+    if (status === "approved") {
+      patch.approved_at = new Date().toISOString();
+    }
+    const { error } = await supabase.from("wine_catalog").update(patch).eq("id", id);
+    if (error) return alert(error.message);
     fetchCatalog();
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Tem certeza?")) return;
+    if (!confirm("Excluir definitivamente?")) return;
     const { error } = await supabase.from("wine_catalog").delete().eq("id", id);
     if (!error) fetchCatalog();
   }
 
-  const filteredItems = items.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.producer?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const counts = useMemo(() => ({
+    pending: items.filter(i => i.status === "pending").length,
+    approved: items.filter(i => i.status === "approved").length,
+    rejected: items.filter(i => i.status === "rejected").length,
+  }), [items]);
+
+  const filtered = useMemo(() => items
+    .filter(i => i.status === statusTab)
+    .filter(i =>
+      !search ||
+      i.name.toLowerCase().includes(search.toLowerCase()) ||
+      (i.producer ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (i.barcode ?? "").includes(search)
+    ), [items, statusTab, search]);
 
   return (
-    <div className="flex-1 space-y-8 p-4 md:p-8">
+    <div className="flex-1 space-y-6 p-4 md:p-8">
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           <Database className="h-8 w-8 text-primary" />
-          <h1 className="page-title text-3xl font-bold tracking-tight">Catálogo Global</h1>
+          <div>
+            <h1 className="page-title text-3xl font-bold tracking-tight">Catálogo Global</h1>
+            <p className="text-sm text-muted-foreground">Revisão e curadoria de rótulos enviados por restaurantes.</p>
+          </div>
         </div>
-        {canEdit && (
-          <button 
-            onClick={() => setEditingItem({ name: "" })}
-            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
+        {isAdmin && (
+          <button onClick={() => setEditing({ name: "", status: "approved" })}
+            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             <Plus className="h-4 w-4" /> Novo Rótulo
           </button>
         )}
-
       </header>
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input 
-            placeholder="Buscar por nome ou produtor..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full rounded-md border border-input bg-background pl-10 pr-4 py-2 text-sm"
-          />
-        </div>
+      <div className="flex flex-wrap items-center gap-2 border-b border-border">
+        <TabButton active={statusTab === "pending"} onClick={() => setStatusTab("pending")} icon={<Clock className="h-4 w-4" />}>
+          Pendentes <span className="ml-1 rounded-full bg-amber-500/20 px-2 text-xs text-amber-500">{counts.pending}</span>
+        </TabButton>
+        <TabButton active={statusTab === "approved"} onClick={() => setStatusTab("approved")} icon={<ShieldCheck className="h-4 w-4" />}>
+          Aprovados <span className="ml-1 rounded-full bg-emerald-500/20 px-2 text-xs text-emerald-500">{counts.approved}</span>
+        </TabButton>
+        <TabButton active={statusTab === "rejected"} onClick={() => setStatusTab("rejected")} icon={<Ban className="h-4 w-4" />}>
+          Rejeitados <span className="ml-1 rounded-full bg-rose-500/20 px-2 text-xs text-rose-500">{counts.rejected}</span>
+        </TabButton>
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input placeholder="Buscar por nome, produtor ou código de barras..."
+          value={search} onChange={e => setSearch(e.target.value)}
+          className="w-full rounded-md border border-input bg-background pl-10 pr-4 py-2 text-sm" />
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-border bg-card">
@@ -121,211 +184,272 @@ function CatalogAdmin() {
             <tr>
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Produtor</th>
-              <th className="px-4 py-3">Região/País</th>
-              <th className="px-4 py-3">Uvas</th>
-              <th className="px-4 py-3">Volume</th>
+              <th className="px-4 py-3">Safra</th>
+              <th className="px-4 py-3">Tipo / Estilo</th>
+              <th className="px-4 py-3">País</th>
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {filteredItems.map(item => (
+            {filtered.map(item => (
               <tr key={item.id} className="hover:bg-accent/50">
                 <td className="px-4 py-3 font-medium">{item.name}</td>
-                <td className="px-4 py-3">{item.producer}</td>
-                <td className="px-4 py-3">{item.region}, {item.country}</td>
-                <td className="px-4 py-3">{item.grape}</td>
-                <td className="px-4 py-3">{item.volume}</td>
+                <td className="px-4 py-3">{item.producer ?? "—"}</td>
+                <td className="px-4 py-3">{item.vintage ?? "—"}</td>
+                <td className="px-4 py-3"><span className="block">{item.wine_type ?? "—"}</span><span className="block text-xs text-muted-foreground">{item.style ?? ""}</span></td>
+                <td className="px-4 py-3">{item.country ?? "—"}</td>
                 <td className="px-4 py-3 text-right">
-                  {canEdit && (
-                    <div className="flex justify-end gap-2">
-                      <button 
-                        onClick={() => setEditingItem(item)}
-                        className="rounded p-1 hover:bg-accent"
-                      >
-                        <Edit className="h-4 w-4 text-primary" />
+                  <div className="flex justify-end gap-1.5">
+                    {isAdmin && item.status === "pending" && (
+                      <>
+                        <button title="Aprovar" onClick={() => setStatus(item.id, "approved")}
+                          className="rounded p-1.5 text-emerald-500 hover:bg-emerald-500/10">
+                          <Check className="h-4 w-4" />
+                        </button>
+                        <button title="Rejeitar" onClick={() => {
+                          const r = prompt("Motivo da rejeição (opcional)") ?? undefined;
+                          setStatus(item.id, "rejected", r);
+                        }} className="rounded p-1.5 text-rose-500 hover:bg-rose-500/10">
+                          <XIcon className="h-4 w-4" />
+                        </button>
+                      </>
+                    )}
+                    {isAdmin && item.status === "rejected" && (
+                      <button title="Reverter para pendente" onClick={() => setStatus(item.id, "pending")}
+                        className="rounded p-1.5 text-amber-500 hover:bg-amber-500/10">
+                        <Clock className="h-4 w-4" />
                       </button>
-                      <button 
-                        onClick={() => handleDelete(item.id)}
-                        className="rounded p-1 hover:bg-accent"
-                      >
+                    )}
+                    <button onClick={() => setEditing(item)} className="rounded p-1.5 hover:bg-accent">
+                      <Edit className="h-4 w-4 text-primary" />
+                    </button>
+                    {isAdmin && (
+                      <button onClick={() => handleDelete(item.id)} className="rounded p-1.5 hover:bg-accent">
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </td>
-
               </tr>
             ))}
           </tbody>
         </table>
         {loading && <div className="p-8 text-center">Carregando catálogo...</div>}
-        {!loading && filteredItems.length === 0 && (
-          <div className="p-8 text-center text-muted-foreground">Nenhum item encontrado.</div>
+        {!loading && filtered.length === 0 && (
+          <div className="p-8 text-center text-muted-foreground">
+            {statusTab === "pending" ? "Nenhum rótulo pendente de revisão." : "Nenhum item encontrado."}
+          </div>
         )}
       </div>
 
-      {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold">{editingItem.id ? "Editar Rótulo" : "Novo Rótulo"}</h3>
-              <button 
-                onClick={() => setEditingItem(null)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                ✕
-              </button>
-            </div>
-            <p className="mb-4 text-xs italic text-muted-foreground/70">
-              Os textos em cinza claro dentro dos campos são apenas exemplos. Passe o mouse no ícone <Info className="inline h-3 w-3" /> ao lado de cada rótulo para ver a explicação.
-            </p>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="grid gap-2">
-                <FieldLabel hint="Nome completo do rótulo como aparece no contra-rótulo, sem incluir produtor ou safra. Ex.: 'Alpha Cabernet Sauvignon', 'Brut Réserve'.">
-                  Nome do Rótulo
-                </FieldLabel>
-                <input
-                  value={editingItem.name || ""}
-                  onChange={e => setEditingItem({ ...editingItem, name: e.target.value })}
-                  placeholder="Ex: Alpha Cabernet Sauvignon"
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
-                />
+      {editing && (
+        <EditorModal item={editing} onChange={setEditing} onClose={() => setEditing(null)} onSave={handleSave} />
+      )}
+    </div>
+  );
+}
+
+function TabButton({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick}
+      className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition ${active ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+      {icon}{children}
+    </button>
+  );
+}
+
+function EditorModal({ item, onChange, onClose, onSave }: {
+  item: Partial<WineCatalog>;
+  onChange: (i: Partial<WineCatalog>) => void;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  const [tab, setTab] = useState<"geral" | "carac" | "midia">("geral");
+  const set = <K extends keyof WineCatalog>(k: K, v: WineCatalog[K]) => onChange({ ...item, [k]: v });
+  const videos: Video[] = Array.isArray(item.videos) ? (item.videos as Video[]) : [];
+  const suppliers: string[] = Array.isArray(item.suppliers) ? item.suppliers : [];
+  const awards: string[] = Array.isArray(item.awards) ? item.awards : [];
+
+  function setVideo(idx: number, v: Partial<Video>) {
+    const next = [...videos];
+    next[idx] = { ...next[idx], ...v };
+    set("videos", next as any);
+  }
+  function addVideo() { set("videos", [...videos, { title: "", url: "" }] as any); }
+  function removeVideo(i: number) { set("videos", videos.filter((_, k) => k !== i) as any); }
+
+  function setSupplier(idx: number, v: string) {
+    const next = [...suppliers]; next[idx] = v; set("suppliers", next as any);
+  }
+  function addSupplier() { set("suppliers", [...suppliers, ""] as any); }
+  function removeSupplier(i: number) { set("suppliers", suppliers.filter((_, k) => k !== i) as any); }
+
+  function setAward(idx: number, v: string) {
+    const next = [...awards]; next[idx] = v; set("awards", next as any);
+  }
+  function addAward() {
+    if (awards.length >= 10) return;
+    set("awards", [...awards, ""] as any);
+  }
+  function removeAward(i: number) { set("awards", awards.filter((_, k) => k !== i) as any); }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+      <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-lg">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-xl font-bold">{item.id ? "Editar Rótulo" : "Novo Rótulo"}</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><XIcon className="h-5 w-5" /></button>
+        </div>
+
+        <div className="mb-4 flex gap-1 border-b border-border">
+          {(["geral", "carac", "midia"] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`px-4 py-2 text-sm font-medium border-b-2 ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}>
+              {t === "geral" ? "Geral" : t === "carac" ? "Características" : "Mídia"}
+            </button>
+          ))}
+        </div>
+
+        {tab === "geral" && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <Input label="Nome*" hint="Nome do rótulo como aparece no contra-rótulo, sem produtor/safra." placeholder="Ex: Alpha Cabernet Sauvignon" value={item.name ?? ""} onChange={v => set("name", v)} />
+            <Input label="Produtor" hint="Vinícola responsável pela elaboração." placeholder="Ex: Viña Montes" value={item.producer ?? ""} onChange={v => set("producer", v)} />
+            <Input label="Safra" hint="Ano da colheita. Vazio para NV." placeholder="Ex: 2020" value={item.vintage ? String(item.vintage) : ""} onChange={v => set("vintage", v ? Number(v) : null)} />
+            <Input label="Região" hint="Região vitivinícola ou DO." placeholder="Ex: Vale do Colchagua" value={item.region ?? ""} onChange={v => set("region", v)} />
+            <Input label="País" hint="País de origem." placeholder="Ex: Chile" value={item.country ?? ""} onChange={v => set("country", v)} />
+            <Input label="Uvas" hint="Castas e % quando houver corte." placeholder="Ex: Cabernet Sauvignon 85%, Merlot 15%" value={item.grape ?? ""} onChange={v => set("grape", v)} />
+            <Select label="Tipo" hint="Categoria geral." value={item.wine_type ?? ""} onChange={v => set("wine_type", v)} options={TYPES} />
+            <Select label="Estilo" hint="Estilo usado para harmonização." value={item.style ?? ""} onChange={v => set("style", v)} options={STYLES} />
+            <Select label="Volume" hint="Capacidade da garrafa." value={item.volume ?? ""} onChange={v => set("volume", v)} options={VOLUMES} />
+            <Input label="Código de barras" hint="EAN / UPC do rótulo." placeholder="7891234567890" value={item.barcode ?? ""} onChange={v => set("barcode", v)} />
+            <div className="md:col-span-2">
+              <FieldLabel hint="Fornecedores conhecidos no Brasil. Pode incluir mais de um.">Fornecedores</FieldLabel>
+              <div className="mt-2 space-y-2">
+                {suppliers.map((s, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input value={s} onChange={e => setSupplier(i, e.target.value)} placeholder="Ex: Mistral, World Wine..."
+                      className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <button onClick={() => removeSupplier(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
+                  </div>
+                ))}
+                <button onClick={addSupplier} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus className="h-3 w-3" /> Adicionar fornecedor</button>
               </div>
-              <div className="grid gap-2">
-                <FieldLabel hint="Vinícola ou produtor responsável pela elaboração. Ex.: 'Viña Montes', 'Moët & Chandon'.">
-                  Produtor
-                </FieldLabel>
-                <input
-                  value={editingItem.producer || ""}
-                  onChange={e => setEditingItem({ ...editingItem, producer: e.target.value })}
-                  placeholder="Ex: Viña Montes"
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
-                />
-              </div>
-              <div className="grid gap-2">
-                <FieldLabel hint="País de origem do vinho, por extenso e em português. Ex.: 'Chile', 'França', 'Itália'.">
-                  País
-                </FieldLabel>
-                <input
-                  value={editingItem.country || ""}
-                  onChange={e => setEditingItem({ ...editingItem, country: e.target.value })}
-                  placeholder="Ex: Chile"
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
-                />
-              </div>
-              <div className="grid gap-2">
-                <FieldLabel hint="Região vitivinícola, denominação ou apelação de origem. Ex.: 'Vale do Colchagua', 'Bordeaux', 'Mendoza'.">
-                  Região
-                </FieldLabel>
-                <input
-                  value={editingItem.region || ""}
-                  onChange={e => setEditingItem({ ...editingItem, region: e.target.value })}
-                  placeholder="Ex: Vale do Colchagua"
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
-                />
-              </div>
-              <div className="grid gap-2">
-                <FieldLabel hint="Castas/uvas e seus percentuais quando houver corte. Separe por vírgula. Ex.: 'Cabernet Sauvignon 85%, Merlot 15%'.">
-                  Uvas
-                </FieldLabel>
-                <input
-                  value={editingItem.grape || ""}
-                  onChange={e => setEditingItem({ ...editingItem, grape: e.target.value })}
-                  placeholder="Ex: Cabernet Sauvignon 85%, Merlot 15%"
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
-                />
-              </div>
-              <div className="grid gap-2">
-                <FieldLabel hint="Categoria geral do vinho. Use 'Outros' apenas quando nenhuma das opções padrão se aplicar.">
-                  Tipo
-                </FieldLabel>
-                <select
-                  value={editingItem.wine_type || ""}
-                  onChange={e => setEditingItem({ ...editingItem, wine_type: e.target.value })}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">Selecione...</option>
-                  <option value="Espumante">Espumante</option>
-                  <option value="Branco">Branco</option>
-                  <option value="Rosé">Rosé</option>
-                  <option value="Tinto">Tinto</option>
-                  <option value="Fortificado">Fortificado</option>
-                  <option value="Sobremesa">Sobremesa</option>
-                </select>
-              </div>
-              <div className="grid gap-2">
-                <FieldLabel hint="Capacidade da garrafa em mililitros, com a unidade. Padrões comuns: 750ml, 375ml, 187ml, 1500ml (magnum).">
-                  Volume
-                </FieldLabel>
-                <input
-                  value={editingItem.volume || ""}
-                  onChange={e => setEditingItem({ ...editingItem, volume: e.target.value })}
-                  placeholder="Ex: 750ml"
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
-                />
-              </div>
-              <div className="grid gap-2">
-                <FieldLabel hint="Endereço (URL) público da foto do rótulo. Deve iniciar com https:// e apontar diretamente para uma imagem (.jpg, .png, .webp).">
-                  URL da Imagem
-                </FieldLabel>
-                <input
-                  value={editingItem.image_url || ""}
-                  onChange={e => setEditingItem({ ...editingItem, image_url: e.target.value })}
-                  placeholder="https://exemplo.com/rotulo.jpg"
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
-                />
-              </div>
-              <div className="col-span-2 grid gap-2">
-                <FieldLabel hint="Descrição sensorial: cor, aromas, sabor, corpo, taninos e final de boca. Texto corrido, 2 a 4 linhas.">
-                  Notas de Degustação
-                </FieldLabel>
-                <textarea
-                  value={editingItem.tasting_notes || ""}
-                  onChange={e => setEditingItem({ ...editingItem, tasting_notes: e.target.value })}
-                  placeholder="Ex: Rubi intenso. Aromas de frutas negras maduras, especiarias e notas de baunilha. Em boca apresenta taninos firmes, corpo médio e final persistente."
-                  className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
-                />
-              </div>
-              <div className="col-span-2 grid gap-2">
-                <FieldLabel hint="Sugestões gastronômicas: pratos, proteínas, queijos e temperos que combinam com o vinho.">
-                  Harmonização
-                </FieldLabel>
-                <textarea
-                  value={editingItem.pairing_notes || ""}
-                  onChange={e => setEditingItem({ ...editingItem, pairing_notes: e.target.value })}
-                  placeholder="Ex: Carnes vermelhas grelhadas, cordeiro, massas com molhos encorpados e queijos curados."
-                  className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
-                />
-              </div>
-              <div className="col-span-2 grid gap-2">
-                <FieldLabel hint="Como o vinho foi vinificado e envelhecido: tipo de fermentação, tempo e tipo de barrica, guarda em garrafa, etc.">
-                  Elaboração e Maturação
-                </FieldLabel>
-                <textarea
-                  value={editingItem.aging || ""}
-                  onChange={e => setEditingItem({ ...editingItem, aging: e.target.value })}
-                  placeholder="Ex: Fermentação em tanques de inox, maturação por 12 meses em barricas de carvalho francês (30% novas) e 6 meses adicionais em garrafa."
-                  className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => setEditingItem(null)}
-                className="rounded-md px-4 py-2 text-sm font-medium hover:bg-accent"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSave}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                Salvar
-              </button>
             </div>
           </div>
+        )}
+
+        {tab === "carac" && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <Input label="Teor alcoólico (%)" hint="Porcentagem de álcool em volume." placeholder="Ex: 13.5" value={item.alcohol_pct != null ? String(item.alcohol_pct) : ""} onChange={v => set("alcohol_pct", v ? Number(v) : null)} />
+            <div />
+            <Select label="Açúcar (conceito)" hint="Classificação por dulçor." value={item.sugar_level ?? ""} onChange={v => set("sugar_level", v)} options={SUGAR_LEVELS} />
+            <Input label="Açúcar (g/L)" hint="Açúcar residual em gramas por litro." placeholder="Ex: 3.5" value={item.sugar_g_l != null ? String(item.sugar_g_l) : ""} onChange={v => set("sugar_g_l", v ? Number(v) : null)} />
+            <Select label="Corpo" hint="Peso/estrutura do vinho na boca." value={item.body ?? ""} onChange={v => set("body", v)} options={BODY} />
+            <Select label="Taninos" hint="Intensidade dos taninos." value={item.tannin ?? ""} onChange={v => set("tannin", v)} options={INTENSITY} />
+            <Select label="Acidez (conceito)" hint="Percepção de frescor." value={item.acidity ?? ""} onChange={v => set("acidity", v)} options={INTENSITY} />
+            <Input label="Acidez (g/L)" hint="Acidez total em gramas por litro." placeholder="Ex: 5.8" value={item.acidity_g_l != null ? String(item.acidity_g_l) : ""} onChange={v => set("acidity_g_l", v ? Number(v) : null)} />
+            <Input label="Acidez (pH)" hint="Valor de pH do vinho." placeholder="Ex: 3.4" value={item.acidity_ph != null ? String(item.acidity_ph) : ""} onChange={v => set("acidity_ph", v ? Number(v) : null)} />
+            <div />
+            <TextArea label="Elaboração" hint="Vinificação: tipo de fermentação, leveduras, tanques, etc." placeholder="Ex: Fermentação em tanques de inox a temperatura controlada..." value={item.elaboration ?? ""} onChange={v => set("elaboration", v)} className="md:col-span-2" />
+            <TextArea label="Maturação" hint="Envelhecimento: barricas, tempo, guarda em garrafa." placeholder="Ex: 12 meses em barrica de carvalho francês (30% novas)." value={item.aging ?? ""} onChange={v => set("aging", v)} className="md:col-span-2" />
+            <Input label="Temp. mín. serviço (°C)" hint="Temperatura mínima recomendada." placeholder="Ex: 16" value={item.serving_temp_min != null ? String(item.serving_temp_min) : ""} onChange={v => set("serving_temp_min", v ? Number(v) : null)} />
+            <Input label="Temp. máx. serviço (°C)" hint="Temperatura máxima recomendada." placeholder="Ex: 18" value={item.serving_temp_max != null ? String(item.serving_temp_max) : ""} onChange={v => set("serving_temp_max", v ? Number(v) : null)} />
+            <TextArea label="Notas de degustação" hint="Cor, aromas, paladar e final." placeholder="Ex: Rubi intenso. Aromas de frutas negras, especiarias..." value={item.tasting_notes ?? ""} onChange={v => set("tasting_notes", v)} className="md:col-span-2" />
+            <TextArea label="Harmonização" hint="Sugestões gastronômicas." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro, queijos curados." value={item.pairing_notes ?? ""} onChange={v => set("pairing_notes", v)} className="md:col-span-2" />
+            <div className="md:col-span-2">
+              <FieldLabel hint="Até 10 premiações. Use um campo por prêmio.">Premiações ({awards.length}/10)</FieldLabel>
+              <div className="mt-2 space-y-2">
+                {awards.map((a, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input value={a} onChange={e => setAward(i, e.target.value)} placeholder="Ex: 92 pts Wine Spectator 2022"
+                      className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <button onClick={() => removeAward(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
+                  </div>
+                ))}
+                {awards.length < 10 && (
+                  <button onClick={addAward} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus className="h-3 w-3" /> Adicionar premiação</button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === "midia" && (
+          <div className="space-y-5">
+            <div>
+              <FieldLabel hint="Foto principal do rótulo, usada como capa no catálogo.">Imagem principal</FieldLabel>
+              <div className="mt-2">
+                <MediaUploader value={item.image_url ?? null} onChange={(v) => set("image_url", v)} folder="catalog" />
+              </div>
+            </div>
+            <div>
+              <FieldLabel hint="Imagens adicionais: contra-rótulo, garrafa, vinhedo.">Galeria de imagens</FieldLabel>
+              <div className="mt-2">
+                <MediaGallery values={item.gallery_urls ?? []} onChange={(v) => set("gallery_urls", v)} folder="catalog" />
+              </div>
+            </div>
+            <div>
+              <FieldLabel hint="Ficha técnica oficial em PDF, fornecida pelo produtor ou importador.">Ficha técnica (PDF)</FieldLabel>
+              <div className="mt-2">
+                <MediaUploader value={item.tech_sheet_url ?? null} onChange={(v) => set("tech_sheet_url", v)} accept="application/pdf" folder="catalog/tech" kind="file" />
+              </div>
+            </div>
+            <div>
+              <FieldLabel hint="Vídeos do YouTube, Vimeo ou outras plataformas. Renomeie o título para identificar.">Vídeos</FieldLabel>
+              <div className="mt-2 space-y-2">
+                {videos.map((v, i) => (
+                  <div key={i} className="grid gap-2 rounded-md border border-border bg-muted/30 p-3 md:grid-cols-[1fr_2fr_auto]">
+                    <input value={v.title} onChange={e => setVideo(i, { title: e.target.value })} placeholder="Título do vídeo"
+                      className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <input value={v.url} onChange={e => setVideo(i, { url: e.target.value })} placeholder="https://youtube.com/..."
+                      className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <button onClick={() => removeVideo(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
+                  </div>
+                ))}
+                <button onClick={addVideo} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus className="h-3 w-3" /> Adicionar vídeo</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-end gap-3 border-t border-border pt-4">
+          <button onClick={onClose} className="rounded-md border border-input px-4 py-2 text-sm">Cancelar</button>
+          <button onClick={onSave} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Salvar</button>
         </div>
-      )}
+      </div>
+    </div>
+  );
+}
+
+function Input({ label, hint, value, onChange, placeholder }: { label: string; hint: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <div className="grid gap-1.5">
+      <FieldLabel hint={hint}>{label}</FieldLabel>
+      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40" />
+    </div>
+  );
+}
+
+function TextArea({ label, hint, value, onChange, placeholder, className }: { label: string; hint: string; value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
+  return (
+    <div className={`grid gap-1.5 ${className ?? ""}`}>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
+      <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        className="h-20 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40" />
+    </div>
+  );
+}
+
+function Select({ label, hint, value, onChange, options }: { label: string; hint: string; value: string; onChange: (v: string) => void; options: string[] }) {
+  return (
+    <div className="grid gap-1.5">
+      <FieldLabel hint={hint}>{label}</FieldLabel>
+      <select value={value} onChange={e => onChange(e.target.value)}
+        className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+        <option value="">Selecione...</option>
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
     </div>
   );
 }

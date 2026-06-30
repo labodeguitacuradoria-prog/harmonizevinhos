@@ -378,19 +378,19 @@ function EditorModal({ item, onChange, onClose, onSave }: {
             <div>
               <FieldLabel hint="Foto principal do rótulo, usada como capa no catálogo.">Imagem principal</FieldLabel>
               <div className="mt-2">
-                <MediaUploader value={item.image_url ?? null} onChange={(v) => set("image_url", v)} folder="catalog" />
+                <MediaUploader label="" value={item.image_url ?? null} onChange={(v) => set("image_url", v)} folder="catalog" />
               </div>
             </div>
             <div>
               <FieldLabel hint="Imagens adicionais: contra-rótulo, garrafa, vinhedo.">Galeria de imagens</FieldLabel>
               <div className="mt-2">
-                <MediaGallery values={item.gallery_urls ?? []} onChange={(v) => set("gallery_urls", v)} folder="catalog" />
+                <MediaGallery label="" values={item.gallery_urls ?? []} onChange={(v) => set("gallery_urls", v)} folder="catalog" />
               </div>
             </div>
             <div>
               <FieldLabel hint="Ficha técnica oficial em PDF, fornecida pelo produtor ou importador.">Ficha técnica (PDF)</FieldLabel>
               <div className="mt-2">
-                <MediaUploader value={item.tech_sheet_url ?? null} onChange={(v) => set("tech_sheet_url", v)} accept="application/pdf" folder="catalog/tech" kind="file" />
+                <MediaUploader label="" value={item.tech_sheet_url ?? null} onChange={(v) => set("tech_sheet_url", v)} accept="application/pdf" folder="catalog/tech" kind="file" />
               </div>
             </div>
             <div>

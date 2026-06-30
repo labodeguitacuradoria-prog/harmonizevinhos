@@ -624,6 +624,8 @@ export type Database = {
       wine_catalog: {
         Row: {
           acidity: string | null
+          acidity_g_l: number | null
+          acidity_ph: number | null
           aging: string | null
           alcohol_pct: number | null
           approved_at: string | null
@@ -633,6 +635,7 @@ export type Database = {
           body: string | null
           country: string | null
           created_at: string
+          elaboration: string | null
           gallery_urls: string[] | null
           grape: string | null
           id: string
@@ -646,13 +649,17 @@ export type Database = {
           serving_temp_min: number | null
           source_restaurant_id: string | null
           status: Database["public"]["Enums"]["catalog_status"]
+          style: string | null
           submitted_by: string | null
+          sugar_g_l: number | null
           sugar_level: string | null
+          suppliers: string[] | null
           tannin: string | null
           tasting_notes: string | null
           tech_sheet_url: string | null
           updated_at: string
           video_url: string | null
+          videos: Json | null
           vintage: number | null
           volume: string | null
           volume_ml: number | null
@@ -660,6 +667,8 @@ export type Database = {
         }
         Insert: {
           acidity?: string | null
+          acidity_g_l?: number | null
+          acidity_ph?: number | null
           aging?: string | null
           alcohol_pct?: number | null
           approved_at?: string | null
@@ -669,6 +678,7 @@ export type Database = {
           body?: string | null
           country?: string | null
           created_at?: string
+          elaboration?: string | null
           gallery_urls?: string[] | null
           grape?: string | null
           id?: string
@@ -682,13 +692,17 @@ export type Database = {
           serving_temp_min?: number | null
           source_restaurant_id?: string | null
           status?: Database["public"]["Enums"]["catalog_status"]
+          style?: string | null
           submitted_by?: string | null
+          sugar_g_l?: number | null
           sugar_level?: string | null
+          suppliers?: string[] | null
           tannin?: string | null
           tasting_notes?: string | null
           tech_sheet_url?: string | null
           updated_at?: string
           video_url?: string | null
+          videos?: Json | null
           vintage?: number | null
           volume?: string | null
           volume_ml?: number | null
@@ -696,6 +710,8 @@ export type Database = {
         }
         Update: {
           acidity?: string | null
+          acidity_g_l?: number | null
+          acidity_ph?: number | null
           aging?: string | null
           alcohol_pct?: number | null
           approved_at?: string | null
@@ -705,6 +721,7 @@ export type Database = {
           body?: string | null
           country?: string | null
           created_at?: string
+          elaboration?: string | null
           gallery_urls?: string[] | null
           grape?: string | null
           id?: string
@@ -718,13 +735,17 @@ export type Database = {
           serving_temp_min?: number | null
           source_restaurant_id?: string | null
           status?: Database["public"]["Enums"]["catalog_status"]
+          style?: string | null
           submitted_by?: string | null
+          sugar_g_l?: number | null
           sugar_level?: string | null
+          suppliers?: string[] | null
           tannin?: string | null
           tasting_notes?: string | null
           tech_sheet_url?: string | null
           updated_at?: string
           video_url?: string | null
+          videos?: Json | null
           vintage?: number | null
           volume?: string | null
           volume_ml?: number | null
@@ -743,6 +764,8 @@ export type Database = {
       wines: {
         Row: {
           acidity: string | null
+          acidity_g_l: number | null
+          acidity_ph: number | null
           active_on_menu: boolean
           aging: string | null
           alcohol_pct: number | null
@@ -754,6 +777,7 @@ export type Database = {
           count_in_stock: boolean
           country: string | null
           created_at: string
+          elaboration: string | null
           gallery_urls: string[] | null
           grape: string | null
           id: string
@@ -767,6 +791,8 @@ export type Database = {
           sale_price: number
           serving_temp_max: number | null
           serving_temp_min: number | null
+          style: string | null
+          sugar_g_l: number | null
           sugar_level: string | null
           supplier_id: string | null
           tannin: string | null
@@ -774,12 +800,15 @@ export type Database = {
           tech_sheet_url: string | null
           updated_at: string
           video_url: string | null
+          videos: Json | null
           vintage: number | null
           volume: string | null
           wine_type: string | null
         }
         Insert: {
           acidity?: string | null
+          acidity_g_l?: number | null
+          acidity_ph?: number | null
           active_on_menu?: boolean
           aging?: string | null
           alcohol_pct?: number | null
@@ -791,6 +820,7 @@ export type Database = {
           count_in_stock?: boolean
           country?: string | null
           created_at?: string
+          elaboration?: string | null
           gallery_urls?: string[] | null
           grape?: string | null
           id?: string
@@ -804,6 +834,8 @@ export type Database = {
           sale_price?: number
           serving_temp_max?: number | null
           serving_temp_min?: number | null
+          style?: string | null
+          sugar_g_l?: number | null
           sugar_level?: string | null
           supplier_id?: string | null
           tannin?: string | null
@@ -811,12 +843,15 @@ export type Database = {
           tech_sheet_url?: string | null
           updated_at?: string
           video_url?: string | null
+          videos?: Json | null
           vintage?: number | null
           volume?: string | null
           wine_type?: string | null
         }
         Update: {
           acidity?: string | null
+          acidity_g_l?: number | null
+          acidity_ph?: number | null
           active_on_menu?: boolean
           aging?: string | null
           alcohol_pct?: number | null
@@ -828,6 +863,7 @@ export type Database = {
           count_in_stock?: boolean
           country?: string | null
           created_at?: string
+          elaboration?: string | null
           gallery_urls?: string[] | null
           grape?: string | null
           id?: string
@@ -841,6 +877,8 @@ export type Database = {
           sale_price?: number
           serving_temp_max?: number | null
           serving_temp_min?: number | null
+          style?: string | null
+          sugar_g_l?: number | null
           sugar_level?: string | null
           supplier_id?: string | null
           tannin?: string | null
@@ -848,6 +886,7 @@ export type Database = {
           tech_sheet_url?: string | null
           updated_at?: string
           video_url?: string | null
+          videos?: Json | null
           vintage?: number | null
           volume?: string | null
           wine_type?: string | null

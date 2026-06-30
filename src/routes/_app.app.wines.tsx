@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +30,83 @@ function WineStatusBadge({ wine }: { wine: { active_on_menu: boolean; count_in_s
   );
 }
 
+
+type CatalogPick = {
+  name: string;
+  producer: string | null;
+  vintage: number | null;
+  region: string | null;
+  country: string | null;
+  grape: string | null;
+  wine_type: string | null;
+  alcohol_pct: number | null;
+  sugar_level: string | null;
+  body: string | null;
+  tannin: string | null;
+  acidity: string | null;
+  aging: string | null;
+  serving_temp_min: number | null;
+  serving_temp_max: number | null;
+  pairing_notes: string | null;
+  tasting_notes: string | null;
+  barcode: string | null;
+  image_url: string | null;
+};
+
+function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<(CatalogPick & { id: string })[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (q.trim().length < 2) { setResults([]); return; }
+    setLoading(true);
+    const handle = setTimeout(async () => {
+      const { data } = await supabase
+        .from("wine_catalog")
+        .select("id,name,producer,vintage,region,country,grape,wine_type,alcohol_pct,sugar_level,body,tannin,acidity,aging,serving_temp_min,serving_temp_max,pairing_notes,tasting_notes,barcode,image_url")
+        .eq("status", "approved")
+        .or(`name.ilike.%${q}%,producer.ilike.%${q}%,barcode.eq.${q}`)
+        .limit(8);
+      setResults((data as any) ?? []);
+      setLoading(false);
+    }, 250);
+    return () => clearTimeout(handle);
+  }, [q]);
+
+  return (
+    <div className="relative rounded-md border border-dashed border-primary/40 bg-primary/5 p-3">
+      <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
+        <Info className="h-3 w-3" /> Buscar no Catálogo Global (preenche os campos vazios automaticamente)
+      </div>
+      <input
+        value={q}
+        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        placeholder="Digite nome, produtor ou código de barras..."
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      />
+      {open && (q.trim().length >= 2) && (
+        <div className="absolute left-3 right-3 z-10 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+          {loading && <div className="p-3 text-xs text-muted-foreground">Buscando...</div>}
+          {!loading && results.length === 0 && <div className="p-3 text-xs text-muted-foreground">Nenhum rótulo encontrado.</div>}
+          {results.map((r) => (
+            <button
+              type="button"
+              key={r.id}
+              onClick={() => { onPick(r); setOpen(false); setQ(""); }}
+              className="block w-full border-b border-border px-3 py-2 text-left text-sm hover:bg-accent"
+            >
+              <div className="font-medium">{r.name} {r.vintage ? <span className="text-muted-foreground">— {r.vintage}</span> : null}</div>
+              <div className="text-xs text-muted-foreground">{[r.producer, r.region, r.country].filter(Boolean).join(" • ")}</div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,
@@ -531,6 +608,37 @@ function WineForm({
       <form onSubmit={save} className="space-y-4">
         {tab === "geral" && (
           <div className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <CatalogSearch
+                onPick={(c) => {
+                  setF((prev) => ({
+                    ...prev,
+                    name: prev.name || c.name || "",
+                    producer: prev.producer || c.producer || "",
+                    vintage: prev.vintage || (c.vintage ? String(c.vintage) : ""),
+                    region: prev.region || c.region || "",
+                    country: prev.country || c.country || "",
+                    grape: prev.grape || c.grape || "",
+                    wine_type: prev.wine_type === "Tinto" && c.wine_type
+                      ? (DEFAULT_TYPES.includes(c.wine_type) ? c.wine_type : "__custom")
+                      : prev.wine_type,
+                    wine_type_custom: !DEFAULT_TYPES.includes(c.wine_type ?? "") ? (c.wine_type ?? "") : prev.wine_type_custom,
+                    alcohol_pct: prev.alcohol_pct || (c.alcohol_pct != null ? String(c.alcohol_pct) : ""),
+                    sugar_level: prev.sugar_level || c.sugar_level || "",
+                    body: prev.body || c.body || "",
+                    tannin: prev.tannin || c.tannin || "",
+                    acidity: prev.acidity || c.acidity || "",
+                    aging: prev.aging || c.aging || "",
+                    serving_temp_min: prev.serving_temp_min || (c.serving_temp_min != null ? String(c.serving_temp_min) : ""),
+                    serving_temp_max: prev.serving_temp_max || (c.serving_temp_max != null ? String(c.serving_temp_max) : ""),
+                    pairing_notes: prev.pairing_notes || c.pairing_notes || "",
+                    tasting_notes: prev.tasting_notes || c.tasting_notes || "",
+                    barcode: prev.barcode || c.barcode || "",
+                  }));
+                  if (!image && c.image_url) setImage(c.image_url);
+                }}
+              />
+            </div>
             <Field label="Nome*" required value={f.name} onChange={(v) => setF({ ...f, name: v })} hint="Nome do rótulo como aparece no contra-rótulo, sem incluir produtor ou safra." placeholder="Ex: Alpha Cabernet Sauvignon" />
             <Field label="Código no restaurante" value={f.internal_code} onChange={(v) => setF({ ...f, internal_code: v })} hint="Código interno usado pelo restaurante para identificar o rótulo (PDV, carta, planilha)." placeholder="Ex: V-014" />
             <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} hint="Vinícola ou produtor responsável pela elaboração do vinho." placeholder="Ex: Viña Montes" />

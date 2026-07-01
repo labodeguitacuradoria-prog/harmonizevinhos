@@ -439,7 +439,10 @@ function WinesSection() {
               <th className="px-4 py-3">Custo</th>
               <th className="px-4 py-3">Venda</th>
               <th className="px-4 py-3">Markup</th>
-              <th className="px-4 py-3">Estoque</th>
+              <th className="px-4 py-3">
+                <div>Estoque</div>
+                <div className="text-[9px] font-normal normal-case text-muted-foreground/70">última contagem</div>
+              </th>
               <th className="px-4 py-3">Venda mensal</th>
             </tr>
           </thead>

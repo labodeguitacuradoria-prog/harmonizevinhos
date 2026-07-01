@@ -177,8 +177,18 @@ const LEGACY_TYPE_MAP: Record<string, string> = {
 const SUGAR_LEVELS = ["Seco", "Meio-seco", "Suave", "Doce"];
 const INTENSITY = ["Baixo", "Médio", "Alto"];
 const BODY = ["Leve", "Médio", "Encorpado"];
+const STYLES = [
+  "ESPUMANTE", "BRANCO LEVE", "BRANCO AROMÁTICO", "BRANCO ENCORPADO", "ROSÉ",
+  "TINTO LEVE", "TINTO MÉDIO", "TINTO ENCORPADO", "FORTIFICADO",
+];
 const GLASS_WINE_TYPES = ["Universal", "Tinto", "Branco", "Espumante", "Fortificado", "Outro"];
 const GLASS_MATERIALS = ["Cristal", "Vidro", "Outro"];
+
+function fmtDate(d: string | null | undefined) {
+  if (!d) return "";
+  const dt = new Date(d);
+  return dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
+}
 
 function ProductsPage() {
   const [category, setCategory] = useState<"wine" | "glass">("wine");

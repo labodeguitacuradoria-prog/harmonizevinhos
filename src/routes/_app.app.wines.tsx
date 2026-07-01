@@ -544,6 +544,9 @@ function WineForm({
 
   const [tab, setTab] = useState<"geral" | "carac" | "midia">("geral");
 
+  const initialStyle = wine?.style ?? "";
+  const styleInList = STYLES.includes(initialStyle);
+
   const [f, setF] = useState({
     name: wine?.name ?? "",
     producer: wine?.producer ?? "",
@@ -553,6 +556,8 @@ function WineForm({
     grape: wine?.grape ?? "",
     wine_type: typeInList ? initialType : "__custom",
     wine_type_custom: typeInList ? "" : initialType,
+    style: styleInList ? initialStyle : (initialStyle ? "__custom" : ""),
+    style_custom: styleInList ? "" : initialStyle,
     volume: volumeInList ? initialVolume : "__custom",
     volume_custom: volumeInList ? "" : initialVolume,
     cost_price: wine ? String(wine.cost_price) : "",
@@ -561,24 +566,31 @@ function WineForm({
     internal_code: wine?.internal_code ?? "",
     alcohol_pct: wine?.alcohol_pct != null ? String(wine.alcohol_pct) : "",
     sugar_level: wine?.sugar_level ?? "",
+    sugar_g_l: wine?.sugar_g_l != null ? String(wine.sugar_g_l) : "",
     body: wine?.body ?? "",
     tannin: wine?.tannin ?? "",
     acidity: wine?.acidity ?? "",
+    acidity_g_l: wine?.acidity_g_l != null ? String(wine.acidity_g_l) : "",
+    acidity_ph: wine?.acidity_ph != null ? String(wine.acidity_ph) : "",
+    elaboration: wine?.elaboration ?? "",
     aging: wine?.aging ?? "",
     serving_temp_min: wine?.serving_temp_min != null ? String(wine.serving_temp_min) : "",
     serving_temp_max: wine?.serving_temp_max != null ? String(wine.serving_temp_max) : "",
     pairing_notes: wine?.pairing_notes ?? "",
     tasting_notes: wine?.tasting_notes ?? "",
-    awards: (wine?.awards ?? []).join(", "),
     barcode: wine?.barcode ?? "",
     active_on_menu: wine?.active_on_menu ?? true,
     count_in_stock: wine?.count_in_stock ?? true,
   });
+  const [suppliersList, setSuppliersList] = useState<string[]>(wine?.suppliers ?? []);
+  const [awardsList, setAwardsList] = useState<string[]>(wine?.awards ?? []);
+  const [videosList, setVideosList] = useState<Video[]>(
+    Array.isArray(wine?.videos) ? (wine!.videos as Video[]) : (wine?.video_url ? [{ title: "Vídeo", url: wine.video_url }] : [])
+  );
   const [scanOpen, setScanOpen] = useState(false);
   const [image, setImage] = useState<string | null>(wine?.image_url ?? null);
   const [gallery, setGallery] = useState<string[]>(wine?.gallery_urls ?? []);
   const [techSheet, setTechSheet] = useState<string | null>(wine?.tech_sheet_url ?? null);
-  const [videoUrl, setVideoUrl] = useState<string>(wine?.video_url ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 

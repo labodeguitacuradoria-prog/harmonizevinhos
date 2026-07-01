@@ -101,12 +101,13 @@ function CatalogAdmin() {
       return;
     }
     // Strip fields that cannot be sent in insert/update (metadata / auto).
-    const {
-      id: _id,
-      // @ts-expect-error runtime-only fields
-      created_at, updated_at, approved_at, submitted_by, source_restaurant_id,
-      ...rest
-    } = editing as any;
+    const rest: any = { ...editing };
+    delete rest.id;
+    delete rest.created_at;
+    delete rest.updated_at;
+    delete rest.approved_at;
+    delete rest.submitted_by;
+    delete rest.source_restaurant_id;
     const payload: any = rest;
     if (editing.id) {
       const { error, data } = await supabase

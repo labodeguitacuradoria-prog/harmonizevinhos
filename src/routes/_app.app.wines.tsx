@@ -1132,12 +1132,12 @@ function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: stri
 }
 
 function Field({
-  label, type = "text", value, onChange, required, hint, placeholder,
+  label, type = "text", value, onChange, required, hint, placeholder, className = "",
 }: {
-  label: string; type?: string; value: string; onChange: (v: string) => void; required?: boolean; hint?: string; placeholder?: string;
+  label: string; type?: string; value: string; onChange: (v: string) => void; required?: boolean; hint?: string; placeholder?: string; className?: string;
 }) {
   return (
-    <label className="block">
+    <label className={`block ${className}`}>
       <FieldLabel hint={hint}>{label}</FieldLabel>
       <input
         type={type}
@@ -1149,6 +1149,72 @@ function Field({
         className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-ring"
       />
     </label>
+  );
+}
+
+function StringListEditor({ label, hint, placeholder, values, onChange }: { label: string; hint?: string; placeholder?: string; values: string[]; onChange: (v: string[]) => void }) {
+  const [draft, setDraft] = useState("");
+  return (
+    <div>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
+      <div className="mt-1 flex gap-2">
+        <input
+          value={draft}
+          placeholder={placeholder}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); if (draft.trim()) { onChange([...values, draft.trim()]); setDraft(""); } }
+          }}
+          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-ring"
+        />
+        <button
+          type="button"
+          onClick={() => { if (draft.trim()) { onChange([...values, draft.trim()]); setDraft(""); } }}
+          className="rounded-md border border-input px-3 py-2 text-sm hover:bg-accent"
+        >Adicionar</button>
+      </div>
+      {values.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {values.map((v, i) => (
+            <span key={i} className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs">
+              {v}
+              <button type="button" onClick={() => onChange(values.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VideoListEditor({ values, onChange }: { values: Video[]; onChange: (v: Video[]) => void }) {
+  const [title, setTitle] = useState("");
+  const [url, setUrl] = useState("");
+  return (
+    <div>
+      <FieldLabel hint="Adicione um ou mais vídeos (YouTube, Vimeo, etc.) com título opcional.">Vídeos</FieldLabel>
+      <div className="mt-1 grid gap-2 sm:grid-cols-[1fr_2fr_auto]">
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título (ex: Apresentação)"
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40" />
+        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..."
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40" />
+        <button type="button" onClick={() => { if (url.trim()) { onChange([...values, { title: title.trim() || "Vídeo", url: url.trim() }]); setTitle(""); setUrl(""); } }}
+          className="rounded-md border border-input px-3 py-2 text-sm hover:bg-accent">Adicionar</button>
+      </div>
+      {values.length > 0 && (
+        <ul className="mt-2 space-y-1 text-sm">
+          {values.map((v, i) => (
+            <li key={i} className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+              <div className="min-w-0">
+                <div className="truncate font-medium">{v.title}</div>
+                <a href={v.url} target="_blank" rel="noreferrer" className="truncate text-xs text-primary hover:underline">{v.url}</a>
+              </div>
+              <button type="button" onClick={() => onChange(values.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">×</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

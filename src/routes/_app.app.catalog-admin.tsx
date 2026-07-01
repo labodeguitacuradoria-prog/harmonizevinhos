@@ -96,14 +96,34 @@ function CatalogAdmin() {
   }
 
   async function handleSave() {
-    if (!editing || !editing.name) return;
-    const payload = { ...editing };
+    if (!editing || !editing.name) {
+      alert("Nome é obrigatório.");
+      return;
+    }
+    // Strip fields that cannot be sent in insert/update (metadata / auto).
+    const rest: any = { ...editing };
+    delete rest.id;
+    delete rest.created_at;
+    delete rest.updated_at;
+    delete rest.approved_at;
+    delete rest.submitted_by;
+    delete rest.source_restaurant_id;
+    const payload: any = rest;
     if (editing.id) {
-      const { error } = await supabase.from("wine_catalog").update(payload as any).eq("id", editing.id);
-      if (error) return alert(error.message);
+      const { error, data } = await supabase
+        .from("wine_catalog")
+        .update(payload)
+        .eq("id", editing.id)
+        .select();
+      if (error) return alert("Erro ao salvar: " + error.message);
+      if (!data || data.length === 0) {
+        return alert("Nenhuma linha foi alterada. Verifique se você tem permissão de administrador.");
+      }
     } else {
-      const { error } = await supabase.from("wine_catalog").insert([{ ...payload, status: "approved" } as any]);
-      if (error) return alert(error.message);
+      const { error } = await supabase
+        .from("wine_catalog")
+        .insert([{ ...payload, status: payload.status ?? "approved" }]);
+      if (error) return alert("Erro ao criar: " + error.message);
     }
     setEditing(null);
     fetchCatalog();

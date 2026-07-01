@@ -112,6 +112,8 @@ export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,
 });
 
+type Video = { title: string; url: string };
+
 type Wine = {
   id: string;
   name: string;
@@ -120,17 +122,23 @@ type Wine = {
   region: string | null;
   country: string | null;
   wine_type: string | null;
+  style: string | null;
   grape: string | null;
   volume: string | null;
   cost_price: number;
   sale_price: number;
   supplier_id: string | null;
+  suppliers: string[] | null;
   internal_code: string | null;
   alcohol_pct: number | null;
   sugar_level: string | null;
+  sugar_g_l: number | null;
   body: string | null;
   tannin: string | null;
   acidity: string | null;
+  acidity_g_l: number | null;
+  acidity_ph: number | null;
+  elaboration: string | null;
   aging: string | null;
   serving_temp_min: number | null;
   serving_temp_max: number | null;
@@ -141,6 +149,7 @@ type Wine = {
   gallery_urls: string[] | null;
   tech_sheet_url: string | null;
   video_url: string | null;
+  videos: Video[] | null;
   barcode: string | null;
   active_on_menu: boolean;
   count_in_stock: boolean;
@@ -168,8 +177,18 @@ const LEGACY_TYPE_MAP: Record<string, string> = {
 const SUGAR_LEVELS = ["Seco", "Meio-seco", "Suave", "Doce"];
 const INTENSITY = ["Baixo", "Médio", "Alto"];
 const BODY = ["Leve", "Médio", "Encorpado"];
+const STYLES = [
+  "ESPUMANTE", "BRANCO LEVE", "BRANCO AROMÁTICO", "BRANCO ENCORPADO", "ROSÉ",
+  "TINTO LEVE", "TINTO MÉDIO", "TINTO ENCORPADO", "FORTIFICADO",
+];
 const GLASS_WINE_TYPES = ["Universal", "Tinto", "Branco", "Espumante", "Fortificado", "Outro"];
 const GLASS_MATERIALS = ["Cristal", "Vidro", "Outro"];
+
+function fmtDate(d: string | null | undefined) {
+  if (!d) return "";
+  const dt = new Date(d);
+  return dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
+}
 
 function ProductsPage() {
   const [category, setCategory] = useState<"wine" | "glass">("wine");
@@ -252,17 +271,26 @@ function WinesSection() {
   });
 
   const { data: stockMap = {} } = useQuery({
-    queryKey: ["stock-map", restaurantId],
+    queryKey: ["last-stock-count-map", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("inventory_movements")
-        .select("wine_id, movement_type, quantity")
-        .eq("restaurant_id", restaurantId!);
-      const map: Record<string, number> = {};
-      for (const m of data ?? []) {
-        const sign = m.movement_type === "sale" ? -1 : 1;
-        map[m.wine_id] = (map[m.wine_id] ?? 0) + sign * m.quantity;
+      // Find latest closed session per restaurant, then read its item counts.
+      const { data: sessions } = await supabase
+        .from("stock_count_sessions")
+        .select("id, reference_date")
+        .eq("restaurant_id", restaurantId!)
+        .eq("status", "closed")
+        .order("reference_date", { ascending: false })
+        .limit(1);
+      const session = sessions?.[0];
+      const map: Record<string, { qty: number; date: string | null }> = {};
+      if (!session) return map;
+      const { data: items } = await supabase
+        .from("stock_count_items")
+        .select("wine_id, counted_qty")
+        .eq("session_id", session.id);
+      for (const it of items ?? []) {
+        map[it.wine_id] = { qty: it.counted_qty ?? 0, date: session.reference_date };
       }
       return map;
     },
@@ -382,7 +410,12 @@ function WinesSection() {
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Estoque</div>
-                  <div className="text-base font-semibold leading-none">{isGlassVol(w.volume) ? "—" : (stockMap[w.id] ?? 0)}</div>
+                  <div className="text-base font-semibold leading-none">
+                    {isGlassVol(w.volume) ? "—" : (stockMap[w.id]?.qty ?? "—")}
+                  </div>
+                  {!isGlassVol(w.volume) && stockMap[w.id]?.date && (
+                    <div className="text-[9px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
+                  )}
                   <div className="mt-1 text-[10px] text-muted-foreground">
                     Mês: <span className="font-medium text-foreground">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</span>
                   </div>
@@ -406,7 +439,10 @@ function WinesSection() {
               <th className="px-4 py-3">Custo</th>
               <th className="px-4 py-3">Venda</th>
               <th className="px-4 py-3">Markup</th>
-              <th className="px-4 py-3">Estoque</th>
+              <th className="px-4 py-3">
+                <div>Estoque</div>
+                <div className="text-[9px] font-normal normal-case text-muted-foreground/70">última contagem</div>
+              </th>
               <th className="px-4 py-3">Venda mensal</th>
             </tr>
           </thead>
@@ -442,7 +478,20 @@ function WinesSection() {
                   <td className="px-4 py-3">R$ {Number(w.cost_price).toFixed(2)}</td>
                   <td className="px-4 py-3">R$ {Number(w.sale_price).toFixed(2)}</td>
                   <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>
-                  <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (stockMap[w.id] ?? 0)}</td>
+                  <td className="px-4 py-3">
+                    {isGlassVol(w.volume) ? (
+                      "—"
+                    ) : stockMap[w.id] ? (
+                      <>
+                        <div className="font-medium leading-none">{stockMap[w.id].qty}</div>
+                        {stockMap[w.id].date && (
+                          <div className="mt-0.5 text-[10px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</td>
                 </tr>
               );
@@ -495,6 +544,9 @@ function WineForm({
 
   const [tab, setTab] = useState<"geral" | "carac" | "midia">("geral");
 
+  const initialStyle = wine?.style ?? "";
+  const styleInList = STYLES.includes(initialStyle);
+
   const [f, setF] = useState({
     name: wine?.name ?? "",
     producer: wine?.producer ?? "",
@@ -504,6 +556,8 @@ function WineForm({
     grape: wine?.grape ?? "",
     wine_type: typeInList ? initialType : "__custom",
     wine_type_custom: typeInList ? "" : initialType,
+    style: styleInList ? initialStyle : (initialStyle ? "__custom" : ""),
+    style_custom: styleInList ? "" : initialStyle,
     volume: volumeInList ? initialVolume : "__custom",
     volume_custom: volumeInList ? "" : initialVolume,
     cost_price: wine ? String(wine.cost_price) : "",
@@ -512,24 +566,31 @@ function WineForm({
     internal_code: wine?.internal_code ?? "",
     alcohol_pct: wine?.alcohol_pct != null ? String(wine.alcohol_pct) : "",
     sugar_level: wine?.sugar_level ?? "",
+    sugar_g_l: wine?.sugar_g_l != null ? String(wine.sugar_g_l) : "",
     body: wine?.body ?? "",
     tannin: wine?.tannin ?? "",
     acidity: wine?.acidity ?? "",
+    acidity_g_l: wine?.acidity_g_l != null ? String(wine.acidity_g_l) : "",
+    acidity_ph: wine?.acidity_ph != null ? String(wine.acidity_ph) : "",
+    elaboration: wine?.elaboration ?? "",
     aging: wine?.aging ?? "",
     serving_temp_min: wine?.serving_temp_min != null ? String(wine.serving_temp_min) : "",
     serving_temp_max: wine?.serving_temp_max != null ? String(wine.serving_temp_max) : "",
     pairing_notes: wine?.pairing_notes ?? "",
     tasting_notes: wine?.tasting_notes ?? "",
-    awards: (wine?.awards ?? []).join(", "),
     barcode: wine?.barcode ?? "",
     active_on_menu: wine?.active_on_menu ?? true,
     count_in_stock: wine?.count_in_stock ?? true,
   });
+  const [suppliersList, setSuppliersList] = useState<string[]>(wine?.suppliers ?? []);
+  const [awardsList, setAwardsList] = useState<string[]>(wine?.awards ?? []);
+  const [videosList, setVideosList] = useState<Video[]>(
+    Array.isArray(wine?.videos) ? (wine!.videos as Video[]) : (wine?.video_url ? [{ title: "Vídeo", url: wine.video_url }] : [])
+  );
   const [scanOpen, setScanOpen] = useState(false);
   const [image, setImage] = useState<string | null>(wine?.image_url ?? null);
   const [gallery, setGallery] = useState<string[]>(wine?.gallery_urls ?? []);
   const [techSheet, setTechSheet] = useState<string | null>(wine?.tech_sheet_url ?? null);
-  const [videoUrl, setVideoUrl] = useState<string>(wine?.video_url ?? "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -547,26 +608,33 @@ function WineForm({
       country: f.country || null,
       grape: f.grape || null,
       wine_type: wineType || null,
+      style: (f.style === "__custom" ? f.style_custom.trim() : f.style) || null,
       volume: volume || null,
       cost_price: Number(f.cost_price) || 0,
       sale_price: Number(f.sale_price) || 0,
       supplier_id: f.supplier_id || null,
+      suppliers: suppliersList.length ? suppliersList : null,
       internal_code: f.internal_code.trim() || null,
       alcohol_pct: f.alcohol_pct ? Number(f.alcohol_pct) : null,
       sugar_level: f.sugar_level || null,
+      sugar_g_l: f.sugar_g_l ? Number(f.sugar_g_l) : null,
       body: f.body || null,
       tannin: f.tannin || null,
       acidity: f.acidity || null,
+      acidity_g_l: f.acidity_g_l ? Number(f.acidity_g_l) : null,
+      acidity_ph: f.acidity_ph ? Number(f.acidity_ph) : null,
+      elaboration: f.elaboration || null,
       aging: f.aging || null,
       serving_temp_min: f.serving_temp_min ? Number(f.serving_temp_min) : null,
       serving_temp_max: f.serving_temp_max ? Number(f.serving_temp_max) : null,
       pairing_notes: f.pairing_notes || null,
       tasting_notes: f.tasting_notes || null,
-      awards: f.awards ? f.awards.split(",").map((s) => s.trim()).filter(Boolean) : null,
+      awards: awardsList.length ? awardsList : null,
       image_url: image,
       gallery_urls: gallery.length ? gallery : null,
       tech_sheet_url: techSheet,
-      video_url: videoUrl.trim() || null,
+      video_url: videosList[0]?.url ?? null,
+      videos: videosList.length ? videosList : null,
       barcode: f.barcode.trim() || null,
       active_on_menu: f.active_on_menu,
       count_in_stock: f.count_in_stock,
@@ -733,17 +801,46 @@ function WineForm({
 
         {tab === "carac" && (
           <div className="grid gap-3 sm:grid-cols-2">
+            <SelectWithCustom
+              label="Estilo"
+              hint="Estilo/subcategoria do vinho (ex.: Encorpado e complexo, Fresco e frutado)."
+              value={f.style}
+              custom={f.style_custom}
+              options={STYLES}
+              onChange={(v, c) => setF({ ...f, style: v, style_custom: c })}
+            />
             <Field label="Teor alcoólico (%)" type="number" value={f.alcohol_pct} onChange={(v) => setF({ ...f, alcohol_pct: v })} hint="Porcentagem de álcool em volume, conforme rótulo." placeholder="Ex: 13.5" />
             <SelectField label="Açúcar" value={f.sugar_level} options={SUGAR_LEVELS} onChange={(v) => setF({ ...f, sugar_level: v })} hint="Nível de açúcar residual (seco, meio-seco, demi-sec, doce...)." />
+            <Field label="Açúcar residual (g/L)" type="number" value={f.sugar_g_l} onChange={(v) => setF({ ...f, sugar_g_l: v })} hint="Concentração de açúcar residual em gramas por litro." placeholder="Ex: 4.5" />
             <SelectField label="Corpo" value={f.body} options={BODY} onChange={(v) => setF({ ...f, body: v })} hint="Sensação de peso/estrutura do vinho na boca." />
             <SelectField label="Taninos" value={f.tannin} options={INTENSITY} onChange={(v) => setF({ ...f, tannin: v })} hint="Intensidade dos taninos (adstringência). Mais relevante em tintos." />
             <SelectField label="Acidez" value={f.acidity} options={INTENSITY} onChange={(v) => setF({ ...f, acidity: v })} hint="Percepção de acidez/frescor no paladar." />
-            <Field label="Elaboração e Maturação" value={f.aging} onChange={(v) => setF({ ...f, aging: v })} hint="Como o vinho foi vinificado e envelhecido: fermentação, barricas, tempo em garrafa, etc." placeholder="Ex: 12 meses em barrica de carvalho francês (30% novas)" />
+            <Field label="Acidez total (g/L)" type="number" value={f.acidity_g_l} onChange={(v) => setF({ ...f, acidity_g_l: v })} hint="Acidez total em gramas de ácido tartárico por litro." placeholder="Ex: 5.8" />
+            <Field label="pH" type="number" value={f.acidity_ph} onChange={(v) => setF({ ...f, acidity_ph: v })} hint="Valor de pH do vinho." placeholder="Ex: 3.5" />
+            <Field label="Elaboração" value={f.elaboration} onChange={(v) => setF({ ...f, elaboration: v })} hint="Método de vinificação: fermentação, maceração, tanques, etc." placeholder="Ex: Fermentação em inox, maceração 20 dias" className="sm:col-span-2" />
+            <Field label="Maturação" value={f.aging} onChange={(v) => setF({ ...f, aging: v })} hint="Envelhecimento: barricas, tempo em garrafa, etc." placeholder="Ex: 12 meses em barrica de carvalho francês (30% novas)" className="sm:col-span-2" />
             <Field label="Temp. mín. serviço (°C)" type="number" value={f.serving_temp_min} onChange={(v) => setF({ ...f, serving_temp_min: v })} hint="Temperatura mínima recomendada para servir." placeholder="Ex: 16" />
             <Field label="Temp. máx. serviço (°C)" type="number" value={f.serving_temp_max} onChange={(v) => setF({ ...f, serving_temp_max: v })} hint="Temperatura máxima recomendada para servir." placeholder="Ex: 18" />
             <TextArea label="Notas de degustação" value={f.tasting_notes} onChange={(v) => setF({ ...f, tasting_notes: v })} className="sm:col-span-2" hint="Descrição sensorial: cor, aromas, sabor, corpo, taninos e final de boca." placeholder="Ex: Rubi intenso. Aromas de frutas negras maduras, especiarias e notas de baunilha. Taninos firmes, corpo médio e final persistente." />
             <TextArea label="Harmonização" value={f.pairing_notes} onChange={(v) => setF({ ...f, pairing_notes: v })} className="sm:col-span-2" hint="Sugestões gastronômicas: pratos, proteínas, queijos e temperos que combinam." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro e queijos curados." />
-            <Field label="Premiações (separadas por vírgula)" value={f.awards} onChange={(v) => setF({ ...f, awards: v })} hint="Lista de prêmios e pontuações relevantes, separados por vírgula." placeholder="Ex: 92 pts Wine Spectator, Decanter Silver 2022" />
+            <div className="sm:col-span-2">
+              <StringListEditor
+                label="Premiações"
+                hint="Lista de prêmios e pontuações relevantes."
+                placeholder="Ex: 92 pts Wine Spectator"
+                values={awardsList}
+                onChange={setAwardsList}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <StringListEditor
+                label="Fornecedores"
+                hint="Um ou mais fornecedores deste rótulo para o restaurante."
+                placeholder="Ex: Mistral"
+                values={suppliersList}
+                onChange={setSuppliersList}
+              />
+            </div>
           </div>
         )}
 
@@ -759,7 +856,7 @@ function WineForm({
               folder="wines/tech"
               kind="file"
             />
-            <Field label="Link de vídeo (YouTube, Vimeo...)" value={videoUrl} onChange={setVideoUrl} />
+            <VideoListEditor values={videosList} onChange={setVideosList} />
           </div>
         )}
 
@@ -1035,12 +1132,12 @@ function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: stri
 }
 
 function Field({
-  label, type = "text", value, onChange, required, hint, placeholder,
+  label, type = "text", value, onChange, required, hint, placeholder, className = "",
 }: {
-  label: string; type?: string; value: string; onChange: (v: string) => void; required?: boolean; hint?: string; placeholder?: string;
+  label: string; type?: string; value: string; onChange: (v: string) => void; required?: boolean; hint?: string; placeholder?: string; className?: string;
 }) {
   return (
-    <label className="block">
+    <label className={`block ${className}`}>
       <FieldLabel hint={hint}>{label}</FieldLabel>
       <input
         type={type}
@@ -1052,6 +1149,72 @@ function Field({
         className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-ring"
       />
     </label>
+  );
+}
+
+function StringListEditor({ label, hint, placeholder, values, onChange }: { label: string; hint?: string; placeholder?: string; values: string[]; onChange: (v: string[]) => void }) {
+  const [draft, setDraft] = useState("");
+  return (
+    <div>
+      <FieldLabel hint={hint}>{label}</FieldLabel>
+      <div className="mt-1 flex gap-2">
+        <input
+          value={draft}
+          placeholder={placeholder}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); if (draft.trim()) { onChange([...values, draft.trim()]); setDraft(""); } }
+          }}
+          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/40 focus:ring-2 focus:ring-ring"
+        />
+        <button
+          type="button"
+          onClick={() => { if (draft.trim()) { onChange([...values, draft.trim()]); setDraft(""); } }}
+          className="rounded-md border border-input px-3 py-2 text-sm hover:bg-accent"
+        >Adicionar</button>
+      </div>
+      {values.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {values.map((v, i) => (
+            <span key={i} className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs">
+              {v}
+              <button type="button" onClick={() => onChange(values.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VideoListEditor({ values, onChange }: { values: Video[]; onChange: (v: Video[]) => void }) {
+  const [title, setTitle] = useState("");
+  const [url, setUrl] = useState("");
+  return (
+    <div>
+      <FieldLabel hint="Adicione um ou mais vídeos (YouTube, Vimeo, etc.) com título opcional.">Vídeos</FieldLabel>
+      <div className="mt-1 grid gap-2 sm:grid-cols-[1fr_2fr_auto]">
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título (ex: Apresentação)"
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40" />
+        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..."
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/40" />
+        <button type="button" onClick={() => { if (url.trim()) { onChange([...values, { title: title.trim() || "Vídeo", url: url.trim() }]); setTitle(""); setUrl(""); } }}
+          className="rounded-md border border-input px-3 py-2 text-sm hover:bg-accent">Adicionar</button>
+      </div>
+      {values.length > 0 && (
+        <ul className="mt-2 space-y-1 text-sm">
+          {values.map((v, i) => (
+            <li key={i} className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+              <div className="min-w-0">
+                <div className="truncate font-medium">{v.title}</div>
+                <a href={v.url} target="_blank" rel="noreferrer" className="truncate text-xs text-primary hover:underline">{v.url}</a>
+              </div>
+              <button type="button" onClick={() => onChange(values.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">×</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

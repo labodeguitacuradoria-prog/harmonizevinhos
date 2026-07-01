@@ -271,17 +271,26 @@ function WinesSection() {
   });
 
   const { data: stockMap = {} } = useQuery({
-    queryKey: ["stock-map", restaurantId],
+    queryKey: ["last-stock-count-map", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("inventory_movements")
-        .select("wine_id, movement_type, quantity")
-        .eq("restaurant_id", restaurantId!);
-      const map: Record<string, number> = {};
-      for (const m of data ?? []) {
-        const sign = m.movement_type === "sale" ? -1 : 1;
-        map[m.wine_id] = (map[m.wine_id] ?? 0) + sign * m.quantity;
+      // Find latest closed session per restaurant, then read its item counts.
+      const { data: sessions } = await supabase
+        .from("stock_count_sessions")
+        .select("id, reference_date")
+        .eq("restaurant_id", restaurantId!)
+        .eq("status", "closed")
+        .order("reference_date", { ascending: false })
+        .limit(1);
+      const session = sessions?.[0];
+      const map: Record<string, { qty: number; date: string | null }> = {};
+      if (!session) return map;
+      const { data: items } = await supabase
+        .from("stock_count_items")
+        .select("wine_id, counted_qty")
+        .eq("session_id", session.id);
+      for (const it of items ?? []) {
+        map[it.wine_id] = { qty: it.counted_qty ?? 0, date: session.reference_date };
       }
       return map;
     },

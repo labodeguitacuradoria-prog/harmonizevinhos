@@ -112,6 +112,8 @@ export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,
 });
 
+type Video = { title: string; url: string };
+
 type Wine = {
   id: string;
   name: string;
@@ -120,17 +122,23 @@ type Wine = {
   region: string | null;
   country: string | null;
   wine_type: string | null;
+  style: string | null;
   grape: string | null;
   volume: string | null;
   cost_price: number;
   sale_price: number;
   supplier_id: string | null;
+  suppliers: string[] | null;
   internal_code: string | null;
   alcohol_pct: number | null;
   sugar_level: string | null;
+  sugar_g_l: number | null;
   body: string | null;
   tannin: string | null;
   acidity: string | null;
+  acidity_g_l: number | null;
+  acidity_ph: number | null;
+  elaboration: string | null;
   aging: string | null;
   serving_temp_min: number | null;
   serving_temp_max: number | null;
@@ -141,6 +149,7 @@ type Wine = {
   gallery_urls: string[] | null;
   tech_sheet_url: string | null;
   video_url: string | null;
+  videos: Video[] | null;
   barcode: string | null;
   active_on_menu: boolean;
   count_in_stock: boolean;

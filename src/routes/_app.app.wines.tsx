@@ -478,7 +478,20 @@ function WinesSection() {
                   <td className="px-4 py-3">R$ {Number(w.cost_price).toFixed(2)}</td>
                   <td className="px-4 py-3">R$ {Number(w.sale_price).toFixed(2)}</td>
                   <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>
-                  <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (stockMap[w.id] ?? 0)}</td>
+                  <td className="px-4 py-3">
+                    {isGlassVol(w.volume) ? (
+                      "—"
+                    ) : stockMap[w.id] ? (
+                      <>
+                        <div className="font-medium leading-none">{stockMap[w.id].qty}</div>
+                        {stockMap[w.id].date && (
+                          <div className="mt-0.5 text-[10px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</td>
                 </tr>
               );

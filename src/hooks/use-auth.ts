@@ -15,7 +15,8 @@ export interface UserContext {
 
 export function useAuth(): UserContext {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState(true);
   const [role, setRole] = useState<AppRole | null>(null);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [supplierId, setSupplierId] = useState<string | null>(null);
@@ -26,7 +27,7 @@ export function useAuth(): UserContext {
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      setLoading(false);
+      setSessionLoading(false);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -36,8 +37,10 @@ export function useAuth(): UserContext {
       setRole(null);
       setRestaurantId(null);
       setSupplierId(null);
+      setRoleLoading(sessionLoading);
       return;
     }
+    setRoleLoading(true);
     (async () => {
       const { data } = await supabase
         .from("user_roles")
@@ -46,9 +49,9 @@ export function useAuth(): UserContext {
         .order("role", { ascending: true });
       if (!data || data.length === 0) {
         setRole(null);
+        setRoleLoading(false);
         return;
       }
-      // prioritize: admin > supplier > restaurant
       const admin = data.find((r) => r.role === "admin");
       const supplier = data.find((r) => r.role === "supplier");
       const restaurant = data.find((r) => r.role === "restaurant");
@@ -61,15 +64,17 @@ export function useAuth(): UserContext {
         setRole("restaurant");
         setRestaurantId(restaurant.restaurant_id);
       }
+      setRoleLoading(false);
     })();
-  }, [session]);
+  }, [session, sessionLoading]);
 
   return {
     user: session?.user ?? null,
     session,
-    loading,
+    loading: sessionLoading || roleLoading,
     role,
     restaurantId,
     supplierId,
   };
 }
+

@@ -78,7 +78,7 @@ function FieldLabel({ children, hint }: { children: React.ReactNode; hint: strin
 }
 
 function CatalogAdmin() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const isAdmin = role === "admin";
   const [items, setItems] = useState<WineCatalog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +100,6 @@ function CatalogAdmin() {
       alert("Nome é obrigatório.");
       return;
     }
-    // Strip fields that cannot be sent in insert/update (metadata / auto).
     const rest: any = { ...editing };
     delete rest.id;
     delete rest.created_at;
@@ -120,14 +119,16 @@ function CatalogAdmin() {
         return alert("Nenhuma linha foi alterada. Verifique se você tem permissão de administrador.");
       }
     } else {
+      if (!user?.id) return alert("Sessão inválida. Faça login novamente.");
       const { error } = await supabase
         .from("wine_catalog")
-        .insert([{ ...payload, status: payload.status ?? "approved" }]);
+        .insert([{ ...payload, status: payload.status ?? "approved", submitted_by: user.id }]);
       if (error) return alert("Erro ao criar: " + error.message);
     }
     setEditing(null);
     fetchCatalog();
   }
+
 
   async function setStatus(id: string, status: CatalogStatus, reason?: string) {
     const patch: any = { status, rejection_reason: reason ?? null };

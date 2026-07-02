@@ -23,7 +23,13 @@ export function useAuth(): UserContext {
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
+      // Only update session state if the user actually changed. Token refreshes
+      // (TOKEN_REFRESHED) or window-focus re-emits with the same user would
+      // otherwise re-trigger the role effect and unmount the app tree.
+      setSession((prev) => {
+        if (prev?.user?.id === s?.user?.id) return prev;
+        return s;
+      });
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -32,8 +38,10 @@ export function useAuth(): UserContext {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const userId = session?.user?.id ?? null;
+
   useEffect(() => {
-    if (!session?.user) {
+    if (!userId) {
       setRole(null);
       setRestaurantId(null);
       setSupplierId(null);
@@ -45,7 +53,7 @@ export function useAuth(): UserContext {
       const { data } = await supabase
         .from("user_roles")
         .select("role, restaurant_id, supplier_id")
-        .eq("user_id", session.user.id)
+        .eq("user_id", userId)
         .order("role", { ascending: true });
       if (!data || data.length === 0) {
         setRole(null);
@@ -66,7 +74,7 @@ export function useAuth(): UserContext {
       }
       setRoleLoading(false);
     })();
-  }, [session, sessionLoading]);
+  }, [userId, sessionLoading]);
 
   return {
     user: session?.user ?? null,

@@ -462,8 +462,18 @@ function EditorModal({ item, onChange, onClose, onSave }: {
           <div className="space-y-5">
             <div>
               <FieldLabel hint="Foto principal do rótulo, usada como capa no catálogo.">Imagem principal</FieldLabel>
-              <div className="mt-2">
+              <div className="mt-2 space-y-2">
                 <MediaUploader label="" value={item.image_url ?? null} onChange={(v) => set("image_url", v)} folder="catalog" />
+                <input
+                  type="url"
+                  placeholder="ou cole aqui a URL de uma imagem (https://...)"
+                  defaultValue=""
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    if (v) { set("image_url", v); e.target.value = ""; }
+                  }}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs placeholder:text-muted-foreground/50"
+                />
               </div>
             </div>
             <div>

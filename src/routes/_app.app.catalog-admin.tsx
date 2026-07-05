@@ -2,8 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban } from "lucide-react";
+import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
+import { WineAiExtractor } from "@/components/WineAiExtractor";
+import type { ExtractedWine } from "@/lib/wine-extraction.functions";
 
 export const Route = createFileRoute("/_app/app/catalog-admin")({
   component: CatalogAdmin,

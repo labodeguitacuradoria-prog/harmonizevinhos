@@ -1,0 +1,149 @@
+import { createServerFn } from "@tanstack/react-start";
+import { generateText, NoObjectGeneratedError, Output } from "ai";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createLovableAiGateway } from "./ai-gateway.server";
+
+const SYSTEM_PROMPT = `Você é um Sommelier de nível Master of Wine e Analista Químico especialista em leitura de fichas técnicas de vinícolas e notas de degustação.
+Sua missão é ler o material fornecido (ficha técnica em PDF/imagem ou texto colado), extrair rigorosamente todas as informações sensoriais, físicas e químicas, e retornar uma resposta estritamente estruturada em JSON.
+
+Instruções específicas:
+1. Extraia o nome exato do vinho ("rotulo").
+2. Identifique o produtor ("produtor"), país ("pais"), região ("regiao") e safra ("safra", número inteiro do ano) quando presentes.
+3. Identifique o tipo de vinho ("tipo"). Escolha apenas um entre: "Tinto", "Branco", "Espumante", "Rosé", "Doce", "Fortificado".
+4. Identifique o estilo regulamentado ("estilo"). Escolha OBRIGATORIAMENTE um dos valores exatos em maiúsculas: "ESPUMANTE", "BRANCO LEVE", "BRANCO AROMÁTICO", "BRANCO ENCORPADO", "ROSÉ", "TINTO LEVE", "TINTO MÉDIO", "TINTO ENCORPADO", "FORTIFICADO".
+5. Extraia detalhadamente o blend de uvas ("grapes"): para cada uva, nome ("grape") e porcentagem ("pct", 0-100). Se varietal, 100. Se blend sem percentuais explícitos, divida igualmente ou estime.
+6. Para cada uva, se passou por barrica de carvalho por tempo específico, informe em "mesesBarrica" (0 se não). Informe também o tempo médio geral em "mesesBarrica" (nível raiz).
+7. Extraia parâmetros físico-químicos:
+   - Teor Alcoólico ("alcool") em % vol
+   - Açúcar Residual ("acucar") em g/l
+   - Acidez Total ("acidezVal") em g/l
+   - pH ("ph")
+8. Para espumantes, identifique o método de produção ("metodoProducao"): "Tradicional", "Charmat" ou "Asti". Se não for espumante, deixe null.
+9. Na propriedade "informacoes_tecnicas", redija um texto altamente didático em português, estruturado nas 5 seções abaixo, cada uma separada por quebras de linha duplas:
+
+**COMENTÁRIOS DO PRODUTOR E MÉTODOS DE PRODUÇÃO/MATURAÇÃO**
+[introdução sobre história, produtor, terroir e técnicas de vinificação/barrica]
+
+**ANÁLISE VISUAL**
+[cor, intensidade, halo de evolução, brilho, limpidez]
+
+**ANÁLISE OLFATIVA**
+[frutas, flores, especiarias, tostados, evolução aromática]
+
+**ANÁLISE GUSTATIVA (PALADAR)**
+[corpo, acidez, taninos, equilíbrio alcoólico, final de boca]
+
+**HARMONIZAÇÃO**
+[sugestões práticas de pratos e ingredientes, com justificativa]
+
+10. Na propriedade "texto_original", transcreva textualmente todo o conteúdo relevante do material original (tabelas, laudos, descrições) em texto puro, para servir como documento de referência.
+
+ATENÇÃO CRÍTICA:
+- NUNCA use aspas duplas não escapadas dentro dos textos. Use aspas simples (') para citações.
+- Use '\\n' em vez de quebras de linha reais dentro de valores de string do JSON.
+- Se algum dado numérico não estiver disponível, use null.`;
+
+const GrapeSchema = z.object({
+  grape: z.string(),
+  pct: z.number().nullable(),
+  mesesBarrica: z.number().nullable(),
+});
+
+const ExtractedSchema = z.object({
+  rotulo: z.string().nullable(),
+  produtor: z.string().nullable(),
+  pais: z.string().nullable(),
+  regiao: z.string().nullable(),
+  safra: z.number().nullable(),
+  tipo: z.string().nullable(),
+  estilo: z.string().nullable(),
+  grapes: z.array(GrapeSchema),
+  mesesBarrica: z.number().nullable(),
+  alcool: z.number().nullable(),
+  acucar: z.number().nullable(),
+  acidezVal: z.number().nullable(),
+  ph: z.number().nullable(),
+  metodoProducao: z.string().nullable(),
+  informacoes_tecnicas: z.string().nullable(),
+  texto_original: z.string().nullable(),
+});
+
+export type ExtractedWine = z.infer<typeof ExtractedSchema>;
+
+async function assertAdmin(context: { supabase: any; userId: string }) {
+  const { data } = await context.supabase.rpc("is_admin", { _user_id: context.userId });
+  if (!data) throw new Error("Apenas administradores podem usar a extração por IA.");
+}
+
+async function callModel(userContent: unknown): Promise<ExtractedWine> {
+  const apiKey = process.env.LOVABLE_API_KEY;
+  if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada.");
+
+  const gateway = createLovableAiGateway(apiKey);
+  const model = gateway("google/gemini-3-flash-preview");
+
+  try {
+    const { output } = await generateText({
+      model,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userContent as any }],
+      output: Output.object({ schema: ExtractedSchema }),
+    });
+    return output;
+  } catch (error) {
+    if (NoObjectGeneratedError.isInstance(error)) {
+      try {
+        const parsed = JSON.parse(error.text ?? "");
+        return ExtractedSchema.parse(parsed);
+      } catch {
+        throw new Error("Não foi possível interpretar a resposta da IA.");
+      }
+    }
+    throw error;
+  }
+}
+
+const FileInput = z.object({
+  fileBase64: z.string().min(10),
+  mimeType: z.string().min(1),
+});
+
+export const extractWineFromFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => FileInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    let base64 = data.fileBase64;
+    const c = base64.indexOf(",");
+    if (c !== -1) base64 = base64.substring(c + 1);
+
+    const isImage = data.mimeType.startsWith("image/");
+    const userContent = isImage
+      ? [
+          { type: "text" as const, text: "Extraia todas as informações técnicas desta ficha de vinho conforme o esquema JSON solicitado." },
+          { type: "image" as const, image: `data:${data.mimeType};base64,${base64}` },
+        ]
+      : [
+          { type: "text" as const, text: "Extraia todas as informações técnicas desta ficha de vinho conforme o esquema JSON solicitado." },
+          { type: "file" as const, data: base64, mediaType: data.mimeType },
+        ];
+
+    return callModel(userContent);
+  });
+
+const TextInput = z.object({ text: z.string().min(10) });
+
+export const extractWineFromText = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => TextInput.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const userContent = [
+      {
+        type: "text" as const,
+        text: `Analise o texto a seguir e extraia todos os dados técnicos:\n\n"""\n${data.text}\n"""`,
+      },
+    ];
+    return callModel(userContent);
+  });

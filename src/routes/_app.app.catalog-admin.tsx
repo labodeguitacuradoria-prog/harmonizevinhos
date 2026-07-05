@@ -66,6 +66,13 @@ type WineCatalog = {
   videos: Video[] | null;
   status: CatalogStatus;
   rejection_reason: string | null;
+  grapes_detail: { grape: string; pct: number | null; mesesBarrica: number | null }[] | null;
+  oak_months: number | null;
+  production_method: string | null;
+  source_text: string | null;
+  source_file_url: string | null;
+  extracted_by_ai: boolean | null;
+  extraction_notes: string | null;
 };
 
 function FieldLabel({ children, hint }: { children: React.ReactNode; hint: string }) {

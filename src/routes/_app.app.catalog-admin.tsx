@@ -2,8 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban } from "lucide-react";
+import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
+import { WineAiExtractor } from "@/components/WineAiExtractor";
+import type { ExtractedWine } from "@/lib/wine-extraction.functions";
 
 export const Route = createFileRoute("/_app/app/catalog-admin")({
   component: CatalogAdmin,
@@ -64,6 +66,13 @@ type WineCatalog = {
   videos: Video[] | null;
   status: CatalogStatus;
   rejection_reason: string | null;
+  grapes_detail: { grape: string; pct: number | null; mesesBarrica: number | null }[] | null;
+  oak_months: number | null;
+  production_method: string | null;
+  source_text: string | null;
+  source_file_url: string | null;
+  extracted_by_ai: boolean | null;
+  extraction_notes: string | null;
 };
 
 function FieldLabel({ children, hint }: { children: React.ReactNode; hint: string }) {
@@ -313,6 +322,38 @@ function EditorModal({ item, onChange, onClose, onSave }: {
   }
   function removeAward(i: number) { set("awards", awards.filter((_, k) => k !== i) as any); }
 
+  function applyExtracted(e: ExtractedWine) {
+    const grapeSummary = e.grapes
+      .map((g) => (g.pct != null ? `${g.grape} ${g.pct}%` : g.grape))
+      .join(", ");
+    const typeMap: Record<string, string> = {
+      Tinto: "Tinto", Branco: "Branco", Espumante: "Espumante",
+      Rosé: "Rosé", Rose: "Rosé", Doce: "Sobremesa", Fortificado: "Fortificado",
+    };
+    onChange({
+      ...item,
+      name: item.name || e.rotulo || "",
+      producer: item.producer || e.produtor || null,
+      country: item.country || e.pais || null,
+      region: item.region || e.regiao || null,
+      vintage: item.vintage || e.safra || null,
+      wine_type: e.tipo ? (typeMap[e.tipo] ?? e.tipo) : item.wine_type ?? null,
+      style: e.estilo || item.style || null,
+      grape: grapeSummary || item.grape || null,
+      grapes_detail: e.grapes.length ? e.grapes : item.grapes_detail ?? null,
+      oak_months: e.mesesBarrica ?? item.oak_months ?? null,
+      production_method: e.metodoProducao || item.production_method || null,
+      alcohol_pct: e.alcool ?? item.alcohol_pct ?? null,
+      sugar_g_l: e.acucar ?? item.sugar_g_l ?? null,
+      acidity_g_l: e.acidezVal ?? item.acidity_g_l ?? null,
+      acidity_ph: e.ph ?? item.acidity_ph ?? null,
+      tasting_notes: e.informacoes_tecnicas || item.tasting_notes || null,
+      extraction_notes: e.informacoes_tecnicas ?? item.extraction_notes ?? null,
+      source_text: e.texto_original ?? item.source_text ?? null,
+      extracted_by_ai: true,
+    });
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
       <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-lg">
@@ -331,6 +372,28 @@ function EditorModal({ item, onChange, onClose, onSave }: {
         </div>
 
         {tab === "geral" && (
+          <div className="space-y-4">
+            <WineAiExtractor onExtracted={applyExtracted} />
+            {item.extracted_by_ai && (
+              <div className="flex items-center gap-2 rounded-md border border-[#D4AF37]/40 bg-[#D4AF37]/5 px-3 py-2 text-xs text-[#D4AF37]">
+                <Sparkles className="h-3 w-3" />
+                Dados preenchidos pela IA — revise antes de salvar.
+                {item.source_text && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const w = window.open("", "_blank");
+                      if (w) {
+                        w.document.write(`<pre style="font-family:monospace;padding:20px;white-space:pre-wrap;background:#0b0b0b;color:#eee;">${(item.source_text ?? "").replace(/</g, "&lt;")}</pre>`);
+                      }
+                    }}
+                    className="ml-auto flex items-center gap-1 underline"
+                  >
+                    <FileText className="h-3 w-3" /> ver texto original
+                  </button>
+                )}
+              </div>
+            )}
           <div className="grid gap-4 md:grid-cols-2">
             <Input label="Nome*" hint="Nome do rótulo como aparece no contra-rótulo, sem produtor/safra." placeholder="Ex: Alpha Cabernet Sauvignon" value={item.name ?? ""} onChange={v => set("name", v)} />
             <Input label="Produtor" hint="Vinícola responsável pela elaboração." placeholder="Ex: Viña Montes" value={item.producer ?? ""} onChange={v => set("producer", v)} />
@@ -355,6 +418,7 @@ function EditorModal({ item, onChange, onClose, onSave }: {
                 <button onClick={addSupplier} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus className="h-3 w-3" /> Adicionar fornecedor</button>
               </div>
             </div>
+          </div>
           </div>
         )}
 
@@ -398,8 +462,18 @@ function EditorModal({ item, onChange, onClose, onSave }: {
           <div className="space-y-5">
             <div>
               <FieldLabel hint="Foto principal do rótulo, usada como capa no catálogo.">Imagem principal</FieldLabel>
-              <div className="mt-2">
+              <div className="mt-2 space-y-2">
                 <MediaUploader label="" value={item.image_url ?? null} onChange={(v) => set("image_url", v)} folder="catalog" />
+                <input
+                  type="url"
+                  placeholder="ou cole aqui a URL de uma imagem (https://...)"
+                  defaultValue=""
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    if (v) { set("image_url", v); e.target.value = ""; }
+                  }}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs placeholder:text-muted-foreground/50"
+                />
               </div>
             </div>
             <div>

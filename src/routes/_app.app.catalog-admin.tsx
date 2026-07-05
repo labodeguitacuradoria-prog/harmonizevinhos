@@ -419,6 +419,7 @@ function EditorModal({ item, onChange, onClose, onSave }: {
               </div>
             </div>
           </div>
+          </div>
         )}
 
         {tab === "carac" && (

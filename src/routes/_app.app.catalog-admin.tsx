@@ -372,6 +372,28 @@ function EditorModal({ item, onChange, onClose, onSave }: {
         </div>
 
         {tab === "geral" && (
+          <div className="space-y-4">
+            <WineAiExtractor onExtracted={applyExtracted} />
+            {item.extracted_by_ai && (
+              <div className="flex items-center gap-2 rounded-md border border-[#D4AF37]/40 bg-[#D4AF37]/5 px-3 py-2 text-xs text-[#D4AF37]">
+                <Sparkles className="h-3 w-3" />
+                Dados preenchidos pela IA — revise antes de salvar.
+                {item.source_text && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const w = window.open("", "_blank");
+                      if (w) {
+                        w.document.write(`<pre style="font-family:monospace;padding:20px;white-space:pre-wrap;background:#0b0b0b;color:#eee;">${(item.source_text ?? "").replace(/</g, "&lt;")}</pre>`);
+                      }
+                    }}
+                    className="ml-auto flex items-center gap-1 underline"
+                  >
+                    <FileText className="h-3 w-3" /> ver texto original
+                  </button>
+                )}
+              </div>
+            )}
           <div className="grid gap-4 md:grid-cols-2">
             <Input label="Nome*" hint="Nome do rótulo como aparece no contra-rótulo, sem produtor/safra." placeholder="Ex: Alpha Cabernet Sauvignon" value={item.name ?? ""} onChange={v => set("name", v)} />
             <Input label="Produtor" hint="Vinícola responsável pela elaboração." placeholder="Ex: Viña Montes" value={item.producer ?? ""} onChange={v => set("producer", v)} />

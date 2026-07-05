@@ -322,6 +322,38 @@ function EditorModal({ item, onChange, onClose, onSave }: {
   }
   function removeAward(i: number) { set("awards", awards.filter((_, k) => k !== i) as any); }
 
+  function applyExtracted(e: ExtractedWine) {
+    const grapeSummary = e.grapes
+      .map((g) => (g.pct != null ? `${g.grape} ${g.pct}%` : g.grape))
+      .join(", ");
+    const typeMap: Record<string, string> = {
+      Tinto: "Tinto", Branco: "Branco", Espumante: "Espumante",
+      Rosé: "Rosé", Rose: "Rosé", Doce: "Sobremesa", Fortificado: "Fortificado",
+    };
+    onChange({
+      ...item,
+      name: item.name || e.rotulo || "",
+      producer: item.producer || e.produtor || null,
+      country: item.country || e.pais || null,
+      region: item.region || e.regiao || null,
+      vintage: item.vintage || e.safra || null,
+      wine_type: e.tipo ? (typeMap[e.tipo] ?? e.tipo) : item.wine_type ?? null,
+      style: e.estilo || item.style || null,
+      grape: grapeSummary || item.grape || null,
+      grapes_detail: e.grapes.length ? e.grapes : item.grapes_detail ?? null,
+      oak_months: e.mesesBarrica ?? item.oak_months ?? null,
+      production_method: e.metodoProducao || item.production_method || null,
+      alcohol_pct: e.alcool ?? item.alcohol_pct ?? null,
+      sugar_g_l: e.acucar ?? item.sugar_g_l ?? null,
+      acidity_g_l: e.acidezVal ?? item.acidity_g_l ?? null,
+      acidity_ph: e.ph ?? item.acidity_ph ?? null,
+      tasting_notes: e.informacoes_tecnicas || item.tasting_notes || null,
+      extraction_notes: e.informacoes_tecnicas ?? item.extraction_notes ?? null,
+      source_text: e.texto_original ?? item.source_text ?? null,
+      extracted_by_ai: true,
+    });
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
       <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-lg">

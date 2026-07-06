@@ -1,0 +1,1 @@
+ALTER TABLE public.wine_catalog ADD COLUMN IF NOT EXISTS sommelier_weights jsonb;

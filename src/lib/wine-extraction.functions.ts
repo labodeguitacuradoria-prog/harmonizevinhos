@@ -37,17 +37,37 @@ Instruções específicas:
 **HARMONIZAÇÃO**
 [sugestões práticas de pratos e ingredientes, com justificativa]
 
-10. Na propriedade "texto_original", transcreva textualmente todo o conteúdo relevante do material original (tabelas, laudos, descrições) em texto puro, para servir como documento de referência.
+10. **BLEND DE UVAS (CASTA)** — extraia TODAS as uvas listadas, cada uma como item separado em "grapes", com "grape" (nome), "pct" (0-100) e "mesesBarrica" (tempo em barrica específico daquela casta, quando informado; 0 caso não passe). Se a soma dos percentuais não fechar 100, ajuste proporcionalmente. Para varietais, use pct=100.
+11. **LAUDO QUÍMICO & ANALÍTICO** — extraia rigorosamente do laudo/ficha: "alcool" (% vol), "acucar" (açúcar residual em g/L), "acidezVal" (acidez total em g/L) e "ph" (pH do vinho). Se estiver disponível, priorize sempre o valor do laudo em vez da descrição textual.
+12. **PASSAGEM POR BARRICA** — sempre que houver informação sobre carvalho/barrica, preencha "mesesBarrica" (nível raiz = média geral do vinho) e o "mesesBarrica" de CADA uva individualmente. Se apenas parte do blend passa por madeira, informe 0 para as outras.
+13. **PESOS & INTENSIDADES SOMMELIER (obrigatório)** — dentro do objeto "pesos", preencha SEMPRE (nunca null) valores inteiros de 1 a 10 como sommelier profissional:
+   - "corpo" (1=Leve, 10=Encorpado)
+   - "acidez" (1=Plana, 10=Vibrante)
+   - "taninos" (1=Nulo, 10=Forte — brancos/espumantes/rosés normalmente 1-2)
+   - "docura" (1=Seco, 10=Doce — coerente com açúcar residual)
+   - "estagioBarrica" (1=Sem madeira, 10=Muito amadeirado — coerente com meses em barrica)
+   - "intensidadeAromatica" (1=Delicado, 10=Exuberante)
+14. Na propriedade "informacoes_tecnicas", redija texto didático estruturado em 5 blocos separados por \\n\\n: **COMENTÁRIOS DO PRODUTOR E MÉTODOS**, **ANÁLISE VISUAL**, **ANÁLISE OLFATIVA**, **ANÁLISE GUSTATIVA**, **HARMONIZAÇÃO**.
+15. Na propriedade "texto_original", transcreva textualmente o conteúdo relevante do material original.
 
 ATENÇÃO CRÍTICA:
-- NUNCA use aspas duplas não escapadas dentro dos textos. Use aspas simples (') para citações.
-- Use '\\n' em vez de quebras de linha reais dentro de valores de string do JSON.
-- Se algum dado numérico não estiver disponível, use null.`;
+- Use aspas simples (') para citações dentro de strings; nunca aspas duplas não escapadas.
+- Use '\\n' em vez de quebras de linha reais dentro de strings JSON.
+- Dados numéricos ausentes = null (exceto o objeto "pesos", que é sempre preenchido).`;
 
 const GrapeSchema = z.object({
   grape: z.string(),
   pct: z.number().nullable(),
   mesesBarrica: z.number().nullable(),
+});
+
+const PesosSchema = z.object({
+  corpo: z.number().nullable(),
+  acidez: z.number().nullable(),
+  taninos: z.number().nullable(),
+  docura: z.number().nullable(),
+  estagioBarrica: z.number().nullable(),
+  intensidadeAromatica: z.number().nullable(),
 });
 
 const ExtractedSchema = z.object({
@@ -65,6 +85,7 @@ const ExtractedSchema = z.object({
   acidezVal: z.number().nullable(),
   ph: z.number().nullable(),
   metodoProducao: z.string().nullable(),
+  pesos: PesosSchema.nullable(),
   informacoes_tecnicas: z.string().nullable(),
   texto_original: z.string().nullable(),
 });

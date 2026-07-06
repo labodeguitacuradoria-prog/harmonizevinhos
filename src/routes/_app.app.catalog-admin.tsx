@@ -73,7 +73,31 @@ type WineCatalog = {
   source_file_url: string | null;
   extracted_by_ai: boolean | null;
   extraction_notes: string | null;
+  sommelier_weights: {
+    corpo: number | null;
+    acidez: number | null;
+    taninos: number | null;
+    docura: number | null;
+    estagioBarrica: number | null;
+    intensidadeAromatica: number | null;
+  } | null;
 };
+
+type GrapeRow = { grape: string; pct: number | null; mesesBarrica: number | null };
+
+const SOMMELIER_AXES: {
+  key: keyof NonNullable<WineCatalog["sommelier_weights"]>;
+  label: string;
+  min: string;
+  max: string;
+}[] = [
+  { key: "corpo", label: "Corpo / Peso", min: "Leve", max: "Encorpado" },
+  { key: "acidez", label: "Acidez / Frescor", min: "Plana", max: "Vibrante" },
+  { key: "taninos", label: "Taninos / Estrutura", min: "Nulo", max: "Forte" },
+  { key: "docura", label: "Doçura / Residual", min: "Seco", max: "Doce" },
+  { key: "estagioBarrica", label: "Estágio em Barrica", min: "Sem madeira", max: "Muito amadeirado" },
+  { key: "intensidadeAromatica", label: "Intensidade Aromática", min: "Delicado", max: "Exuberante" },
+];
 
 function FieldLabel({ children, hint }: { children: React.ReactNode; hint: string }) {
   return (
@@ -322,6 +346,30 @@ function EditorModal({ item, onChange, onClose, onSave }: {
   }
   function removeAward(i: number) { set("awards", awards.filter((_, k) => k !== i) as any); }
 
+  const grapes: GrapeRow[] = Array.isArray(item.grapes_detail) ? (item.grapes_detail as GrapeRow[]) : [];
+  const grapesTotalPct = grapes.reduce((s, g) => s + (Number(g.pct) || 0), 0);
+  function updateGrapes(next: GrapeRow[]) {
+    set("grapes_detail", next as any);
+    const summary = next.map((g) => (g.pct != null ? `${g.grape} ${g.pct}%` : g.grape)).filter(Boolean).join(", ");
+    if (summary) set("grape", summary as any);
+    const avg = next.reduce((s, g) => s + (Number(g.mesesBarrica) || 0) * ((Number(g.pct) || 0) / 100), 0);
+    if (avg > 0) set("oak_months", Number(avg.toFixed(1)) as any);
+  }
+  function setGrape(i: number, patch: Partial<GrapeRow>) {
+    const next = grapes.map((g, k) => (k === i ? { ...g, ...patch } : g));
+    updateGrapes(next);
+  }
+  function addGrape() { updateGrapes([...grapes, { grape: "", pct: null, mesesBarrica: 0 }]); }
+  function removeGrape(i: number) { updateGrapes(grapes.filter((_, k) => k !== i)); }
+
+  const weights = item.sommelier_weights ?? {
+    corpo: null, acidez: null, taninos: null, docura: null, estagioBarrica: null, intensidadeAromatica: null,
+  };
+  function setWeight(key: keyof typeof weights, v: number) {
+    set("sommelier_weights", { ...weights, [key]: v } as any);
+  }
+
+
   function applyExtracted(e: ExtractedWine) {
     const grapeSummary = e.grapes
       .map((g) => (g.pct != null ? `${g.grape} ${g.pct}%` : g.grape))
@@ -330,6 +378,9 @@ function EditorModal({ item, onChange, onClose, onSave }: {
       Tinto: "Tinto", Branco: "Branco", Espumante: "Espumante",
       Rosé: "Rosé", Rose: "Rosé", Doce: "Sobremesa", Fortificado: "Fortificado",
     };
+    const avgOak = e.grapes.length
+      ? e.grapes.reduce((s, g) => s + (g.mesesBarrica ?? 0) * ((g.pct ?? 0) / 100), 0)
+      : null;
     onChange({
       ...item,
       name: item.name || e.rotulo || "",
@@ -341,7 +392,7 @@ function EditorModal({ item, onChange, onClose, onSave }: {
       style: e.estilo || item.style || null,
       grape: grapeSummary || item.grape || null,
       grapes_detail: e.grapes.length ? e.grapes : item.grapes_detail ?? null,
-      oak_months: e.mesesBarrica ?? item.oak_months ?? null,
+      oak_months: e.mesesBarrica ?? (avgOak && avgOak > 0 ? Number(avgOak.toFixed(1)) : item.oak_months ?? null),
       production_method: e.metodoProducao || item.production_method || null,
       alcohol_pct: e.alcool ?? item.alcohol_pct ?? null,
       sugar_g_l: e.acucar ?? item.sugar_g_l ?? null,
@@ -350,6 +401,7 @@ function EditorModal({ item, onChange, onClose, onSave }: {
       tasting_notes: e.informacoes_tecnicas || item.tasting_notes || null,
       extraction_notes: e.informacoes_tecnicas ?? item.extraction_notes ?? null,
       source_text: e.texto_original ?? item.source_text ?? null,
+      sommelier_weights: e.pesos ?? item.sommelier_weights ?? null,
       extracted_by_ai: true,
     });
   }
@@ -423,40 +475,129 @@ function EditorModal({ item, onChange, onClose, onSave }: {
         )}
 
         {tab === "carac" && (
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input label="Teor alcoólico (%)" hint="Porcentagem de álcool em volume." placeholder="Ex: 13.5" value={item.alcohol_pct != null ? String(item.alcohol_pct) : ""} onChange={v => set("alcohol_pct", v ? Number(v) : null)} />
-            <div />
-            <Select label="Açúcar (conceito)" hint="Classificação por dulçor." value={item.sugar_level ?? ""} onChange={v => set("sugar_level", v)} options={SUGAR_LEVELS} />
-            <Input label="Açúcar (g/L)" hint="Açúcar residual em gramas por litro." placeholder="Ex: 3.5" value={item.sugar_g_l != null ? String(item.sugar_g_l) : ""} onChange={v => set("sugar_g_l", v ? Number(v) : null)} />
-            <Select label="Corpo" hint="Peso/estrutura do vinho na boca." value={item.body ?? ""} onChange={v => set("body", v)} options={BODY} />
-            <Select label="Taninos" hint="Intensidade dos taninos." value={item.tannin ?? ""} onChange={v => set("tannin", v)} options={INTENSITY} />
-            <Select label="Acidez (conceito)" hint="Percepção de frescor." value={item.acidity ?? ""} onChange={v => set("acidity", v)} options={INTENSITY} />
-            <Input label="Acidez (g/L)" hint="Acidez total em gramas por litro." placeholder="Ex: 5.8" value={item.acidity_g_l != null ? String(item.acidity_g_l) : ""} onChange={v => set("acidity_g_l", v ? Number(v) : null)} />
-            <Input label="Acidez (pH)" hint="Valor de pH do vinho." placeholder="Ex: 3.4" value={item.acidity_ph != null ? String(item.acidity_ph) : ""} onChange={v => set("acidity_ph", v ? Number(v) : null)} />
-            <div />
-            <TextArea label="Elaboração" hint="Vinificação: tipo de fermentação, leveduras, tanques, etc." placeholder="Ex: Fermentação em tanques de inox a temperatura controlada..." value={item.elaboration ?? ""} onChange={v => set("elaboration", v)} className="md:col-span-2" />
-            <TextArea label="Maturação" hint="Envelhecimento: barricas, tempo, guarda em garrafa." placeholder="Ex: 12 meses em barrica de carvalho francês (30% novas)." value={item.aging ?? ""} onChange={v => set("aging", v)} className="md:col-span-2" />
-            <Input label="Temp. mín. serviço (°C)" hint="Temperatura mínima recomendada." placeholder="Ex: 16" value={item.serving_temp_min != null ? String(item.serving_temp_min) : ""} onChange={v => set("serving_temp_min", v ? Number(v) : null)} />
-            <Input label="Temp. máx. serviço (°C)" hint="Temperatura máxima recomendada." placeholder="Ex: 18" value={item.serving_temp_max != null ? String(item.serving_temp_max) : ""} onChange={v => set("serving_temp_max", v ? Number(v) : null)} />
-            <TextArea label="Notas de degustação" hint="Cor, aromas, paladar e final." placeholder="Ex: Rubi intenso. Aromas de frutas negras, especiarias..." value={item.tasting_notes ?? ""} onChange={v => set("tasting_notes", v)} className="md:col-span-2" />
-            <TextArea label="Harmonização" hint="Sugestões gastronômicas." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro, queijos curados." value={item.pairing_notes ?? ""} onChange={v => set("pairing_notes", v)} className="md:col-span-2" />
-            <div className="md:col-span-2">
-              <FieldLabel hint="Até 10 premiações. Use um campo por prêmio.">Premiações ({awards.length}/10)</FieldLabel>
-              <div className="mt-2 space-y-2">
-                {awards.map((a, i) => (
-                  <div key={i} className="flex gap-2">
-                    <input value={a} onChange={e => setAward(i, e.target.value)} placeholder="Ex: 92 pts Wine Spectator 2022"
-                      className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                    <button onClick={() => removeAward(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
+          <div className="space-y-5">
+            {/* Blend de Uvas */}
+            <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Blend de Uvas (Casta)</span>
+                <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${grapesTotalPct === 100 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border border-amber-500/30"}`}>
+                  Total: {grapesTotalPct}%
+                </span>
+              </div>
+              <div className="space-y-2">
+                {grapes.map((g, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-md border border-[#2a2a2a] bg-[#0b0b0b] p-2">
+                    <input value={g.grape} onChange={(e) => setGrape(i, { grape: e.target.value })} placeholder="Nome da uva"
+                      className="flex-1 rounded-md border border-[#2a2a2a] bg-[#141414] px-3 py-2 text-sm text-white" />
+                    <input type="number" min={0} max={100} value={g.pct ?? ""} onChange={(e) => setGrape(i, { pct: e.target.value ? Number(e.target.value) : null })}
+                      className="w-20 rounded-md border border-[#2a2a2a] bg-[#141414] px-3 py-2 text-center text-sm text-[#D4AF37]" />
+                    <span className="text-xs text-muted-foreground">%</span>
+                    <button onClick={() => removeGrape(i)} className="rounded p-2 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 ))}
-                {awards.length < 10 && (
-                  <button onClick={addAward} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus className="h-3 w-3" /> Adicionar premiação</button>
-                )}
+                <button onClick={addGrape} className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#D4AF37]/50 bg-[#0b0b0b] px-3 py-2 text-sm font-medium text-[#D4AF37] hover:bg-[#1a1a1a]">
+                  <Plus className="h-4 w-4" /> Adicionar Uva ao Blend
+                </button>
+              </div>
+            </div>
+
+            {/* Laudo Químico */}
+            <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">
+              <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[#D4AF37]">● Laudo Químico &amp; Analítico (Laboratório)</div>
+              <p className="mb-3 text-xs text-muted-foreground">Valores analíticos reais do laudo químico do produtor. Atuam como direcionadores objetivos do painel.</p>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Input label="Teor alcoólico (%)" hint="Álcool em volume." placeholder="Ex: 13.5" value={item.alcohol_pct != null ? String(item.alcohol_pct) : ""} onChange={v => set("alcohol_pct", v ? Number(v) : null)} />
+                <Input label="Açúcar residual (g/L)" hint="Açúcar residual g/L." placeholder="Ex: 3.5" value={item.sugar_g_l != null ? String(item.sugar_g_l) : ""} onChange={v => set("sugar_g_l", v ? Number(v) : null)} />
+                <Input label="Acidez total (g/L)" hint="Acidez total g/L." placeholder="Ex: 5.8" value={item.acidity_g_l != null ? String(item.acidity_g_l) : ""} onChange={v => set("acidity_g_l", v ? Number(v) : null)} />
+                <Input label="pH do vinho" hint="Valor de pH." placeholder="Ex: 3.4" value={item.acidity_ph != null ? String(item.acidity_ph) : ""} onChange={v => set("acidity_ph", v ? Number(v) : null)} />
+              </div>
+            </div>
+
+            {/* Passagem por Barrica */}
+            <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">
+              <div className="mb-1 text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Passagem por Barrica</div>
+              <div className="mb-3 text-[10px] uppercase tracking-wider text-muted-foreground">Estratificação por Casta (Uva)</div>
+              {grapes.length === 0 && <p className="text-xs text-muted-foreground">Adicione uvas no bloco de Blend acima.</p>}
+              <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+                {grapes.map((g, i) => (
+                  <div key={i} className="flex items-center justify-between rounded-md border border-[#2a2a2a] bg-[#0b0b0b] p-3">
+                    <div>
+                      <div className="text-sm font-bold text-white">{g.grape || "—"}</div>
+                      <div className="text-xs text-muted-foreground">{g.pct ?? 0}% do Blend</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="number" min={0} step="0.5" value={g.mesesBarrica ?? 0}
+                        onChange={(e) => setGrape(i, { mesesBarrica: e.target.value ? Number(e.target.value) : 0 })}
+                        className="w-20 rounded-md border border-[#2a2a2a] bg-[#141414] px-3 py-2 text-center text-sm text-white" />
+                      <span className="text-xs text-muted-foreground">meses</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex items-center justify-between border-t border-[#2a2a2a] pt-3">
+                <span className="text-xs text-muted-foreground">Tempo Geral (Média Ponderada):</span>
+                <span className="rounded-md border border-[#D4AF37]/40 bg-[#0b0b0b] px-3 py-1 text-sm font-bold text-[#D4AF37]">
+                  {(item.oak_months ?? 0).toFixed(1)} meses
+                </span>
+              </div>
+            </div>
+
+            {/* Pesos & Intensidades Sommelier */}
+            <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">
+              <div className="mb-3 text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Pesos &amp; Intensidades Sommelier (Escala 1 a 10)</div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {SOMMELIER_AXES.map((axis) => {
+                  const val = weights[axis.key] ?? 0;
+                  return (
+                    <div key={axis.key} className="rounded-md border border-[#2a2a2a] bg-[#0b0b0b] p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-sm font-bold text-white">{axis.label}</span>
+                        <span className="rounded border border-[#D4AF37]/40 bg-[#141414] px-2 py-0.5 text-xs font-bold text-[#D4AF37]">
+                          {val} / 10
+                        </span>
+                      </div>
+                      <input type="range" min={1} max={10} step={1} value={val || 1}
+                        onChange={(e) => setWeight(axis.key, Number(e.target.value))}
+                        className="w-full accent-[#D4AF37]" />
+                      <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+                        <span>{axis.min}</span><span>{axis.max}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Select label="Açúcar (conceito)" hint="Classificação por dulçor." value={item.sugar_level ?? ""} onChange={v => set("sugar_level", v)} options={SUGAR_LEVELS} />
+              <Select label="Corpo (conceito)" hint="Peso/estrutura na boca." value={item.body ?? ""} onChange={v => set("body", v)} options={BODY} />
+              <Select label="Taninos (conceito)" hint="Intensidade dos taninos." value={item.tannin ?? ""} onChange={v => set("tannin", v)} options={INTENSITY} />
+              <Select label="Acidez (conceito)" hint="Percepção de frescor." value={item.acidity ?? ""} onChange={v => set("acidity", v)} options={INTENSITY} />
+              <TextArea label="Elaboração" hint="Vinificação: fermentação, leveduras, tanques, etc." placeholder="Ex: Fermentação em inox a temperatura controlada..." value={item.elaboration ?? ""} onChange={v => set("elaboration", v)} className="md:col-span-2" />
+              <TextArea label="Maturação" hint="Envelhecimento: barricas, tempo, guarda em garrafa." placeholder="Ex: 12 meses em carvalho francês (30% novas)." value={item.aging ?? ""} onChange={v => set("aging", v)} className="md:col-span-2" />
+              <Input label="Temp. mín. serviço (°C)" hint="Temperatura mínima recomendada." placeholder="Ex: 16" value={item.serving_temp_min != null ? String(item.serving_temp_min) : ""} onChange={v => set("serving_temp_min", v ? Number(v) : null)} />
+              <Input label="Temp. máx. serviço (°C)" hint="Temperatura máxima recomendada." placeholder="Ex: 18" value={item.serving_temp_max != null ? String(item.serving_temp_max) : ""} onChange={v => set("serving_temp_max", v ? Number(v) : null)} />
+              <TextArea label="Notas de degustação" hint="Cor, aromas, paladar e final." placeholder="Ex: Rubi intenso. Aromas de frutas negras..." value={item.tasting_notes ?? ""} onChange={v => set("tasting_notes", v)} className="md:col-span-2" />
+              <TextArea label="Harmonização" hint="Sugestões gastronômicas." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro, queijos curados." value={item.pairing_notes ?? ""} onChange={v => set("pairing_notes", v)} className="md:col-span-2" />
+              <div className="md:col-span-2">
+                <FieldLabel hint="Até 10 premiações. Use um campo por prêmio.">Premiações ({awards.length}/10)</FieldLabel>
+                <div className="mt-2 space-y-2">
+                  {awards.map((a, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input value={a} onChange={e => setAward(i, e.target.value)} placeholder="Ex: 92 pts Wine Spectator 2022"
+                        className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                      <button onClick={() => removeAward(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
+                    </div>
+                  ))}
+                  {awards.length < 10 && (
+                    <button onClick={addAward} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus className="h-3 w-3" /> Adicionar premiação</button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         )}
+
 
         {tab === "midia" && (
           <div className="space-y-5">

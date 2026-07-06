@@ -652,6 +652,7 @@ export type Database = {
           rejection_reason: string | null
           serving_temp_max: number | null
           serving_temp_min: number | null
+          sommelier_weights: Json | null
           source_file_url: string | null
           source_restaurant_id: string | null
           source_text: string | null
@@ -702,6 +703,7 @@ export type Database = {
           rejection_reason?: string | null
           serving_temp_max?: number | null
           serving_temp_min?: number | null
+          sommelier_weights?: Json | null
           source_file_url?: string | null
           source_restaurant_id?: string | null
           source_text?: string | null
@@ -752,6 +754,7 @@ export type Database = {
           rejection_reason?: string | null
           serving_temp_max?: number | null
           serving_temp_min?: number | null
+          sommelier_weights?: Json | null
           source_file_url?: string | null
           source_restaurant_id?: string | null
           source_text?: string | null

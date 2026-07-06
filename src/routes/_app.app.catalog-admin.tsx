@@ -73,7 +73,31 @@ type WineCatalog = {
   source_file_url: string | null;
   extracted_by_ai: boolean | null;
   extraction_notes: string | null;
+  sommelier_weights: {
+    corpo: number | null;
+    acidez: number | null;
+    taninos: number | null;
+    docura: number | null;
+    estagioBarrica: number | null;
+    intensidadeAromatica: number | null;
+  } | null;
 };
+
+type GrapeRow = { grape: string; pct: number | null; mesesBarrica: number | null };
+
+const SOMMELIER_AXES: {
+  key: keyof NonNullable<WineCatalog["sommelier_weights"]>;
+  label: string;
+  min: string;
+  max: string;
+}[] = [
+  { key: "corpo", label: "Corpo / Peso", min: "Leve", max: "Encorpado" },
+  { key: "acidez", label: "Acidez / Frescor", min: "Plana", max: "Vibrante" },
+  { key: "taninos", label: "Taninos / Estrutura", min: "Nulo", max: "Forte" },
+  { key: "docura", label: "Doçura / Residual", min: "Seco", max: "Doce" },
+  { key: "estagioBarrica", label: "Estágio em Barrica", min: "Sem madeira", max: "Muito amadeirado" },
+  { key: "intensidadeAromatica", label: "Intensidade Aromática", min: "Delicado", max: "Exuberante" },
+];
 
 function FieldLabel({ children, hint }: { children: React.ReactNode; hint: string }) {
   return (

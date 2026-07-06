@@ -346,6 +346,30 @@ function EditorModal({ item, onChange, onClose, onSave }: {
   }
   function removeAward(i: number) { set("awards", awards.filter((_, k) => k !== i) as any); }
 
+  const grapes: GrapeRow[] = Array.isArray(item.grapes_detail) ? (item.grapes_detail as GrapeRow[]) : [];
+  const grapesTotalPct = grapes.reduce((s, g) => s + (Number(g.pct) || 0), 0);
+  function updateGrapes(next: GrapeRow[]) {
+    set("grapes_detail", next as any);
+    const summary = next.map((g) => (g.pct != null ? `${g.grape} ${g.pct}%` : g.grape)).filter(Boolean).join(", ");
+    if (summary) set("grape", summary as any);
+    const avg = next.reduce((s, g) => s + (Number(g.mesesBarrica) || 0) * ((Number(g.pct) || 0) / 100), 0);
+    if (avg > 0) set("oak_months", Number(avg.toFixed(1)) as any);
+  }
+  function setGrape(i: number, patch: Partial<GrapeRow>) {
+    const next = grapes.map((g, k) => (k === i ? { ...g, ...patch } : g));
+    updateGrapes(next);
+  }
+  function addGrape() { updateGrapes([...grapes, { grape: "", pct: null, mesesBarrica: 0 }]); }
+  function removeGrape(i: number) { updateGrapes(grapes.filter((_, k) => k !== i)); }
+
+  const weights = item.sommelier_weights ?? {
+    corpo: null, acidez: null, taninos: null, docura: null, estagioBarrica: null, intensidadeAromatica: null,
+  };
+  function setWeight(key: keyof typeof weights, v: number) {
+    set("sommelier_weights", { ...weights, [key]: v } as any);
+  }
+
+
   function applyExtracted(e: ExtractedWine) {
     const grapeSummary = e.grapes
       .map((g) => (g.pct != null ? `${g.grape} ${g.pct}%` : g.grape))

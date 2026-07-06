@@ -354,6 +354,9 @@ function EditorModal({ item, onChange, onClose, onSave }: {
       Tinto: "Tinto", Branco: "Branco", Espumante: "Espumante",
       Rosé: "Rosé", Rose: "Rosé", Doce: "Sobremesa", Fortificado: "Fortificado",
     };
+    const avgOak = e.grapes.length
+      ? e.grapes.reduce((s, g) => s + (g.mesesBarrica ?? 0) * ((g.pct ?? 0) / 100), 0)
+      : null;
     onChange({
       ...item,
       name: item.name || e.rotulo || "",
@@ -365,7 +368,7 @@ function EditorModal({ item, onChange, onClose, onSave }: {
       style: e.estilo || item.style || null,
       grape: grapeSummary || item.grape || null,
       grapes_detail: e.grapes.length ? e.grapes : item.grapes_detail ?? null,
-      oak_months: e.mesesBarrica ?? item.oak_months ?? null,
+      oak_months: e.mesesBarrica ?? (avgOak && avgOak > 0 ? Number(avgOak.toFixed(1)) : item.oak_months ?? null),
       production_method: e.metodoProducao || item.production_method || null,
       alcohol_pct: e.alcool ?? item.alcohol_pct ?? null,
       sugar_g_l: e.acucar ?? item.sugar_g_l ?? null,
@@ -374,6 +377,7 @@ function EditorModal({ item, onChange, onClose, onSave }: {
       tasting_notes: e.informacoes_tecnicas || item.tasting_notes || null,
       extraction_notes: e.informacoes_tecnicas ?? item.extraction_notes ?? null,
       source_text: e.texto_original ?? item.source_text ?? null,
+      sommelier_weights: e.pesos ?? item.sommelier_weights ?? null,
       extracted_by_ai: true,
     });
   }

@@ -568,45 +568,36 @@ function EditorModal({ item, onChange, onClose, onSave }: {
               </div>
             </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Select label="Açúcar (conceito)" hint="Classificação por dulçor." value={item.sugar_level ?? ""} onChange={v => set("sugar_level", v)} options={SUGAR_LEVELS} />
-            <Select label="Corpo (conceito)" hint="Peso/estrutura na boca." value={item.body ?? ""} onChange={v => set("body", v)} options={BODY} />
-            <Select label="Taninos (conceito)" hint="Intensidade dos taninos." value={item.tannin ?? ""} onChange={v => set("tannin", v)} options={INTENSITY} />
-            <Select label="Acidez (conceito)" hint="Percepção de frescor." value={item.acidity ?? ""} onChange={v => set("acidity", v)} options={INTENSITY} />
-
-            <Input label="Teor alcoólico (%)" hint="Porcentagem de álcool em volume." placeholder="Ex: 13.5" value={item.alcohol_pct != null ? String(item.alcohol_pct) : ""} onChange={v => set("alcohol_pct", v ? Number(v) : null)} />
-            <div />
-            <Select label="Açúcar (conceito)" hint="Classificação por dulçor." value={item.sugar_level ?? ""} onChange={v => set("sugar_level", v)} options={SUGAR_LEVELS} />
-            <Input label="Açúcar (g/L)" hint="Açúcar residual em gramas por litro." placeholder="Ex: 3.5" value={item.sugar_g_l != null ? String(item.sugar_g_l) : ""} onChange={v => set("sugar_g_l", v ? Number(v) : null)} />
-            <Select label="Corpo" hint="Peso/estrutura do vinho na boca." value={item.body ?? ""} onChange={v => set("body", v)} options={BODY} />
-            <Select label="Taninos" hint="Intensidade dos taninos." value={item.tannin ?? ""} onChange={v => set("tannin", v)} options={INTENSITY} />
-            <Select label="Acidez (conceito)" hint="Percepção de frescor." value={item.acidity ?? ""} onChange={v => set("acidity", v)} options={INTENSITY} />
-            <Input label="Acidez (g/L)" hint="Acidez total em gramas por litro." placeholder="Ex: 5.8" value={item.acidity_g_l != null ? String(item.acidity_g_l) : ""} onChange={v => set("acidity_g_l", v ? Number(v) : null)} />
-            <Input label="Acidez (pH)" hint="Valor de pH do vinho." placeholder="Ex: 3.4" value={item.acidity_ph != null ? String(item.acidity_ph) : ""} onChange={v => set("acidity_ph", v ? Number(v) : null)} />
-            <div />
-            <TextArea label="Elaboração" hint="Vinificação: tipo de fermentação, leveduras, tanques, etc." placeholder="Ex: Fermentação em tanques de inox a temperatura controlada..." value={item.elaboration ?? ""} onChange={v => set("elaboration", v)} className="md:col-span-2" />
-            <TextArea label="Maturação" hint="Envelhecimento: barricas, tempo, guarda em garrafa." placeholder="Ex: 12 meses em barrica de carvalho francês (30% novas)." value={item.aging ?? ""} onChange={v => set("aging", v)} className="md:col-span-2" />
-            <Input label="Temp. mín. serviço (°C)" hint="Temperatura mínima recomendada." placeholder="Ex: 16" value={item.serving_temp_min != null ? String(item.serving_temp_min) : ""} onChange={v => set("serving_temp_min", v ? Number(v) : null)} />
-            <Input label="Temp. máx. serviço (°C)" hint="Temperatura máxima recomendada." placeholder="Ex: 18" value={item.serving_temp_max != null ? String(item.serving_temp_max) : ""} onChange={v => set("serving_temp_max", v ? Number(v) : null)} />
-            <TextArea label="Notas de degustação" hint="Cor, aromas, paladar e final." placeholder="Ex: Rubi intenso. Aromas de frutas negras, especiarias..." value={item.tasting_notes ?? ""} onChange={v => set("tasting_notes", v)} className="md:col-span-2" />
-            <TextArea label="Harmonização" hint="Sugestões gastronômicas." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro, queijos curados." value={item.pairing_notes ?? ""} onChange={v => set("pairing_notes", v)} className="md:col-span-2" />
-            <div className="md:col-span-2">
-              <FieldLabel hint="Até 10 premiações. Use um campo por prêmio.">Premiações ({awards.length}/10)</FieldLabel>
-              <div className="mt-2 space-y-2">
-                {awards.map((a, i) => (
-                  <div key={i} className="flex gap-2">
-                    <input value={a} onChange={e => setAward(i, e.target.value)} placeholder="Ex: 92 pts Wine Spectator 2022"
-                      className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
-                    <button onClick={() => removeAward(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
-                  </div>
-                ))}
-                {awards.length < 10 && (
-                  <button onClick={addAward} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus className="h-3 w-3" /> Adicionar premiação</button>
-                )}
+            <div className="grid gap-4 md:grid-cols-2">
+              <Select label="Açúcar (conceito)" hint="Classificação por dulçor." value={item.sugar_level ?? ""} onChange={v => set("sugar_level", v)} options={SUGAR_LEVELS} />
+              <Select label="Corpo (conceito)" hint="Peso/estrutura na boca." value={item.body ?? ""} onChange={v => set("body", v)} options={BODY} />
+              <Select label="Taninos (conceito)" hint="Intensidade dos taninos." value={item.tannin ?? ""} onChange={v => set("tannin", v)} options={INTENSITY} />
+              <Select label="Acidez (conceito)" hint="Percepção de frescor." value={item.acidity ?? ""} onChange={v => set("acidity", v)} options={INTENSITY} />
+              <TextArea label="Elaboração" hint="Vinificação: fermentação, leveduras, tanques, etc." placeholder="Ex: Fermentação em inox a temperatura controlada..." value={item.elaboration ?? ""} onChange={v => set("elaboration", v)} className="md:col-span-2" />
+              <TextArea label="Maturação" hint="Envelhecimento: barricas, tempo, guarda em garrafa." placeholder="Ex: 12 meses em carvalho francês (30% novas)." value={item.aging ?? ""} onChange={v => set("aging", v)} className="md:col-span-2" />
+              <Input label="Temp. mín. serviço (°C)" hint="Temperatura mínima recomendada." placeholder="Ex: 16" value={item.serving_temp_min != null ? String(item.serving_temp_min) : ""} onChange={v => set("serving_temp_min", v ? Number(v) : null)} />
+              <Input label="Temp. máx. serviço (°C)" hint="Temperatura máxima recomendada." placeholder="Ex: 18" value={item.serving_temp_max != null ? String(item.serving_temp_max) : ""} onChange={v => set("serving_temp_max", v ? Number(v) : null)} />
+              <TextArea label="Notas de degustação" hint="Cor, aromas, paladar e final." placeholder="Ex: Rubi intenso. Aromas de frutas negras..." value={item.tasting_notes ?? ""} onChange={v => set("tasting_notes", v)} className="md:col-span-2" />
+              <TextArea label="Harmonização" hint="Sugestões gastronômicas." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro, queijos curados." value={item.pairing_notes ?? ""} onChange={v => set("pairing_notes", v)} className="md:col-span-2" />
+              <div className="md:col-span-2">
+                <FieldLabel hint="Até 10 premiações. Use um campo por prêmio.">Premiações ({awards.length}/10)</FieldLabel>
+                <div className="mt-2 space-y-2">
+                  {awards.map((a, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input value={a} onChange={e => setAward(i, e.target.value)} placeholder="Ex: 92 pts Wine Spectator 2022"
+                        className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                      <button onClick={() => removeAward(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
+                    </div>
+                  ))}
+                  {awards.length < 10 && (
+                    <button onClick={addAward} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus className="h-3 w-3" /> Adicionar premiação</button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         )}
+
 
         {tab === "midia" && (
           <div className="space-y-5">

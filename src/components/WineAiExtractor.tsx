@@ -38,10 +38,26 @@ export function WineAiExtractor({ onExtracted }: Props) {
     setBusy(true);
     try {
       const dataUrl = await fileToBase64(file);
+
+      // Upload paralelo ao storage para persistir a ficha original
+      let sourceFileUrl: string | undefined;
+      try {
+        const ext = file.name.split(".").pop() || (file.type.startsWith("image/") ? "img" : "pdf");
+        const path = `catalog/tech/${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("product-media").upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+        if (!upErr) {
+          const { data: signed } = await supabase.storage.from("product-media").createSignedUrl(path, 60 * 60 * 24 * 365);
+          sourceFileUrl = signed?.signedUrl;
+        }
+      } catch { /* upload é opcional */ }
+
       const res = await extractFile({
         data: { fileBase64: dataUrl, mimeType: file.type || "application/pdf" },
       });
-      onExtracted(res);
+      onExtracted(res, { sourceFileUrl, mimeType: file.type });
       toast.success("Ficha extraída! Revise os campos antes de salvar.");
     } catch (e: any) {
       toast.error(e.message || "Falha ao extrair a ficha.");
@@ -49,6 +65,7 @@ export function WineAiExtractor({ onExtracted }: Props) {
       setBusy(false);
     }
   }
+
 
   async function handleText() {
     if (text.trim().length < 20) {

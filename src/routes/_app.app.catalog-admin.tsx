@@ -452,7 +452,29 @@ function EditorModal({ item, onChange, onClose, onSave }: {
             <Input label="Safra" hint="Ano da colheita. Vazio para NV." placeholder="Ex: 2020" value={item.vintage ? String(item.vintage) : ""} onChange={v => set("vintage", v ? Number(v) : null)} />
             <Input label="Região" hint="Região vitivinícola ou DO." placeholder="Ex: Vale do Colchagua" value={item.region ?? ""} onChange={v => set("region", v)} />
             <Input label="País" hint="País de origem." placeholder="Ex: Chile" value={item.country ?? ""} onChange={v => set("country", v)} />
-            <Input label="Uvas" hint="Castas e % quando houver corte." placeholder="Ex: Cabernet Sauvignon 85%, Merlot 15%" value={item.grape ?? ""} onChange={v => set("grape", v)} />
+            <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">Blend de Uvas</span>
+                <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${grapesTotalPct === 100 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border border-amber-500/30"}`}>
+                  {grapesTotalPct}%
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {grapes.map((g, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <input value={g.grape} onChange={(e) => setGrape(i, { grape: e.target.value })} placeholder="Nome da uva"
+                      className="flex-1 rounded border border-[#2a2a2a] bg-[#0b0b0b] px-2 py-1.5 text-xs text-white" />
+                    <input type="number" min={0} max={100} value={g.pct ?? ""} onChange={(e) => setGrape(i, { pct: e.target.value ? Number(e.target.value) : null })}
+                      placeholder="%"
+                      className="w-14 rounded border border-[#2a2a2a] bg-[#0b0b0b] px-2 py-1.5 text-center text-xs text-[#D4AF37]" />
+                    <button onClick={() => removeGrape(i)} className="rounded p-1 text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
+                ))}
+                <button onClick={addGrape} className="flex w-full items-center justify-center gap-1 rounded border border-dashed border-[#D4AF37]/50 bg-[#0b0b0b] px-2 py-1.5 text-xs font-medium text-[#D4AF37] hover:bg-[#1a1a1a]">
+                  <Plus className="h-3 w-3" /> Adicionar uva
+                </button>
+              </div>
+            </div>
             <Select label="Tipo" hint="Categoria geral." value={item.wine_type ?? ""} onChange={v => set("wine_type", v)} options={TYPES} />
             <Select label="Estilo" hint="Estilo usado para harmonização." value={item.style ?? ""} onChange={v => set("style", v)} options={STYLES} />
             <Select label="Volume" hint="Capacidade da garrafa." value={item.volume ?? ""} onChange={v => set("volume", v)} options={VOLUMES} />
@@ -476,30 +498,6 @@ function EditorModal({ item, onChange, onClose, onSave }: {
 
         {tab === "carac" && (
           <div className="space-y-5">
-            {/* Blend de Uvas */}
-            <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Blend de Uvas (Casta)</span>
-                <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${grapesTotalPct === 100 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/10 text-amber-400 border border-amber-500/30"}`}>
-                  Total: {grapesTotalPct}%
-                </span>
-              </div>
-              <div className="space-y-2">
-                {grapes.map((g, i) => (
-                  <div key={i} className="flex items-center gap-2 rounded-md border border-[#2a2a2a] bg-[#0b0b0b] p-2">
-                    <input value={g.grape} onChange={(e) => setGrape(i, { grape: e.target.value })} placeholder="Nome da uva"
-                      className="flex-1 rounded-md border border-[#2a2a2a] bg-[#141414] px-3 py-2 text-sm text-white" />
-                    <input type="number" min={0} max={100} value={g.pct ?? ""} onChange={(e) => setGrape(i, { pct: e.target.value ? Number(e.target.value) : null })}
-                      className="w-20 rounded-md border border-[#2a2a2a] bg-[#141414] px-3 py-2 text-center text-sm text-[#D4AF37]" />
-                    <span className="text-xs text-muted-foreground">%</span>
-                    <button onClick={() => removeGrape(i)} className="rounded p-2 text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
-                  </div>
-                ))}
-                <button onClick={addGrape} className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-[#D4AF37]/50 bg-[#0b0b0b] px-3 py-2 text-sm font-medium text-[#D4AF37] hover:bg-[#1a1a1a]">
-                  <Plus className="h-4 w-4" /> Adicionar Uva ao Blend
-                </button>
-              </div>
-            </div>
 
             {/* Laudo Químico */}
             <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">

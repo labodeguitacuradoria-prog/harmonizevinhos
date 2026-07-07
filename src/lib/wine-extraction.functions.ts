@@ -88,6 +88,17 @@ const ExtractedSchema = z.object({
   pesos: PesosSchema.nullable(),
   informacoes_tecnicas: z.string().nullable(),
   texto_original: z.string().nullable(),
+  premiacoes: z.array(z.string()).nullable(),
+  imagemUrl: z.string().nullable(),
+  elaboracao: z.string().nullable(),
+  maturacao: z.string().nullable(),
+  tempServicoMin: z.number().nullable(),
+  tempServicoMax: z.number().nullable(),
+  harmonizacao: z.string().nullable(),
+  nivelAcucar: z.string().nullable(),
+  conceitoCorpo: z.string().nullable(),
+  conceitoTaninos: z.string().nullable(),
+  conceitoAcidez: z.string().nullable(),
 });
 
 export type ExtractedWine = z.infer<typeof ExtractedSchema>;

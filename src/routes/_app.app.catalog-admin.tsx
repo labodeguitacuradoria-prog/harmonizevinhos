@@ -514,6 +514,31 @@ function EditorModal({ item, onChange, onClose, onSave }: {
 
         {tab === "carac" && (
           <div className="space-y-5">
+            {(item.wine_type === "Espumante" || item.production_method) && (
+              <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">
+                <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Método de Elaboração (Espumante)</div>
+                <div className="flex flex-wrap gap-2">
+                  {["Tradicional", "Charmat", "Asti", "Outro"].map((m) => {
+                    const active = (item.production_method ?? "").startsWith(m);
+                    return (
+                      <button key={m} type="button" onClick={() => set("production_method", m)}
+                        className={`rounded-md border px-3 py-1.5 text-xs font-bold uppercase transition ${active ? "border-[#D4AF37] bg-[#1a1a1a] text-[#D4AF37]" : "border-[#2a2a2a] text-[#888] hover:text-[#D4AF37]"}`}>
+                        {m}
+                      </button>
+                    );
+                  })}
+                </div>
+                {(item.production_method ?? "").startsWith("Outro") && (
+                  <input
+                    value={item.production_method?.replace(/^Outro:?\s*/, "") ?? ""}
+                    onChange={(e) => set("production_method", `Outro: ${e.target.value}`)}
+                    placeholder="Descreva o método"
+                    className="mt-2 w-full rounded border border-[#2a2a2a] bg-[#0b0b0b] px-2 py-1.5 text-xs text-white"
+                  />
+                )}
+              </div>
+            )}
+
 
             {/* Laudo Químico */}
             <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">

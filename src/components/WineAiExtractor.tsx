@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Sparkles, FileText, Upload, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   extractWineFromFile,
   extractWineFromText,
@@ -9,8 +10,9 @@ import {
 } from "@/lib/wine-extraction.functions";
 
 type Props = {
-  onExtracted: (data: ExtractedWine) => void;
+  onExtracted: (data: ExtractedWine, meta?: { sourceFileUrl?: string; mimeType?: string }) => void;
 };
+
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {

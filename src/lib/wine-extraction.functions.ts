@@ -49,6 +49,14 @@ Instruções específicas:
    - "intensidadeAromatica" (1=Delicado, 10=Exuberante)
 14. Na propriedade "informacoes_tecnicas", redija texto didático estruturado em 5 blocos separados por \\n\\n: **COMENTÁRIOS DO PRODUTOR E MÉTODOS**, **ANÁLISE VISUAL**, **ANÁLISE OLFATIVA**, **ANÁLISE GUSTATIVA**, **HARMONIZAÇÃO**.
 15. Na propriedade "texto_original", transcreva textualmente o conteúdo relevante do material original.
+16. **PREMIAÇÕES** — extraia em "premiacoes" (array de strings, até 10 itens) todos os prêmios/pontuações citados no material. Ex: "92 pts Wine Spectator 2022", "Medalha de Ouro Decanter 2021". Se nenhum, retorne [].
+17. **IMAGEM DO RÓTULO** — se o material contiver uma URL absoluta (http/https) apontando para uma imagem/foto do rótulo/garrafa, retorne-a em "imagemUrl"; caso contrário null. Não invente URL.
+18. **ELABORAÇÃO** — em "elaboracao", descreva vinificação (fermentação, leveduras, tanques, temperatura). Null se ausente.
+19. **MATURAÇÃO** — em "maturacao", descreva envelhecimento (barrica, tempo, tipo de carvalho, guarda em garrafa). Null se ausente.
+20. **TEMPERATURA DE SERVIÇO** — extraia em "tempServicoMin" e "tempServicoMax" (°C) quando informado.
+21. **HARMONIZAÇÃO** — em "harmonizacao", texto objetivo com sugestões práticas de pratos.
+22. **CONCEITOS QUALITATIVOS** — preencha "nivelAcucar" (um de: "Seco", "Meio-seco", "Suave", "Doce"), "conceitoCorpo" (um de: "Leve", "Médio", "Encorpado"), "conceitoTaninos" e "conceitoAcidez" (um de: "Baixo", "Médio", "Alto"). Para brancos/espumantes/rosés, "conceitoTaninos" geralmente é "Baixo".
+23. **MÉTODO DO ESPUMANTE** — se for espumante, "metodoProducao" DEVE ser "Tradicional", "Charmat" ou "Asti" (ou "Outro: <descrição>" se explicitamente citado outro método). Null quando não for espumante.
 
 ATENÇÃO CRÍTICA:
 - Use aspas simples (') para citações dentro de strings; nunca aspas duplas não escapadas.

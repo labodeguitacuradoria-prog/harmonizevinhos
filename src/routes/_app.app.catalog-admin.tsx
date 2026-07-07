@@ -370,7 +370,7 @@ function EditorModal({ item, onChange, onClose, onSave }: {
   }
 
 
-  function applyExtracted(e: ExtractedWine) {
+  function applyExtracted(e: ExtractedWine, meta?: { sourceFileUrl?: string; mimeType?: string }) {
     const grapeSummary = e.grapes
       .map((g) => (g.pct != null ? `${g.grape} ${g.pct}%` : g.grape))
       .join(", ");
@@ -381,6 +381,9 @@ function EditorModal({ item, onChange, onClose, onSave }: {
     const avgOak = e.grapes.length
       ? e.grapes.reduce((s, g) => s + (g.mesesBarrica ?? 0) * ((g.pct ?? 0) / 100), 0)
       : null;
+    const isPdf = (meta?.mimeType ?? "").includes("pdf");
+    const isImage = (meta?.mimeType ?? "").startsWith("image/");
+    const nextAwards = (e.premiacoes && e.premiacoes.length ? e.premiacoes.slice(0, 10) : awards);
     onChange({
       ...item,
       name: item.name || e.rotulo || "",
@@ -398,10 +401,23 @@ function EditorModal({ item, onChange, onClose, onSave }: {
       sugar_g_l: e.acucar ?? item.sugar_g_l ?? null,
       acidity_g_l: e.acidezVal ?? item.acidity_g_l ?? null,
       acidity_ph: e.ph ?? item.acidity_ph ?? null,
+      sugar_level: e.nivelAcucar || item.sugar_level || null,
+      body: e.conceitoCorpo || item.body || null,
+      tannin: e.conceitoTaninos || item.tannin || null,
+      acidity: e.conceitoAcidez || item.acidity || null,
+      elaboration: e.elaboracao || item.elaboration || null,
+      aging: e.maturacao || item.aging || null,
+      serving_temp_min: e.tempServicoMin ?? item.serving_temp_min ?? null,
+      serving_temp_max: e.tempServicoMax ?? item.serving_temp_max ?? null,
+      pairing_notes: e.harmonizacao || item.pairing_notes || null,
+      awards: nextAwards as any,
       tasting_notes: e.informacoes_tecnicas || item.tasting_notes || null,
       extraction_notes: e.informacoes_tecnicas ?? item.extraction_notes ?? null,
       source_text: e.texto_original ?? item.source_text ?? null,
       sommelier_weights: e.pesos ?? item.sommelier_weights ?? null,
+      image_url: item.image_url || e.imagemUrl || (isImage ? meta?.sourceFileUrl : undefined) || null,
+      tech_sheet_url: item.tech_sheet_url || (isPdf ? meta?.sourceFileUrl : undefined) || null,
+      source_file_url: meta?.sourceFileUrl ?? item.source_file_url ?? null,
       extracted_by_ai: true,
     });
   }
@@ -498,6 +514,31 @@ function EditorModal({ item, onChange, onClose, onSave }: {
 
         {tab === "carac" && (
           <div className="space-y-5">
+            {(item.wine_type === "Espumante" || item.production_method) && (
+              <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">
+                <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Método de Elaboração (Espumante)</div>
+                <div className="flex flex-wrap gap-2">
+                  {["Tradicional", "Charmat", "Asti", "Outro"].map((m) => {
+                    const active = (item.production_method ?? "").startsWith(m);
+                    return (
+                      <button key={m} type="button" onClick={() => set("production_method", m)}
+                        className={`rounded-md border px-3 py-1.5 text-xs font-bold uppercase transition ${active ? "border-[#D4AF37] bg-[#1a1a1a] text-[#D4AF37]" : "border-[#2a2a2a] text-[#888] hover:text-[#D4AF37]"}`}>
+                        {m}
+                      </button>
+                    );
+                  })}
+                </div>
+                {(item.production_method ?? "").startsWith("Outro") && (
+                  <input
+                    value={item.production_method?.replace(/^Outro:?\s*/, "") ?? ""}
+                    onChange={(e) => set("production_method", `Outro: ${e.target.value}`)}
+                    placeholder="Descreva o método"
+                    className="mt-2 w-full rounded border border-[#2a2a2a] bg-[#0b0b0b] px-2 py-1.5 text-xs text-white"
+                  />
+                )}
+              </div>
+            )}
+
 
             {/* Laudo Químico */}
             <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">

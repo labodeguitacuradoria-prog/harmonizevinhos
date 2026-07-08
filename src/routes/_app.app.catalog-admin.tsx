@@ -337,9 +337,11 @@ function CatalogAdmin() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {editing && (
-        <EditorModal item={editing} onChange={setEditing} onClose={() => setEditing(null)} onSave={handleSave} />
+        <EditorModal item={editing} initialTab={initialTab} onChange={setEditing} onClose={() => setEditing(null)} onSave={handleSave} />
       )}
     </div>
   );

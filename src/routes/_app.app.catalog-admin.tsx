@@ -2,14 +2,39 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText } from "lucide-react";
+import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { WineAiExtractor } from "@/components/WineAiExtractor";
+import { NumberInput } from "@/components/NumberInput";
 import type { ExtractedWine } from "@/lib/wine-extraction.functions";
 
 export const Route = createFileRoute("/_app/app/catalog-admin")({
   component: CatalogAdmin,
 });
+
+// Sugar residual classification (g/L) — Espumantes use the sparkling-wine scale;
+// still wines fall back to the general "Seco/Meio-seco/Suave/Doce" labels.
+const SPARKLING_SUGAR_TABLE: { label: string; max: number }[] = [
+  { label: "Nature / Brut Nature", max: 3 },
+  { label: "Extra Brut", max: 8 },
+  { label: "Brut", max: 15 },
+  { label: "Sec / Seco / Extra Sec", max: 20 },
+  { label: "Demi-Sec / Meio-Doce", max: 60 },
+  { label: "Doce / Doux / Moscatel", max: Infinity },
+];
+const SPARKLING_SUGAR_LABELS = SPARKLING_SUGAR_TABLE.map((t) => t.label);
+
+export function classifySparklingSugar(g: number | null | undefined): string | null {
+  if (g == null || !Number.isFinite(g)) return null;
+  for (const row of SPARKLING_SUGAR_TABLE) if (g <= row.max) return row.label;
+  return null;
+}
+
+// Convert any product-media reference (signed URL or path) to our same-origin proxy.
+export function toProxiedFileUrl(u: string | null | undefined): string | null {
+  if (!u) return null;
+  return `/api/public/catalog-file?u=${encodeURIComponent(u)}`;
+}
 
 type CatalogStatus = "pending" | "approved" | "rejected";
 

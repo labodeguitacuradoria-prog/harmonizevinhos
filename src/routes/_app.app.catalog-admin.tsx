@@ -352,13 +352,14 @@ function TabButton({ active, onClick, icon, children }: { active: boolean; onCli
   );
 }
 
-function EditorModal({ item, onChange, onClose, onSave }: {
+function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: {
   item: Partial<WineCatalog>;
+  initialTab?: "geral" | "carac" | "midia";
   onChange: (i: Partial<WineCatalog>) => void;
   onClose: () => void;
   onSave: () => void;
 }) {
-  const [tab, setTab] = useState<"geral" | "carac" | "midia">("geral");
+  const [tab, setTab] = useState<"geral" | "carac" | "midia">(initialTab);
   const set = <K extends keyof WineCatalog>(k: K, v: WineCatalog[K]) => onChange({ ...item, [k]: v });
   const videos: Video[] = Array.isArray(item.videos) ? (item.videos as Video[]) : [];
   const suppliers: string[] = Array.isArray(item.suppliers) ? item.suppliers : [];

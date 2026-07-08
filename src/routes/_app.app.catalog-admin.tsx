@@ -715,8 +715,14 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
             </div>
             <div>
               <FieldLabel hint="Ficha técnica oficial em PDF, fornecida pelo produtor ou importador.">Ficha técnica (PDF)</FieldLabel>
-              <div className="mt-2">
+              <div className="mt-2 space-y-2">
                 <MediaUploader label="" value={item.tech_sheet_url ?? null} onChange={(v) => set("tech_sheet_url", v)} accept="application/pdf" folder="catalog/tech" kind="file" />
+                {item.tech_sheet_url && (
+                  <a href={toProxiedFileUrl(item.tech_sheet_url) ?? "#"} target="_blank" rel="noreferrer"
+                    className="inline-flex items-center gap-1 rounded-md border border-[#D4AF37]/40 bg-[#141414] px-3 py-1.5 text-xs font-bold uppercase text-[#D4AF37] hover:bg-[#1a1a1a]">
+                    <ExternalLink className="h-3 w-3" /> Abrir ficha técnica
+                  </a>
+                )}
               </div>
             </div>
             <div>

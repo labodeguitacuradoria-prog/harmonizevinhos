@@ -784,3 +784,146 @@ function Select({ label, hint, value, onChange, options }: { label: string; hint
     </div>
   );
 }
+
+// ============================================================
+// Completeness panel — highlights labels missing key information
+// ============================================================
+
+type FieldCheck = { key: string; label: string; tab: "geral" | "carac" | "midia"; ok: boolean };
+
+function auditWine(w: WineCatalog): FieldCheck[] {
+  const grapes = Array.isArray(w.grapes_detail) ? w.grapes_detail : [];
+  const isEspumante = w.wine_type === "Espumante";
+  return [
+    { key: "producer", label: "Produtor", tab: "geral", ok: !!w.producer },
+    { key: "vintage", label: "Safra", tab: "geral", ok: !!w.vintage },
+    { key: "country", label: "País", tab: "geral", ok: !!w.country },
+    { key: "region", label: "Região", tab: "geral", ok: !!w.region },
+    { key: "wine_type", label: "Tipo", tab: "geral", ok: !!w.wine_type },
+    { key: "style", label: "Estilo", tab: "geral", ok: !!w.style },
+    { key: "grapes_detail", label: "Blend de uvas", tab: "geral", ok: grapes.length > 0 },
+    { key: "alcohol_pct", label: "Álcool (%)", tab: "carac", ok: w.alcohol_pct != null },
+    { key: "sugar_g_l", label: "Açúcar residual (g/L)", tab: "carac", ok: w.sugar_g_l != null },
+    { key: "acidity_g_l", label: "Acidez total (g/L)", tab: "carac", ok: w.acidity_g_l != null },
+    { key: "acidity_ph", label: "pH", tab: "carac", ok: w.acidity_ph != null },
+    { key: "sugar_level", label: "Açúcar (conceito)", tab: "carac", ok: !!w.sugar_level },
+    { key: "body", label: "Corpo (conceito)", tab: "carac", ok: !!w.body },
+    { key: "tannin", label: "Taninos (conceito)", tab: "carac", ok: !!w.tannin },
+    { key: "acidity", label: "Acidez (conceito)", tab: "carac", ok: !!w.acidity },
+    { key: "sommelier_weights", label: "Pesos sommelier", tab: "carac", ok: !!w.sommelier_weights && Object.values(w.sommelier_weights).some(v => v != null) },
+    { key: "serving_temp_min", label: "Temp. serviço mín.", tab: "carac", ok: w.serving_temp_min != null },
+    { key: "serving_temp_max", label: "Temp. serviço máx.", tab: "carac", ok: w.serving_temp_max != null },
+    { key: "elaboration", label: "Elaboração", tab: "carac", ok: !!w.elaboration },
+    { key: "aging", label: "Maturação", tab: "carac", ok: !!w.aging },
+    { key: "tasting_notes", label: "Notas de degustação", tab: "carac", ok: !!w.tasting_notes },
+    { key: "pairing_notes", label: "Harmonização", tab: "carac", ok: !!w.pairing_notes },
+    { key: "awards", label: "Premiações", tab: "carac", ok: Array.isArray(w.awards) && w.awards.length > 0 },
+    ...(isEspumante ? [{ key: "production_method", label: "Método (espumante)", tab: "carac" as const, ok: !!w.production_method }] : []),
+    { key: "image_url", label: "Imagem principal", tab: "midia", ok: !!w.image_url },
+    { key: "tech_sheet_url", label: "Ficha técnica (PDF)", tab: "midia", ok: !!w.tech_sheet_url },
+  ];
+}
+
+function CompletenessPanel({ items, onEdit }: {
+  items: WineCatalog[];
+  onEdit: (item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia") => void;
+}) {
+  const [filter, setFilter] = useState<"all" | "incomplete">("incomplete");
+  const rows = useMemo(() => items.map(w => {
+    const checks = auditWine(w);
+    const total = checks.length;
+    const done = checks.filter(c => c.ok).length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    return { wine: w, checks, done, total, pct };
+  }).sort((a, b) => a.pct - b.pct), [items]);
+
+  const visible = filter === "incomplete" ? rows.filter(r => r.pct < 100) : rows;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between rounded-lg border border-[#D4AF37]/30 bg-[#141414] p-4">
+        <div>
+          <div className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Painel de Completude</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {rows.filter(r => r.pct === 100).length} de {rows.length} rótulos 100% completos
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {(["incomplete", "all"] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`rounded-md border px-3 py-1.5 text-xs font-bold uppercase ${filter === f ? "border-[#D4AF37] bg-[#1a1a1a] text-[#D4AF37]" : "border-[#2a2a2a] text-muted-foreground hover:text-[#D4AF37]"}`}>
+              {f === "incomplete" ? "Incompletos" : "Todos"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {visible.length === 0 && (
+        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-8 text-center text-sm text-emerald-400">
+          🎉 Todos os rótulos estão 100% completos.
+        </div>
+      )}
+
+      <div className="grid gap-3">
+        {visible.map(({ wine, checks, done, total, pct }) => {
+          const missing = checks.filter(c => !c.ok);
+          const byTab: Record<string, FieldCheck[]> = { geral: [], carac: [], midia: [] };
+          missing.forEach(m => byTab[m.tab].push(m));
+          const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+          return (
+            <div key={wine.id} className="rounded-lg border border-border bg-card p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="truncate text-base font-bold text-foreground">
+                    {wine.name} {wine.vintage ? <span className="text-muted-foreground">· {wine.vintage}</span> : null}
+                  </div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {wine.producer ?? "sem produtor"} · {wine.country ?? "—"} · <span className={`uppercase ${wine.status === "approved" ? "text-emerald-400" : wine.status === "pending" ? "text-amber-400" : "text-rose-400"}`}>{wine.status}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-40">
+                    <div className="flex items-center justify-between text-[10px] font-bold uppercase text-muted-foreground">
+                      <span>Completude</span><span className="text-[#D4AF37]">{pct}%</span>
+                    </div>
+                    <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[#0b0b0b] border border-[#2a2a2a]">
+                      <div className={`h-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="mt-0.5 text-[10px] text-muted-foreground">{done}/{total} campos</div>
+                  </div>
+                </div>
+              </div>
+
+              {missing.length > 0 && (
+                <div className="grid gap-2 md:grid-cols-3">
+                  {(["geral", "carac", "midia"] as const).map(tab => (
+                    byTab[tab].length > 0 && (
+                      <div key={tab} className="rounded-md border border-[#2a2a2a] bg-[#0b0b0b] p-3">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                            {tab === "geral" ? "Geral" : tab === "carac" ? "Características" : "Mídia"} ({byTab[tab].length})
+                          </span>
+                          <button onClick={() => onEdit(wine, tab)}
+                            className="flex items-center gap-1 rounded border border-[#D4AF37]/40 px-2 py-0.5 text-[10px] font-bold uppercase text-[#D4AF37] hover:bg-[#141414]">
+                            <Edit className="h-2.5 w-2.5" /> Editar
+                          </button>
+                        </div>
+                        <ul className="space-y-1">
+                          {byTab[tab].map(m => (
+                            <li key={m.key} className="flex items-center gap-1.5 text-xs text-foreground/80">
+                              <AlertTriangle className="h-3 w-3 text-amber-400" /> {m.label}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

@@ -507,7 +507,7 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
           <div className="grid gap-4 md:grid-cols-2">
             <Input label="Nome*" hint="Nome do rótulo como aparece no contra-rótulo, sem produtor/safra." placeholder="Ex: Alpha Cabernet Sauvignon" value={item.name ?? ""} onChange={v => set("name", v)} />
             <Input label="Produtor" hint="Vinícola responsável pela elaboração." placeholder="Ex: Viña Montes" value={item.producer ?? ""} onChange={v => set("producer", v)} />
-            <Input label="Safra" hint="Ano da colheita. Vazio para NV." placeholder="Ex: 2020" value={item.vintage ? String(item.vintage) : ""} onChange={v => set("vintage", v ? Number(v) : null)} />
+            <NumberInput label="Safra" hint="Ano da colheita. Vazio para NV." placeholder="Ex: 2020" value={item.vintage ?? null} onChange={v => set("vintage", v != null ? Math.trunc(v) : null)} />
             <Input label="Região" hint="Região vitivinícola ou DO." placeholder="Ex: Vale do Colchagua" value={item.region ?? ""} onChange={v => set("region", v)} />
             <Input label="País" hint="País de origem." placeholder="Ex: Chile" value={item.country ?? ""} onChange={v => set("country", v)} />
             <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-3">

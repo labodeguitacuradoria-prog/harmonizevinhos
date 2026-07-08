@@ -659,14 +659,14 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <Select label="Açúcar (conceito)" hint="Classificação por dulçor." value={item.sugar_level ?? ""} onChange={v => set("sugar_level", v)} options={SUGAR_LEVELS} />
+              <Select label="Açúcar (conceito)" hint={item.wine_type === "Espumante" ? "Classificação de dulçor para espumantes." : "Classificação por dulçor."} value={item.sugar_level ?? ""} onChange={v => set("sugar_level", v)} options={item.wine_type === "Espumante" ? SPARKLING_SUGAR_LABELS : SUGAR_LEVELS} />
               <Select label="Corpo (conceito)" hint="Peso/estrutura na boca." value={item.body ?? ""} onChange={v => set("body", v)} options={BODY} />
               <Select label="Taninos (conceito)" hint="Intensidade dos taninos." value={item.tannin ?? ""} onChange={v => set("tannin", v)} options={INTENSITY} />
               <Select label="Acidez (conceito)" hint="Percepção de frescor." value={item.acidity ?? ""} onChange={v => set("acidity", v)} options={INTENSITY} />
               <TextArea label="Elaboração" hint="Vinificação: fermentação, leveduras, tanques, etc." placeholder="Ex: Fermentação em inox a temperatura controlada..." value={item.elaboration ?? ""} onChange={v => set("elaboration", v)} className="md:col-span-2" />
               <TextArea label="Maturação" hint="Envelhecimento: barricas, tempo, guarda em garrafa." placeholder="Ex: 12 meses em carvalho francês (30% novas)." value={item.aging ?? ""} onChange={v => set("aging", v)} className="md:col-span-2" />
-              <Input label="Temp. mín. serviço (°C)" hint="Temperatura mínima recomendada." placeholder="Ex: 16" value={item.serving_temp_min != null ? String(item.serving_temp_min) : ""} onChange={v => set("serving_temp_min", v ? Number(v) : null)} />
-              <Input label="Temp. máx. serviço (°C)" hint="Temperatura máxima recomendada." placeholder="Ex: 18" value={item.serving_temp_max != null ? String(item.serving_temp_max) : ""} onChange={v => set("serving_temp_max", v ? Number(v) : null)} />
+              <NumberInput label="Temp. mín. serviço (°C)" hint="Temperatura mínima recomendada." placeholder="Ex: 16" value={item.serving_temp_min ?? null} onChange={v => set("serving_temp_min", v)} />
+              <NumberInput label="Temp. máx. serviço (°C)" hint="Temperatura máxima recomendada." placeholder="Ex: 18" value={item.serving_temp_max ?? null} onChange={v => set("serving_temp_max", v)} />
               <TextArea label="Notas de degustação" hint="Cor, aromas, paladar e final." placeholder="Ex: Rubi intenso. Aromas de frutas negras..." value={item.tasting_notes ?? ""} onChange={v => set("tasting_notes", v)} className="md:col-span-2" />
               <TextArea label="Harmonização" hint="Sugestões gastronômicas." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro, queijos curados." value={item.pairing_notes ?? ""} onChange={v => set("pairing_notes", v)} className="md:col-span-2" />
               <div className="md:col-span-2">

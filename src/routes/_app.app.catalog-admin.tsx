@@ -2,14 +2,39 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText } from "lucide-react";
+import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { WineAiExtractor } from "@/components/WineAiExtractor";
+import { NumberInput } from "@/components/NumberInput";
 import type { ExtractedWine } from "@/lib/wine-extraction.functions";
 
 export const Route = createFileRoute("/_app/app/catalog-admin")({
   component: CatalogAdmin,
 });
+
+// Sugar residual classification (g/L) — Espumantes use the sparkling-wine scale;
+// still wines fall back to the general "Seco/Meio-seco/Suave/Doce" labels.
+const SPARKLING_SUGAR_TABLE: { label: string; max: number }[] = [
+  { label: "Nature / Brut Nature", max: 3 },
+  { label: "Extra Brut", max: 8 },
+  { label: "Brut", max: 15 },
+  { label: "Sec / Seco / Extra Sec", max: 20 },
+  { label: "Demi-Sec / Meio-Doce", max: 60 },
+  { label: "Doce / Doux / Moscatel", max: Infinity },
+];
+const SPARKLING_SUGAR_LABELS = SPARKLING_SUGAR_TABLE.map((t) => t.label);
+
+export function classifySparklingSugar(g: number | null | undefined): string | null {
+  if (g == null || !Number.isFinite(g)) return null;
+  for (const row of SPARKLING_SUGAR_TABLE) if (g <= row.max) return row.label;
+  return null;
+}
+
+// Convert any product-media reference (signed URL or path) to our same-origin proxy.
+export function toProxiedFileUrl(u: string | null | undefined): string | null {
+  if (!u) return null;
+  return `/api/public/catalog-file?u=${encodeURIComponent(u)}`;
+}
 
 type CatalogStatus = "pending" | "approved" | "rejected";
 
@@ -116,8 +141,9 @@ function CatalogAdmin() {
   const [items, setItems] = useState<WineCatalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusTab, setStatusTab] = useState<CatalogStatus>("pending");
+  const [statusTab, setStatusTab] = useState<CatalogStatus | "complete">("pending");
   const [editing, setEditing] = useState<Partial<WineCatalog> | null>(null);
+  const [initialTab, setInitialTab] = useState<"geral" | "carac" | "midia">("geral");
 
   useEffect(() => { fetchCatalog(); }, []);
 
@@ -186,13 +212,18 @@ function CatalogAdmin() {
   }), [items]);
 
   const filtered = useMemo(() => items
-    .filter(i => i.status === statusTab)
+    .filter(i => statusTab === "complete" ? true : i.status === statusTab)
     .filter(i =>
       !search ||
       i.name.toLowerCase().includes(search.toLowerCase()) ||
       (i.producer ?? "").toLowerCase().includes(search.toLowerCase()) ||
       (i.barcode ?? "").includes(search)
     ), [items, statusTab, search]);
+
+  function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" = "geral") {
+    setInitialTab(tab);
+    setEditing(item);
+  }
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8">
@@ -219,11 +250,19 @@ function CatalogAdmin() {
         <TabButton active={statusTab === "approved"} onClick={() => setStatusTab("approved")} icon={<ShieldCheck className="h-4 w-4" />}>
           Aprovados <span className="ml-1 rounded-full bg-emerald-500/20 px-2 text-xs text-emerald-500">{counts.approved}</span>
         </TabButton>
+
         <TabButton active={statusTab === "rejected"} onClick={() => setStatusTab("rejected")} icon={<Ban className="h-4 w-4" />}>
           Rejeitados <span className="ml-1 rounded-full bg-rose-500/20 px-2 text-xs text-rose-500">{counts.rejected}</span>
         </TabButton>
+        <TabButton active={statusTab === "complete"} onClick={() => setStatusTab("complete")} icon={<AlertTriangle className="h-4 w-4" />}>
+          Completude
+        </TabButton>
       </div>
 
+      {statusTab === "complete" ? (
+        <CompletenessPanel items={items} onEdit={openEdit} />
+      ) : (
+      <>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input placeholder="Buscar por nome, produtor ou código de barras..."
@@ -294,9 +333,11 @@ function CatalogAdmin() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {editing && (
-        <EditorModal item={editing} onChange={setEditing} onClose={() => setEditing(null)} onSave={handleSave} />
+        <EditorModal item={editing} initialTab={initialTab} onChange={setEditing} onClose={() => setEditing(null)} onSave={handleSave} />
       )}
     </div>
   );
@@ -311,13 +352,14 @@ function TabButton({ active, onClick, icon, children }: { active: boolean; onCli
   );
 }
 
-function EditorModal({ item, onChange, onClose, onSave }: {
+function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: {
   item: Partial<WineCatalog>;
+  initialTab?: "geral" | "carac" | "midia";
   onChange: (i: Partial<WineCatalog>) => void;
   onClose: () => void;
   onSave: () => void;
 }) {
-  const [tab, setTab] = useState<"geral" | "carac" | "midia">("geral");
+  const [tab, setTab] = useState<"geral" | "carac" | "midia">(initialTab);
   const set = <K extends keyof WineCatalog>(k: K, v: WineCatalog[K]) => onChange({ ...item, [k]: v });
   const videos: Video[] = Array.isArray(item.videos) ? (item.videos as Video[]) : [];
   const suppliers: string[] = Array.isArray(item.suppliers) ? item.suppliers : [];
@@ -465,7 +507,7 @@ function EditorModal({ item, onChange, onClose, onSave }: {
           <div className="grid gap-4 md:grid-cols-2">
             <Input label="Nome*" hint="Nome do rótulo como aparece no contra-rótulo, sem produtor/safra." placeholder="Ex: Alpha Cabernet Sauvignon" value={item.name ?? ""} onChange={v => set("name", v)} />
             <Input label="Produtor" hint="Vinícola responsável pela elaboração." placeholder="Ex: Viña Montes" value={item.producer ?? ""} onChange={v => set("producer", v)} />
-            <Input label="Safra" hint="Ano da colheita. Vazio para NV." placeholder="Ex: 2020" value={item.vintage ? String(item.vintage) : ""} onChange={v => set("vintage", v ? Number(v) : null)} />
+            <NumberInput label="Safra" hint="Ano da colheita. Vazio para NV." placeholder="Ex: 2020" value={item.vintage ?? null} onChange={v => set("vintage", v != null ? Math.trunc(v) : null)} />
             <Input label="Região" hint="Região vitivinícola ou DO." placeholder="Ex: Vale do Colchagua" value={item.region ?? ""} onChange={v => set("region", v)} />
             <Input label="País" hint="País de origem." placeholder="Ex: Chile" value={item.country ?? ""} onChange={v => set("country", v)} />
             <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-3">
@@ -545,12 +587,21 @@ function EditorModal({ item, onChange, onClose, onSave }: {
               <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[#D4AF37]">● Laudo Químico &amp; Analítico (Laboratório)</div>
               <p className="mb-3 text-xs text-muted-foreground">Valores analíticos reais do laudo químico do produtor. Atuam como direcionadores objetivos do painel.</p>
               <div className="grid gap-3 md:grid-cols-2">
-                <Input label="Teor alcoólico (%)" hint="Álcool em volume." placeholder="Ex: 13.5" value={item.alcohol_pct != null ? String(item.alcohol_pct) : ""} onChange={v => set("alcohol_pct", v ? Number(v) : null)} />
-                <Input label="Açúcar residual (g/L)" hint="Açúcar residual g/L." placeholder="Ex: 3.5" value={item.sugar_g_l != null ? String(item.sugar_g_l) : ""} onChange={v => set("sugar_g_l", v ? Number(v) : null)} />
-                <Input label="Acidez total (g/L)" hint="Acidez total g/L." placeholder="Ex: 5.8" value={item.acidity_g_l != null ? String(item.acidity_g_l) : ""} onChange={v => set("acidity_g_l", v ? Number(v) : null)} />
-                <Input label="pH do vinho" hint="Valor de pH." placeholder="Ex: 3.4" value={item.acidity_ph != null ? String(item.acidity_ph) : ""} onChange={v => set("acidity_ph", v ? Number(v) : null)} />
+                <NumberInput label="Teor alcoólico (%)" hint="Álcool em volume." placeholder="Ex: 13.5" value={item.alcohol_pct ?? null} onChange={v => set("alcohol_pct", v)} />
+                <NumberInput label="Açúcar residual (g/L)" hint="Açúcar residual g/L." placeholder="Ex: 3.5" value={item.sugar_g_l ?? null} onChange={v => set("sugar_g_l", v)} />
+                <NumberInput label="Acidez total (g/L)" hint="Acidez total g/L." placeholder="Ex: 5.8" value={item.acidity_g_l ?? null} onChange={v => set("acidity_g_l", v)} />
+                <NumberInput label="pH do vinho" hint="Valor de pH." placeholder="Ex: 3.4" value={item.acidity_ph ?? null} onChange={v => set("acidity_ph", v)} />
               </div>
+              {item.wine_type === "Espumante" && (
+                <div className="mt-3 rounded-md border border-[#D4AF37]/30 bg-[#0b0b0b] p-2 text-xs">
+                  <span className="text-muted-foreground">Classificação (espumante): </span>
+                  <span className="font-bold text-[#D4AF37]">
+                    {classifySparklingSugar(item.sugar_g_l ?? null) ?? "—"}
+                  </span>
+                </div>
+              )}
             </div>
+
 
             {/* Passagem por Barrica */}
             <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">
@@ -608,14 +659,14 @@ function EditorModal({ item, onChange, onClose, onSave }: {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <Select label="Açúcar (conceito)" hint="Classificação por dulçor." value={item.sugar_level ?? ""} onChange={v => set("sugar_level", v)} options={SUGAR_LEVELS} />
+              <Select label="Açúcar (conceito)" hint={item.wine_type === "Espumante" ? "Classificação de dulçor para espumantes." : "Classificação por dulçor."} value={item.sugar_level ?? ""} onChange={v => set("sugar_level", v)} options={item.wine_type === "Espumante" ? SPARKLING_SUGAR_LABELS : SUGAR_LEVELS} />
               <Select label="Corpo (conceito)" hint="Peso/estrutura na boca." value={item.body ?? ""} onChange={v => set("body", v)} options={BODY} />
               <Select label="Taninos (conceito)" hint="Intensidade dos taninos." value={item.tannin ?? ""} onChange={v => set("tannin", v)} options={INTENSITY} />
               <Select label="Acidez (conceito)" hint="Percepção de frescor." value={item.acidity ?? ""} onChange={v => set("acidity", v)} options={INTENSITY} />
               <TextArea label="Elaboração" hint="Vinificação: fermentação, leveduras, tanques, etc." placeholder="Ex: Fermentação em inox a temperatura controlada..." value={item.elaboration ?? ""} onChange={v => set("elaboration", v)} className="md:col-span-2" />
               <TextArea label="Maturação" hint="Envelhecimento: barricas, tempo, guarda em garrafa." placeholder="Ex: 12 meses em carvalho francês (30% novas)." value={item.aging ?? ""} onChange={v => set("aging", v)} className="md:col-span-2" />
-              <Input label="Temp. mín. serviço (°C)" hint="Temperatura mínima recomendada." placeholder="Ex: 16" value={item.serving_temp_min != null ? String(item.serving_temp_min) : ""} onChange={v => set("serving_temp_min", v ? Number(v) : null)} />
-              <Input label="Temp. máx. serviço (°C)" hint="Temperatura máxima recomendada." placeholder="Ex: 18" value={item.serving_temp_max != null ? String(item.serving_temp_max) : ""} onChange={v => set("serving_temp_max", v ? Number(v) : null)} />
+              <NumberInput label="Temp. mín. serviço (°C)" hint="Temperatura mínima recomendada." placeholder="Ex: 16" value={item.serving_temp_min ?? null} onChange={v => set("serving_temp_min", v)} />
+              <NumberInput label="Temp. máx. serviço (°C)" hint="Temperatura máxima recomendada." placeholder="Ex: 18" value={item.serving_temp_max ?? null} onChange={v => set("serving_temp_max", v)} />
               <TextArea label="Notas de degustação" hint="Cor, aromas, paladar e final." placeholder="Ex: Rubi intenso. Aromas de frutas negras..." value={item.tasting_notes ?? ""} onChange={v => set("tasting_notes", v)} className="md:col-span-2" />
               <TextArea label="Harmonização" hint="Sugestões gastronômicas." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro, queijos curados." value={item.pairing_notes ?? ""} onChange={v => set("pairing_notes", v)} className="md:col-span-2" />
               <div className="md:col-span-2">
@@ -664,8 +715,14 @@ function EditorModal({ item, onChange, onClose, onSave }: {
             </div>
             <div>
               <FieldLabel hint="Ficha técnica oficial em PDF, fornecida pelo produtor ou importador.">Ficha técnica (PDF)</FieldLabel>
-              <div className="mt-2">
+              <div className="mt-2 space-y-2">
                 <MediaUploader label="" value={item.tech_sheet_url ?? null} onChange={(v) => set("tech_sheet_url", v)} accept="application/pdf" folder="catalog/tech" kind="file" />
+                {item.tech_sheet_url && (
+                  <a href={toProxiedFileUrl(item.tech_sheet_url) ?? "#"} target="_blank" rel="noreferrer"
+                    className="inline-flex items-center gap-1 rounded-md border border-[#D4AF37]/40 bg-[#141414] px-3 py-1.5 text-xs font-bold uppercase text-[#D4AF37] hover:bg-[#1a1a1a]">
+                    <ExternalLink className="h-3 w-3" /> Abrir ficha técnica
+                  </a>
+                )}
               </div>
             </div>
             <div>
@@ -724,6 +781,149 @@ function Select({ label, hint, value, onChange, options }: { label: string; hint
         <option value="">Selecione...</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
+    </div>
+  );
+}
+
+// ============================================================
+// Completeness panel — highlights labels missing key information
+// ============================================================
+
+type FieldCheck = { key: string; label: string; tab: "geral" | "carac" | "midia"; ok: boolean };
+
+function auditWine(w: WineCatalog): FieldCheck[] {
+  const grapes = Array.isArray(w.grapes_detail) ? w.grapes_detail : [];
+  const isEspumante = w.wine_type === "Espumante";
+  return [
+    { key: "producer", label: "Produtor", tab: "geral", ok: !!w.producer },
+    { key: "vintage", label: "Safra", tab: "geral", ok: !!w.vintage },
+    { key: "country", label: "País", tab: "geral", ok: !!w.country },
+    { key: "region", label: "Região", tab: "geral", ok: !!w.region },
+    { key: "wine_type", label: "Tipo", tab: "geral", ok: !!w.wine_type },
+    { key: "style", label: "Estilo", tab: "geral", ok: !!w.style },
+    { key: "grapes_detail", label: "Blend de uvas", tab: "geral", ok: grapes.length > 0 },
+    { key: "alcohol_pct", label: "Álcool (%)", tab: "carac", ok: w.alcohol_pct != null },
+    { key: "sugar_g_l", label: "Açúcar residual (g/L)", tab: "carac", ok: w.sugar_g_l != null },
+    { key: "acidity_g_l", label: "Acidez total (g/L)", tab: "carac", ok: w.acidity_g_l != null },
+    { key: "acidity_ph", label: "pH", tab: "carac", ok: w.acidity_ph != null },
+    { key: "sugar_level", label: "Açúcar (conceito)", tab: "carac", ok: !!w.sugar_level },
+    { key: "body", label: "Corpo (conceito)", tab: "carac", ok: !!w.body },
+    { key: "tannin", label: "Taninos (conceito)", tab: "carac", ok: !!w.tannin },
+    { key: "acidity", label: "Acidez (conceito)", tab: "carac", ok: !!w.acidity },
+    { key: "sommelier_weights", label: "Pesos sommelier", tab: "carac", ok: !!w.sommelier_weights && Object.values(w.sommelier_weights).some(v => v != null) },
+    { key: "serving_temp_min", label: "Temp. serviço mín.", tab: "carac", ok: w.serving_temp_min != null },
+    { key: "serving_temp_max", label: "Temp. serviço máx.", tab: "carac", ok: w.serving_temp_max != null },
+    { key: "elaboration", label: "Elaboração", tab: "carac", ok: !!w.elaboration },
+    { key: "aging", label: "Maturação", tab: "carac", ok: !!w.aging },
+    { key: "tasting_notes", label: "Notas de degustação", tab: "carac", ok: !!w.tasting_notes },
+    { key: "pairing_notes", label: "Harmonização", tab: "carac", ok: !!w.pairing_notes },
+    { key: "awards", label: "Premiações", tab: "carac", ok: Array.isArray(w.awards) && w.awards.length > 0 },
+    ...(isEspumante ? [{ key: "production_method", label: "Método (espumante)", tab: "carac" as const, ok: !!w.production_method }] : []),
+    { key: "image_url", label: "Imagem principal", tab: "midia", ok: !!w.image_url },
+    { key: "tech_sheet_url", label: "Ficha técnica (PDF)", tab: "midia", ok: !!w.tech_sheet_url },
+  ];
+}
+
+function CompletenessPanel({ items, onEdit }: {
+  items: WineCatalog[];
+  onEdit: (item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia") => void;
+}) {
+  const [filter, setFilter] = useState<"all" | "incomplete">("incomplete");
+  const rows = useMemo(() => items.map(w => {
+    const checks = auditWine(w);
+    const total = checks.length;
+    const done = checks.filter(c => c.ok).length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    return { wine: w, checks, done, total, pct };
+  }).sort((a, b) => a.pct - b.pct), [items]);
+
+  const visible = filter === "incomplete" ? rows.filter(r => r.pct < 100) : rows;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between rounded-lg border border-[#D4AF37]/30 bg-[#141414] p-4">
+        <div>
+          <div className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Painel de Completude</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {rows.filter(r => r.pct === 100).length} de {rows.length} rótulos 100% completos
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {(["incomplete", "all"] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`rounded-md border px-3 py-1.5 text-xs font-bold uppercase ${filter === f ? "border-[#D4AF37] bg-[#1a1a1a] text-[#D4AF37]" : "border-[#2a2a2a] text-muted-foreground hover:text-[#D4AF37]"}`}>
+              {f === "incomplete" ? "Incompletos" : "Todos"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {visible.length === 0 && (
+        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-8 text-center text-sm text-emerald-400">
+          🎉 Todos os rótulos estão 100% completos.
+        </div>
+      )}
+
+      <div className="grid gap-3">
+        {visible.map(({ wine, checks, done, total, pct }) => {
+          const missing = checks.filter(c => !c.ok);
+          const byTab: Record<string, FieldCheck[]> = { geral: [], carac: [], midia: [] };
+          missing.forEach(m => byTab[m.tab].push(m));
+          const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+          return (
+            <div key={wine.id} className="rounded-lg border border-border bg-card p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="truncate text-base font-bold text-foreground">
+                    {wine.name} {wine.vintage ? <span className="text-muted-foreground">· {wine.vintage}</span> : null}
+                  </div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {wine.producer ?? "sem produtor"} · {wine.country ?? "—"} · <span className={`uppercase ${wine.status === "approved" ? "text-emerald-400" : wine.status === "pending" ? "text-amber-400" : "text-rose-400"}`}>{wine.status}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-40">
+                    <div className="flex items-center justify-between text-[10px] font-bold uppercase text-muted-foreground">
+                      <span>Completude</span><span className="text-[#D4AF37]">{pct}%</span>
+                    </div>
+                    <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[#0b0b0b] border border-[#2a2a2a]">
+                      <div className={`h-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="mt-0.5 text-[10px] text-muted-foreground">{done}/{total} campos</div>
+                  </div>
+                </div>
+              </div>
+
+              {missing.length > 0 && (
+                <div className="grid gap-2 md:grid-cols-3">
+                  {(["geral", "carac", "midia"] as const).map(tab => (
+                    byTab[tab].length > 0 && (
+                      <div key={tab} className="rounded-md border border-[#2a2a2a] bg-[#0b0b0b] p-3">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                            {tab === "geral" ? "Geral" : tab === "carac" ? "Características" : "Mídia"} ({byTab[tab].length})
+                          </span>
+                          <button onClick={() => onEdit(wine, tab)}
+                            className="flex items-center gap-1 rounded border border-[#D4AF37]/40 px-2 py-0.5 text-[10px] font-bold uppercase text-[#D4AF37] hover:bg-[#141414]">
+                            <Edit className="h-2.5 w-2.5" /> Editar
+                          </button>
+                        </div>
+                        <ul className="space-y-1">
+                          {byTab[tab].map(m => (
+                            <li key={m.key} className="flex items-center gap-1.5 text-xs text-foreground/80">
+                              <AlertTriangle className="h-3 w-3 text-amber-400" /> {m.label}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

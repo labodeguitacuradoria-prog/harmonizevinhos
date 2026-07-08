@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.index'
 import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
+import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
 import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
 import { Route as AppAppStockCountsAdminRouteImport } from './routes/_app.app.stock-counts-admin'
 import { Route as AppAppStockCountsRouteImport } from './routes/_app.app.stock-counts'
@@ -53,6 +54,11 @@ const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
   getParentRoute: () => AppRoute,
+} as any)
+const ApiPublicCatalogFileRoute = ApiPublicCatalogFileRouteImport.update({
+  id: '/api/public/catalog-file',
+  path: '/api/public/catalog-file',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppAppWinesRoute = AppAppWinesRouteImport.update({
   id: '/app/wines',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/app/stock-counts': typeof AppAppStockCountsRoute
   '/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
   '/app/wines': typeof AppAppWinesRoute
+  '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/admin/': typeof AppAdminIndexRoute
   '/app/': typeof AppAppIndexRoute
   '/supplier/': typeof AppSupplierIndexRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/app/stock-counts': typeof AppAppStockCountsRoute
   '/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
   '/app/wines': typeof AppAppWinesRoute
+  '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/admin': typeof AppAdminIndexRoute
   '/app': typeof AppAppIndexRoute
   '/supplier': typeof AppSupplierIndexRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/_app/app/stock-counts': typeof AppAppStockCountsRoute
   '/_app/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
   '/_app/app/wines': typeof AppAppWinesRoute
+  '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/app/': typeof AppAppIndexRoute
   '/_app/supplier/': typeof AppSupplierIndexRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/app/stock-counts'
     | '/app/stock-counts-admin'
     | '/app/wines'
+    | '/api/public/catalog-file'
     | '/admin/'
     | '/app/'
     | '/supplier/'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/app/stock-counts'
     | '/app/stock-counts-admin'
     | '/app/wines'
+    | '/api/public/catalog-file'
     | '/admin'
     | '/app'
     | '/supplier'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/_app/app/stock-counts'
     | '/_app/app/stock-counts-admin'
     | '/_app/app/wines'
+    | '/api/public/catalog-file'
     | '/_app/admin/'
     | '/_app/app/'
     | '/_app/supplier/'
@@ -206,6 +218,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/api/public/catalog-file': {
+      id: '/api/public/catalog-file'
+      path: '/api/public/catalog-file'
+      fullPath: '/api/public/catalog-file'
+      preLoaderRoute: typeof ApiPublicCatalogFileRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/app/wines': {
       id: '/_app/app/wines'
@@ -354,17 +374,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -587,10 +587,19 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
               <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[#D4AF37]">● Laudo Químico &amp; Analítico (Laboratório)</div>
               <p className="mb-3 text-xs text-muted-foreground">Valores analíticos reais do laudo químico do produtor. Atuam como direcionadores objetivos do painel.</p>
               <div className="grid gap-3 md:grid-cols-2">
-                <Input label="Teor alcoólico (%)" hint="Álcool em volume." placeholder="Ex: 13.5" value={item.alcohol_pct != null ? String(item.alcohol_pct) : ""} onChange={v => set("alcohol_pct", v ? Number(v) : null)} />
-                <Input label="Açúcar residual (g/L)" hint="Açúcar residual g/L." placeholder="Ex: 3.5" value={item.sugar_g_l != null ? String(item.sugar_g_l) : ""} onChange={v => set("sugar_g_l", v ? Number(v) : null)} />
-                <Input label="Acidez total (g/L)" hint="Acidez total g/L." placeholder="Ex: 5.8" value={item.acidity_g_l != null ? String(item.acidity_g_l) : ""} onChange={v => set("acidity_g_l", v ? Number(v) : null)} />
-                <Input label="pH do vinho" hint="Valor de pH." placeholder="Ex: 3.4" value={item.acidity_ph != null ? String(item.acidity_ph) : ""} onChange={v => set("acidity_ph", v ? Number(v) : null)} />
+                <NumberInput label="Teor alcoólico (%)" hint="Álcool em volume." placeholder="Ex: 13.5" value={item.alcohol_pct ?? null} onChange={v => set("alcohol_pct", v)} />
+                <NumberInput label="Açúcar residual (g/L)" hint="Açúcar residual g/L." placeholder="Ex: 3.5" value={item.sugar_g_l ?? null} onChange={v => set("sugar_g_l", v)} />
+                <NumberInput label="Acidez total (g/L)" hint="Acidez total g/L." placeholder="Ex: 5.8" value={item.acidity_g_l ?? null} onChange={v => set("acidity_g_l", v)} />
+                <NumberInput label="pH do vinho" hint="Valor de pH." placeholder="Ex: 3.4" value={item.acidity_ph ?? null} onChange={v => set("acidity_ph", v)} />
+              </div>
+              {item.wine_type === "Espumante" && (
+                <div className="mt-3 rounded-md border border-[#D4AF37]/30 bg-[#0b0b0b] p-2 text-xs">
+                  <span className="text-muted-foreground">Classificação (espumante): </span>
+                  <span className="font-bold text-[#D4AF37]">
+                    {classifySparklingSugar(item.sugar_g_l ?? null) ?? "—"}
+                  </span>
+                </div>
+              )}
               </div>
             </div>
 

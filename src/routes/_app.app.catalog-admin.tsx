@@ -600,8 +600,8 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
                   </span>
                 </div>
               )}
-              </div>
             </div>
+
 
             {/* Passagem por Barrica */}
             <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">

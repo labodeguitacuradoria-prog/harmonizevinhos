@@ -212,13 +212,18 @@ function CatalogAdmin() {
   }), [items]);
 
   const filtered = useMemo(() => items
-    .filter(i => i.status === statusTab)
+    .filter(i => statusTab === "complete" ? true : i.status === statusTab)
     .filter(i =>
       !search ||
       i.name.toLowerCase().includes(search.toLowerCase()) ||
       (i.producer ?? "").toLowerCase().includes(search.toLowerCase()) ||
       (i.barcode ?? "").includes(search)
     ), [items, statusTab, search]);
+
+  function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" = "geral") {
+    setInitialTab(tab);
+    setEditing(item);
+  }
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8">

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink } from "lucide-react";
+import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { WineAiExtractor } from "@/components/WineAiExtractor";
 import { NumberInput } from "@/components/NumberInput";
@@ -141,9 +141,10 @@ function CatalogAdmin() {
   const [items, setItems] = useState<WineCatalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusTab, setStatusTab] = useState<CatalogStatus | "complete">("pending");
+  const [statusTab, setStatusTab] = useState<CatalogStatus>("pending");
   const [editing, setEditing] = useState<Partial<WineCatalog> | null>(null);
   const [initialTab, setInitialTab] = useState<"geral" | "carac" | "midia">("geral");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => { fetchCatalog(); }, []);
 
@@ -212,7 +213,7 @@ function CatalogAdmin() {
   }), [items]);
 
   const filtered = useMemo(() => items
-    .filter(i => statusTab === "complete" ? true : i.status === statusTab)
+    .filter(i => i.status === statusTab)
     .filter(i =>
       !search ||
       i.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -254,15 +255,10 @@ function CatalogAdmin() {
         <TabButton active={statusTab === "rejected"} onClick={() => setStatusTab("rejected")} icon={<Ban className="h-4 w-4" />}>
           Rejeitados <span className="ml-1 rounded-full bg-rose-500/20 px-2 text-xs text-rose-500">{counts.rejected}</span>
         </TabButton>
-        <TabButton active={statusTab === "complete"} onClick={() => setStatusTab("complete")} icon={<AlertTriangle className="h-4 w-4" />}>
-          Completude
-        </TabButton>
       </div>
 
-      {statusTab === "complete" ? (
-        <CompletenessPanel items={items} onEdit={openEdit} />
-      ) : (
       <>
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input placeholder="Buscar por nome, produtor ou código de barras..."
@@ -289,8 +285,12 @@ function CatalogAdmin() {
               const done = checks.filter(c => c.ok).length;
               const pct = checks.length ? Math.round((done / checks.length) * 100) : 0;
               const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+              const missing = checks.filter(c => !c.ok);
+              const isExpanded = expandedId === item.id;
+              const colCount = statusTab === "approved" ? 7 : 6;
               return (
-              <tr key={item.id} className="hover:bg-accent/50">
+              <React.Fragment key={item.id}>
+              <tr className="hover:bg-accent/50">
                 <td className="px-4 py-3 font-medium">{item.name}</td>
                 <td className="px-4 py-3">{item.producer ?? "—"}</td>
                 <td className="px-4 py-3">{item.vintage ?? "—"}</td>
@@ -303,6 +303,13 @@ function CatalogAdmin() {
                         <div className={`h-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
                       </div>
                       <span className="w-9 text-right text-xs font-bold text-[#D4AF37]">{pct}%</span>
+                      <button
+                        title={missing.length ? `${missing.length} campos faltando` : "100% completo"}
+                        onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                        disabled={missing.length === 0}
+                        className={`rounded p-0.5 transition ${missing.length === 0 ? "text-emerald-500/60 cursor-default" : "text-[#D4AF37] hover:bg-[#1a1a1a]"}`}>
+                        {missing.length === 0 ? <Check className="h-3.5 w-3.5" /> : isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                      </button>
                     </div>
                   </td>
                 )}
@@ -328,17 +335,50 @@ function CatalogAdmin() {
                         <Clock className="h-4 w-4" />
                       </button>
                     )}
-                    <button onClick={() => setEditing(item)} className="rounded p-1.5 hover:bg-accent">
+                    <button title="Editar rótulo" onClick={() => setEditing(item)} className="rounded p-1.5 hover:bg-accent">
                       <Edit className="h-4 w-4 text-primary" />
                     </button>
                     {isAdmin && (
-                      <button onClick={() => handleDelete(item.id)} className="rounded p-1.5 hover:bg-accent">
+                      <button title="Excluir" onClick={() => handleDelete(item.id)} className="rounded p-1.5 hover:bg-accent">
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </button>
                     )}
                   </div>
                 </td>
               </tr>
+              {isExpanded && missing.length > 0 && (
+                <tr className="bg-[#0b0b0b]">
+                  <td colSpan={colCount} className="px-4 py-3">
+                    <div className="grid gap-2 md:grid-cols-3">
+                      {(["geral", "carac", "midia"] as const).map(t => {
+                        const inTab = missing.filter(m => m.tab === t);
+                        if (inTab.length === 0) return null;
+                        return (
+                          <div key={t} className="rounded-md border border-[#2a2a2a] bg-[#141414] p-3">
+                            <div className="mb-1.5 flex items-center justify-between">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                {t === "geral" ? "Geral" : t === "carac" ? "Características" : "Mídia"} ({inTab.length})
+                              </span>
+                              <button onClick={() => openEdit(item, t)}
+                                className="flex items-center gap-1 rounded border border-[#D4AF37]/40 px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#D4AF37] hover:bg-[#1a1a1a]">
+                                <Edit className="h-2.5 w-2.5" /> Editar
+                              </button>
+                            </div>
+                            <ul className="space-y-0.5">
+                              {inTab.map(m => (
+                                <li key={m.key} className="flex items-center gap-1.5 text-xs text-foreground/80">
+                                  <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" /> {m.label}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </td>
+                </tr>
+              )}
+              </React.Fragment>
               );
             })}
           </tbody>
@@ -351,7 +391,7 @@ function CatalogAdmin() {
         )}
       </div>
       </>
-      )}
+
 
       {editing && (
         <EditorModal item={editing} initialTab={initialTab} onChange={setEditing} onClose={() => setEditing(null)} onSave={handleSave} />
@@ -841,106 +881,3 @@ function auditWine(w: WineCatalog): FieldCheck[] {
   ];
 }
 
-function CompletenessPanel({ items, onEdit }: {
-  items: WineCatalog[];
-  onEdit: (item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia") => void;
-}) {
-  const [filter, setFilter] = useState<"all" | "incomplete">("incomplete");
-  const rows = useMemo(() => items.map(w => {
-    const checks = auditWine(w);
-    const total = checks.length;
-    const done = checks.filter(c => c.ok).length;
-    const pct = total ? Math.round((done / total) * 100) : 0;
-    return { wine: w, checks, done, total, pct };
-  }).sort((a, b) => a.pct - b.pct), [items]);
-
-  const visible = filter === "incomplete" ? rows.filter(r => r.pct < 100) : rows;
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between rounded-lg border border-[#D4AF37]/30 bg-[#141414] p-4">
-        <div>
-          <div className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">Painel de Completude</div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            {rows.filter(r => r.pct === 100).length} de {rows.length} rótulos 100% completos
-          </div>
-        </div>
-        <div className="flex gap-2">
-          {(["incomplete", "all"] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`rounded-md border px-3 py-1.5 text-xs font-bold uppercase ${filter === f ? "border-[#D4AF37] bg-[#1a1a1a] text-[#D4AF37]" : "border-[#2a2a2a] text-muted-foreground hover:text-[#D4AF37]"}`}>
-              {f === "incomplete" ? "Incompletos" : "Todos"}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {visible.length === 0 && (
-        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-8 text-center text-sm text-emerald-400">
-          🎉 Todos os rótulos estão 100% completos.
-        </div>
-      )}
-
-      <div className="grid gap-3">
-        {visible.map(({ wine, checks, done, total, pct }) => {
-          const missing = checks.filter(c => !c.ok);
-          const byTab: Record<string, FieldCheck[]> = { geral: [], carac: [], midia: [] };
-          missing.forEach(m => byTab[m.tab].push(m));
-          const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
-          return (
-            <div key={wine.id} className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="truncate text-base font-bold text-foreground">
-                    {wine.name} {wine.vintage ? <span className="text-muted-foreground">· {wine.vintage}</span> : null}
-                  </div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {wine.producer ?? "sem produtor"} · {wine.country ?? "—"} · <span className={`uppercase ${wine.status === "approved" ? "text-emerald-400" : wine.status === "pending" ? "text-amber-400" : "text-rose-400"}`}>{wine.status}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-40">
-                    <div className="flex items-center justify-between text-[10px] font-bold uppercase text-muted-foreground">
-                      <span>Completude</span><span className="text-[#D4AF37]">{pct}%</span>
-                    </div>
-                    <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-[#0b0b0b] border border-[#2a2a2a]">
-                      <div className={`h-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className="mt-0.5 text-[10px] text-muted-foreground">{done}/{total} campos</div>
-                  </div>
-                </div>
-              </div>
-
-              {missing.length > 0 && (
-                <div className="grid gap-2 md:grid-cols-3">
-                  {(["geral", "carac", "midia"] as const).map(tab => (
-                    byTab[tab].length > 0 && (
-                      <div key={tab} className="rounded-md border border-[#2a2a2a] bg-[#0b0b0b] p-3">
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            {tab === "geral" ? "Geral" : tab === "carac" ? "Características" : "Mídia"} ({byTab[tab].length})
-                          </span>
-                          <button onClick={() => onEdit(wine, tab)}
-                            className="flex items-center gap-1 rounded border border-[#D4AF37]/40 px-2 py-0.5 text-[10px] font-bold uppercase text-[#D4AF37] hover:bg-[#141414]">
-                            <Edit className="h-2.5 w-2.5" /> Editar
-                          </button>
-                        </div>
-                        <ul className="space-y-1">
-                          {byTab[tab].map(m => (
-                            <li key={m.key} className="flex items-center gap-1.5 text-xs text-foreground/80">
-                              <AlertTriangle className="h-3 w-3 text-amber-400" /> {m.label}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}

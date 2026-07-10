@@ -255,15 +255,10 @@ function CatalogAdmin() {
         <TabButton active={statusTab === "rejected"} onClick={() => setStatusTab("rejected")} icon={<Ban className="h-4 w-4" />}>
           Rejeitados <span className="ml-1 rounded-full bg-rose-500/20 px-2 text-xs text-rose-500">{counts.rejected}</span>
         </TabButton>
-        <TabButton active={statusTab === "complete"} onClick={() => setStatusTab("complete")} icon={<AlertTriangle className="h-4 w-4" />}>
-          Completude
-        </TabButton>
       </div>
 
-      {statusTab === "complete" ? (
-        <CompletenessPanel items={items} onEdit={openEdit} />
-      ) : (
       <>
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input placeholder="Buscar por nome, produtor ou código de barras..."

@@ -289,8 +289,8 @@ function CatalogAdmin() {
               const isExpanded = expandedId === item.id;
               const colCount = statusTab === "approved" ? 7 : 6;
               return (
-              <>
-              <tr key={item.id} className="hover:bg-accent/50">
+              <React.Fragment key={item.id}>
+              <tr className="hover:bg-accent/50">
                 <td className="px-4 py-3 font-medium">{item.name}</td>
                 <td className="px-4 py-3">{item.producer ?? "—"}</td>
                 <td className="px-4 py-3">{item.vintage ?? "—"}</td>

@@ -285,7 +285,11 @@ function CatalogAdmin() {
               const done = checks.filter(c => c.ok).length;
               const pct = checks.length ? Math.round((done / checks.length) * 100) : 0;
               const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+              const missing = checks.filter(c => !c.ok);
+              const isExpanded = expandedId === item.id;
+              const colCount = statusTab === "approved" ? 7 : 6;
               return (
+              <>
               <tr key={item.id} className="hover:bg-accent/50">
                 <td className="px-4 py-3 font-medium">{item.name}</td>
                 <td className="px-4 py-3">{item.producer ?? "—"}</td>
@@ -299,6 +303,13 @@ function CatalogAdmin() {
                         <div className={`h-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
                       </div>
                       <span className="w-9 text-right text-xs font-bold text-[#D4AF37]">{pct}%</span>
+                      <button
+                        title={missing.length ? `${missing.length} campos faltando` : "100% completo"}
+                        onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                        disabled={missing.length === 0}
+                        className={`rounded p-0.5 transition ${missing.length === 0 ? "text-emerald-500/60 cursor-default" : "text-[#D4AF37] hover:bg-[#1a1a1a]"}`}>
+                        {missing.length === 0 ? <Check className="h-3.5 w-3.5" /> : isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                      </button>
                     </div>
                   </td>
                 )}
@@ -324,17 +335,50 @@ function CatalogAdmin() {
                         <Clock className="h-4 w-4" />
                       </button>
                     )}
-                    <button onClick={() => setEditing(item)} className="rounded p-1.5 hover:bg-accent">
+                    <button title="Editar rótulo" onClick={() => setEditing(item)} className="rounded p-1.5 hover:bg-accent">
                       <Edit className="h-4 w-4 text-primary" />
                     </button>
                     {isAdmin && (
-                      <button onClick={() => handleDelete(item.id)} className="rounded p-1.5 hover:bg-accent">
+                      <button title="Excluir" onClick={() => handleDelete(item.id)} className="rounded p-1.5 hover:bg-accent">
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </button>
                     )}
                   </div>
                 </td>
               </tr>
+              {isExpanded && missing.length > 0 && (
+                <tr className="bg-[#0b0b0b]">
+                  <td colSpan={colCount} className="px-4 py-3">
+                    <div className="grid gap-2 md:grid-cols-3">
+                      {(["geral", "carac", "midia"] as const).map(t => {
+                        const inTab = missing.filter(m => m.tab === t);
+                        if (inTab.length === 0) return null;
+                        return (
+                          <div key={t} className="rounded-md border border-[#2a2a2a] bg-[#141414] p-3">
+                            <div className="mb-1.5 flex items-center justify-between">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                {t === "geral" ? "Geral" : t === "carac" ? "Características" : "Mídia"} ({inTab.length})
+                              </span>
+                              <button onClick={() => openEdit(item, t)}
+                                className="flex items-center gap-1 rounded border border-[#D4AF37]/40 px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#D4AF37] hover:bg-[#1a1a1a]">
+                                <Edit className="h-2.5 w-2.5" /> Editar
+                              </button>
+                            </div>
+                            <ul className="space-y-0.5">
+                              {inTab.map(m => (
+                                <li key={m.key} className="flex items-center gap-1.5 text-xs text-foreground/80">
+                                  <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" /> {m.label}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </td>
+                </tr>
+              )}
+              </>
               );
             })}
           </tbody>

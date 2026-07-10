@@ -378,7 +378,7 @@ function CatalogAdmin() {
                   </td>
                 </tr>
               )}
-              </>
+              </React.Fragment>
               );
             })}
           </tbody>

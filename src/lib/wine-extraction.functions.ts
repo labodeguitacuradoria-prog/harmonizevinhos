@@ -129,17 +129,28 @@ async function callModel(userContent: unknown): Promise<ExtractedWine> {
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userContent as any }],
       output: Output.object({ schema: ExtractedSchema }),
+      maxOutputTokens: 16384,
+      temperature: 0.2,
     });
     return output;
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) {
-      try {
-        const parsed = JSON.parse(error.text ?? "");
-        return ExtractedSchema.parse(parsed);
-      } catch {
-        throw new Error("Não foi possível interpretar a resposta da IA.");
+      const raw = error.text ?? "";
+      try { return ExtractedSchema.parse(JSON.parse(raw)); } catch { /* fallthrough */ }
+      const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+      const candidate = fence?.[1] ?? raw;
+      const start = candidate.indexOf("{");
+      const end = candidate.lastIndexOf("}");
+      if (start !== -1 && end > start) {
+        const slice = candidate.substring(start, end + 1);
+        try { return ExtractedSchema.parse(JSON.parse(slice)); } catch { /* fallthrough */ }
       }
+      console.error("[wine-extraction] Falha ao parsear resposta da IA. Prévia:", raw.slice(0, 400));
+      throw new Error(
+        "A IA retornou uma resposta incompleta ou fora do formato esperado. Tente novamente — se persistir, cole o texto da ficha na aba 'Texto colado'."
+      );
     }
+    console.error("[wine-extraction] Erro na chamada da IA:", error);
     throw error;
   }
 }

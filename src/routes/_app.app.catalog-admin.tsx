@@ -279,17 +279,33 @@ function CatalogAdmin() {
               <th className="px-4 py-3">Safra</th>
               <th className="px-4 py-3">Tipo / Estilo</th>
               <th className="px-4 py-3">País</th>
+              {statusTab === "approved" && <th className="px-4 py-3 w-32">Completude</th>}
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {filtered.map(item => (
+            {filtered.map(item => {
+              const checks = auditWine(item);
+              const done = checks.filter(c => c.ok).length;
+              const pct = checks.length ? Math.round((done / checks.length) * 100) : 0;
+              const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+              return (
               <tr key={item.id} className="hover:bg-accent/50">
                 <td className="px-4 py-3 font-medium">{item.name}</td>
                 <td className="px-4 py-3">{item.producer ?? "—"}</td>
                 <td className="px-4 py-3">{item.vintage ?? "—"}</td>
                 <td className="px-4 py-3"><span className="block">{item.wine_type ?? "—"}</span><span className="block text-xs text-muted-foreground">{item.style ?? ""}</span></td>
                 <td className="px-4 py-3">{item.country ?? "—"}</td>
+                {statusTab === "approved" && (
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#0b0b0b] border border-[#2a2a2a]">
+                        <div className={`h-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-9 text-right text-xs font-bold text-[#D4AF37]">{pct}%</span>
+                    </div>
+                  </td>
+                )}
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-1.5">
                     {isAdmin && item.status === "pending" && (
@@ -323,7 +339,8 @@ function CatalogAdmin() {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         {loading && <div className="p-8 text-center">Carregando catálogo...</div>}

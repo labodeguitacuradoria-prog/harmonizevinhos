@@ -213,7 +213,7 @@ function CatalogAdmin() {
   }), [items]);
 
   const filtered = useMemo(() => items
-    .filter(i => statusTab === "complete" ? true : i.status === statusTab)
+    .filter(i => i.status === statusTab)
     .filter(i =>
       !search ||
       i.name.toLowerCase().includes(search.toLowerCase()) ||

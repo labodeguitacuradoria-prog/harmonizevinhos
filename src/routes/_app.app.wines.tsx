@@ -717,6 +717,7 @@ function WineForm({
             <Field label="Safra" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} hint="Ano da colheita das uvas. Deixe em branco para vinhos sem safra (NV)." placeholder="Ex: 2020" />
             <Field label="Região" value={f.region} onChange={(v) => setF({ ...f, region: v })} hint="Região vitivinícola, denominação ou apelação de origem." placeholder="Ex: Vale do Colchagua" />
             <Field label="País" value={f.country} onChange={(v) => setF({ ...f, country: v })} hint="País de origem do vinho, por extenso e em português." placeholder="Ex: Chile" />
+            <Field label="AOP / Denominação" value={f.appellation} onChange={(v) => setF({ ...f, appellation: v })} hint="Somente vinhos europeus. Denominação de Origem Protegida — França: AOP/AOC; Itália: DOC/DOCG; Espanha: DO/DOCa; Portugal: DOP/DOC; Alemanha: g.U./Prädikatswein." placeholder="Ex: AOC Saint-Émilion Grand Cru" />
             <Field label="Uvas" value={f.grape} onChange={(v) => setF({ ...f, grape: v })} hint="Castas/uvas e seus percentuais quando houver corte. Separe por vírgula." placeholder="Ex: Cabernet Sauvignon 85%, Merlot 15%" />
             <SelectWithCustom
               label="Tipo"

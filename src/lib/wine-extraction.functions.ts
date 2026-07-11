@@ -138,14 +138,24 @@ async function callModel(userContent: unknown): Promise<ExtractedWine> {
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) {
       const raw = error.text ?? "";
-      try { return ExtractedSchema.parse(JSON.parse(raw)); } catch { /* fallthrough */ }
-      const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-      const candidate = fence?.[1] ?? raw;
-      const start = candidate.indexOf("{");
-      const end = candidate.lastIndexOf("}");
-      if (start !== -1 && end > start) {
-        const slice = candidate.substring(start, end + 1);
-        try { return ExtractedSchema.parse(JSON.parse(slice)); } catch { /* fallthrough */ }
+      const tryParse = (s: string) => {
+        try { return JSON.parse(s); } catch { return null; }
+      };
+      let parsed: any = tryParse(raw);
+      if (!parsed) {
+        const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+        const candidate = fence?.[1] ?? raw;
+        const start = candidate.indexOf("{");
+        const end = candidate.lastIndexOf("}");
+        if (start !== -1 && end > start) {
+          parsed = tryParse(candidate.substring(start, end + 1));
+        }
+      }
+      if (parsed && typeof parsed === "object") {
+        // Coerção tolerante: preenche campos ausentes/errados em vez de rejeitar tudo
+        const safe = ExtractedSchema.safeParse(parsed);
+        if (safe.success) return safe.data;
+        return coerceExtracted(parsed);
       }
       console.error("[wine-extraction] Falha ao parsear resposta da IA. Prévia:", raw.slice(0, 400));
       throw new Error(
@@ -155,6 +165,60 @@ async function callModel(userContent: unknown): Promise<ExtractedWine> {
     console.error("[wine-extraction] Erro na chamada da IA:", error);
     throw error;
   }
+}
+
+function coerceExtracted(p: any): ExtractedWine {
+  const num = (v: any) => (typeof v === "number" && !isNaN(v) ? v : v != null && !isNaN(Number(v)) ? Number(v) : null);
+  const str = (v: any) => (typeof v === "string" ? v : v == null ? null : String(v));
+  const grapes = Array.isArray(p.grapes)
+    ? p.grapes.filter((g: any) => g && typeof g === "object").map((g: any) => ({
+        grape: str(g.grape) ?? "",
+        pct: num(g.pct),
+        mesesBarrica: num(g.mesesBarrica),
+      }))
+    : [];
+  const pesosIn = p.pesos && typeof p.pesos === "object" ? p.pesos : null;
+  const pesos = pesosIn
+    ? {
+        corpo: num(pesosIn.corpo),
+        acidez: num(pesosIn.acidez),
+        taninos: num(pesosIn.taninos),
+        docura: num(pesosIn.docura),
+        estagioBarrica: num(pesosIn.estagioBarrica),
+        intensidadeAromatica: num(pesosIn.intensidadeAromatica),
+      }
+    : null;
+  return {
+    rotulo: str(p.rotulo),
+    produtor: str(p.produtor),
+    pais: str(p.pais),
+    regiao: str(p.regiao),
+    denominacao: str(p.denominacao),
+    safra: num(p.safra),
+    tipo: str(p.tipo),
+    estilo: str(p.estilo),
+    grapes,
+    mesesBarrica: num(p.mesesBarrica),
+    alcool: num(p.alcool),
+    acucar: num(p.acucar),
+    acidezVal: num(p.acidezVal),
+    ph: num(p.ph),
+    metodoProducao: str(p.metodoProducao),
+    pesos,
+    informacoes_tecnicas: str(p.informacoes_tecnicas),
+    texto_original: str(p.texto_original),
+    premiacoes: Array.isArray(p.premiacoes) ? p.premiacoes.map(str).filter(Boolean) as string[] : null,
+    imagemUrl: str(p.imagemUrl),
+    elaboracao: str(p.elaboracao),
+    maturacao: str(p.maturacao),
+    tempServicoMin: num(p.tempServicoMin),
+    tempServicoMax: num(p.tempServicoMax),
+    harmonizacao: str(p.harmonizacao),
+    nivelAcucar: str(p.nivelAcucar),
+    conceitoCorpo: str(p.conceitoCorpo),
+    conceitoTaninos: str(p.conceitoTaninos),
+    conceitoAcidez: str(p.conceitoAcidez),
+  };
 }
 
 const FileInput = z.object({

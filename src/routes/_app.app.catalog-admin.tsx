@@ -859,6 +859,7 @@ function auditWine(w: WineCatalog): FieldCheck[] {
     { key: "vintage", label: "Safra", tab: "geral", ok: !!w.vintage },
     { key: "country", label: "País", tab: "geral", ok: !!w.country },
     { key: "region", label: "Região", tab: "geral", ok: !!w.region },
+    { key: "appellation", label: "AOP / Denominação (Europa)", tab: "geral", ok: !!w.appellation || !isEuropeanCountry(w.country) },
     { key: "wine_type", label: "Tipo", tab: "geral", ok: !!w.wine_type },
     { key: "style", label: "Estilo", tab: "geral", ok: !!w.style },
     { key: "grapes_detail", label: "Blend de uvas", tab: "geral", ok: grapes.length > 0 },

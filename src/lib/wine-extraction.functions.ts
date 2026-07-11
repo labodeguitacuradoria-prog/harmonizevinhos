@@ -83,6 +83,7 @@ const ExtractedSchema = z.object({
   produtor: z.string().nullable(),
   pais: z.string().nullable(),
   regiao: z.string().nullable(),
+  denominacao: z.string().nullable(),
   safra: z.number().nullable(),
   tipo: z.string().nullable(),
   estilo: z.string().nullable(),

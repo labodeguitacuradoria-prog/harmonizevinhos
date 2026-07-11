@@ -58,6 +58,7 @@ Instruções específicas:
 21. **HARMONIZAÇÃO** — em "harmonizacao", texto objetivo com sugestões práticas de pratos.
 22. **CONCEITOS QUALITATIVOS** — preencha "nivelAcucar" (um de: "Seco", "Meio-seco", "Suave", "Doce"), "conceitoCorpo" (um de: "Leve", "Médio", "Encorpado"), "conceitoTaninos" e "conceitoAcidez" (um de: "Baixo", "Médio", "Alto"). Para brancos/espumantes/rosés, "conceitoTaninos" geralmente é "Baixo".
 23. **MÉTODO DO ESPUMANTE** — se for espumante, "metodoProducao" DEVE ser "Tradicional", "Charmat" ou "Asti" (ou "Outro: <descrição>" se explicitamente citado outro método). Null quando não for espumante.
+24. **PREÇO DE VENDA AO CONSUMIDOR** — se o material citar preço sugerido/recomendado de venda ao consumidor (PDV, "preço sugerido", "sugestão de venda", "MSRP", "PVP", "preço ao consumidor"), extraia em "precoVendaSugerido" o valor numérico em reais (R$). Aceite formatos brasileiros ("R$ 189,90" → 189.90). Se o preço aparecer em outra moeda ou for preço de custo/importador (não ao consumidor final), retorne null.
 
 ATENÇÃO CRÍTICA:
 - Use aspas simples (') para citações dentro de strings; nunca aspas duplas não escapadas.
@@ -109,6 +110,7 @@ const ExtractedSchema = z.object({
   conceitoCorpo: z.string().nullable(),
   conceitoTaninos: z.string().nullable(),
   conceitoAcidez: z.string().nullable(),
+  precoVendaSugerido: z.number().nullable(),
 });
 
 export type ExtractedWine = z.infer<typeof ExtractedSchema>;
@@ -218,6 +220,7 @@ function coerceExtracted(p: any): ExtractedWine {
     conceitoCorpo: str(p.conceitoCorpo),
     conceitoTaninos: str(p.conceitoTaninos),
     conceitoAcidez: str(p.conceitoAcidez),
+    precoVendaSugerido: num(p.precoVendaSugerido),
   };
 }
 

@@ -688,6 +688,7 @@ function WineForm({
                     producer: prev.producer || c.producer || "",
                     vintage: prev.vintage || (c.vintage ? String(c.vintage) : ""),
                     region: prev.region || c.region || "",
+                    appellation: prev.appellation || (c as any).appellation || "",
                     country: prev.country || c.country || "",
                     grape: prev.grape || c.grape || "",
                     wine_type: prev.wine_type === "Tinto" && c.wine_type

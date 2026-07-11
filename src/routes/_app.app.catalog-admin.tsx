@@ -490,6 +490,7 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
       producer: item.producer || e.produtor || null,
       country: item.country || e.pais || null,
       region: item.region || e.regiao || null,
+      appellation: item.appellation || (e as any).denominacao || null,
       vintage: item.vintage || e.safra || null,
       wine_type: e.tipo ? (typeMap[e.tipo] ?? e.tipo) : item.wine_type ?? null,
       style: e.estilo || item.style || null,

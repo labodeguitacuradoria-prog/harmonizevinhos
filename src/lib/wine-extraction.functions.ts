@@ -220,6 +220,7 @@ function coerceExtracted(p: any): ExtractedWine {
     conceitoCorpo: str(p.conceitoCorpo),
     conceitoTaninos: str(p.conceitoTaninos),
     conceitoAcidez: str(p.conceitoAcidez),
+    precoVendaSugerido: num(p.precoVendaSugerido),
   };
 }
 

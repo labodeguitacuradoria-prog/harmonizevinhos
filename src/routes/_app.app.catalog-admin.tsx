@@ -519,8 +519,9 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
       image_url: item.image_url || e.imagemUrl || (isImage ? meta?.sourceFileUrl : undefined) || null,
       tech_sheet_url: item.tech_sheet_url || (isPdf ? meta?.sourceFileUrl : undefined) || null,
       source_file_url: meta?.sourceFileUrl ?? item.source_file_url ?? null,
+      suggested_retail_price: (e as any).precoVendaSugerido ?? (item as any).suggested_retail_price ?? null,
       extracted_by_ai: true,
-    });
+    } as any);
   }
 
   return (

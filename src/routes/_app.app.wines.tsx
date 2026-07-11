@@ -553,6 +553,7 @@ function WineForm({
     producer: wine?.producer ?? "",
     vintage: wine?.vintage ? String(wine.vintage) : "",
     region: wine?.region ?? "",
+    appellation: wine?.appellation ?? "",
     country: wine?.country ?? "",
     grape: wine?.grape ?? "",
     wine_type: typeInList ? initialType : "__custom",

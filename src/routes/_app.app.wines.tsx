@@ -120,6 +120,7 @@ type Wine = {
   producer: string | null;
   vintage: number | null;
   region: string | null;
+  appellation: string | null;
   country: string | null;
   wine_type: string | null;
   style: string | null;

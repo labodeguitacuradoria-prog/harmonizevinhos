@@ -851,6 +851,13 @@ function Select({ label, hint, value, onChange, options }: { label: string; hint
 
 type FieldCheck = { key: string; label: string; tab: "geral" | "carac" | "midia"; ok: boolean };
 
+const EUROPEAN_COUNTRIES = ["frança","franca","france","itália","italia","italy","espanha","spain","españa","portugal","alemanha","germany","deutschland","áustria","austria","grécia","grecia","greece","hungria","hungary","suíça","suica","switzerland","romênia","romenia","romania","bulgária","bulgaria","croácia","croacia","croatia","eslovênia","eslovenia","slovenia","reino unido","uk","inglaterra","england","luxemburgo","luxembourg","holanda","netherlands","bélgica","belgica","belgium","república tcheca","chéquia","czechia","eslováquia","slovakia","moldávia","moldova","geórgia","georgia"];
+function isEuropeanCountry(c: string | null | undefined): boolean {
+  if (!c) return false;
+  const l = c.toLowerCase();
+  return EUROPEAN_COUNTRIES.some(e => l.includes(e));
+}
+
 function auditWine(w: WineCatalog): FieldCheck[] {
   const grapes = Array.isArray(w.grapes_detail) ? w.grapes_detail : [];
   const isEspumante = w.wine_type === "Espumante";

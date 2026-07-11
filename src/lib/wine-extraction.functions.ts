@@ -110,6 +110,7 @@ const ExtractedSchema = z.object({
   conceitoCorpo: z.string().nullable(),
   conceitoTaninos: z.string().nullable(),
   conceitoAcidez: z.string().nullable(),
+  precoVendaSugerido: z.number().nullable(),
 });
 
 export type ExtractedWine = z.infer<typeof ExtractedSchema>;

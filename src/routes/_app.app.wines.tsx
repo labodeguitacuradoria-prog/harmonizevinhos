@@ -65,7 +65,7 @@ function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
     const handle = setTimeout(async () => {
       const { data } = await supabase
         .from("wine_catalog")
-        .select("id,name,producer,vintage,region,country,grape,wine_type,alcohol_pct,sugar_level,body,tannin,acidity,aging,serving_temp_min,serving_temp_max,pairing_notes,tasting_notes,barcode,image_url")
+        .select("id,name,producer,vintage,region,appellation,country,grape,wine_type,alcohol_pct,sugar_level,body,tannin,acidity,aging,serving_temp_min,serving_temp_max,pairing_notes,tasting_notes,barcode,image_url")
         .eq("status", "approved")
         .or(`name.ilike.%${q}%,producer.ilike.%${q}%,barcode.eq.${q}`)
         .limit(8);

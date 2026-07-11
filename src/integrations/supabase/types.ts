@@ -662,6 +662,7 @@ export type Database = {
           submitted_by: string | null
           sugar_g_l: number | null
           sugar_level: string | null
+          suggested_retail_price: number | null
           suppliers: string[] | null
           tannin: string | null
           tasting_notes: string | null
@@ -714,6 +715,7 @@ export type Database = {
           submitted_by?: string | null
           sugar_g_l?: number | null
           sugar_level?: string | null
+          suggested_retail_price?: number | null
           suppliers?: string[] | null
           tannin?: string | null
           tasting_notes?: string | null
@@ -766,6 +768,7 @@ export type Database = {
           submitted_by?: string | null
           sugar_g_l?: number | null
           sugar_level?: string | null
+          suggested_retail_price?: number | null
           suppliers?: string[] | null
           tannin?: string | null
           tasting_notes?: string | null

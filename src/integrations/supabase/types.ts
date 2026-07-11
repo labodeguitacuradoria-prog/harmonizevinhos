@@ -628,6 +628,7 @@ export type Database = {
           acidity_ph: number | null
           aging: string | null
           alcohol_pct: number | null
+          appellation: string | null
           approved_at: string | null
           approved_by: string | null
           awards: string[] | null
@@ -679,6 +680,7 @@ export type Database = {
           acidity_ph?: number | null
           aging?: string | null
           alcohol_pct?: number | null
+          appellation?: string | null
           approved_at?: string | null
           approved_by?: string | null
           awards?: string[] | null
@@ -730,6 +732,7 @@ export type Database = {
           acidity_ph?: number | null
           aging?: string | null
           alcohol_pct?: number | null
+          appellation?: string | null
           approved_at?: string | null
           approved_by?: string | null
           awards?: string[] | null
@@ -793,6 +796,7 @@ export type Database = {
           active_on_menu: boolean
           aging: string | null
           alcohol_pct: number | null
+          appellation: string | null
           awards: string[] | null
           barcode: string | null
           body: string | null
@@ -837,6 +841,7 @@ export type Database = {
           active_on_menu?: boolean
           aging?: string | null
           alcohol_pct?: number | null
+          appellation?: string | null
           awards?: string[] | null
           barcode?: string | null
           body?: string | null
@@ -881,6 +886,7 @@ export type Database = {
           active_on_menu?: boolean
           aging?: string | null
           alcohol_pct?: number | null
+          appellation?: string | null
           awards?: string[] | null
           barcode?: string | null
           body?: string | null

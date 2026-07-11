@@ -65,7 +65,7 @@ function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
     const handle = setTimeout(async () => {
       const { data } = await supabase
         .from("wine_catalog")
-        .select("id,name,producer,vintage,region,country,grape,wine_type,alcohol_pct,sugar_level,body,tannin,acidity,aging,serving_temp_min,serving_temp_max,pairing_notes,tasting_notes,barcode,image_url")
+        .select("id,name,producer,vintage,region,appellation,country,grape,wine_type,alcohol_pct,sugar_level,body,tannin,acidity,aging,serving_temp_min,serving_temp_max,pairing_notes,tasting_notes,barcode,image_url")
         .eq("status", "approved")
         .or(`name.ilike.%${q}%,producer.ilike.%${q}%,barcode.eq.${q}`)
         .limit(8);
@@ -120,6 +120,7 @@ type Wine = {
   producer: string | null;
   vintage: number | null;
   region: string | null;
+  appellation: string | null;
   country: string | null;
   wine_type: string | null;
   style: string | null;
@@ -552,6 +553,7 @@ function WineForm({
     producer: wine?.producer ?? "",
     vintage: wine?.vintage ? String(wine.vintage) : "",
     region: wine?.region ?? "",
+    appellation: wine?.appellation ?? "",
     country: wine?.country ?? "",
     grape: wine?.grape ?? "",
     wine_type: typeInList ? initialType : "__custom",
@@ -605,6 +607,7 @@ function WineForm({
       producer: f.producer || null,
       vintage: f.vintage ? Number(f.vintage) : null,
       region: f.region || null,
+      appellation: f.appellation || null,
       country: f.country || null,
       grape: f.grape || null,
       wine_type: wineType || null,
@@ -685,6 +688,7 @@ function WineForm({
                     producer: prev.producer || c.producer || "",
                     vintage: prev.vintage || (c.vintage ? String(c.vintage) : ""),
                     region: prev.region || c.region || "",
+                    appellation: prev.appellation || (c as any).appellation || "",
                     country: prev.country || c.country || "",
                     grape: prev.grape || c.grape || "",
                     wine_type: prev.wine_type === "Tinto" && c.wine_type
@@ -713,6 +717,7 @@ function WineForm({
             <Field label="Safra" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} hint="Ano da colheita das uvas. Deixe em branco para vinhos sem safra (NV)." placeholder="Ex: 2020" />
             <Field label="Região" value={f.region} onChange={(v) => setF({ ...f, region: v })} hint="Região vitivinícola, denominação ou apelação de origem." placeholder="Ex: Vale do Colchagua" />
             <Field label="País" value={f.country} onChange={(v) => setF({ ...f, country: v })} hint="País de origem do vinho, por extenso e em português." placeholder="Ex: Chile" />
+            <Field label="AOP / Denominação" value={f.appellation} onChange={(v) => setF({ ...f, appellation: v })} hint="Somente vinhos europeus. Denominação de Origem Protegida — França: AOP/AOC; Itália: DOC/DOCG; Espanha: DO/DOCa; Portugal: DOP/DOC; Alemanha: g.U./Prädikatswein." placeholder="Ex: AOC Saint-Émilion Grand Cru" />
             <Field label="Uvas" value={f.grape} onChange={(v) => setF({ ...f, grape: v })} hint="Castas/uvas e seus percentuais quando houver corte. Separe por vírgula." placeholder="Ex: Cabernet Sauvignon 85%, Merlot 15%" />
             <SelectWithCustom
               label="Tipo"

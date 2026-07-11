@@ -63,6 +63,7 @@ type WineCatalog = {
   producer: string | null;
   vintage: number | null;
   region: string | null;
+  appellation: string | null;
   country: string | null;
   grape: string | null;
   wine_type: string | null;
@@ -489,6 +490,7 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
       producer: item.producer || e.produtor || null,
       country: item.country || e.pais || null,
       region: item.region || e.regiao || null,
+      appellation: item.appellation || (e as any).denominacao || null,
       vintage: item.vintage || e.safra || null,
       wine_type: e.tipo ? (typeMap[e.tipo] ?? e.tipo) : item.wine_type ?? null,
       style: e.estilo || item.style || null,
@@ -567,6 +569,7 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
             <NumberInput label="Safra" hint="Ano da colheita. Vazio para NV." placeholder="Ex: 2020" value={item.vintage ?? null} onChange={v => set("vintage", v != null ? Math.trunc(v) : null)} />
             <Input label="Região" hint="Região vitivinícola ou DO." placeholder="Ex: Vale do Colchagua" value={item.region ?? ""} onChange={v => set("region", v)} />
             <Input label="País" hint="País de origem." placeholder="Ex: Chile" value={item.country ?? ""} onChange={v => set("country", v)} />
+            <Input label="AOP / Denominação" hint="Somente vinhos europeus. França: AOP/AOC; Itália: DOC/DOCG; Espanha: DO/DOCa; Portugal: DOP/DOC; Alemanha: g.U./Prädikatswein." placeholder="Ex: AOC Saint-Émilion Grand Cru" value={item.appellation ?? ""} onChange={v => set("appellation", v)} />
             <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-3">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">Blend de Uvas</span>
@@ -848,6 +851,13 @@ function Select({ label, hint, value, onChange, options }: { label: string; hint
 
 type FieldCheck = { key: string; label: string; tab: "geral" | "carac" | "midia"; ok: boolean };
 
+const EUROPEAN_COUNTRIES = ["frança","franca","france","itália","italia","italy","espanha","spain","españa","portugal","alemanha","germany","deutschland","áustria","austria","grécia","grecia","greece","hungria","hungary","suíça","suica","switzerland","romênia","romenia","romania","bulgária","bulgaria","croácia","croacia","croatia","eslovênia","eslovenia","slovenia","reino unido","uk","inglaterra","england","luxemburgo","luxembourg","holanda","netherlands","bélgica","belgica","belgium","república tcheca","chéquia","czechia","eslováquia","slovakia","moldávia","moldova","geórgia","georgia"];
+function isEuropeanCountry(c: string | null | undefined): boolean {
+  if (!c) return false;
+  const l = c.toLowerCase();
+  return EUROPEAN_COUNTRIES.some(e => l.includes(e));
+}
+
 function auditWine(w: WineCatalog): FieldCheck[] {
   const grapes = Array.isArray(w.grapes_detail) ? w.grapes_detail : [];
   const isEspumante = w.wine_type === "Espumante";
@@ -856,6 +866,7 @@ function auditWine(w: WineCatalog): FieldCheck[] {
     { key: "vintage", label: "Safra", tab: "geral", ok: !!w.vintage },
     { key: "country", label: "País", tab: "geral", ok: !!w.country },
     { key: "region", label: "Região", tab: "geral", ok: !!w.region },
+    { key: "appellation", label: "AOP / Denominação (Europa)", tab: "geral", ok: !!w.appellation || !isEuropeanCountry(w.country) },
     { key: "wine_type", label: "Tipo", tab: "geral", ok: !!w.wine_type },
     { key: "style", label: "Estilo", tab: "geral", ok: !!w.style },
     { key: "grapes_detail", label: "Blend de uvas", tab: "geral", ok: grapes.length > 0 },

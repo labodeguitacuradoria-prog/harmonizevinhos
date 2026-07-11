@@ -607,6 +607,7 @@ function WineForm({
       producer: f.producer || null,
       vintage: f.vintage ? Number(f.vintage) : null,
       region: f.region || null,
+      appellation: f.appellation || null,
       country: f.country || null,
       grape: f.grape || null,
       wine_type: wineType || null,

@@ -10,6 +10,7 @@ Sua missão é ler o material fornecido (ficha técnica em PDF/imagem ou texto c
 Instruções específicas:
 1. Extraia o nome exato do vinho ("rotulo").
 2. Identifique o produtor ("produtor"), país ("pais"), região ("regiao") e safra ("safra", número inteiro do ano) quando presentes.
+2b. Para vinhos EUROPEUS, extraia também a Denominação de Origem Protegida em "denominacao" — usando exatamente a nomenclatura oficial do país: França "AOP/AOC ..." (ex: "AOC Saint-Émilion Grand Cru"), Itália "DOC/DOCG ..." (ex: "DOCG Barolo"), Espanha "DO/DOCa ..." (ex: "DOCa Rioja"), Portugal "DOP/DOC ..." (ex: "DOC Douro"), Alemanha "Prädikatswein/g.U. ...". Para vinhos NÃO europeus, retorne null.
 3. Identifique o tipo de vinho ("tipo"). Escolha apenas um entre: "Tinto", "Branco", "Espumante", "Rosé", "Doce", "Fortificado".
 4. Identifique o estilo regulamentado ("estilo"). Escolha OBRIGATORIAMENTE um dos valores exatos em maiúsculas: "ESPUMANTE", "BRANCO LEVE", "BRANCO AROMÁTICO", "BRANCO ENCORPADO", "ROSÉ", "TINTO LEVE", "TINTO MÉDIO", "TINTO ENCORPADO", "FORTIFICADO".
 5. Extraia detalhadamente o blend de uvas ("grapes"): para cada uva, nome ("grape") e porcentagem ("pct", 0-100). Se varietal, 100. Se blend sem percentuais explícitos, divida igualmente ou estime.

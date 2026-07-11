@@ -597,6 +597,8 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
             <Select label="Estilo" hint="Estilo usado para harmonização." value={item.style ?? ""} onChange={v => set("style", v)} options={STYLES} />
             <Select label="Volume" hint="Capacidade da garrafa." value={item.volume ?? ""} onChange={v => set("volume", v)} options={VOLUMES} />
             <Input label="Código de barras" hint="EAN / UPC do rótulo." placeholder="7891234567890" value={item.barcode ?? ""} onChange={v => set("barcode", v)} />
+            <NumberInput label="Preço sugerido de venda (R$)" hint="Preço sugerido de venda ao consumidor, quando informado pelo produtor/importador. Referência — cada restaurante pode ter o seu próprio preço." placeholder="Ex: 189,90" value={(item as any).suggested_retail_price ?? null} onChange={v => set("suggested_retail_price" as any, v as any)} />
+
             <div className="md:col-span-2">
               <FieldLabel hint="Fornecedores conhecidos no Brasil. Pode incluir mais de um.">Fornecedores</FieldLabel>
               <div className="mt-2 space-y-2">

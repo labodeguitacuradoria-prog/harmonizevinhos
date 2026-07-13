@@ -84,7 +84,8 @@ function MonthlySalesPage() {
     }
     setSaving(true);
     const [y, m] = month.split("-").map(Number);
-    const occurredAt = new Date(y, m, 0, 23, 59, 59).toISOString();
+    // Fix in UTC noon of day 15 of the selected month to avoid any timezone drift
+    const occurredAt = new Date(Date.UTC(y, m - 1, 15, 12, 0, 0)).toISOString();
 
     const rows = qtyOnly.map(([wine_id, q]) => {
       const w = wines.find((x) => x.id === wine_id)!;

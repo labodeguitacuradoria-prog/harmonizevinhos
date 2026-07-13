@@ -42,6 +42,7 @@ function AppLayout() {
           {role === "restaurant" && (
             <>
               <NavLink to="/app" icon={<Home className="h-4 w-4" />}>Início</NavLink>
+              <NavLink to="/app/cadastros" icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
               <NavLink to="/app/wines" icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
               <NavLink to="/app/stock-counts" icon={<ClipboardList className="h-4 w-4" />}>Contagem</NavLink>
               <NavLink to="/app/stock-counts-admin" icon={<ClipboardCheck className="h-4 w-4" />}>Revisão de contagens</NavLink>

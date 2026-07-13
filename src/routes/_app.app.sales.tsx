@@ -18,8 +18,8 @@ type SaleRow = {
 
 function formatMonth(iso: string) {
   const d = new Date(iso);
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const yy = String(d.getUTCFullYear()).slice(-2);
   return `${mm}/${yy}`;
 }
 

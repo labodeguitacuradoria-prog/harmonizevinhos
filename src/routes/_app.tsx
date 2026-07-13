@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate, Link, useRouter } from "@tanstack
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, ClipboardCheck, Database, Building2 } from "lucide-react";
+import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, ClipboardCheck, Database, Building2, FolderCog } from "lucide-react";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -42,6 +42,7 @@ function AppLayout() {
           {role === "restaurant" && (
             <>
               <NavLink to="/app" icon={<Home className="h-4 w-4" />}>Início</NavLink>
+              <NavLink to="/app/cadastros" icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
               <NavLink to="/app/wines" icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
               <NavLink to="/app/stock-counts" icon={<ClipboardList className="h-4 w-4" />}>Contagem</NavLink>
               <NavLink to="/app/stock-counts-admin" icon={<ClipboardCheck className="h-4 w-4" />}>Revisão de contagens</NavLink>

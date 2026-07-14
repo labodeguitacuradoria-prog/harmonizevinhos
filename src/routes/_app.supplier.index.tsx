@@ -18,7 +18,7 @@ function SupplierPortal() {
     if (!loading && role !== "supplier") navigate({ to: "/app" });
   }, [role, loading, navigate]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["supplier-data", supplierId],
     enabled: !!supplierId,
     queryFn: async () => {
@@ -33,7 +33,12 @@ function SupplierPortal() {
             .select("wine_id, movement_type, quantity, unit_price, occurred_at, restaurant_id")
             .in("wine_id", wineIds)
         : { data: [] };
-      return { wines: wines ?? [], movs: movs ?? [] };
+      const { data: materials } = await supabase
+        .from("supplier_materials")
+        .select("*")
+        .eq("supplier_id", supplierId!)
+        .order("created_at", { ascending: false });
+      return { wines: wines ?? [], movs: movs ?? [], materials: materials ?? [] };
     },
   });
 

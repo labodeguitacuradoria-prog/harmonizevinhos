@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Wine, Package, TrendingUp, Store } from "lucide-react";
+import { MaterialsManager } from "@/routes/_app.app.suppliers";
 
 export const Route = createFileRoute("/_app/supplier/")({
   component: SupplierPortal,

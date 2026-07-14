@@ -128,6 +128,22 @@ function SupplierPortal() {
           </section>
         </div>
       )}
+
+      {supplierId && (
+        <section className="mt-10">
+          <h2 className="mb-3 text-lg font-semibold">Meus materiais</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Publique listas de preços, apresentações e fichas técnicas. Os restaurantes cadastrados
+            terão acesso ao seu conteúdo.
+          </p>
+          <MaterialsManager
+            supplierId={supplierId}
+            materials={(data?.materials ?? []) as Parameters<typeof MaterialsManager>[0]["materials"]}
+            onChange={() => refetch()}
+            canEdit
+          />
+        </section>
+      )}
     </div>
   );
 }

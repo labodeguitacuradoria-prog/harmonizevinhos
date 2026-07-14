@@ -13,9 +13,9 @@ const items = [
     icon: Package,
   },
   {
-    to: "/admin/suppliers",
+    to: "/app/suppliers",
     title: "Fornecedores",
-    desc: "Cadastro dos fornecedores e envio de acesso ao portal do fornecedor.",
+    desc: "Dados institucionais dos fornecedores e materiais (listas de preço, apresentações).",
     icon: Users,
   },
   {

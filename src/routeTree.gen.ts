@@ -17,6 +17,7 @@ import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
 import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
+import { Route as AppAppSuppliersRouteImport } from './routes/_app.app.suppliers'
 import { Route as AppAppStockCountsAdminRouteImport } from './routes/_app.app.stock-counts-admin'
 import { Route as AppAppStockCountsRouteImport } from './routes/_app.app.stock-counts'
 import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
@@ -64,6 +65,11 @@ const ApiPublicCatalogFileRoute = ApiPublicCatalogFileRouteImport.update({
 const AppAppWinesRoute = AppAppWinesRouteImport.update({
   id: '/app/wines',
   path: '/app/wines',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSuppliersRoute = AppAppSuppliersRouteImport.update({
+  id: '/app/suppliers',
+  path: '/app/suppliers',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppStockCountsAdminRoute = AppAppStockCountsAdminRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/app/sharing': typeof AppAppSharingRoute
   '/app/stock-counts': typeof AppAppStockCountsRoute
   '/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
+  '/app/suppliers': typeof AppAppSuppliersRoute
   '/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/admin/': typeof AppAdminIndexRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/app/sharing': typeof AppAppSharingRoute
   '/app/stock-counts': typeof AppAppStockCountsRoute
   '/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
+  '/app/suppliers': typeof AppAppSuppliersRoute
   '/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/admin': typeof AppAdminIndexRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/_app/app/sharing': typeof AppAppSharingRoute
   '/_app/app/stock-counts': typeof AppAppStockCountsRoute
   '/_app/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
+  '/_app/app/suppliers': typeof AppAppSuppliersRoute
   '/_app/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/_app/admin/': typeof AppAdminIndexRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/app/sharing'
     | '/app/stock-counts'
     | '/app/stock-counts-admin'
+    | '/app/suppliers'
     | '/app/wines'
     | '/api/public/catalog-file'
     | '/admin/'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/app/sharing'
     | '/app/stock-counts'
     | '/app/stock-counts-admin'
+    | '/app/suppliers'
     | '/app/wines'
     | '/api/public/catalog-file'
     | '/admin'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/_app/app/sharing'
     | '/_app/app/stock-counts'
     | '/_app/app/stock-counts-admin'
+    | '/_app/app/suppliers'
     | '/_app/app/wines'
     | '/api/public/catalog-file'
     | '/_app/admin/'
@@ -289,6 +301,13 @@ declare module '@tanstack/react-router' {
       path: '/app/wines'
       fullPath: '/app/wines'
       preLoaderRoute: typeof AppAppWinesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/suppliers': {
+      id: '/_app/app/suppliers'
+      path: '/app/suppliers'
+      fullPath: '/app/suppliers'
+      preLoaderRoute: typeof AppAppSuppliersRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/app/stock-counts-admin': {
@@ -367,6 +386,7 @@ interface AppRouteChildren {
   AppAppSharingRoute: typeof AppAppSharingRoute
   AppAppStockCountsRoute: typeof AppAppStockCountsRoute
   AppAppStockCountsAdminRoute: typeof AppAppStockCountsAdminRoute
+  AppAppSuppliersRoute: typeof AppAppSuppliersRoute
   AppAppWinesRoute: typeof AppAppWinesRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppAppIndexRoute: typeof AppAppIndexRoute
@@ -383,6 +403,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppSharingRoute: AppAppSharingRoute,
   AppAppStockCountsRoute: AppAppStockCountsRoute,
   AppAppStockCountsAdminRoute: AppAppStockCountsAdminRoute,
+  AppAppSuppliersRoute: AppAppSuppliersRoute,
   AppAppWinesRoute: AppAppWinesRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
   AppAppIndexRoute: AppAppIndexRoute,

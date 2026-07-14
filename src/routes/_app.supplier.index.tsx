@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Wine, Package, TrendingUp, Store } from "lucide-react";
+import { MaterialsManager } from "@/routes/_app.app.suppliers";
 
 export const Route = createFileRoute("/_app/supplier/")({
   component: SupplierPortal,
@@ -17,7 +18,7 @@ function SupplierPortal() {
     if (!loading && role !== "supplier") navigate({ to: "/app" });
   }, [role, loading, navigate]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["supplier-data", supplierId],
     enabled: !!supplierId,
     queryFn: async () => {
@@ -32,7 +33,12 @@ function SupplierPortal() {
             .select("wine_id, movement_type, quantity, unit_price, occurred_at, restaurant_id")
             .in("wine_id", wineIds)
         : { data: [] };
-      return { wines: wines ?? [], movs: movs ?? [] };
+      const { data: materials } = await supabase
+        .from("supplier_materials")
+        .select("*")
+        .eq("supplier_id", supplierId!)
+        .order("created_at", { ascending: false });
+      return { wines: wines ?? [], movs: movs ?? [], materials: materials ?? [] };
     },
   });
 
@@ -121,6 +127,22 @@ function SupplierPortal() {
             </Table>
           </section>
         </div>
+      )}
+
+      {supplierId && (
+        <section className="mt-10">
+          <h2 className="mb-3 text-lg font-semibold">Meus materiais</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Publique listas de preços, apresentações e fichas técnicas. Os restaurantes cadastrados
+            terão acesso ao seu conteúdo.
+          </p>
+          <MaterialsManager
+            supplierId={supplierId}
+            materials={(data?.materials ?? []) as Parameters<typeof MaterialsManager>[0]["materials"]}
+            onChange={() => refetch()}
+            canEdit
+          />
+        </section>
       )}
     </div>
   );

@@ -555,27 +555,149 @@ export type Database = {
           },
         ]
       }
-      suppliers: {
+      supplier_materials: {
         Row: {
-          contact_email: string | null
           created_at: string
+          description: string | null
+          file_url: string | null
           id: string
-          name: string
+          material_type: string
+          supplier_id: string
+          title: string
           updated_at: string
+          uploaded_by: string | null
+          valid_until: string | null
         }
         Insert: {
-          contact_email?: string | null
           created_at?: string
+          description?: string | null
+          file_url?: string | null
           id?: string
-          name: string
+          material_type?: string
+          supplier_id: string
+          title: string
           updated_at?: string
+          uploaded_by?: string | null
+          valid_until?: string | null
         }
         Update: {
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          material_type?: string
+          supplier_id?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_materials_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address_city: string | null
+          address_complement: string | null
+          address_country: string | null
+          address_district: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip: string | null
+          cnpj: string | null
+          commercial_email: string | null
+          contact_email: string | null
+          created_at: string
+          created_by: string | null
+          delivery_lead_time: string | null
+          id: string
+          legal_name: string | null
+          minimum_order: string | null
+          name: string
+          notes: string | null
+          payment_terms: string | null
+          phone: string | null
+          primary_contact_email: string | null
+          primary_contact_name: string | null
+          primary_contact_phone: string | null
+          primary_contact_role: string | null
+          state_registration: string | null
+          trade_name: string | null
+          updated_at: string
+          website: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_country?: string | null
+          address_district?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          cnpj?: string | null
+          commercial_email?: string | null
           contact_email?: string | null
           created_at?: string
+          created_by?: string | null
+          delivery_lead_time?: string | null
           id?: string
-          name?: string
+          legal_name?: string | null
+          minimum_order?: string | null
+          name: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_role?: string | null
+          state_registration?: string | null
+          trade_name?: string | null
           updated_at?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_country?: string | null
+          address_district?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          cnpj?: string | null
+          commercial_email?: string | null
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_lead_time?: string | null
+          id?: string
+          legal_name?: string | null
+          minimum_order?: string | null
+          name?: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_role?: string | null
+          state_registration?: string | null
+          trade_name?: string | null
+          updated_at?: string
+          website?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }

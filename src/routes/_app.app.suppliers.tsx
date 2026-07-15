@@ -52,6 +52,7 @@ type Supplier = {
   delivery_lead_time: string | null;
   minimum_order: string | null;
   notes: string | null;
+  catalog_id?: string | null;
 };
 
 type Material = {

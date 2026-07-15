@@ -18,6 +18,7 @@ import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
 import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
 import { Route as AppAppSuppliersRouteImport } from './routes/_app.app.suppliers'
+import { Route as AppAppSupplierCatalogAdminRouteImport } from './routes/_app.app.supplier-catalog-admin'
 import { Route as AppAppStockCountsAdminRouteImport } from './routes/_app.app.stock-counts-admin'
 import { Route as AppAppStockCountsRouteImport } from './routes/_app.app.stock-counts'
 import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
@@ -72,6 +73,12 @@ const AppAppSuppliersRoute = AppAppSuppliersRouteImport.update({
   path: '/app/suppliers',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppSupplierCatalogAdminRoute =
+  AppAppSupplierCatalogAdminRouteImport.update({
+    id: '/app/supplier-catalog-admin',
+    path: '/app/supplier-catalog-admin',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppAppStockCountsAdminRoute = AppAppStockCountsAdminRouteImport.update({
   id: '/app/stock-counts-admin',
   path: '/app/stock-counts-admin',
@@ -130,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/app/sharing': typeof AppAppSharingRoute
   '/app/stock-counts': typeof AppAppStockCountsRoute
   '/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
+  '/app/supplier-catalog-admin': typeof AppAppSupplierCatalogAdminRoute
   '/app/suppliers': typeof AppAppSuppliersRoute
   '/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
@@ -149,6 +157,7 @@ export interface FileRoutesByTo {
   '/app/sharing': typeof AppAppSharingRoute
   '/app/stock-counts': typeof AppAppStockCountsRoute
   '/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
+  '/app/supplier-catalog-admin': typeof AppAppSupplierCatalogAdminRoute
   '/app/suppliers': typeof AppAppSuppliersRoute
   '/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
@@ -170,6 +179,7 @@ export interface FileRoutesById {
   '/_app/app/sharing': typeof AppAppSharingRoute
   '/_app/app/stock-counts': typeof AppAppStockCountsRoute
   '/_app/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
+  '/_app/app/supplier-catalog-admin': typeof AppAppSupplierCatalogAdminRoute
   '/_app/app/suppliers': typeof AppAppSuppliersRoute
   '/_app/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/app/sharing'
     | '/app/stock-counts'
     | '/app/stock-counts-admin'
+    | '/app/supplier-catalog-admin'
     | '/app/suppliers'
     | '/app/wines'
     | '/api/public/catalog-file'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/app/sharing'
     | '/app/stock-counts'
     | '/app/stock-counts-admin'
+    | '/app/supplier-catalog-admin'
     | '/app/suppliers'
     | '/app/wines'
     | '/api/public/catalog-file'
@@ -230,6 +242,7 @@ export interface FileRouteTypes {
     | '/_app/app/sharing'
     | '/_app/app/stock-counts'
     | '/_app/app/stock-counts-admin'
+    | '/_app/app/supplier-catalog-admin'
     | '/_app/app/suppliers'
     | '/_app/app/wines'
     | '/api/public/catalog-file'
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppSuppliersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/supplier-catalog-admin': {
+      id: '/_app/app/supplier-catalog-admin'
+      path: '/app/supplier-catalog-admin'
+      fullPath: '/app/supplier-catalog-admin'
+      preLoaderRoute: typeof AppAppSupplierCatalogAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/stock-counts-admin': {
       id: '/_app/app/stock-counts-admin'
       path: '/app/stock-counts-admin'
@@ -386,6 +406,7 @@ interface AppRouteChildren {
   AppAppSharingRoute: typeof AppAppSharingRoute
   AppAppStockCountsRoute: typeof AppAppStockCountsRoute
   AppAppStockCountsAdminRoute: typeof AppAppStockCountsAdminRoute
+  AppAppSupplierCatalogAdminRoute: typeof AppAppSupplierCatalogAdminRoute
   AppAppSuppliersRoute: typeof AppAppSuppliersRoute
   AppAppWinesRoute: typeof AppAppWinesRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
@@ -403,6 +424,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppSharingRoute: AppAppSharingRoute,
   AppAppStockCountsRoute: AppAppStockCountsRoute,
   AppAppStockCountsAdminRoute: AppAppStockCountsAdminRoute,
+  AppAppSupplierCatalogAdminRoute: AppAppSupplierCatalogAdminRoute,
   AppAppSuppliersRoute: AppAppSuppliersRoute,
   AppAppWinesRoute: AppAppWinesRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,

@@ -4,8 +4,21 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { Plus, X, Pencil, FileText, Mail, Phone, Globe, MapPin } from "lucide-react";
+import { Plus, X, Pencil, FileText, Mail, Phone, Globe, MapPin, Search, Check } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
+
+type CatalogSupplier = {
+  id: string;
+  name: string;
+  trade_name: string | null;
+  legal_name: string | null;
+  cnpj: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  phone: string | null;
+  commercial_email: string | null;
+  website: string | null;
+};
 
 export const Route = createFileRoute("/_app/app/suppliers")({
   component: SuppliersPage,
@@ -39,6 +52,7 @@ type Supplier = {
   delivery_lead_time: string | null;
   minimum_order: string | null;
   notes: string | null;
+  catalog_id?: string | null;
 };
 
 type Material = {
@@ -276,6 +290,27 @@ function SupplierForm({
 
         {tab === "dados" && (
           <form onSubmit={save} className="space-y-4">
+            {!supplier && (
+              <CatalogSearch
+                onPick={(c) => {
+                  setF((s) => ({
+                    ...s,
+                    name: c.trade_name || c.name,
+                    trade_name: c.trade_name ?? s.trade_name,
+                    legal_name: c.legal_name ?? s.legal_name,
+                    cnpj: c.cnpj ?? s.cnpj,
+                    address_city: c.address_city ?? s.address_city,
+                    address_state: c.address_state ?? s.address_state,
+                    phone: c.phone ?? s.phone,
+                    commercial_email: c.commercial_email ?? s.commercial_email,
+                    website: c.website ?? s.website,
+                    ...(({} as any)),
+                    catalog_id: c.id as any,
+                  } as any));
+                  toast.success("Dados do catálogo aplicados. Preencha o restante e salve.");
+                }}
+              />
+            )}
             <Section title="Identificação">
               <Field label="Nome / Apelido *">
                 <input required value={f.name ?? ""} onChange={(e) => up("name", e.target.value)} className={inp} />
@@ -586,5 +621,84 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
     >
       {children}
     </button>
+  );
+}
+
+function CatalogSearch({ onPick }: { onPick: (c: any) => void }) {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<CatalogSupplier[]>([]);
+  const [open, setOpen] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
+
+  async function search(term: string) {
+    setQ(term);
+    if (term.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+    const { data } = await supabase
+      .from("supplier_catalog")
+      .select("id,name,trade_name,legal_name,cnpj,address_city,address_state,phone,commercial_email,website")
+      .eq("status", "approved")
+      .or(`name.ilike.%${term}%,trade_name.ilike.%${term}%,legal_name.ilike.%${term}%,cnpj.ilike.%${term}%`)
+      .limit(10);
+    setResults((data ?? []) as CatalogSupplier[]);
+    setOpen(true);
+  }
+
+  async function pick(c: CatalogSupplier) {
+    const { data } = await supabase.from("supplier_catalog").select("*").eq("id", c.id).maybeSingle();
+    onPick(data ?? c);
+    setPicked(c.trade_name || c.name);
+    setOpen(false);
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3">
+      <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+        <Search className="h-3.5 w-3.5" /> Buscar no catálogo global de fornecedores
+      </div>
+      <p className="mb-2 text-xs text-muted-foreground">
+        Use um fornecedor já cadastrado no catálogo para preencher os dados automaticamente. Se não encontrar, preencha manualmente — o novo fornecedor será enviado como sugestão ao administrador.
+      </p>
+      <div className="relative">
+        <input
+          value={q}
+          onChange={(e) => search(e.target.value)}
+          onFocus={() => q && setOpen(true)}
+          placeholder="Digite nome, razão social ou CNPJ..."
+          className={inp}
+        />
+        {picked && (
+          <div className="mt-1 flex items-center gap-1 text-xs text-primary">
+            <Check className="h-3 w-3" /> {picked} — dados carregados
+          </div>
+        )}
+        {open && results.length > 0 && (
+          <div className="absolute z-10 mt-1 max-h-72 w-full overflow-auto rounded-md border border-border bg-card shadow-lg">
+            {results.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => pick(r)}
+                className="block w-full border-b border-border/50 px-3 py-2 text-left text-sm hover:bg-accent"
+              >
+                <div className="font-medium">{r.trade_name || r.name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {[r.legal_name, r.cnpj, [r.address_city, r.address_state].filter(Boolean).join("/")]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+        {open && q.trim().length >= 2 && results.length === 0 && (
+          <div className="mt-1 text-xs text-muted-foreground">
+            Nenhum fornecedor aprovado encontrado. Preencha o formulário abaixo para criar um novo.
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

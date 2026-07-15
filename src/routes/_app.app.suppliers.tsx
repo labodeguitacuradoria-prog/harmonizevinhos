@@ -289,6 +289,27 @@ function SupplierForm({
 
         {tab === "dados" && (
           <form onSubmit={save} className="space-y-4">
+            {!supplier && (
+              <CatalogSearch
+                onPick={(c) => {
+                  setF((s) => ({
+                    ...s,
+                    name: c.trade_name || c.name,
+                    trade_name: c.trade_name ?? s.trade_name,
+                    legal_name: c.legal_name ?? s.legal_name,
+                    cnpj: c.cnpj ?? s.cnpj,
+                    address_city: c.address_city ?? s.address_city,
+                    address_state: c.address_state ?? s.address_state,
+                    phone: c.phone ?? s.phone,
+                    commercial_email: c.commercial_email ?? s.commercial_email,
+                    website: c.website ?? s.website,
+                    ...(({} as any)),
+                    catalog_id: c.id as any,
+                  } as any));
+                  toast.success("Dados do catálogo aplicados. Preencha o restante e salve.");
+                }}
+              />
+            )}
             <Section title="Identificação">
               <Field label="Nome / Apelido *">
                 <input required value={f.name ?? ""} onChange={(e) => up("name", e.target.value)} className={inp} />

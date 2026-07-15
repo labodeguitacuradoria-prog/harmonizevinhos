@@ -555,6 +555,125 @@ export type Database = {
           },
         ]
       }
+      supplier_catalog: {
+        Row: {
+          address_city: string | null
+          address_complement: string | null
+          address_country: string | null
+          address_district: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip: string | null
+          approved_at: string | null
+          approved_by: string | null
+          cnpj: string | null
+          commercial_email: string | null
+          contact_email: string | null
+          created_at: string
+          id: string
+          legal_name: string | null
+          logo_url: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          primary_contact_email: string | null
+          primary_contact_name: string | null
+          primary_contact_phone: string | null
+          primary_contact_role: string | null
+          regions: string | null
+          source_restaurant_id: string | null
+          specialties: string | null
+          state_registration: string | null
+          status: Database["public"]["Enums"]["catalog_status"]
+          submitted_by: string | null
+          trade_name: string | null
+          updated_at: string
+          website: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_country?: string | null
+          address_district?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          cnpj?: string | null
+          commercial_email?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          legal_name?: string | null
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_role?: string | null
+          regions?: string | null
+          source_restaurant_id?: string | null
+          specialties?: string | null
+          state_registration?: string | null
+          status?: Database["public"]["Enums"]["catalog_status"]
+          submitted_by?: string | null
+          trade_name?: string | null
+          updated_at?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_country?: string | null
+          address_district?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          cnpj?: string | null
+          commercial_email?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          legal_name?: string | null
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_role?: string | null
+          regions?: string | null
+          source_restaurant_id?: string | null
+          specialties?: string | null
+          state_registration?: string | null
+          status?: Database["public"]["Enums"]["catalog_status"]
+          submitted_by?: string | null
+          trade_name?: string | null
+          updated_at?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_catalog_source_restaurant_id_fkey"
+            columns: ["source_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_materials: {
         Row: {
           created_at: string
@@ -612,6 +731,7 @@ export type Database = {
           address_state: string | null
           address_street: string | null
           address_zip: string | null
+          catalog_id: string | null
           cnpj: string | null
           commercial_email: string | null
           contact_email: string | null
@@ -644,6 +764,7 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           address_zip?: string | null
+          catalog_id?: string | null
           cnpj?: string | null
           commercial_email?: string | null
           contact_email?: string | null
@@ -676,6 +797,7 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           address_zip?: string | null
+          catalog_id?: string | null
           cnpj?: string | null
           commercial_email?: string | null
           contact_email?: string | null
@@ -699,7 +821,15 @@ export type Database = {
           website?: string | null
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

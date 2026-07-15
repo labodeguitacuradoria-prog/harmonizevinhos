@@ -4,8 +4,21 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { Plus, X, Pencil, FileText, Mail, Phone, Globe, MapPin } from "lucide-react";
+import { Plus, X, Pencil, FileText, Mail, Phone, Globe, MapPin, Search, Check } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
+
+type CatalogSupplier = {
+  id: string;
+  name: string;
+  trade_name: string | null;
+  legal_name: string | null;
+  cnpj: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  phone: string | null;
+  commercial_email: string | null;
+  website: string | null;
+};
 
 export const Route = createFileRoute("/_app/app/suppliers")({
   component: SuppliersPage,

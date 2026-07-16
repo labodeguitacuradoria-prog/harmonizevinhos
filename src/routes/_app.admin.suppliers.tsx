@@ -24,9 +24,13 @@ function AdminSuppliers() {
   }, [role, loading, navigate]);
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["all-suppliers"],
+    queryKey: ["catalog-suppliers-approved"],
     queryFn: async () => {
-      const { data } = await supabase.from("suppliers").select("*").order("name");
+      const { data } = await supabase
+        .from("supplier_catalog")
+        .select("id, name, trade_name, cnpj, commercial_email, contact_email, address_city, address_state")
+        .eq("status", "approved")
+        .order("name");
       return data ?? [];
     },
   });

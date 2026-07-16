@@ -49,8 +49,8 @@ function AdminSuppliers() {
     <div className="p-6 md:p-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Fornecedores</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Cadastre fornecedores e envie acesso por e-mail.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Fornecedores — Catálogo global</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Cadastros disponíveis para todos os restaurantes usarem ao registrar rótulos.</p>
         </div>
         <button onClick={() => setShowForm(true)} className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
           <Plus className="h-4 w-4" /> Novo fornecedor
@@ -62,21 +62,26 @@ function AdminSuppliers() {
           <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Nome</th>
+              <th className="px-4 py-3">CNPJ</th>
+              <th className="px-4 py-3">Cidade/UF</th>
               <th className="px-4 py-3">E-mail</th>
-              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
-            {suppliers.length === 0 && <tr><td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">Nenhum fornecedor cadastrado.</td></tr>}
+            {suppliers.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">Nenhum fornecedor no catálogo global.</td></tr>}
             {suppliers.map((s) => (
               <tr key={s.id} className="border-b border-border last:border-0">
-                <td className="px-4 py-3 font-medium">{s.name}</td>
-                <td className="px-4 py-3 text-muted-foreground">{s.contact_email ?? "-"}</td>
-                <td className="px-4 py-3 text-right">
-                  <button onClick={() => handleInvite(s)} className="rounded-md border border-input px-3 py-1 text-xs hover:bg-accent">
-                    Enviar acesso
-                  </button>
+                <td className="px-4 py-3 font-medium">
+                  <div>{s.trade_name || s.name}</div>
+                  {s.trade_name && s.name !== s.trade_name && (
+                    <div className="text-xs text-muted-foreground">{s.name}</div>
+                  )}
                 </td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">{s.cnpj ?? "—"}</td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">
+                  {[s.address_city, s.address_state].filter(Boolean).join("/") || "—"}
+                </td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">{s.commercial_email || s.contact_email || "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -84,7 +89,7 @@ function AdminSuppliers() {
       </div>
 
       {showForm && (
-        <SupplierForm onClose={() => setShowForm(false)} onSaved={() => { qc.invalidateQueries({ queryKey: ["all-suppliers"] }); setShowForm(false); }} />
+        <SupplierForm onClose={() => setShowForm(false)} onSaved={() => { qc.invalidateQueries({ queryKey: ["catalog-suppliers-approved"] }); qc.invalidateQueries({ queryKey: ["supplier-catalog"] }); setShowForm(false); }} />
       )}
     </div>
   );

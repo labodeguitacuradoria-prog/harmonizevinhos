@@ -144,14 +144,15 @@ function SupplierForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =
     e.preventDefault();
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
-    const payload: Record<string, unknown> = {};
-    (Object.keys(f) as (keyof Form)[]).forEach((k) => {
-      payload[k] = f[k].trim() === "" ? null : f[k].trim();
-    });
-    payload.name = f.name.trim();
-    payload.status = "approved";
-    payload.submitted_by = user?.id ?? null;
-    payload.approved_at = new Date().toISOString();
+    const payload = {
+      ...(Object.fromEntries(
+        (Object.keys(f) as (keyof Form)[]).map((k) => [k, f[k].trim() === "" ? null : f[k].trim()])
+      ) as Record<keyof Form, string | null>),
+      name: f.name.trim(),
+      status: "approved" as const,
+      submitted_by: user?.id ?? null,
+      approved_at: new Date().toISOString(),
+    };
     const { error } = await supabase.from("supplier_catalog").insert(payload);
     setSaving(false);
     if (error) return toast.error(error.message);

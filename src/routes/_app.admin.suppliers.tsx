@@ -15,7 +15,6 @@ function AdminSuppliers() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const invite = useServerFn(inviteSupplierUser);
 
   useEffect(() => {
     if (!loading && role !== "admin") navigate({ to: "/app" });
@@ -32,16 +31,6 @@ function AdminSuppliers() {
       return data ?? [];
     },
   });
-
-  async function handleInvite(supplier: { id: string; contact_email: string | null }) {
-    if (!supplier.contact_email) return toast.error("Cadastre um e-mail antes");
-    try {
-      await invite({ data: { supplier_id: supplier.id, email: supplier.contact_email } });
-      toast.success("Convite enviado. O fornecedor receberá um e-mail para definir senha.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao convidar");
-    }
-  }
 
   return (
     <div className="p-6 md:p-10">

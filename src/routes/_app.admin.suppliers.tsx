@@ -5,8 +5,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
-import { inviteSupplierUser } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_app/admin/suppliers")({
   component: AdminSuppliers,

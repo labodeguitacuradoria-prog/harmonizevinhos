@@ -601,12 +601,11 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
             <NumberInput label="Preço sugerido de venda (R$)" hint="Preço sugerido de venda ao consumidor, quando informado pelo produtor/importador. Referência — cada restaurante pode ter o seu próprio preço." placeholder="Ex: 189,90" value={(item as any).suggested_retail_price ?? null} onChange={v => set("suggested_retail_price" as any, v as any)} />
 
             <div className="md:col-span-2">
-              <FieldLabel hint="Fornecedores conhecidos no Brasil. Pode incluir mais de um.">Fornecedores</FieldLabel>
+              <FieldLabel hint="Fornecedores conhecidos no Brasil. Comece a digitar para buscar no catálogo. Se não existir, o nome será salvo como pendente no cadastro de fornecedores.">Fornecedores</FieldLabel>
               <div className="mt-2 space-y-2">
                 {suppliers.map((s, i) => (
                   <div key={i} className="flex gap-2">
-                    <input value={s} onChange={e => setSupplier(i, e.target.value)} placeholder="Ex: Mistral, World Wine..."
-                      className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <SupplierAutocomplete value={s} onChange={(v) => setSupplier(i, v)} />
                     <button onClick={() => removeSupplier(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
                   </div>
                 ))}

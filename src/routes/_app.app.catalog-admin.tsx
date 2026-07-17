@@ -186,8 +186,27 @@ function CatalogAdmin() {
         .insert([{ ...payload, status: payload.status ?? "approved", submitted_by: user.id }]);
       if (error) return alert("Erro ao criar: " + error.message);
     }
+    await ensureSuppliersInCatalog(editing.suppliers ?? [], user?.id);
     setEditing(null);
     fetchCatalog();
+  }
+
+  async function ensureSuppliersInCatalog(names: string[], uid: string | undefined) {
+    if (!uid) return;
+    const clean = Array.from(new Set((names || []).map((n) => (n || "").trim()).filter(Boolean)));
+    if (clean.length === 0) return;
+    const { data: existing } = await supabase
+      .from("supplier_catalog")
+      .select("name, trade_name")
+      .or(clean.map((n) => `name.ilike.${n},trade_name.ilike.${n}`).join(","));
+    const known = new Set(
+      (existing ?? []).flatMap((r: any) => [r.name, r.trade_name].filter(Boolean).map((s: string) => s.toLowerCase()))
+    );
+    const missing = clean.filter((n) => !known.has(n.toLowerCase()));
+    if (missing.length === 0) return;
+    await supabase
+      .from("supplier_catalog")
+      .insert(missing.map((n) => ({ name: n, status: "pending" as const, submitted_by: uid })));
   }
 
 
@@ -601,12 +620,11 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
             <NumberInput label="Preço sugerido de venda (R$)" hint="Preço sugerido de venda ao consumidor, quando informado pelo produtor/importador. Referência — cada restaurante pode ter o seu próprio preço." placeholder="Ex: 189,90" value={(item as any).suggested_retail_price ?? null} onChange={v => set("suggested_retail_price" as any, v as any)} />
 
             <div className="md:col-span-2">
-              <FieldLabel hint="Fornecedores conhecidos no Brasil. Pode incluir mais de um.">Fornecedores</FieldLabel>
+              <FieldLabel hint="Fornecedores conhecidos no Brasil. Comece a digitar para buscar no catálogo. Se não existir, o nome será salvo como pendente no cadastro de fornecedores.">Fornecedores</FieldLabel>
               <div className="mt-2 space-y-2">
                 {suppliers.map((s, i) => (
                   <div key={i} className="flex gap-2">
-                    <input value={s} onChange={e => setSupplier(i, e.target.value)} placeholder="Ex: Mistral, World Wine..."
-                      className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                    <SupplierAutocomplete value={s} onChange={(v) => setSupplier(i, v)} />
                     <button onClick={() => removeSupplier(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
                   </div>
                 ))}
@@ -893,5 +911,52 @@ function auditWine(w: WineCatalog): FieldCheck[] {
     { key: "image_url", label: "Imagem principal", tab: "midia", ok: !!w.image_url },
     { key: "tech_sheet_url", label: "Ficha técnica (PDF)", tab: "midia", ok: !!w.tech_sheet_url },
   ];
+}
+
+function SupplierAutocomplete({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [results, setResults] = useState<{ id: string; name: string; trade_name: string | null; status: string }[]>([]);
+  useEffect(() => {
+    const q = value.trim();
+    if (q.length < 2) { setResults([]); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from("supplier_catalog")
+        .select("id, name, trade_name, status")
+        .or(`name.ilike.%${q}%,trade_name.ilike.%${q}%`)
+        .eq("status", "approved")
+        .limit(8);
+      if (!cancelled) setResults(data ?? []);
+    }, 180);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [value]);
+  return (
+    <div className="relative flex-1">
+      <input
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder="Ex: Mistral, World Wine..."
+        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      />
+      {open && results.length > 0 && (
+        <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-64 overflow-auto rounded-md border border-border bg-card shadow-lg">
+          {results.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); onChange(r.trade_name || r.name); setOpen(false); }}
+              className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
+            >
+              <span>{r.trade_name || r.name}</span>
+              {r.trade_name && r.name !== r.trade_name && <span className="text-xs text-muted-foreground">{r.name}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 

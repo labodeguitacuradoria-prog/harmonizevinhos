@@ -238,14 +238,14 @@ function SupplierForm({ id, initial, onClose, onSaved }: { id?: string; initial:
 
     let error;
     if (id) {
-      ({ error } = await supabase.from("supplier_catalog").update(payload).eq("id", id));
+      ({ error } = await supabase.from("supplier_catalog").update(payload as any).eq("id", id));
     } else {
       ({ error } = await supabase.from("supplier_catalog").insert({
-        ...payload,
+        ...(payload as any),
         status: "approved" as const,
         submitted_by: user?.id ?? null,
         approved_at: new Date().toISOString(),
-      }));
+      } as any));
     }
     setSaving(false);
     if (error) return toast.error(error.message);

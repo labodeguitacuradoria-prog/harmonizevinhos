@@ -186,8 +186,27 @@ function CatalogAdmin() {
         .insert([{ ...payload, status: payload.status ?? "approved", submitted_by: user.id }]);
       if (error) return alert("Erro ao criar: " + error.message);
     }
+    await ensureSuppliersInCatalog(editing.suppliers ?? [], user?.id);
     setEditing(null);
     fetchCatalog();
+  }
+
+  async function ensureSuppliersInCatalog(names: string[], uid: string | undefined) {
+    if (!uid) return;
+    const clean = Array.from(new Set((names || []).map((n) => (n || "").trim()).filter(Boolean)));
+    if (clean.length === 0) return;
+    const { data: existing } = await supabase
+      .from("supplier_catalog")
+      .select("name, trade_name")
+      .or(clean.map((n) => `name.ilike.${n},trade_name.ilike.${n}`).join(","));
+    const known = new Set(
+      (existing ?? []).flatMap((r: any) => [r.name, r.trade_name].filter(Boolean).map((s: string) => s.toLowerCase()))
+    );
+    const missing = clean.filter((n) => !known.has(n.toLowerCase()));
+    if (missing.length === 0) return;
+    await supabase
+      .from("supplier_catalog")
+      .insert(missing.map((n) => ({ name: n, status: "pending" as const, submitted_by: uid })));
   }
 
 

@@ -25,6 +25,7 @@ import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
 import { Route as AppAppSalesMonthlyRouteImport } from './routes/_app.app.sales-monthly'
 import { Route as AppAppSalesRouteImport } from './routes/_app.app.sales'
 import { Route as AppAppRestaurantProfileRouteImport } from './routes/_app.app.restaurant-profile'
+import { Route as AppAppDashboardRouteImport } from './routes/_app.app.dashboard'
 import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
 import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
@@ -109,6 +110,11 @@ const AppAppRestaurantProfileRoute = AppAppRestaurantProfileRouteImport.update({
   path: '/app/restaurant-profile',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppDashboardRoute = AppAppDashboardRouteImport.update({
+  id: '/app/dashboard',
+  path: '/app/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAppCatalogAdminRoute = AppAppCatalogAdminRouteImport.update({
   id: '/app/catalog-admin',
   path: '/app/catalog-admin',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
+  '/app/dashboard': typeof AppAppDashboardRoute
   '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
+  '/app/dashboard': typeof AppAppDashboardRoute
   '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
   '/_app/app/cadastros': typeof AppAppCadastrosRoute
   '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
+  '/_app/app/dashboard': typeof AppAppDashboardRoute
   '/_app/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/_app/app/sales': typeof AppAppSalesRoute
   '/_app/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/admin/suppliers'
     | '/app/cadastros'
     | '/app/catalog-admin'
+    | '/app/dashboard'
     | '/app/restaurant-profile'
     | '/app/sales'
     | '/app/sales-monthly'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/admin/suppliers'
     | '/app/cadastros'
     | '/app/catalog-admin'
+    | '/app/dashboard'
     | '/app/restaurant-profile'
     | '/app/sales'
     | '/app/sales-monthly'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/_app/admin/suppliers'
     | '/_app/app/cadastros'
     | '/_app/app/catalog-admin'
+    | '/_app/app/dashboard'
     | '/_app/app/restaurant-profile'
     | '/_app/app/sales'
     | '/_app/app/sales-monthly'
@@ -372,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppRestaurantProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/dashboard': {
+      id: '/_app/app/dashboard'
+      path: '/app/dashboard'
+      fullPath: '/app/dashboard'
+      preLoaderRoute: typeof AppAppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/catalog-admin': {
       id: '/_app/app/catalog-admin'
       path: '/app/catalog-admin'
@@ -400,6 +419,7 @@ interface AppRouteChildren {
   AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
   AppAppCadastrosRoute: typeof AppAppCadastrosRoute
   AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
+  AppAppDashboardRoute: typeof AppAppDashboardRoute
   AppAppRestaurantProfileRoute: typeof AppAppRestaurantProfileRoute
   AppAppSalesRoute: typeof AppAppSalesRoute
   AppAppSalesMonthlyRoute: typeof AppAppSalesMonthlyRoute
@@ -418,6 +438,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminSuppliersRoute: AppAdminSuppliersRoute,
   AppAppCadastrosRoute: AppAppCadastrosRoute,
   AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,
+  AppAppDashboardRoute: AppAppDashboardRoute,
   AppAppRestaurantProfileRoute: AppAppRestaurantProfileRoute,
   AppAppSalesRoute: AppAppSalesRoute,
   AppAppSalesMonthlyRoute: AppAppSalesMonthlyRoute,
@@ -443,13 +464,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

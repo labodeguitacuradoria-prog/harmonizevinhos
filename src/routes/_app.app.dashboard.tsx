@@ -482,23 +482,6 @@ function FaturamentoPanel({
         height={280}
       />
 
-
-      <div className="mt-4 flex items-center justify-center gap-6 text-[11px]">
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-block h-3 w-3 rounded"
-            style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
-          />
-          <span className="text-muted-foreground">{previousYear}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-block h-3 w-3 rounded"
-            style={{ background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
-          />
-          <span className="text-muted-foreground">{currentYear}</span>
-        </div>
-      </div>
     </div>
   );
 }

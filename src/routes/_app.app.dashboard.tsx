@@ -49,6 +49,28 @@ function fmtBRL(n: number, digits = 0) {
   });
 }
 
+function monthLabel(year: number, monthIdx: number) {
+  if (monthIdx < 0) return "—";
+  return `${MONTHS[monthIdx]}/${String(year).slice(-2)}`;
+}
+
+function findLastMonthWithData(
+  byYearMonth: Record<number, number[]>,
+  currentYear: number,
+  previousYear: number,
+  currentMonth: number,
+): { year: number; month: number } {
+  const curr = byYearMonth[currentYear] || [];
+  for (let i = Math.min(currentMonth, 11); i >= 0; i--) {
+    if ((curr[i] ?? 0) > 0) return { year: currentYear, month: i };
+  }
+  const prev = byYearMonth[previousYear] || [];
+  for (let i = 11; i >= 0; i--) {
+    if ((prev[i] ?? 0) > 0) return { year: previousYear, month: i };
+  }
+  return { year: currentYear, month: -1 };
+}
+
 type TabKey =
   | "faturamento"
   | "garrafas"

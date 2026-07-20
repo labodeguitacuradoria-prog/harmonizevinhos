@@ -518,7 +518,6 @@ function SimpleYearPanel({
 }) {
   const curr = byYearMonth[currentYear];
   const prev = byYearMonth[previousYear];
-  const maxVal = Math.max(1, ...curr, ...prev);
   const currTotal = curr.reduce((a, b) => a + b, 0);
   const prevTotal = prev.reduce((a, b) => a + b, 0);
 
@@ -533,29 +532,148 @@ function SimpleYearPanel({
         <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
         <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
       </div>
-      <div className="relative h-56 w-full">
-        <div className="absolute inset-0 flex items-end justify-between gap-2 border-b border-border pb-6">
-          {MONTHS.map((mo, i) => (
-            <div key={mo} className="flex flex-1 flex-col items-center gap-1">
-              <div className="relative flex h-48 w-full items-end justify-center gap-0.5">
+      <BarChart
+        curr={curr}
+        prev={prev}
+        currentYear={currentYear}
+        previousYear={previousYear}
+        valueSuffix={` ${unit}`}
+        height={240}
+      />
+    </div>
+  );
+}
+
+function niceMax(v: number) {
+  if (v <= 0) return 1;
+  const pow = Math.pow(10, Math.floor(Math.log10(v)));
+  const n = v / pow;
+  let m: number;
+  if (n <= 1) m = 1;
+  else if (n <= 2) m = 2;
+  else if (n <= 2.5) m = 2.5;
+  else if (n <= 5) m = 5;
+  else m = 10;
+  return m * pow;
+}
+
+function BarChart({
+  curr,
+  prev,
+  currentYear,
+  previousYear,
+  valuePrefix = "",
+  valueSuffix = "",
+  height = 260,
+}: {
+  curr: number[];
+  prev: number[];
+  currentYear: number;
+  previousYear: number;
+  valuePrefix?: string;
+  valueSuffix?: string;
+  height?: number;
+}) {
+  const rawMax = Math.max(1, ...curr, ...prev);
+  const maxVal = niceMax(rawMax);
+  const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => maxVal * f);
+  const axisWidth = 68;
+
+  return (
+    <div>
+      <div className="relative w-full" style={{ height }}>
+        {/* Y-axis labels + horizontal gridlines */}
+        <div className="absolute inset-0" style={{ paddingLeft: axisWidth, paddingBottom: 22 }}>
+          <div className="relative h-full w-full">
+            {ticks.map((t, i) => (
+              <div
+                key={i}
+                className="absolute left-0 right-0 flex items-center"
+                style={{ top: `${(i / (ticks.length - 1)) * 100}%`, transform: "translateY(-0.5px)" }}
+              >
+                <span
+                  className="absolute right-full pr-2 text-[10px] text-muted-foreground whitespace-nowrap"
+                  style={{ transform: "translateY(-50%)" }}
+                >
+                  {valuePrefix}
+                  {fmtBRL(t)}
+                  {valueSuffix}
+                </span>
                 <div
-                  className="w-2/5 rounded-t"
-                  style={{
-                    height: `${(prev[i] / maxVal) * 100}%`,
-                    background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)",
-                  }}
-                />
-                <div
-                  className="w-2/5 rounded-t"
-                  style={{
-                    height: `${(curr[i] / maxVal) * 100}%`,
-                    background: "linear-gradient(180deg, var(--gold), var(--wine))",
-                  }}
+                  className="h-px w-full"
+                  style={{ background: "color-mix(in oklab, var(--muted-foreground) 20%, transparent)" }}
                 />
               </div>
-              <span className="text-[10px] text-muted-foreground">{mo}</span>
+            ))}
+            {/* Vertical gridlines between months */}
+            <div className="absolute inset-0 flex">
+              {MONTHS.map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-1 border-l"
+                  style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 12%, transparent)" }}
+                />
+              ))}
+              <div
+                className="border-l"
+                style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 20%, transparent)" }}
+              />
+            </div>
+            {/* Bars */}
+            <div className="absolute inset-0 flex items-end justify-between gap-2">
+              {MONTHS.map((mo, i) => {
+                const cPct = (curr[i] / maxVal) * 100;
+                const pPct = (prev[i] / maxVal) * 100;
+                return (
+                  <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-0.5">
+                    <div
+                      className="w-2/5 rounded-t transition-all"
+                      style={{
+                        height: `${pPct}%`,
+                        background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)",
+                      }}
+                      title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
+                    />
+                    <div
+                      className="w-2/5 rounded-t transition-all"
+                      style={{
+                        height: `${cPct}%`,
+                        background: "linear-gradient(180deg, var(--gold), var(--wine))",
+                      }}
+                      title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        {/* Month labels */}
+        <div
+          className="absolute bottom-0 left-0 right-0 flex justify-between gap-2"
+          style={{ paddingLeft: axisWidth }}
+        >
+          {MONTHS.map((mo) => (
+            <div key={mo} className="flex-1 text-center text-[10px] text-muted-foreground">
+              {mo}
             </div>
           ))}
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-center gap-6 text-[11px]">
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-block h-3 w-3 rounded"
+            style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
+          />
+          <span className="text-muted-foreground">{previousYear}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-block h-3 w-3 rounded"
+            style={{ background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
+          />
+          <span className="text-muted-foreground">{currentYear}</span>
         </div>
       </div>
     </div>

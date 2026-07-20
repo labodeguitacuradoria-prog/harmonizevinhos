@@ -473,37 +473,15 @@ function FaturamentoPanel({
         />
       </div>
 
-      <div className="relative h-64 w-full">
-        <div className="absolute inset-0 flex items-end justify-between gap-2 border-b border-border pb-6">
-          {MONTHS.map((mo, i) => {
-            const cPct = (curr[i] / maxVal) * 100;
-            const pPct = (prev[i] / maxVal) * 100;
-            return (
-              <div key={mo} className="flex flex-1 flex-col items-center gap-1">
-                <div className="relative flex h-56 w-full items-end justify-center gap-0.5">
-                  <div
-                    className="w-2/5 rounded-t transition-all"
-                    style={{
-                      height: `${pPct}%`,
-                      background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)",
-                    }}
-                    title={`${previousYear}: R$ ${fmtBRL(prev[i])}`}
-                  />
-                  <div
-                    className="w-2/5 rounded-t transition-all"
-                    style={{
-                      height: `${cPct}%`,
-                      background: "linear-gradient(180deg, var(--gold), var(--wine))",
-                    }}
-                    title={`${currentYear}: R$ ${fmtBRL(curr[i])}`}
-                  />
-                </div>
-                <span className="text-[10px] text-muted-foreground">{mo}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <BarChart
+        curr={curr}
+        prev={prev}
+        currentYear={currentYear}
+        previousYear={previousYear}
+        valuePrefix="R$ "
+        height={280}
+      />
+
 
       <div className="mt-4 flex items-center justify-center gap-6 text-[11px]">
         <div className="flex items-center gap-2">

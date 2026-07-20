@@ -49,6 +49,28 @@ function fmtBRL(n: number, digits = 0) {
   });
 }
 
+function monthLabel(year: number, monthIdx: number) {
+  if (monthIdx < 0) return "—";
+  return `${MONTHS[monthIdx]}/${String(year).slice(-2)}`;
+}
+
+function findLastMonthWithData(
+  byYearMonth: Record<number, number[]>,
+  currentYear: number,
+  previousYear: number,
+  currentMonth: number,
+): { year: number; month: number } {
+  const curr = byYearMonth[currentYear] || [];
+  for (let i = Math.min(currentMonth, 11); i >= 0; i--) {
+    if ((curr[i] ?? 0) > 0) return { year: currentYear, month: i };
+  }
+  const prev = byYearMonth[previousYear] || [];
+  for (let i = 11; i >= 0; i--) {
+    if ((prev[i] ?? 0) > 0) return { year: previousYear, month: i };
+  }
+  return { year: currentYear, month: -1 };
+}
+
 type TabKey =
   | "faturamento"
   | "garrafas"
@@ -202,6 +224,14 @@ function DashboardPage() {
         ? (revBottles + revGlasses) / (bottlesYearTotal + glassesYearTotal)
         : 0;
 
+    const lastRev = findLastMonthWithData(revByYearMonth, currentYear, previousYear, currentMonth);
+    const lastBottles = findLastMonthWithData(bottlesByYearMonth, currentYear, previousYear, currentMonth);
+    const lastGlasses = findLastMonthWithData(glassesByYearMonth, currentYear, previousYear, currentMonth);
+
+    const revLast = lastRev.month >= 0 ? revByYearMonth[lastRev.year][lastRev.month] : 0;
+    const bottlesLast = lastBottles.month >= 0 ? bottlesByYearMonth[lastBottles.year][lastBottles.month] : 0;
+    const glassesLast = lastGlasses.month >= 0 ? glassesByYearMonth[lastGlasses.year][lastGlasses.month] : 0;
+
     return {
       revByYearMonth,
       bottlesByYearMonth,
@@ -219,6 +249,12 @@ function DashboardPage() {
       avgBottle,
       avgGlass,
       avgAll,
+      lastRev,
+      lastBottles,
+      lastGlasses,
+      revLast,
+      bottlesLast,
+      glassesLast,
     };
   }, [movements, wineById, wines, stockMap, currentYear, previousYear, currentMonth]);
 
@@ -233,22 +269,22 @@ function DashboardPage() {
       key: "faturamento",
       label: "Faturamento",
       icon: <DollarSign size={14} />,
-      primary: `R$ ${fmtBRL(agg.revCurrentMonth)}`,
-      sub: `Ano: R$ ${fmtBRL(agg.revYear)}`,
+      primary: `R$ ${fmtBRL(agg.revLast)}`,
+      sub: monthLabel(agg.lastRev.year, agg.lastRev.month),
     },
     {
       key: "garrafas",
       label: "Garrafas",
       icon: <Wine size={14} />,
-      primary: `${agg.bottlesMonth}`,
-      sub: `Ano: ${agg.bottlesYear}`,
+      primary: `${agg.bottlesLast}`,
+      sub: monthLabel(agg.lastBottles.year, agg.lastBottles.month),
     },
     {
       key: "tacas",
       label: "Taças",
       icon: <GlassWater size={14} />,
-      primary: `${agg.glassesMonth}`,
-      sub: `Ano: ${agg.glassesYear}`,
+      primary: `${agg.glassesLast}`,
+      sub: monthLabel(agg.lastGlasses.year, agg.lastGlasses.month),
     },
     {
       key: "estoque",
@@ -412,7 +448,7 @@ function FaturamentoPanel({
 }) {
   const curr = revByYearMonth[currentYear];
   const prev = revByYearMonth[previousYear];
-  const maxVal = Math.max(1, ...curr, ...prev);
+  
   const prevYearTotal = prev.reduce((a, b) => a + b, 0);
   const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const prevAcc = prev.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
@@ -437,54 +473,15 @@ function FaturamentoPanel({
         />
       </div>
 
-      <div className="relative h-64 w-full">
-        <div className="absolute inset-0 flex items-end justify-between gap-2 border-b border-border pb-6">
-          {MONTHS.map((mo, i) => {
-            const cPct = (curr[i] / maxVal) * 100;
-            const pPct = (prev[i] / maxVal) * 100;
-            return (
-              <div key={mo} className="flex flex-1 flex-col items-center gap-1">
-                <div className="relative flex h-56 w-full items-end justify-center gap-0.5">
-                  <div
-                    className="w-2/5 rounded-t transition-all"
-                    style={{
-                      height: `${pPct}%`,
-                      background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)",
-                    }}
-                    title={`${previousYear}: R$ ${fmtBRL(prev[i])}`}
-                  />
-                  <div
-                    className="w-2/5 rounded-t transition-all"
-                    style={{
-                      height: `${cPct}%`,
-                      background: "linear-gradient(180deg, var(--gold), var(--wine))",
-                    }}
-                    title={`${currentYear}: R$ ${fmtBRL(curr[i])}`}
-                  />
-                </div>
-                <span className="text-[10px] text-muted-foreground">{mo}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <BarChart
+        curr={curr}
+        prev={prev}
+        currentYear={currentYear}
+        previousYear={previousYear}
+        valuePrefix="R$ "
+        height={280}
+      />
 
-      <div className="mt-4 flex items-center justify-center gap-6 text-[11px]">
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-block h-3 w-3 rounded"
-            style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
-          />
-          <span className="text-muted-foreground">{previousYear}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-block h-3 w-3 rounded"
-            style={{ background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
-          />
-          <span className="text-muted-foreground">{currentYear}</span>
-        </div>
-      </div>
     </div>
   );
 }
@@ -504,7 +501,6 @@ function SimpleYearPanel({
 }) {
   const curr = byYearMonth[currentYear];
   const prev = byYearMonth[previousYear];
-  const maxVal = Math.max(1, ...curr, ...prev);
   const currTotal = curr.reduce((a, b) => a + b, 0);
   const prevTotal = prev.reduce((a, b) => a + b, 0);
 
@@ -519,29 +515,148 @@ function SimpleYearPanel({
         <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
         <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
       </div>
-      <div className="relative h-56 w-full">
-        <div className="absolute inset-0 flex items-end justify-between gap-2 border-b border-border pb-6">
-          {MONTHS.map((mo, i) => (
-            <div key={mo} className="flex flex-1 flex-col items-center gap-1">
-              <div className="relative flex h-48 w-full items-end justify-center gap-0.5">
+      <BarChart
+        curr={curr}
+        prev={prev}
+        currentYear={currentYear}
+        previousYear={previousYear}
+        valueSuffix={` ${unit}`}
+        height={240}
+      />
+    </div>
+  );
+}
+
+function niceMax(v: number) {
+  if (v <= 0) return 1;
+  const pow = Math.pow(10, Math.floor(Math.log10(v)));
+  const n = v / pow;
+  let m: number;
+  if (n <= 1) m = 1;
+  else if (n <= 2) m = 2;
+  else if (n <= 2.5) m = 2.5;
+  else if (n <= 5) m = 5;
+  else m = 10;
+  return m * pow;
+}
+
+function BarChart({
+  curr,
+  prev,
+  currentYear,
+  previousYear,
+  valuePrefix = "",
+  valueSuffix = "",
+  height = 260,
+}: {
+  curr: number[];
+  prev: number[];
+  currentYear: number;
+  previousYear: number;
+  valuePrefix?: string;
+  valueSuffix?: string;
+  height?: number;
+}) {
+  const rawMax = Math.max(1, ...curr, ...prev);
+  const maxVal = niceMax(rawMax);
+  const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => maxVal * f);
+  const axisWidth = 68;
+
+  return (
+    <div>
+      <div className="relative w-full" style={{ height }}>
+        {/* Y-axis labels + horizontal gridlines */}
+        <div className="absolute inset-0" style={{ paddingLeft: axisWidth, paddingBottom: 22 }}>
+          <div className="relative h-full w-full">
+            {ticks.map((t, i) => (
+              <div
+                key={i}
+                className="absolute left-0 right-0 flex items-center"
+                style={{ top: `${(i / (ticks.length - 1)) * 100}%`, transform: "translateY(-0.5px)" }}
+              >
+                <span
+                  className="absolute right-full pr-2 text-[10px] text-muted-foreground whitespace-nowrap"
+                  style={{ transform: "translateY(-50%)" }}
+                >
+                  {valuePrefix}
+                  {fmtBRL(t)}
+                  {valueSuffix}
+                </span>
                 <div
-                  className="w-2/5 rounded-t"
-                  style={{
-                    height: `${(prev[i] / maxVal) * 100}%`,
-                    background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)",
-                  }}
-                />
-                <div
-                  className="w-2/5 rounded-t"
-                  style={{
-                    height: `${(curr[i] / maxVal) * 100}%`,
-                    background: "linear-gradient(180deg, var(--gold), var(--wine))",
-                  }}
+                  className="h-px w-full"
+                  style={{ background: "color-mix(in oklab, var(--muted-foreground) 20%, transparent)" }}
                 />
               </div>
-              <span className="text-[10px] text-muted-foreground">{mo}</span>
+            ))}
+            {/* Vertical gridlines between months */}
+            <div className="absolute inset-0 flex">
+              {MONTHS.map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-1 border-l"
+                  style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 12%, transparent)" }}
+                />
+              ))}
+              <div
+                className="border-l"
+                style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 20%, transparent)" }}
+              />
+            </div>
+            {/* Bars */}
+            <div className="absolute inset-0 flex items-end justify-between gap-2">
+              {MONTHS.map((mo, i) => {
+                const cPct = (curr[i] / maxVal) * 100;
+                const pPct = (prev[i] / maxVal) * 100;
+                return (
+                  <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-0.5">
+                    <div
+                      className="w-2/5 rounded-t transition-all"
+                      style={{
+                        height: `${pPct}%`,
+                        background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)",
+                      }}
+                      title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
+                    />
+                    <div
+                      className="w-2/5 rounded-t transition-all"
+                      style={{
+                        height: `${cPct}%`,
+                        background: "linear-gradient(180deg, var(--gold), var(--wine))",
+                      }}
+                      title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        {/* Month labels */}
+        <div
+          className="absolute bottom-0 left-0 right-0 flex justify-between gap-2"
+          style={{ paddingLeft: axisWidth }}
+        >
+          {MONTHS.map((mo) => (
+            <div key={mo} className="flex-1 text-center text-[10px] text-muted-foreground">
+              {mo}
             </div>
           ))}
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-center gap-6 text-[11px]">
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-block h-3 w-3 rounded"
+            style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
+          />
+          <span className="text-muted-foreground">{previousYear}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-block h-3 w-3 rounded"
+            style={{ background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
+          />
+          <span className="text-muted-foreground">{currentYear}</span>
         </div>
       </div>
     </div>

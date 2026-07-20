@@ -224,6 +224,14 @@ function DashboardPage() {
         ? (revBottles + revGlasses) / (bottlesYearTotal + glassesYearTotal)
         : 0;
 
+    const lastRev = findLastMonthWithData(revByYearMonth, currentYear, previousYear, currentMonth);
+    const lastBottles = findLastMonthWithData(bottlesByYearMonth, currentYear, previousYear, currentMonth);
+    const lastGlasses = findLastMonthWithData(glassesByYearMonth, currentYear, previousYear, currentMonth);
+
+    const revLast = lastRev.month >= 0 ? revByYearMonth[lastRev.year][lastRev.month] : 0;
+    const bottlesLast = lastBottles.month >= 0 ? bottlesByYearMonth[lastBottles.year][lastBottles.month] : 0;
+    const glassesLast = lastGlasses.month >= 0 ? glassesByYearMonth[lastGlasses.year][lastGlasses.month] : 0;
+
     return {
       revByYearMonth,
       bottlesByYearMonth,
@@ -241,6 +249,12 @@ function DashboardPage() {
       avgBottle,
       avgGlass,
       avgAll,
+      lastRev,
+      lastBottles,
+      lastGlasses,
+      revLast,
+      bottlesLast,
+      glassesLast,
     };
   }, [movements, wineById, wines, stockMap, currentYear, previousYear, currentMonth]);
 

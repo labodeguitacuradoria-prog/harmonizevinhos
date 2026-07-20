@@ -448,7 +448,7 @@ function FaturamentoPanel({
 }) {
   const curr = revByYearMonth[currentYear];
   const prev = revByYearMonth[previousYear];
-  void curr; void prev;
+  
   const prevYearTotal = prev.reduce((a, b) => a + b, 0);
   const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const prevAcc = prev.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);

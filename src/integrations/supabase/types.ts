@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      corkage_fees: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          quantity: number
+          reference_month: number
+          reference_year: number
+          restaurant_id: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          reference_month: number
+          reference_year: number
+          restaurant_id: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          reference_month?: number
+          reference_year?: number
+          restaurant_id?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "corkage_fees_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       glasses: {
         Row: {
           brand: string | null

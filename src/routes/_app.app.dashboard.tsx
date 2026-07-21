@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import {
   Coins,
   Sparkles,
   TrendingUp,
+  Info,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/dashboard")({
@@ -140,6 +141,20 @@ function DashboardPage() {
     },
   });
 
+  type CorkageRow = { reference_year: number; reference_month: number; quantity: number; total_amount: number };
+  const { data: corkage = [] } = useQuery<CorkageRow[]>({
+    queryKey: ["dash-corkage", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("corkage_fees")
+        .select("reference_year, reference_month, quantity, total_amount")
+        .eq("restaurant_id", restaurantId!)
+        .in("reference_year", [currentYear, previousYear]);
+      return (data ?? []) as CorkageRow[];
+    },
+  });
+
   const wineById = useMemo(() => {
     const m: Record<string, WineRow> = {};
     for (const w of wines) m[w.id] = w;
@@ -161,9 +176,39 @@ function DashboardPage() {
       [currentYear]: Array(12).fill(0),
       [previousYear]: Array(12).fill(0),
     };
-    let costCurrentMonth = 0;
-    let revCurrentMonth = 0;
-    let costYear = 0;
+    // Per-month cost and revenue (wine sales only) for CMV/avg-price by month
+    const revWineByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    const costWineByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    const revBottlesByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    const revGlassesByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    // Corkage per year/month
+    const corkageAmtByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    const corkageQtyByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    for (const c of corkage) {
+      if (c.reference_year !== currentYear && c.reference_year !== previousYear) continue;
+      const mo = (c.reference_month || 1) - 1;
+      corkageAmtByYearMonth[c.reference_year][mo] += Number(c.total_amount || 0);
+      corkageQtyByYearMonth[c.reference_year][mo] += Number(c.quantity || 0);
+    }
+
     let revYear = 0;
 
     for (const m of movements) {
@@ -177,21 +222,35 @@ function DashboardPage() {
       const q = m.quantity ?? 0;
       const rev = price * q;
       revByYearMonth[y][mo] += rev;
-      if (w && isGlassVol(w.volume)) glassesByYearMonth[y][mo] += q;
-      else bottlesByYearMonth[y][mo] += q;
-
-      if (y === currentYear) {
-        revYear += rev;
-        costYear += cost * q;
-        if (mo === currentMonth) {
-          revCurrentMonth += rev;
-          costCurrentMonth += cost * q;
-        }
+      revWineByYearMonth[y][mo] += rev;
+      costWineByYearMonth[y][mo] += cost * q;
+      if (w && isGlassVol(w.volume)) {
+        glassesByYearMonth[y][mo] += q;
+        revGlassesByYearMonth[y][mo] += rev;
+      } else {
+        bottlesByYearMonth[y][mo] += q;
+        revBottlesByYearMonth[y][mo] += rev;
       }
     }
 
-    const cmvMonth = revCurrentMonth > 0 ? (costCurrentMonth / revCurrentMonth) * 100 : 0;
-    const cmvYear = revYear > 0 ? (costYear / revYear) * 100 : 0;
+    // Add corkage into total revenue buckets (integrated into monthly revenue)
+    for (const y of [currentYear, previousYear]) {
+      for (let mo = 0; mo < 12; mo++) {
+        revByYearMonth[y][mo] += corkageAmtByYearMonth[y][mo];
+      }
+    }
+    revYear = revByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+
+    // CMV by month (based on wine sales only, since corkage has no cost)
+    const cmvByMonth: number[] = Array(12).fill(0);
+    for (let i = 0; i < 12; i++) {
+      const r = revWineByYearMonth[currentYear][i];
+      const c = costWineByYearMonth[currentYear][i];
+      cmvByMonth[i] = r > 0 ? (c / r) * 100 : 0;
+    }
+    const costYearTotal = costWineByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const revYearWineTotal = revWineByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const cmvYear = revYearWineTotal > 0 ? (costYearTotal / revYearWineTotal) * 100 : 0;
 
     // stock
     let stockBottles = 0;
@@ -203,48 +262,71 @@ function DashboardPage() {
       stockValue += q * (Number(w.sale_price) || 0);
     }
 
-    // Preço médio (based on current-year sales)
+    // Preço médio por mês
+    const avgAllByMonth: number[] = Array(12).fill(0);
+    const avgBottleByMonth: number[] = Array(12).fill(0);
+    const avgGlassByMonth: number[] = Array(12).fill(0);
+    for (let i = 0; i < 12; i++) {
+      const b = bottlesByYearMonth[currentYear][i];
+      const g = glassesByYearMonth[currentYear][i];
+      const rb = revBottlesByYearMonth[currentYear][i];
+      const rg = revGlassesByYearMonth[currentYear][i];
+      avgBottleByMonth[i] = b > 0 ? rb / b : 0;
+      avgGlassByMonth[i] = g > 0 ? rg / g : 0;
+      avgAllByMonth[i] = b + g > 0 ? (rb + rg) / (b + g) : 0;
+    }
+
+    // Preço médio anual
     const bottlesYearTotal = bottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
     const glassesYearTotal = glassesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
-    let revBottles = 0;
-    let revGlasses = 0;
-    for (const m of movements) {
-      const d = new Date(m.occurred_at);
-      if (d.getFullYear() !== currentYear) continue;
-      const w = wineById[m.wine_id];
-      const price = Number(m.unit_price ?? w?.sale_price ?? 0);
-      const q = m.quantity ?? 0;
-      if (w && isGlassVol(w.volume)) revGlasses += price * q;
-      else revBottles += price * q;
-    }
-    const avgBottle = bottlesYearTotal ? revBottles / bottlesYearTotal : 0;
-    const avgGlass = glassesYearTotal ? revGlasses / glassesYearTotal : 0;
+    const revBottlesYear = revBottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const revGlassesYear = revGlassesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const avgBottle = bottlesYearTotal ? revBottlesYear / bottlesYearTotal : 0;
+    const avgGlass = glassesYearTotal ? revGlassesYear / glassesYearTotal : 0;
     const avgAll =
       bottlesYearTotal + glassesYearTotal
-        ? (revBottles + revGlasses) / (bottlesYearTotal + glassesYearTotal)
+        ? (revBottlesYear + revGlassesYear) / (bottlesYearTotal + glassesYearTotal)
         : 0;
 
     const lastRev = findLastMonthWithData(revByYearMonth, currentYear, previousYear, currentMonth);
     const lastBottles = findLastMonthWithData(bottlesByYearMonth, currentYear, previousYear, currentMonth);
     const lastGlasses = findLastMonthWithData(glassesByYearMonth, currentYear, previousYear, currentMonth);
+    const lastCmv = findLastMonthWithData(
+      { [currentYear]: cmvByMonth, [previousYear]: Array(12).fill(0) },
+      currentYear,
+      previousYear,
+      currentMonth,
+    );
+    const lastAvg = findLastMonthWithData(
+      { [currentYear]: avgAllByMonth, [previousYear]: Array(12).fill(0) },
+      currentYear,
+      previousYear,
+      currentMonth,
+    );
+    const lastCorkage = findLastMonthWithData(corkageAmtByYearMonth, currentYear, previousYear, currentMonth);
 
     const revLast = lastRev.month >= 0 ? revByYearMonth[lastRev.year][lastRev.month] : 0;
     const bottlesLast = lastBottles.month >= 0 ? bottlesByYearMonth[lastBottles.year][lastBottles.month] : 0;
     const glassesLast = lastGlasses.month >= 0 ? glassesByYearMonth[lastGlasses.year][lastGlasses.month] : 0;
+    const cmvLast = lastCmv.month >= 0 ? cmvByMonth[lastCmv.month] : 0;
+    const avgLast = lastAvg.month >= 0 ? avgAllByMonth[lastAvg.month] : 0;
+    const avgBottleLast = lastAvg.month >= 0 ? avgBottleByMonth[lastAvg.month] : 0;
+    const avgGlassLast = lastAvg.month >= 0 ? avgGlassByMonth[lastAvg.month] : 0;
+    const corkageAmtLast = lastCorkage.month >= 0 ? corkageAmtByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+    const corkageQtyLast = lastCorkage.month >= 0 ? corkageQtyByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+    const corkageAmtYear = corkageAmtByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const corkageQtyYear = corkageQtyByYearMonth[currentYear].reduce((a, b) => a + b, 0);
 
     return {
       revByYearMonth,
       bottlesByYearMonth,
       glassesByYearMonth,
-      revCurrentMonth,
       revYear,
-      cmvMonth,
+      cmvByMonth,
       cmvYear,
       stockBottles,
       stockValue,
-      bottlesMonth: bottlesByYearMonth[currentYear][currentMonth],
       bottlesYear: bottlesYearTotal,
-      glassesMonth: glassesByYearMonth[currentYear][currentMonth],
       glassesYear: glassesYearTotal,
       avgBottle,
       avgGlass,
@@ -252,11 +334,22 @@ function DashboardPage() {
       lastRev,
       lastBottles,
       lastGlasses,
+      lastCmv,
+      lastAvg,
+      lastCorkage,
       revLast,
       bottlesLast,
       glassesLast,
+      cmvLast,
+      avgLast,
+      avgBottleLast,
+      avgGlassLast,
+      corkageAmtLast,
+      corkageQtyLast,
+      corkageAmtYear,
+      corkageQtyYear,
     };
-  }, [movements, wineById, wines, stockMap, currentYear, previousYear, currentMonth]);
+  }, [movements, corkage, wineById, wines, stockMap, currentYear, previousYear, currentMonth]);
 
   const TABS: Array<{
     key: TabKey;
@@ -264,6 +357,7 @@ function DashboardPage() {
     icon: React.ReactNode;
     primary: string;
     sub: string;
+    info: string;
   }> = [
     {
       key: "faturamento",
@@ -271,48 +365,55 @@ function DashboardPage() {
       icon: <DollarSign size={14} />,
       primary: `R$ ${fmtBRL(agg.revLast)}`,
       sub: monthLabel(agg.lastRev.year, agg.lastRev.month),
+      info: "Receita total do último mês com dados (vendas de vinhos + taxas de rolha). Abaixo, o gráfico compara mês a mês o ano atual com o anterior.",
     },
     {
       key: "garrafas",
-      label: "Garrafas",
+      label: "Garrafas Vendidas",
       icon: <Wine size={14} />,
       primary: `${agg.bottlesLast}`,
       sub: monthLabel(agg.lastBottles.year, agg.lastBottles.month),
+      info: "Quantidade de garrafas vendidas no último mês com dados. O painel abre o comparativo mensal com o ano anterior.",
     },
     {
       key: "tacas",
-      label: "Taças",
+      label: "Taças Vendidas",
       icon: <GlassWater size={14} />,
       primary: `${agg.glassesLast}`,
       sub: monthLabel(agg.lastGlasses.year, agg.lastGlasses.month),
+      info: "Quantidade de taças de vinho vendidas no último mês com dados, comparadas mês a mês com o ano anterior.",
     },
     {
       key: "estoque",
-      label: "Estoque",
+      label: "Estoque Gfas",
       icon: <Package size={14} />,
-      primary: `${agg.stockBottles} gfa`,
+      primary: `${agg.stockBottles}`,
       sub: `R$ ${fmtBRL(agg.stockValue)}`,
+      info: "Total de garrafas em adega e o valor correspondente (preço de venda) segundo a última contagem fechada.",
     },
     {
       key: "preco",
       label: "Preço Médio",
       icon: <Tag size={14} />,
-      primary: `R$ ${fmtBRL(agg.avgAll)}`,
-      sub: `Geral (ano)`,
+      primary: `R$ ${fmtBRL(agg.avgLast)}`,
+      sub: monthLabel(agg.lastAvg.year, agg.lastAvg.month),
+      info: "Preço médio praticado no último mês com dados (receita ÷ unidades vendidas, considerando garrafas e taças).",
     },
     {
       key: "cmv",
       label: "CMV",
       icon: <Percent size={14} />,
-      primary: `${agg.cmvMonth.toFixed(1)}%`,
-      sub: `Ano: ${agg.cmvYear.toFixed(1)}%`,
+      primary: `${agg.cmvLast.toFixed(1)}%`,
+      sub: monthLabel(agg.lastCmv.year, agg.lastCmv.month),
+      info: "Custo da mercadoria vendida no último mês com dados: custo total ÷ receita das vendas de vinhos. Meta usual: ≤ 33%.",
     },
     {
       key: "rolha",
       label: "Taxa de Rolha",
       icon: <Coins size={14} />,
-      primary: `0`,
-      sub: `Em breve`,
+      primary: `R$ ${fmtBRL(agg.corkageAmtLast)}`,
+      sub: monthLabel(agg.lastCorkage.year, agg.lastCorkage.month),
+      info: "Valor arrecadado com taxas de rolha no último mês lançado. Lance mensalmente em 'Taxa de rolha'; o valor entra no faturamento.",
     },
     {
       key: "outras",
@@ -320,6 +421,7 @@ function DashboardPage() {
       icon: <Sparkles size={14} />,
       primary: `+`,
       sub: `Personalizar`,
+      info: "Espaço para indicadores personalizados do restaurante (em breve).",
     },
   ];
 
@@ -340,13 +442,21 @@ function DashboardPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`rounded-xl border p-3 text-left transition ${
+            className={`relative rounded-xl border p-3 text-left transition ${
               tab === t.key
                 ? "border-primary bg-[color:var(--wine)]/20 shadow-[0_0_0_1px_var(--gold)]"
                 : "border-border bg-card hover:border-primary/60"
             }`}
           >
-            <div className="mb-1 flex items-center justify-between">
+            <span
+              className="absolute right-1.5 top-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground/70 hover:text-primary"
+              title={t.info}
+              aria-label={t.info}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Info size={11} />
+            </span>
+            <div className="mb-1 flex items-center justify-between pr-5">
               <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {t.label}
               </span>
@@ -375,8 +485,10 @@ function DashboardPage() {
             revByYearMonth={agg.revByYearMonth}
             currentYear={currentYear}
             previousYear={previousYear}
-            revCurrentMonth={agg.revCurrentMonth}
+            revLast={agg.revLast}
+            lastMonth={agg.lastRev}
             revYear={agg.revYear}
+            corkageAmtYear={agg.corkageAmtYear}
             currentMonth={currentMonth}
           />
         )}
@@ -407,12 +519,33 @@ function DashboardPage() {
           />
         )}
         {tab === "preco" && (
-          <PrecoPanel avgAll={agg.avgAll} avgBottle={agg.avgBottle} avgGlass={agg.avgGlass} />
+          <PrecoPanel
+            avgAll={agg.avgLast}
+            avgBottle={agg.avgBottleLast}
+            avgGlass={agg.avgGlassLast}
+            avgAllYear={agg.avgAll}
+            avgBottleYear={agg.avgBottle}
+            avgGlassYear={agg.avgGlass}
+            lastMonth={agg.lastAvg}
+          />
         )}
         {tab === "cmv" && (
-          <CmvPanel cmvMonth={agg.cmvMonth} cmvYear={agg.cmvYear} wines={wines} />
+          <CmvPanel
+            cmvMonth={agg.cmvLast}
+            cmvYear={agg.cmvYear}
+            lastMonth={agg.lastCmv}
+            wines={wines}
+          />
         )}
-        {tab === "rolha" && <RolhaPanel />}
+        {tab === "rolha" && (
+          <RolhaPanel
+            amtLast={agg.corkageAmtLast}
+            qtyLast={agg.corkageQtyLast}
+            amtYear={agg.corkageAmtYear}
+            qtyYear={agg.corkageQtyYear}
+            lastMonth={agg.lastCorkage}
+          />
+        )}
         {tab === "outras" && <OutrasPanel />}
       </div>
     </div>
@@ -435,20 +568,24 @@ function FaturamentoPanel({
   revByYearMonth,
   currentYear,
   previousYear,
-  revCurrentMonth,
+  revLast,
+  lastMonth,
   revYear,
+  corkageAmtYear,
   currentMonth,
 }: {
   revByYearMonth: Record<number, number[]>;
   currentYear: number;
   previousYear: number;
-  revCurrentMonth: number;
+  revLast: number;
+  lastMonth: { year: number; month: number };
   revYear: number;
+  corkageAmtYear: number;
   currentMonth: number;
 }) {
   const curr = revByYearMonth[currentYear];
   const prev = revByYearMonth[previousYear];
-  
+
   const prevYearTotal = prev.reduce((a, b) => a + b, 0);
   const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const prevAcc = prev.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
@@ -459,11 +596,15 @@ function FaturamentoPanel({
       <SectionHeader
         icon={<TrendingUp size={14} />}
         title="Faturamento — mensal e acumulado"
-        subtitle="Barras do ano anterior (cinza) e do ano corrente (vinho→ouro)."
+        subtitle="Vendas de vinhos + taxas de rolha. Ano anterior em cinza, ano corrente em vinho→ouro."
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MiniStat label="Mês atual" value={`R$ ${fmtBRL(revCurrentMonth)}`} tone="primary" />
+        <MiniStat
+          label={`Último mês (${monthLabel(lastMonth.year, lastMonth.month)})`}
+          value={`R$ ${fmtBRL(revLast)}`}
+          tone="primary"
+        />
         <MiniStat label={`Acumulado ${currentYear}`} value={`R$ ${fmtBRL(revYear)}`} />
         <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
         <MiniStat
@@ -482,6 +623,9 @@ function FaturamentoPanel({
         height={280}
       />
 
+      <p className="mt-3 text-[11px] text-muted-foreground">
+        Inclui R$ {fmtBRL(corkageAmtYear)} de taxa de rolha no ano corrente.
+      </p>
     </div>
   );
 }
@@ -724,20 +868,55 @@ function EstoquePanel({
   );
 }
 
-function PrecoPanel({ avgAll, avgBottle, avgGlass }: { avgAll: number; avgBottle: number; avgGlass: number }) {
+function PrecoPanel({
+  avgAll,
+  avgBottle,
+  avgGlass,
+  avgAllYear,
+  avgBottleYear,
+  avgGlassYear,
+  lastMonth,
+}: {
+  avgAll: number;
+  avgBottle: number;
+  avgGlass: number;
+  avgAllYear: number;
+  avgBottleYear: number;
+  avgGlassYear: number;
+  lastMonth: { year: number; month: number };
+}) {
+  const ml = monthLabel(lastMonth.year, lastMonth.month);
   return (
     <div>
-      <SectionHeader icon={<Tag size={14} />} title="Preço médio praticado" subtitle="Baseado nas vendas do ano corrente." />
+      <SectionHeader
+        icon={<Tag size={14} />}
+        title="Preço médio praticado"
+        subtitle={`Referência: último mês com dados (${ml}). Ao lado, média do ano corrente.`}
+      />
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <MiniStat label="Geral" value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
-        <MiniStat label="Garrafa" value={`R$ ${fmtBRL(avgBottle)}`} />
-        <MiniStat label="Taça" value={`R$ ${fmtBRL(avgGlass)}`} />
+        <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
+        <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
+        <MiniStat label={`Taça — ${ml}`} value={`R$ ${fmtBRL(avgGlass)}`} />
+        <MiniStat label="Geral (ano)" value={`R$ ${fmtBRL(avgAllYear)}`} />
+        <MiniStat label="Garrafa (ano)" value={`R$ ${fmtBRL(avgBottleYear)}`} />
+        <MiniStat label="Taça (ano)" value={`R$ ${fmtBRL(avgGlassYear)}`} />
       </div>
     </div>
   );
 }
 
-function CmvPanel({ cmvMonth, cmvYear, wines }: { cmvMonth: number; cmvYear: number; wines: WineRow[] }) {
+function CmvPanel({
+  cmvMonth,
+  cmvYear,
+  lastMonth,
+  wines,
+}: {
+  cmvMonth: number;
+  cmvYear: number;
+  lastMonth: { year: number; month: number };
+  wines: WineRow[];
+}) {
+  const ml = monthLabel(lastMonth.year, lastMonth.month);
   const high = wines
     .filter((w) => {
       const c = Number(w.cost_price) || 0;
@@ -756,10 +935,10 @@ function CmvPanel({ cmvMonth, cmvYear, wines }: { cmvMonth: number; cmvYear: num
 
   return (
     <div>
-      <SectionHeader icon={<Percent size={14} />} title="CMV do restaurante" subtitle="Custo da mercadoria vendida (custo / preço de venda)." />
+      <SectionHeader icon={<Percent size={14} />} title="CMV do restaurante" subtitle="Custo da mercadoria vendida (custo / preço de venda das vendas de vinhos)." />
       <div className="mb-5 grid grid-cols-2 gap-3">
         <MiniStat
-          label="CMV do mês"
+          label={`CMV — ${ml}`}
           value={`${cmvMonth.toFixed(1)}%`}
           tone={cmvMonth <= 33 ? "primary" : "danger"}
         />
@@ -803,13 +982,39 @@ function CmvPanel({ cmvMonth, cmvYear, wines }: { cmvMonth: number; cmvYear: num
   );
 }
 
-function RolhaPanel() {
+function RolhaPanel({
+  amtLast,
+  qtyLast,
+  amtYear,
+  qtyYear,
+  lastMonth,
+}: {
+  amtLast: number;
+  qtyLast: number;
+  amtYear: number;
+  qtyYear: number;
+  lastMonth: { year: number; month: number };
+}) {
+  const ml = monthLabel(lastMonth.year, lastMonth.month);
   return (
     <div>
-      <SectionHeader icon={<Coins size={14} />} title="Taxa de rolha" subtitle="Cobranças por trazer o próprio vinho." />
-      <div className="rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-6 text-center text-xs text-muted-foreground">
-        Módulo em preparação — em breve o restaurante poderá lançar a quantidade
-        de taxas de rolha aplicadas no mês e no ano, com o valor total arrecadado.
+      <SectionHeader
+        icon={<Coins size={14} />}
+        title="Taxa de rolha"
+        subtitle="Cobranças por trazer o próprio vinho. Valor integra o faturamento mensal."
+      />
+      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <MiniStat label={`Valor — ${ml}`} value={`R$ ${fmtBRL(amtLast)}`} tone="primary" />
+        <MiniStat label={`Qtd — ${ml}`} value={`${qtyLast}`} />
+        <MiniStat label="Valor ano" value={`R$ ${fmtBRL(amtYear)}`} />
+        <MiniStat label="Qtd ano" value={`${qtyYear}`} />
+      </div>
+      <div className="rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-4 text-center text-xs text-muted-foreground">
+        Para lançar ou ajustar taxas de rolha,{" "}
+        <Link to="/app/corkage-fees" className="text-primary underline">
+          abra o lançamento mensal
+        </Link>
+        .
       </div>
     </div>
   );

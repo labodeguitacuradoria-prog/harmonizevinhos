@@ -568,20 +568,24 @@ function FaturamentoPanel({
   revByYearMonth,
   currentYear,
   previousYear,
-  revCurrentMonth,
+  revLast,
+  lastMonth,
   revYear,
+  corkageAmtYear,
   currentMonth,
 }: {
   revByYearMonth: Record<number, number[]>;
   currentYear: number;
   previousYear: number;
-  revCurrentMonth: number;
+  revLast: number;
+  lastMonth: { year: number; month: number };
   revYear: number;
+  corkageAmtYear: number;
   currentMonth: number;
 }) {
   const curr = revByYearMonth[currentYear];
   const prev = revByYearMonth[previousYear];
-  
+
   const prevYearTotal = prev.reduce((a, b) => a + b, 0);
   const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const prevAcc = prev.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
@@ -592,11 +596,15 @@ function FaturamentoPanel({
       <SectionHeader
         icon={<TrendingUp size={14} />}
         title="Faturamento — mensal e acumulado"
-        subtitle="Barras do ano anterior (cinza) e do ano corrente (vinho→ouro)."
+        subtitle="Vendas de vinhos + taxas de rolha. Ano anterior em cinza, ano corrente em vinho→ouro."
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MiniStat label="Mês atual" value={`R$ ${fmtBRL(revCurrentMonth)}`} tone="primary" />
+        <MiniStat
+          label={`Último mês (${monthLabel(lastMonth.year, lastMonth.month)})`}
+          value={`R$ ${fmtBRL(revLast)}`}
+          tone="primary"
+        />
         <MiniStat label={`Acumulado ${currentYear}`} value={`R$ ${fmtBRL(revYear)}`} />
         <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
         <MiniStat
@@ -615,6 +623,9 @@ function FaturamentoPanel({
         height={280}
       />
 
+      <p className="mt-3 text-[11px] text-muted-foreground">
+        Inclui R$ {fmtBRL(corkageAmtYear)} de taxa de rolha no ano corrente.
+      </p>
     </div>
   );
 }

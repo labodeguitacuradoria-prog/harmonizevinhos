@@ -357,6 +357,7 @@ function DashboardPage() {
     icon: React.ReactNode;
     primary: string;
     sub: string;
+    info: string;
   }> = [
     {
       key: "faturamento",
@@ -364,48 +365,55 @@ function DashboardPage() {
       icon: <DollarSign size={14} />,
       primary: `R$ ${fmtBRL(agg.revLast)}`,
       sub: monthLabel(agg.lastRev.year, agg.lastRev.month),
+      info: "Receita total do último mês com dados (vendas de vinhos + taxas de rolha). Abaixo, o gráfico compara mês a mês o ano atual com o anterior.",
     },
     {
       key: "garrafas",
-      label: "Garrafas",
+      label: "Garrafas Vendidas",
       icon: <Wine size={14} />,
       primary: `${agg.bottlesLast}`,
       sub: monthLabel(agg.lastBottles.year, agg.lastBottles.month),
+      info: "Quantidade de garrafas vendidas no último mês com dados. O painel abre o comparativo mensal com o ano anterior.",
     },
     {
       key: "tacas",
-      label: "Taças",
+      label: "Taças Vendidas",
       icon: <GlassWater size={14} />,
       primary: `${agg.glassesLast}`,
       sub: monthLabel(agg.lastGlasses.year, agg.lastGlasses.month),
+      info: "Quantidade de taças de vinho vendidas no último mês com dados, comparadas mês a mês com o ano anterior.",
     },
     {
       key: "estoque",
-      label: "Estoque",
+      label: "Estoque Gfas",
       icon: <Package size={14} />,
-      primary: `${agg.stockBottles} gfa`,
+      primary: `${agg.stockBottles}`,
       sub: `R$ ${fmtBRL(agg.stockValue)}`,
+      info: "Total de garrafas em adega e o valor correspondente (preço de venda) segundo a última contagem fechada.",
     },
     {
       key: "preco",
       label: "Preço Médio",
       icon: <Tag size={14} />,
-      primary: `R$ ${fmtBRL(agg.avgAll)}`,
-      sub: `Geral (ano)`,
+      primary: `R$ ${fmtBRL(agg.avgLast)}`,
+      sub: monthLabel(agg.lastAvg.year, agg.lastAvg.month),
+      info: "Preço médio praticado no último mês com dados (receita ÷ unidades vendidas, considerando garrafas e taças).",
     },
     {
       key: "cmv",
       label: "CMV",
       icon: <Percent size={14} />,
-      primary: `${agg.cmvMonth.toFixed(1)}%`,
-      sub: `Ano: ${agg.cmvYear.toFixed(1)}%`,
+      primary: `${agg.cmvLast.toFixed(1)}%`,
+      sub: monthLabel(agg.lastCmv.year, agg.lastCmv.month),
+      info: "Custo da mercadoria vendida no último mês com dados: custo total ÷ receita das vendas de vinhos. Meta usual: ≤ 33%.",
     },
     {
       key: "rolha",
       label: "Taxa de Rolha",
       icon: <Coins size={14} />,
-      primary: `0`,
-      sub: `Em breve`,
+      primary: `R$ ${fmtBRL(agg.corkageAmtLast)}`,
+      sub: monthLabel(agg.lastCorkage.year, agg.lastCorkage.month),
+      info: "Valor arrecadado com taxas de rolha no último mês lançado. Lance mensalmente em 'Taxa de rolha'; o valor entra no faturamento.",
     },
     {
       key: "outras",
@@ -413,6 +421,7 @@ function DashboardPage() {
       icon: <Sparkles size={14} />,
       primary: `+`,
       sub: `Personalizar`,
+      info: "Espaço para indicadores personalizados do restaurante (em breve).",
     },
   ];
 
@@ -433,13 +442,21 @@ function DashboardPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`rounded-xl border p-3 text-left transition ${
+            className={`relative rounded-xl border p-3 text-left transition ${
               tab === t.key
                 ? "border-primary bg-[color:var(--wine)]/20 shadow-[0_0_0_1px_var(--gold)]"
                 : "border-border bg-card hover:border-primary/60"
             }`}
           >
-            <div className="mb-1 flex items-center justify-between">
+            <span
+              className="absolute right-1.5 top-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground/70 hover:text-primary"
+              title={t.info}
+              aria-label={t.info}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Info size={11} />
+            </span>
+            <div className="mb-1 flex items-center justify-between pr-5">
               <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {t.label}
               </span>
@@ -468,8 +485,10 @@ function DashboardPage() {
             revByYearMonth={agg.revByYearMonth}
             currentYear={currentYear}
             previousYear={previousYear}
-            revCurrentMonth={agg.revCurrentMonth}
+            revLast={agg.revLast}
+            lastMonth={agg.lastRev}
             revYear={agg.revYear}
+            corkageAmtYear={agg.corkageAmtYear}
             currentMonth={currentMonth}
           />
         )}
@@ -500,12 +519,33 @@ function DashboardPage() {
           />
         )}
         {tab === "preco" && (
-          <PrecoPanel avgAll={agg.avgAll} avgBottle={agg.avgBottle} avgGlass={agg.avgGlass} />
+          <PrecoPanel
+            avgAll={agg.avgLast}
+            avgBottle={agg.avgBottleLast}
+            avgGlass={agg.avgGlassLast}
+            avgAllYear={agg.avgAll}
+            avgBottleYear={agg.avgBottle}
+            avgGlassYear={agg.avgGlass}
+            lastMonth={agg.lastAvg}
+          />
         )}
         {tab === "cmv" && (
-          <CmvPanel cmvMonth={agg.cmvMonth} cmvYear={agg.cmvYear} wines={wines} />
+          <CmvPanel
+            cmvMonth={agg.cmvLast}
+            cmvYear={agg.cmvYear}
+            lastMonth={agg.lastCmv}
+            wines={wines}
+          />
         )}
-        {tab === "rolha" && <RolhaPanel />}
+        {tab === "rolha" && (
+          <RolhaPanel
+            amtLast={agg.corkageAmtLast}
+            qtyLast={agg.corkageQtyLast}
+            amtYear={agg.corkageAmtYear}
+            qtyYear={agg.corkageQtyYear}
+            lastMonth={agg.lastCorkage}
+          />
+        )}
         {tab === "outras" && <OutrasPanel />}
       </div>
     </div>

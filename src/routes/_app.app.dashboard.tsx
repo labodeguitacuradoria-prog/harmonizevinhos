@@ -176,9 +176,39 @@ function DashboardPage() {
       [currentYear]: Array(12).fill(0),
       [previousYear]: Array(12).fill(0),
     };
-    let costCurrentMonth = 0;
-    let revCurrentMonth = 0;
-    let costYear = 0;
+    // Per-month cost and revenue (wine sales only) for CMV/avg-price by month
+    const revWineByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    const costWineByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    const revBottlesByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    const revGlassesByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    // Corkage per year/month
+    const corkageAmtByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    const corkageQtyByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    for (const c of corkage) {
+      if (c.reference_year !== currentYear && c.reference_year !== previousYear) continue;
+      const mo = (c.reference_month || 1) - 1;
+      corkageAmtByYearMonth[c.reference_year][mo] += Number(c.total_amount || 0);
+      corkageQtyByYearMonth[c.reference_year][mo] += Number(c.quantity || 0);
+    }
+
     let revYear = 0;
 
     for (const m of movements) {
@@ -192,21 +222,35 @@ function DashboardPage() {
       const q = m.quantity ?? 0;
       const rev = price * q;
       revByYearMonth[y][mo] += rev;
-      if (w && isGlassVol(w.volume)) glassesByYearMonth[y][mo] += q;
-      else bottlesByYearMonth[y][mo] += q;
-
-      if (y === currentYear) {
-        revYear += rev;
-        costYear += cost * q;
-        if (mo === currentMonth) {
-          revCurrentMonth += rev;
-          costCurrentMonth += cost * q;
-        }
+      revWineByYearMonth[y][mo] += rev;
+      costWineByYearMonth[y][mo] += cost * q;
+      if (w && isGlassVol(w.volume)) {
+        glassesByYearMonth[y][mo] += q;
+        revGlassesByYearMonth[y][mo] += rev;
+      } else {
+        bottlesByYearMonth[y][mo] += q;
+        revBottlesByYearMonth[y][mo] += rev;
       }
     }
 
-    const cmvMonth = revCurrentMonth > 0 ? (costCurrentMonth / revCurrentMonth) * 100 : 0;
-    const cmvYear = revYear > 0 ? (costYear / revYear) * 100 : 0;
+    // Add corkage into total revenue buckets (integrated into monthly revenue)
+    for (const y of [currentYear, previousYear]) {
+      for (let mo = 0; mo < 12; mo++) {
+        revByYearMonth[y][mo] += corkageAmtByYearMonth[y][mo];
+      }
+    }
+    revYear = revByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+
+    // CMV by month (based on wine sales only, since corkage has no cost)
+    const cmvByMonth: number[] = Array(12).fill(0);
+    for (let i = 0; i < 12; i++) {
+      const r = revWineByYearMonth[currentYear][i];
+      const c = costWineByYearMonth[currentYear][i];
+      cmvByMonth[i] = r > 0 ? (c / r) * 100 : 0;
+    }
+    const costYearTotal = costWineByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const revYearWineTotal = revWineByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const cmvYear = revYearWineTotal > 0 ? (costYearTotal / revYearWineTotal) * 100 : 0;
 
     // stock
     let stockBottles = 0;
@@ -218,48 +262,71 @@ function DashboardPage() {
       stockValue += q * (Number(w.sale_price) || 0);
     }
 
-    // Preço médio (based on current-year sales)
+    // Preço médio por mês
+    const avgAllByMonth: number[] = Array(12).fill(0);
+    const avgBottleByMonth: number[] = Array(12).fill(0);
+    const avgGlassByMonth: number[] = Array(12).fill(0);
+    for (let i = 0; i < 12; i++) {
+      const b = bottlesByYearMonth[currentYear][i];
+      const g = glassesByYearMonth[currentYear][i];
+      const rb = revBottlesByYearMonth[currentYear][i];
+      const rg = revGlassesByYearMonth[currentYear][i];
+      avgBottleByMonth[i] = b > 0 ? rb / b : 0;
+      avgGlassByMonth[i] = g > 0 ? rg / g : 0;
+      avgAllByMonth[i] = b + g > 0 ? (rb + rg) / (b + g) : 0;
+    }
+
+    // Preço médio anual
     const bottlesYearTotal = bottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
     const glassesYearTotal = glassesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
-    let revBottles = 0;
-    let revGlasses = 0;
-    for (const m of movements) {
-      const d = new Date(m.occurred_at);
-      if (d.getFullYear() !== currentYear) continue;
-      const w = wineById[m.wine_id];
-      const price = Number(m.unit_price ?? w?.sale_price ?? 0);
-      const q = m.quantity ?? 0;
-      if (w && isGlassVol(w.volume)) revGlasses += price * q;
-      else revBottles += price * q;
-    }
-    const avgBottle = bottlesYearTotal ? revBottles / bottlesYearTotal : 0;
-    const avgGlass = glassesYearTotal ? revGlasses / glassesYearTotal : 0;
+    const revBottlesYear = revBottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const revGlassesYear = revGlassesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const avgBottle = bottlesYearTotal ? revBottlesYear / bottlesYearTotal : 0;
+    const avgGlass = glassesYearTotal ? revGlassesYear / glassesYearTotal : 0;
     const avgAll =
       bottlesYearTotal + glassesYearTotal
-        ? (revBottles + revGlasses) / (bottlesYearTotal + glassesYearTotal)
+        ? (revBottlesYear + revGlassesYear) / (bottlesYearTotal + glassesYearTotal)
         : 0;
 
     const lastRev = findLastMonthWithData(revByYearMonth, currentYear, previousYear, currentMonth);
     const lastBottles = findLastMonthWithData(bottlesByYearMonth, currentYear, previousYear, currentMonth);
     const lastGlasses = findLastMonthWithData(glassesByYearMonth, currentYear, previousYear, currentMonth);
+    const lastCmv = findLastMonthWithData(
+      { [currentYear]: cmvByMonth, [previousYear]: Array(12).fill(0) },
+      currentYear,
+      previousYear,
+      currentMonth,
+    );
+    const lastAvg = findLastMonthWithData(
+      { [currentYear]: avgAllByMonth, [previousYear]: Array(12).fill(0) },
+      currentYear,
+      previousYear,
+      currentMonth,
+    );
+    const lastCorkage = findLastMonthWithData(corkageAmtByYearMonth, currentYear, previousYear, currentMonth);
 
     const revLast = lastRev.month >= 0 ? revByYearMonth[lastRev.year][lastRev.month] : 0;
     const bottlesLast = lastBottles.month >= 0 ? bottlesByYearMonth[lastBottles.year][lastBottles.month] : 0;
     const glassesLast = lastGlasses.month >= 0 ? glassesByYearMonth[lastGlasses.year][lastGlasses.month] : 0;
+    const cmvLast = lastCmv.month >= 0 ? cmvByMonth[lastCmv.month] : 0;
+    const avgLast = lastAvg.month >= 0 ? avgAllByMonth[lastAvg.month] : 0;
+    const avgBottleLast = lastAvg.month >= 0 ? avgBottleByMonth[lastAvg.month] : 0;
+    const avgGlassLast = lastAvg.month >= 0 ? avgGlassByMonth[lastAvg.month] : 0;
+    const corkageAmtLast = lastCorkage.month >= 0 ? corkageAmtByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+    const corkageQtyLast = lastCorkage.month >= 0 ? corkageQtyByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+    const corkageAmtYear = corkageAmtByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const corkageQtyYear = corkageQtyByYearMonth[currentYear].reduce((a, b) => a + b, 0);
 
     return {
       revByYearMonth,
       bottlesByYearMonth,
       glassesByYearMonth,
-      revCurrentMonth,
       revYear,
-      cmvMonth,
+      cmvByMonth,
       cmvYear,
       stockBottles,
       stockValue,
-      bottlesMonth: bottlesByYearMonth[currentYear][currentMonth],
       bottlesYear: bottlesYearTotal,
-      glassesMonth: glassesByYearMonth[currentYear][currentMonth],
       glassesYear: glassesYearTotal,
       avgBottle,
       avgGlass,
@@ -267,11 +334,22 @@ function DashboardPage() {
       lastRev,
       lastBottles,
       lastGlasses,
+      lastCmv,
+      lastAvg,
+      lastCorkage,
       revLast,
       bottlesLast,
       glassesLast,
+      cmvLast,
+      avgLast,
+      avgBottleLast,
+      avgGlassLast,
+      corkageAmtLast,
+      corkageQtyLast,
+      corkageAmtYear,
+      corkageQtyYear,
     };
-  }, [movements, wineById, wines, stockMap, currentYear, previousYear, currentMonth]);
+  }, [movements, corkage, wineById, wines, stockMap, currentYear, previousYear, currentMonth]);
 
   const TABS: Array<{
     key: TabKey;

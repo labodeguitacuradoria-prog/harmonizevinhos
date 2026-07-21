@@ -50,6 +50,7 @@ function AppLayout() {
               <NavLink to="/app/stock-counts-admin" icon={<ClipboardCheck className="h-4 w-4" />}>Revisão de contagens</NavLink>
               <NavLink to="/app/sales" icon={<BarChart3 className="h-4 w-4" />}>Vendas</NavLink>
               <NavLink to="/app/sales-monthly" icon={<CalendarRange className="h-4 w-4" />}>Venda mensal</NavLink>
+              <NavLink to="/app/corkage-fees" icon={<Coins className="h-4 w-4" />}>Taxa de rolha</NavLink>
               <NavLink to="/app/sharing" icon={<Share2 className="h-4 w-4" />}>Compartilhamento</NavLink>
               <NavLink to="/app/catalog-admin" icon={<Database className="h-4 w-4" />}>Catálogo Global</NavLink>
               <NavLink to="/app/restaurant-profile" icon={<Building2 className="h-4 w-4" />}>Perfil do Restaurante</NavLink>

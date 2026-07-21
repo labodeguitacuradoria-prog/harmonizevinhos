@@ -26,6 +26,7 @@ import { Route as AppAppSalesMonthlyRouteImport } from './routes/_app.app.sales-
 import { Route as AppAppSalesRouteImport } from './routes/_app.app.sales'
 import { Route as AppAppRestaurantProfileRouteImport } from './routes/_app.app.restaurant-profile'
 import { Route as AppAppDashboardRouteImport } from './routes/_app.app.dashboard'
+import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage-fees'
 import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
 import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
@@ -115,6 +116,11 @@ const AppAppDashboardRoute = AppAppDashboardRouteImport.update({
   path: '/app/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppCorkageFeesRoute = AppAppCorkageFeesRouteImport.update({
+  id: '/app/corkage-fees',
+  path: '/app/corkage-fees',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAppCatalogAdminRoute = AppAppCatalogAdminRouteImport.update({
   id: '/app/catalog-admin',
   path: '/app/catalog-admin',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
+  '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
   '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
+  '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
   '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
   '/_app/app/cadastros': typeof AppAppCadastrosRoute
   '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
+  '/_app/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/_app/app/dashboard': typeof AppAppDashboardRoute
   '/_app/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/_app/app/sales': typeof AppAppSalesRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/admin/suppliers'
     | '/app/cadastros'
     | '/app/catalog-admin'
+    | '/app/corkage-fees'
     | '/app/dashboard'
     | '/app/restaurant-profile'
     | '/app/sales'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/admin/suppliers'
     | '/app/cadastros'
     | '/app/catalog-admin'
+    | '/app/corkage-fees'
     | '/app/dashboard'
     | '/app/restaurant-profile'
     | '/app/sales'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/_app/admin/suppliers'
     | '/_app/app/cadastros'
     | '/_app/app/catalog-admin'
+    | '/_app/app/corkage-fees'
     | '/_app/app/dashboard'
     | '/_app/app/restaurant-profile'
     | '/_app/app/sales'
@@ -391,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/corkage-fees': {
+      id: '/_app/app/corkage-fees'
+      path: '/app/corkage-fees'
+      fullPath: '/app/corkage-fees'
+      preLoaderRoute: typeof AppAppCorkageFeesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/catalog-admin': {
       id: '/_app/app/catalog-admin'
       path: '/app/catalog-admin'
@@ -419,6 +438,7 @@ interface AppRouteChildren {
   AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
   AppAppCadastrosRoute: typeof AppAppCadastrosRoute
   AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
+  AppAppCorkageFeesRoute: typeof AppAppCorkageFeesRoute
   AppAppDashboardRoute: typeof AppAppDashboardRoute
   AppAppRestaurantProfileRoute: typeof AppAppRestaurantProfileRoute
   AppAppSalesRoute: typeof AppAppSalesRoute
@@ -438,6 +458,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminSuppliersRoute: AppAdminSuppliersRoute,
   AppAppCadastrosRoute: AppAppCadastrosRoute,
   AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,
+  AppAppCorkageFeesRoute: AppAppCorkageFeesRoute,
   AppAppDashboardRoute: AppAppDashboardRoute,
   AppAppRestaurantProfileRoute: AppAppRestaurantProfileRoute,
   AppAppSalesRoute: AppAppSalesRoute,

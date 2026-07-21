@@ -141,6 +141,20 @@ function DashboardPage() {
     },
   });
 
+  type CorkageRow = { reference_year: number; reference_month: number; quantity: number; total_amount: number };
+  const { data: corkage = [] } = useQuery<CorkageRow[]>({
+    queryKey: ["dash-corkage", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("corkage_fees")
+        .select("reference_year, reference_month, quantity, total_amount")
+        .eq("restaurant_id", restaurantId!)
+        .in("reference_year", [currentYear, previousYear]);
+      return (data ?? []) as CorkageRow[];
+    },
+  });
+
   const wineById = useMemo(() => {
     const m: Record<string, WineRow> = {};
     for (const w of wines) m[w.id] = w;

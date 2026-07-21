@@ -868,20 +868,55 @@ function EstoquePanel({
   );
 }
 
-function PrecoPanel({ avgAll, avgBottle, avgGlass }: { avgAll: number; avgBottle: number; avgGlass: number }) {
+function PrecoPanel({
+  avgAll,
+  avgBottle,
+  avgGlass,
+  avgAllYear,
+  avgBottleYear,
+  avgGlassYear,
+  lastMonth,
+}: {
+  avgAll: number;
+  avgBottle: number;
+  avgGlass: number;
+  avgAllYear: number;
+  avgBottleYear: number;
+  avgGlassYear: number;
+  lastMonth: { year: number; month: number };
+}) {
+  const ml = monthLabel(lastMonth.year, lastMonth.month);
   return (
     <div>
-      <SectionHeader icon={<Tag size={14} />} title="Preço médio praticado" subtitle="Baseado nas vendas do ano corrente." />
+      <SectionHeader
+        icon={<Tag size={14} />}
+        title="Preço médio praticado"
+        subtitle={`Referência: último mês com dados (${ml}). Ao lado, média do ano corrente.`}
+      />
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <MiniStat label="Geral" value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
-        <MiniStat label="Garrafa" value={`R$ ${fmtBRL(avgBottle)}`} />
-        <MiniStat label="Taça" value={`R$ ${fmtBRL(avgGlass)}`} />
+        <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
+        <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
+        <MiniStat label={`Taça — ${ml}`} value={`R$ ${fmtBRL(avgGlass)}`} />
+        <MiniStat label="Geral (ano)" value={`R$ ${fmtBRL(avgAllYear)}`} />
+        <MiniStat label="Garrafa (ano)" value={`R$ ${fmtBRL(avgBottleYear)}`} />
+        <MiniStat label="Taça (ano)" value={`R$ ${fmtBRL(avgGlassYear)}`} />
       </div>
     </div>
   );
 }
 
-function CmvPanel({ cmvMonth, cmvYear, wines }: { cmvMonth: number; cmvYear: number; wines: WineRow[] }) {
+function CmvPanel({
+  cmvMonth,
+  cmvYear,
+  lastMonth,
+  wines,
+}: {
+  cmvMonth: number;
+  cmvYear: number;
+  lastMonth: { year: number; month: number };
+  wines: WineRow[];
+}) {
+  const ml = monthLabel(lastMonth.year, lastMonth.month);
   const high = wines
     .filter((w) => {
       const c = Number(w.cost_price) || 0;
@@ -900,10 +935,10 @@ function CmvPanel({ cmvMonth, cmvYear, wines }: { cmvMonth: number; cmvYear: num
 
   return (
     <div>
-      <SectionHeader icon={<Percent size={14} />} title="CMV do restaurante" subtitle="Custo da mercadoria vendida (custo / preço de venda)." />
+      <SectionHeader icon={<Percent size={14} />} title="CMV do restaurante" subtitle="Custo da mercadoria vendida (custo / preço de venda das vendas de vinhos)." />
       <div className="mb-5 grid grid-cols-2 gap-3">
         <MiniStat
-          label="CMV do mês"
+          label={`CMV — ${ml}`}
           value={`${cmvMonth.toFixed(1)}%`}
           tone={cmvMonth <= 33 ? "primary" : "danger"}
         />
@@ -947,13 +982,39 @@ function CmvPanel({ cmvMonth, cmvYear, wines }: { cmvMonth: number; cmvYear: num
   );
 }
 
-function RolhaPanel() {
+function RolhaPanel({
+  amtLast,
+  qtyLast,
+  amtYear,
+  qtyYear,
+  lastMonth,
+}: {
+  amtLast: number;
+  qtyLast: number;
+  amtYear: number;
+  qtyYear: number;
+  lastMonth: { year: number; month: number };
+}) {
+  const ml = monthLabel(lastMonth.year, lastMonth.month);
   return (
     <div>
-      <SectionHeader icon={<Coins size={14} />} title="Taxa de rolha" subtitle="Cobranças por trazer o próprio vinho." />
-      <div className="rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-6 text-center text-xs text-muted-foreground">
-        Módulo em preparação — em breve o restaurante poderá lançar a quantidade
-        de taxas de rolha aplicadas no mês e no ano, com o valor total arrecadado.
+      <SectionHeader
+        icon={<Coins size={14} />}
+        title="Taxa de rolha"
+        subtitle="Cobranças por trazer o próprio vinho. Valor integra o faturamento mensal."
+      />
+      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <MiniStat label={`Valor — ${ml}`} value={`R$ ${fmtBRL(amtLast)}`} tone="primary" />
+        <MiniStat label={`Qtd — ${ml}`} value={`${qtyLast}`} />
+        <MiniStat label="Valor ano" value={`R$ ${fmtBRL(amtYear)}`} />
+        <MiniStat label="Qtd ano" value={`${qtyYear}`} />
+      </div>
+      <div className="rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-4 text-center text-xs text-muted-foreground">
+        Para lançar ou ajustar taxas de rolha,{" "}
+        <Link to="/app/corkage-fees" className="text-primary underline">
+          abra o lançamento mensal
+        </Link>
+        .
       </div>
     </div>
   );

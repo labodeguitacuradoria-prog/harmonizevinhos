@@ -322,6 +322,8 @@ function DashboardPage() {
       bottlesByYearMonth,
       glassesByYearMonth,
       corkageAmtByYearMonth,
+      revBottlesByYearMonth,
+      revGlassesByYearMonth,
       revYear,
       cmvByMonth,
       cmvYear,
@@ -485,6 +487,9 @@ function DashboardPage() {
         {tab === "faturamento" && (
           <FaturamentoPanel
             revByYearMonth={agg.revByYearMonth}
+            revBottlesByYearMonth={agg.revBottlesByYearMonth}
+            revGlassesByYearMonth={agg.revGlassesByYearMonth}
+            corkageAmtByYearMonth={agg.corkageAmtByYearMonth}
             currentYear={currentYear}
             previousYear={previousYear}
             revLast={agg.revLast}
@@ -572,6 +577,9 @@ function SectionHeader({ icon, title, subtitle }: { icon: React.ReactNode; title
 
 function FaturamentoPanel({
   revByYearMonth,
+  revBottlesByYearMonth,
+  revGlassesByYearMonth,
+  corkageAmtByYearMonth,
   currentYear,
   previousYear,
   revLast,
@@ -581,6 +589,9 @@ function FaturamentoPanel({
   currentMonth,
 }: {
   revByYearMonth: Record<number, number[]>;
+  revBottlesByYearMonth: Record<number, number[]>;
+  revGlassesByYearMonth: Record<number, number[]>;
+  corkageAmtByYearMonth: Record<number, number[]>;
   currentYear: number;
   previousYear: number;
   revLast: number;
@@ -596,6 +607,19 @@ function FaturamentoPanel({
   const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const prevAcc = prev.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const diff = prevAcc > 0 ? ((currAcc - prevAcc) / prevAcc) * 100 : 0;
+
+  const [pieMode, setPieMode] = useState<"mes" | "ano">("mes");
+  const useMonth = pieMode === "mes" && lastMonth.month >= 0;
+  const yr = useMonth ? lastMonth.year : currentYear;
+  const bottlesRev = useMonth
+    ? revBottlesByYearMonth[yr][lastMonth.month]
+    : revBottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+  const glassesRev = useMonth
+    ? revGlassesByYearMonth[yr][lastMonth.month]
+    : revGlassesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+  const corkageRev = useMonth
+    ? corkageAmtByYearMonth[yr][lastMonth.month]
+    : corkageAmtYear;
 
   return (
     <div>
@@ -620,18 +644,132 @@ function FaturamentoPanel({
         />
       </div>
 
-      <BarChart
-        curr={curr}
-        prev={prev}
-        currentYear={currentYear}
-        previousYear={previousYear}
-        valuePrefix="R$ "
-        height={280}
-      />
+      <div className="grid gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <BarChart
+            curr={curr}
+            prev={prev}
+            currentYear={currentYear}
+            previousYear={previousYear}
+            valuePrefix="R$ "
+            height={280}
+          />
+        </div>
+        <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+              Composição do Faturamento
+            </div>
+            <div className="flex overflow-hidden rounded-md border border-border text-[10px]">
+              <button
+                onClick={() => setPieMode("mes")}
+                className={`px-2 py-1 ${pieMode === "mes" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}
+              >
+                Mês
+              </button>
+              <button
+                onClick={() => setPieMode("ano")}
+                className={`px-2 py-1 ${pieMode === "ano" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}
+              >
+                Ano
+              </button>
+            </div>
+          </div>
+          <div className="text-[10px] text-muted-foreground mb-3">
+            {pieMode === "mes"
+              ? `Referência: ${monthLabel(lastMonth.year, lastMonth.month)}`
+              : `Acumulado ${currentYear}`}
+          </div>
+          <PieChart
+            slices={[
+              { label: "Garrafas", value: bottlesRev, color: "var(--gold)" },
+              { label: "Taças", value: glassesRev, color: "var(--wine)" },
+              { label: "Taxa de Rolha", value: corkageRev, color: "#c9a8a8" },
+            ]}
+          />
+        </div>
+      </div>
 
       <p className="mt-3 text-[11px] text-muted-foreground">
         Inclui R$ {fmtBRL(corkageAmtYear)} de taxa de rolha no ano corrente.
       </p>
+    </div>
+  );
+}
+
+function PieChart({ slices }: { slices: { label: string; value: number; color: string }[] }) {
+  const total = slices.reduce((a, s) => a + (s.value || 0), 0);
+  const size = 180;
+  const r = 78;
+  const cx = size / 2;
+  const cy = size / 2;
+
+  let acc = 0;
+  const paths =
+    total > 0
+      ? slices.map((s) => {
+          const frac = s.value / total;
+          const startAngle = acc * 2 * Math.PI;
+          const endAngle = (acc + frac) * 2 * Math.PI;
+          acc += frac;
+          const large = frac > 0.5 ? 1 : 0;
+          const x1 = cx + r * Math.sin(startAngle);
+          const y1 = cy - r * Math.cos(startAngle);
+          const x2 = cx + r * Math.sin(endAngle);
+          const y2 = cy - r * Math.cos(endAngle);
+          // Handle 100% single-slice case with a full circle
+          const d =
+            frac >= 0.9999
+              ? `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.01} ${cy - r} Z`
+              : `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+          return { d, color: s.color, label: s.label, value: s.value, pct: frac * 100 };
+        })
+      : [];
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      {total > 0 ? (
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {paths.map((p, i) => (
+            <path
+              key={i}
+              d={p.d}
+              fill={p.color}
+              stroke="var(--card)"
+              strokeWidth={1.5}
+            />
+          ))}
+        </svg>
+      ) : (
+        <div
+          className="flex items-center justify-center rounded-full border border-dashed border-border text-[10px] text-muted-foreground"
+          style={{ width: size, height: size }}
+        >
+          Sem dados
+        </div>
+      )}
+      <div className="w-full space-y-1.5">
+        {slices.map((s) => {
+          const pct = total > 0 ? (s.value / total) * 100 : 0;
+          return (
+            <div key={s.label} className="flex items-center justify-between text-[11px]">
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block h-3 w-3 rounded"
+                  style={{ background: s.color }}
+                />
+                <span className="text-muted-foreground">{s.label}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-foreground">R$ {fmtBRL(s.value)}</span>
+                <span className="text-primary font-semibold w-12 text-right">
+                  {pct.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

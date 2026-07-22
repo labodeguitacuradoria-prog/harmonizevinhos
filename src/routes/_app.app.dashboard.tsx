@@ -321,6 +321,7 @@ function DashboardPage() {
       revByYearMonth,
       bottlesByYearMonth,
       glassesByYearMonth,
+      corkageAmtByYearMonth,
       revYear,
       cmvByMonth,
       cmvYear,
@@ -350,6 +351,7 @@ function DashboardPage() {
       corkageQtyYear,
     };
   }, [movements, corkage, wineById, wines, stockMap, currentYear, previousYear, currentMonth]);
+
 
   const TABS: Array<{
     key: TabKey;

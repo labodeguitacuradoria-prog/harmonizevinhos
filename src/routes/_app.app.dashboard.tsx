@@ -734,7 +734,7 @@ function BarChart({
                 </span>
                 <div
                   className="h-px w-full"
-                  style={{ background: "color-mix(in oklab, var(--muted-foreground) 20%, transparent)" }}
+                  style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
                 />
               </div>
             ))}
@@ -744,14 +744,15 @@ function BarChart({
                 <div
                   key={i}
                   className="flex-1 border-l"
-                  style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 12%, transparent)" }}
+                  style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 30%, transparent)" }}
                 />
               ))}
               <div
                 className="border-l"
-                style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 20%, transparent)" }}
+                style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
               />
             </div>
+
             {/* Bars */}
             <div className="absolute inset-0 flex items-end justify-between gap-2">
               {MONTHS.map((mo, i) => {

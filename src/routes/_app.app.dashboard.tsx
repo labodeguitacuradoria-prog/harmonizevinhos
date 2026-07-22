@@ -764,10 +764,12 @@ function BarChart({
                       className="w-2/5 rounded-t transition-all"
                       style={{
                         height: `${pPct}%`,
-                        background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)",
+                        background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)",
+                        boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
                       }}
                       title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
                     />
+
                     <div
                       className="w-2/5 rounded-t transition-all"
                       style={{

@@ -487,6 +487,9 @@ function DashboardPage() {
         {tab === "faturamento" && (
           <FaturamentoPanel
             revByYearMonth={agg.revByYearMonth}
+            revBottlesByYearMonth={agg.revBottlesByYearMonth}
+            revGlassesByYearMonth={agg.revGlassesByYearMonth}
+            corkageAmtByYearMonth={agg.corkageAmtByYearMonth}
             currentYear={currentYear}
             previousYear={previousYear}
             revLast={agg.revLast}

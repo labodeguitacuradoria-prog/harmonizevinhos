@@ -247,18 +247,21 @@ function SupplierForm({
     e.preventDefault();
     if (!f.name?.trim()) return toast.error("Informe o nome do fornecedor");
     setSaving(true);
-    const payload = { ...f };
+    const { id: _id, ...rest } = f as any;
+    delete (rest as any).created_at;
+    delete (rest as any).updated_at;
+    const payload = rest;
     if (supplier) {
       const { error } = await supabase.from("suppliers").update(payload).eq("id", supplier.id);
       setSaving(false);
-      if (error) return toast.error(error.message);
+      if (error) { console.error("supplier update", error); return toast.error(error.message); }
       toast.success("Fornecedor atualizado");
     } else {
       const { error } = await supabase
         .from("suppliers")
         .insert({ ...payload, name: payload.name!, created_by: user?.id });
       setSaving(false);
-      if (error) return toast.error(error.message);
+      if (error) { console.error("supplier insert", error); return toast.error(error.message); }
       toast.success("Fornecedor criado");
     }
     onSaved();

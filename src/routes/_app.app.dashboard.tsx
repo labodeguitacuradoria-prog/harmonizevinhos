@@ -322,6 +322,8 @@ function DashboardPage() {
       bottlesByYearMonth,
       glassesByYearMonth,
       corkageAmtByYearMonth,
+      revBottlesByYearMonth,
+      revGlassesByYearMonth,
       revYear,
       cmvByMonth,
       cmvYear,

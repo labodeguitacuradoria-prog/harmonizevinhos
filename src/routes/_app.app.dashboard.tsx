@@ -800,7 +800,8 @@ function BarChart({
         <div className="flex items-center gap-2">
           <span
             className="inline-block h-3 w-3 rounded"
-            style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
+            style={{ background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)" }}
+
           />
           <span className="text-muted-foreground">{previousYear}</span>
         </div>

@@ -626,7 +626,6 @@ function FaturamentoPanel({
       <SectionHeader
         icon={<TrendingUp size={14} />}
         title="Faturamento — mensal e acumulado"
-        subtitle="Vendas de vinhos + taxas de rolha. Ano anterior em cinza, ano corrente em vinho→ouro."
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">

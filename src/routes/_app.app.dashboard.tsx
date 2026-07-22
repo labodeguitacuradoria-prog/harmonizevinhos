@@ -321,6 +321,7 @@ function DashboardPage() {
       revByYearMonth,
       bottlesByYearMonth,
       glassesByYearMonth,
+      corkageAmtByYearMonth,
       revYear,
       cmvByMonth,
       cmvYear,
@@ -350,6 +351,7 @@ function DashboardPage() {
       corkageQtyYear,
     };
   }, [movements, corkage, wineById, wines, stockMap, currentYear, previousYear, currentMonth]);
+
 
   const TABS: Array<{
     key: TabKey;
@@ -544,8 +546,12 @@ function DashboardPage() {
             amtYear={agg.corkageAmtYear}
             qtyYear={agg.corkageQtyYear}
             lastMonth={agg.lastCorkage}
+            corkageAmtByYearMonth={agg.corkageAmtByYearMonth}
+            currentYear={currentYear}
+            previousYear={previousYear}
           />
         )}
+
         {tab === "outras" && <OutrasPanel />}
       </div>
     </div>
@@ -728,7 +734,7 @@ function BarChart({
                 </span>
                 <div
                   className="h-px w-full"
-                  style={{ background: "color-mix(in oklab, var(--muted-foreground) 20%, transparent)" }}
+                  style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
                 />
               </div>
             ))}
@@ -738,14 +744,15 @@ function BarChart({
                 <div
                   key={i}
                   className="flex-1 border-l"
-                  style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 12%, transparent)" }}
+                  style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 30%, transparent)" }}
                 />
               ))}
               <div
                 className="border-l"
-                style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 20%, transparent)" }}
+                style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
               />
             </div>
+
             {/* Bars */}
             <div className="absolute inset-0 flex items-end justify-between gap-2">
               {MONTHS.map((mo, i) => {
@@ -757,10 +764,12 @@ function BarChart({
                       className="w-2/5 rounded-t transition-all"
                       style={{
                         height: `${pPct}%`,
-                        background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)",
+                        background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)",
+                        boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
                       }}
                       title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
                     />
+
                     <div
                       className="w-2/5 rounded-t transition-all"
                       style={{
@@ -791,7 +800,8 @@ function BarChart({
         <div className="flex items-center gap-2">
           <span
             className="inline-block h-3 w-3 rounded"
-            style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
+            style={{ background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)" }}
+
           />
           <span className="text-muted-foreground">{previousYear}</span>
         </div>
@@ -988,14 +998,23 @@ function RolhaPanel({
   amtYear,
   qtyYear,
   lastMonth,
+  corkageAmtByYearMonth,
+  currentYear,
+  previousYear,
 }: {
   amtLast: number;
   qtyLast: number;
   amtYear: number;
   qtyYear: number;
   lastMonth: { year: number; month: number };
+  corkageAmtByYearMonth: Record<number, number[]>;
+  currentYear: number;
+  previousYear: number;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
+  const curr = corkageAmtByYearMonth[currentYear];
+  const prev = corkageAmtByYearMonth[previousYear];
+  const prevYearTotal = prev.reduce((a, b) => a + b, 0);
   return (
     <div>
       <SectionHeader
@@ -1006,10 +1025,18 @@ function RolhaPanel({
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <MiniStat label={`Valor — ${ml}`} value={`R$ ${fmtBRL(amtLast)}`} tone="primary" />
         <MiniStat label={`Qtd — ${ml}`} value={`${qtyLast}`} />
-        <MiniStat label="Valor ano" value={`R$ ${fmtBRL(amtYear)}`} />
-        <MiniStat label="Qtd ano" value={`${qtyYear}`} />
+        <MiniStat label={`Valor ${currentYear}`} value={`R$ ${fmtBRL(amtYear)}`} />
+        <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
       </div>
-      <div className="rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-4 text-center text-xs text-muted-foreground">
+      <BarChart
+        curr={curr}
+        prev={prev}
+        currentYear={currentYear}
+        previousYear={previousYear}
+        valuePrefix="R$ "
+        height={260}
+      />
+      <div className="mt-4 rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-3 text-center text-[11px] text-muted-foreground">
         Para lançar ou ajustar taxas de rolha,{" "}
         <Link to="/app/corkage-fees" className="text-primary underline">
           abra o lançamento mensal
@@ -1019,6 +1046,7 @@ function RolhaPanel({
     </div>
   );
 }
+
 
 function OutrasPanel() {
   return (

@@ -546,8 +546,12 @@ function DashboardPage() {
             amtYear={agg.corkageAmtYear}
             qtyYear={agg.corkageQtyYear}
             lastMonth={agg.lastCorkage}
+            corkageAmtByYearMonth={agg.corkageAmtByYearMonth}
+            currentYear={currentYear}
+            previousYear={previousYear}
           />
         )}
+
         {tab === "outras" && <OutrasPanel />}
       </div>
     </div>

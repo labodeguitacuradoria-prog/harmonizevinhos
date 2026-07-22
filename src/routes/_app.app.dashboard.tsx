@@ -994,14 +994,23 @@ function RolhaPanel({
   amtYear,
   qtyYear,
   lastMonth,
+  corkageAmtByYearMonth,
+  currentYear,
+  previousYear,
 }: {
   amtLast: number;
   qtyLast: number;
   amtYear: number;
   qtyYear: number;
   lastMonth: { year: number; month: number };
+  corkageAmtByYearMonth: Record<number, number[]>;
+  currentYear: number;
+  previousYear: number;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
+  const curr = corkageAmtByYearMonth[currentYear];
+  const prev = corkageAmtByYearMonth[previousYear];
+  const prevYearTotal = prev.reduce((a, b) => a + b, 0);
   return (
     <div>
       <SectionHeader
@@ -1012,10 +1021,18 @@ function RolhaPanel({
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <MiniStat label={`Valor — ${ml}`} value={`R$ ${fmtBRL(amtLast)}`} tone="primary" />
         <MiniStat label={`Qtd — ${ml}`} value={`${qtyLast}`} />
-        <MiniStat label="Valor ano" value={`R$ ${fmtBRL(amtYear)}`} />
-        <MiniStat label="Qtd ano" value={`${qtyYear}`} />
+        <MiniStat label={`Valor ${currentYear}`} value={`R$ ${fmtBRL(amtYear)}`} />
+        <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
       </div>
-      <div className="rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-4 text-center text-xs text-muted-foreground">
+      <BarChart
+        curr={curr}
+        prev={prev}
+        currentYear={currentYear}
+        previousYear={previousYear}
+        valuePrefix="R$ "
+        height={260}
+      />
+      <div className="mt-4 rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-3 text-center text-[11px] text-muted-foreground">
         Para lançar ou ajustar taxas de rolha,{" "}
         <Link to="/app/corkage-fees" className="text-primary underline">
           abra o lançamento mensal
@@ -1025,6 +1042,7 @@ function RolhaPanel({
     </div>
   );
 }
+
 
 function OutrasPanel() {
   return (

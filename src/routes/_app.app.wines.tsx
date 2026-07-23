@@ -154,7 +154,14 @@ type Wine = {
   barcode: string | null;
   active_on_menu: boolean;
   count_in_stock: boolean;
+  min_stock_override: number | null;
 };
+
+function computeMinStock(w: Pick<Wine, "min_stock_override">, avg4m: number): number {
+  if (w.min_stock_override != null) return Math.max(0, Math.round(Number(w.min_stock_override)));
+  // suggested = média mensal últimos 4 meses (arredondada para cima)
+  return Math.max(1, Math.ceil(avg4m));
+}
 
 type Glass = {
   id: string;

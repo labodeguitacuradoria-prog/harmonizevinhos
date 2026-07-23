@@ -451,19 +451,10 @@ function DashboardPage() {
             >
               <Info size={11} />
             </span>
-            <div className="mb-1 flex items-center justify-between pr-5">
+            <div className="mb-1 pr-5">
               <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {t.label}
               </span>
-              <div
-                className={`rounded p-1 ${
-                  tab === t.key
-                    ? "bg-primary/20 text-primary"
-                    : "bg-[color:var(--surface-2)] text-muted-foreground"
-                }`}
-              >
-                {t.icon}
-              </div>
             </div>
             <div className="text-lg font-bold text-primary leading-tight">
               {t.primary}

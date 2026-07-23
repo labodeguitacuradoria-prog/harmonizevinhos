@@ -333,6 +333,29 @@ function WinesSection() {
     },
   });
 
+  // Média das vendas dos últimos 4 meses (soma / 4) — usada para sugerir o estoque mínimo.
+  const { data: avg4mMap = {} } = useQuery({
+    queryKey: ["monthly-sales-avg-4m", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString();
+      const { data } = await supabase
+        .from("inventory_movements")
+        .select("wine_id, quantity, occurred_at")
+        .eq("restaurant_id", restaurantId!)
+        .eq("movement_type", "sale")
+        .gte("occurred_at", start);
+      const totals: Record<string, number> = {};
+      for (const m of data ?? []) {
+        totals[m.wine_id] = (totals[m.wine_id] ?? 0) + m.quantity;
+      }
+      const map: Record<string, number> = {};
+      for (const wineId of Object.keys(totals)) map[wineId] = totals[wineId] / 4;
+      return map;
+    },
+  });
+
 
   const filteredWines = (typeFilter === "Todos"
     ? wines

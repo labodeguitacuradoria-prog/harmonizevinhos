@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info } from "lucide-react";
+import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info, AlertTriangle, Check as CheckIcon, Pencil } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 
@@ -27,6 +27,116 @@ function WineStatusBadge({ wine }: { wine: { active_on_menu: boolean; count_in_s
     >
       {archived ? "Arquivado" : "Fora da carta"}
     </span>
+  );
+}
+
+
+function ReorderAlertCell({
+  wine,
+  stock,
+  avg4m,
+  compact,
+}: {
+  wine: Wine;
+  stock: number | null;
+  avg4m: number;
+  compact?: boolean;
+}) {
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const suggested = Math.max(1, Math.ceil(avg4m));
+  const min = wine.min_stock_override != null ? Math.max(0, Math.round(Number(wine.min_stock_override))) : suggested;
+  const [value, setValue] = useState<string>(wine.min_stock_override != null ? String(wine.min_stock_override) : "");
+  const [saving, setSaving] = useState(false);
+
+  const hasStock = stock != null;
+  const needsReorder = hasStock && stock <= min;
+
+  async function save(next: number | null) {
+    setSaving(true);
+    const { error } = await supabase.from("wines").update({ min_stock_override: next }).eq("id", wine.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Estoque mínimo atualizado");
+    qc.invalidateQueries({ queryKey: ["wines"] });
+    setEditing(false);
+  }
+
+  const badge = needsReorder ? (
+    <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-500">
+      <AlertTriangle className="h-3 w-3" /> Comprar
+    </span>
+  ) : hasStock ? (
+    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-500">
+      <CheckIcon className="h-3 w-3" /> Ok
+    </span>
+  ) : (
+    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      Sem contagem
+    </span>
+  );
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1.5">
+        {badge}
+        <span className="text-[9px] text-muted-foreground">mín {min}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div className="flex items-center gap-2">
+        {badge}
+        <button
+          type="button"
+          onClick={() => setEditing((e) => !e)}
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-primary"
+          title="Ajustar estoque mínimo"
+        >
+          mín {min} <Pencil className="h-2.5 w-2.5" />
+        </button>
+      </div>
+      {editing && (
+        <div className="absolute right-0 z-20 mt-1 w-64 rounded-md border border-border bg-popover p-3 text-xs shadow-lg">
+          <div className="mb-2 text-muted-foreground">
+            Sugestão do sistema: <span className="font-semibold text-foreground">{suggested}</span> un.
+            <div className="text-[10px] text-muted-foreground/80">(média dos últimos 4 meses, arredondada)</div>
+          </div>
+          <label className="block">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Estoque mínimo manual</span>
+            <input
+              type="number"
+              min={0}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder={`Padrão: ${suggested}`}
+              className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+            />
+          </label>
+          <div className="mt-2 flex justify-end gap-1.5">
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => { setValue(""); save(null); }}
+              className="rounded-md border border-input px-2 py-1 text-[11px] hover:bg-accent"
+              title="Voltar a usar a sugestão automática"
+            >
+              Usar automático
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => save(value === "" ? null : Number(value))}
+              className="rounded-md bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              Salvar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -154,7 +264,14 @@ type Wine = {
   barcode: string | null;
   active_on_menu: boolean;
   count_in_stock: boolean;
+  min_stock_override: number | null;
 };
+
+function computeMinStock(w: Pick<Wine, "min_stock_override">, avg4m: number): number {
+  if (w.min_stock_override != null) return Math.max(0, Math.round(Number(w.min_stock_override)));
+  // suggested = média mensal últimos 4 meses (arredondada para cima)
+  return Math.max(1, Math.ceil(avg4m));
+}
 
 type Glass = {
   id: string;
@@ -326,6 +443,29 @@ function WinesSection() {
     },
   });
 
+  // Média das vendas dos últimos 4 meses (soma / 4) — usada para sugerir o estoque mínimo.
+  const { data: avg4mMap = {} } = useQuery({
+    queryKey: ["monthly-sales-avg-4m", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString();
+      const { data } = await supabase
+        .from("inventory_movements")
+        .select("wine_id, quantity, occurred_at")
+        .eq("restaurant_id", restaurantId!)
+        .eq("movement_type", "sale")
+        .gte("occurred_at", start);
+      const totals: Record<string, number> = {};
+      for (const m of data ?? []) {
+        totals[m.wine_id] = (totals[m.wine_id] ?? 0) + m.quantity;
+      }
+      const map: Record<string, number> = {};
+      for (const wineId of Object.keys(totals)) map[wineId] = totals[wineId] / 4;
+      return map;
+    },
+  });
+
 
   const filteredWines = (typeFilter === "Todos"
     ? wines
@@ -420,6 +560,11 @@ function WinesSection() {
                   <div className="mt-1 text-[10px] text-muted-foreground">
                     Mês: <span className="font-medium text-foreground">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</span>
                   </div>
+                  {!isGlassVol(w.volume) && (
+                    <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                      <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} compact />
+                    </div>
+                  )}
                 </div>
               </div>
             </button>
@@ -445,14 +590,15 @@ function WinesSection() {
                 <div className="text-[9px] font-normal normal-case text-muted-foreground/70">última contagem</div>
               </th>
               <th className="px-4 py-3">Venda mensal</th>
+              <th className="px-4 py-3">Alerta de compra</th>
             </tr>
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && filteredWines.length === 0 && (
-              <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">
                 {typeFilter === "Todos" ? "Nenhum vinho cadastrado ainda." : "Nenhum vinho encontrado para este tipo."}
               </td></tr>
             )}
@@ -494,6 +640,13 @@ function WinesSection() {
                     )}
                   </td>
                   <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</td>
+                  <td className="px-4 py-3">
+                    {isGlassVol(w.volume) ? (
+                      <span className="text-muted-foreground">—</span>
+                    ) : (
+                      <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} />
+                    )}
+                  </td>
                 </tr>
               );
             })}

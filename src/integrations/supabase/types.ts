@@ -1110,6 +1110,7 @@ export type Database = {
           id: string
           image_url: string | null
           internal_code: string | null
+          min_stock_override: number | null
           name: string
           pairing_notes: string | null
           producer: string | null
@@ -1155,6 +1156,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           internal_code?: string | null
+          min_stock_override?: number | null
           name: string
           pairing_notes?: string | null
           producer?: string | null
@@ -1200,6 +1202,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           internal_code?: string | null
+          min_stock_override?: number | null
           name?: string
           pairing_notes?: string | null
           producer?: string | null

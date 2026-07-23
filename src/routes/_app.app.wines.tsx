@@ -450,6 +450,11 @@ function WinesSection() {
                   <div className="mt-1 text-[10px] text-muted-foreground">
                     Mês: <span className="font-medium text-foreground">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</span>
                   </div>
+                  {!isGlassVol(w.volume) && (
+                    <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                      <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} compact />
+                    </div>
+                  )}
                 </div>
               </div>
             </button>

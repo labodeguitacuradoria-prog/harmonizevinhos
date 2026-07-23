@@ -475,6 +475,7 @@ function WinesSection() {
                 <div className="text-[9px] font-normal normal-case text-muted-foreground/70">última contagem</div>
               </th>
               <th className="px-4 py-3">Venda mensal</th>
+              <th className="px-4 py-3">Alerta de compra</th>
             </tr>
           </thead>
           <tbody>

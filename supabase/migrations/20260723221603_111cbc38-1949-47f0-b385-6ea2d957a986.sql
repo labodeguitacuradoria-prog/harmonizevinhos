@@ -1,0 +1,1 @@
+ALTER TABLE public.wines ADD COLUMN IF NOT EXISTS min_stock_override numeric;

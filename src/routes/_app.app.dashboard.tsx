@@ -358,7 +358,6 @@ function DashboardPage() {
   const TABS: Array<{
     key: TabKey;
     label: string;
-    icon: React.ReactNode;
     primary: string;
     sub: string;
     info: string;
@@ -366,7 +365,6 @@ function DashboardPage() {
     {
       key: "faturamento",
       label: "Faturamento",
-      icon: <DollarSign size={14} />,
       primary: `R$ ${fmtBRL(agg.revLast)}`,
       sub: monthLabel(agg.lastRev.year, agg.lastRev.month),
       info: "Receita total do último mês com dados (vendas de vinhos + taxas de rolha). Abaixo, o gráfico compara mês a mês o ano atual com o anterior.",
@@ -374,7 +372,6 @@ function DashboardPage() {
     {
       key: "garrafas",
       label: "Garrafas Vendidas",
-      icon: <Wine size={14} />,
       primary: `${agg.bottlesLast}`,
       sub: monthLabel(agg.lastBottles.year, agg.lastBottles.month),
       info: "Quantidade de garrafas vendidas no último mês com dados. O painel abre o comparativo mensal com o ano anterior.",
@@ -382,7 +379,6 @@ function DashboardPage() {
     {
       key: "tacas",
       label: "Taças Vendidas",
-      icon: <GlassWater size={14} />,
       primary: `${agg.glassesLast}`,
       sub: monthLabel(agg.lastGlasses.year, agg.lastGlasses.month),
       info: "Quantidade de taças de vinho vendidas no último mês com dados, comparadas mês a mês com o ano anterior.",
@@ -390,7 +386,6 @@ function DashboardPage() {
     {
       key: "estoque",
       label: "Estoque Gfas",
-      icon: <Package size={14} />,
       primary: `${agg.stockBottles}`,
       sub: `R$ ${fmtBRL(agg.stockValue)}`,
       info: "Total de garrafas em adega e o valor correspondente (preço de venda) segundo a última contagem fechada.",
@@ -398,7 +393,6 @@ function DashboardPage() {
     {
       key: "preco",
       label: "Preço Médio",
-      icon: <Tag size={14} />,
       primary: `R$ ${fmtBRL(agg.avgLast)}`,
       sub: monthLabel(agg.lastAvg.year, agg.lastAvg.month),
       info: "Preço médio praticado no último mês com dados (receita ÷ unidades vendidas, considerando garrafas e taças).",
@@ -406,7 +400,6 @@ function DashboardPage() {
     {
       key: "cmv",
       label: "CMV",
-      icon: <Percent size={14} />,
       primary: `${agg.cmvLast.toFixed(1)}%`,
       sub: monthLabel(agg.lastCmv.year, agg.lastCmv.month),
       info: "Custo da mercadoria vendida no último mês com dados: custo total ÷ receita das vendas de vinhos. Meta usual: ≤ 33%.",
@@ -414,7 +407,6 @@ function DashboardPage() {
     {
       key: "rolha",
       label: "Taxa de Rolha",
-      icon: <Coins size={14} />,
       primary: `R$ ${fmtBRL(agg.corkageAmtLast)}`,
       sub: monthLabel(agg.lastCorkage.year, agg.lastCorkage.month),
       info: "Valor arrecadado com taxas de rolha no último mês lançado. Lance mensalmente em 'Taxa de rolha'; o valor entra no faturamento.",
@@ -422,7 +414,6 @@ function DashboardPage() {
     {
       key: "outras",
       label: "Outras",
-      icon: <Sparkles size={14} />,
       primary: `+`,
       sub: `Personalizar`,
       info: "Espaço para indicadores personalizados do restaurante (em breve).",

@@ -525,6 +525,13 @@ function WinesSection() {
                     )}
                   </td>
                   <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</td>
+                  <td className="px-4 py-3">
+                    {isGlassVol(w.volume) ? (
+                      <span className="text-muted-foreground">—</span>
+                    ) : (
+                      <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} />
+                    )}
+                  </td>
                 </tr>
               );
             })}

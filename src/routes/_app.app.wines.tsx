@@ -31,6 +31,116 @@ function WineStatusBadge({ wine }: { wine: { active_on_menu: boolean; count_in_s
 }
 
 
+function ReorderAlertCell({
+  wine,
+  stock,
+  avg4m,
+  compact,
+}: {
+  wine: Wine;
+  stock: number | null;
+  avg4m: number;
+  compact?: boolean;
+}) {
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const suggested = Math.max(1, Math.ceil(avg4m));
+  const min = wine.min_stock_override != null ? Math.max(0, Math.round(Number(wine.min_stock_override))) : suggested;
+  const [value, setValue] = useState<string>(wine.min_stock_override != null ? String(wine.min_stock_override) : "");
+  const [saving, setSaving] = useState(false);
+
+  const hasStock = stock != null;
+  const needsReorder = hasStock && stock <= min;
+
+  async function save(next: number | null) {
+    setSaving(true);
+    const { error } = await supabase.from("wines").update({ min_stock_override: next }).eq("id", wine.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Estoque mínimo atualizado");
+    qc.invalidateQueries({ queryKey: ["wines"] });
+    setEditing(false);
+  }
+
+  const badge = needsReorder ? (
+    <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-500">
+      <AlertTriangle className="h-3 w-3" /> Comprar
+    </span>
+  ) : hasStock ? (
+    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-500">
+      <CheckIcon className="h-3 w-3" /> Ok
+    </span>
+  ) : (
+    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      Sem contagem
+    </span>
+  );
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1.5">
+        {badge}
+        <span className="text-[9px] text-muted-foreground">mín {min}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div className="flex items-center gap-2">
+        {badge}
+        <button
+          type="button"
+          onClick={() => setEditing((e) => !e)}
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-primary"
+          title="Ajustar estoque mínimo"
+        >
+          mín {min} <Pencil className="h-2.5 w-2.5" />
+        </button>
+      </div>
+      {editing && (
+        <div className="absolute right-0 z-20 mt-1 w-64 rounded-md border border-border bg-popover p-3 text-xs shadow-lg">
+          <div className="mb-2 text-muted-foreground">
+            Sugestão do sistema: <span className="font-semibold text-foreground">{suggested}</span> un.
+            <div className="text-[10px] text-muted-foreground/80">(média dos últimos 4 meses, arredondada)</div>
+          </div>
+          <label className="block">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Estoque mínimo manual</span>
+            <input
+              type="number"
+              min={0}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder={`Padrão: ${suggested}`}
+              className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+            />
+          </label>
+          <div className="mt-2 flex justify-end gap-1.5">
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => { setValue(""); save(null); }}
+              className="rounded-md border border-input px-2 py-1 text-[11px] hover:bg-accent"
+              title="Voltar a usar a sugestão automática"
+            >
+              Usar automático
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => save(value === "" ? null : Number(value))}
+              className="rounded-md bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              Salvar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 type CatalogPick = {
   name: string;
   producer: string | null;

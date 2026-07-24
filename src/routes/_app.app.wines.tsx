@@ -358,13 +358,60 @@ function CategoryTab({ active, onClick, icon, children }: { active: boolean; onC
 const WINE_TYPES = ["Todos", "Espumante", "Branco", "Rosé", "Tinto", "Fortificado", "Outros"];
 const CORE_WINE_TYPES = ["Espumante", "Branco", "Rosé", "Tinto", "Fortificado"];
 
+type ColFilters = {
+  internal_code: string;
+  name: string;
+  vintage: string;
+  wine_type: string;
+  volume: string;
+  cost_price: string;
+  sale_price: string;
+  markup: string;
+  stock: string;
+  monthly: string;
+  alert: "" | "comprar" | "ok" | "sem";
+};
+const EMPTY_FILTERS: ColFilters = {
+  internal_code: "", name: "", vintage: "", wine_type: "", volume: "",
+  cost_price: "", sale_price: "", markup: "", stock: "", monthly: "", alert: "",
+};
+
+function matchNum(filter: string, value: number | null | undefined): boolean {
+  const s = filter.trim();
+  if (!s) return true;
+  if (value == null || Number.isNaN(Number(value))) return false;
+  const n = Number(value);
+  const range = s.match(/^\s*(-?\d+(?:[.,]\d+)?)\s*-\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+  if (range) return n >= Number(range[1].replace(",", ".")) && n <= Number(range[2].replace(",", "."));
+  const op = s.match(/^\s*(>=|<=|>|<|=)\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+  if (op) {
+    const v = Number(op[2].replace(",", "."));
+    switch (op[1]) {
+      case ">=": return n >= v;
+      case "<=": return n <= v;
+      case ">": return n > v;
+      case "<": return n < v;
+      case "=": return n === v;
+    }
+  }
+  return String(n).includes(s.replace(",", "."));
+}
+function matchText(filter: string, value: string | null | undefined): boolean {
+  const s = filter.trim().toLowerCase();
+  if (!s) return true;
+  return (value ?? "").toLowerCase().includes(s);
+}
+
 function WinesSection() {
   const { restaurantId } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editWine, setEditWine] = useState<Wine | null>(null);
-  const [typeFilter, setTypeFilter] = useState<string>("Todos");
   const [onlyActive, setOnlyActive] = useState<boolean>(true);
+  const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
+  const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v as never }));
+  const hasAnyFilter = Object.values(filters).some((v) => v !== "");
+
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wines", restaurantId],

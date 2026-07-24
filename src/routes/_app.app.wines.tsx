@@ -552,6 +552,9 @@ function WinesSection() {
       );
     });
 
+  const typeOptions = Array.from(new Set(wines.map((w) => wineTypeLabel(w.wine_type)).filter((v) => v && v !== "-"))).sort();
+  const volumeOptions = Array.from(new Set(wines.map((w) => w.volume ?? "").filter(Boolean))).sort();
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">

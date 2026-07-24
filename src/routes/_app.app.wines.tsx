@@ -655,6 +655,30 @@ function WinesSection() {
               <th className="px-4 py-3">Venda mensal</th>
               <th className="px-4 py-3">Alerta de compra</th>
             </tr>
+            <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
+              <th><FilterInput value={filters.internal_code} onChange={(v) => setF("internal_code", v)} placeholder="filtrar" /></th>
+              <th><FilterInput value={filters.name} onChange={(v) => setF("name", v)} placeholder="rótulo/produtor" /></th>
+              <th><FilterInput value={filters.vintage} onChange={(v) => setF("vintage", v)} placeholder="ex. 2020" /></th>
+              <th><FilterInput value={filters.wine_type} onChange={(v) => setF("wine_type", v)} placeholder="tipo" /></th>
+              <th><FilterInput value={filters.volume} onChange={(v) => setF("volume", v)} placeholder="ex. 750" /></th>
+              <th><FilterInput value={filters.cost_price} onChange={(v) => setF("cost_price", v)} placeholder=">50 ou 10-30" /></th>
+              <th><FilterInput value={filters.sale_price} onChange={(v) => setF("sale_price", v)} placeholder=">100" /></th>
+              <th><FilterInput value={filters.markup} onChange={(v) => setF("markup", v)} placeholder=">150" /></th>
+              <th><FilterInput value={filters.stock} onChange={(v) => setF("stock", v)} placeholder="<5" /></th>
+              <th><FilterInput value={filters.monthly} onChange={(v) => setF("monthly", v)} placeholder=">0" /></th>
+              <th>
+                <select
+                  value={filters.alert}
+                  onChange={(e) => setF("alert", e.target.value)}
+                  className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
+                >
+                  <option value="">Todos</option>
+                  <option value="comprar">Comprar</option>
+                  <option value="ok">Ok</option>
+                  <option value="sem">Sem contagem</option>
+                </select>
+              </th>
+            </tr>
           </thead>
           <tbody>
             {isLoading && (
@@ -662,9 +686,10 @@ function WinesSection() {
             )}
             {!isLoading && filteredWines.length === 0 && (
               <tr><td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">
-                {typeFilter === "Todos" ? "Nenhum vinho cadastrado ainda." : "Nenhum vinho encontrado para este tipo."}
+                {hasAnyFilter || onlyActive ? "Nenhum vinho encontrado com esses filtros." : "Nenhum vinho cadastrado ainda."}
               </td></tr>
             )}
+
             {filteredWines.map((w) => {
               const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
               return (

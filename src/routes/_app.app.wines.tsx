@@ -541,8 +541,8 @@ function WinesSection() {
         matchText(filters.internal_code, w.internal_code) &&
         (matchText(filters.name, w.name) || matchText(filters.name, w.producer)) &&
         matchText(filters.vintage, w.vintage != null ? String(w.vintage) : "") &&
-        matchText(filters.wine_type, wineTypeLabel(w.wine_type)) &&
-        matchText(filters.volume, w.volume) &&
+        (filters.wine_type === "" || filters.wine_type === wineTypeLabel(w.wine_type)) &&
+        (filters.volume === "" || filters.volume === (w.volume ?? "")) &&
         matchNum(filters.cost_price, Number(w.cost_price)) &&
         matchNum(filters.sale_price, Number(w.sale_price)) &&
         matchNum(filters.markup, markup) &&

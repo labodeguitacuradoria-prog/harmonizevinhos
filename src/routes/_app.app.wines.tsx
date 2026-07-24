@@ -355,16 +355,73 @@ function CategoryTab({ active, onClick, icon, children }: { active: boolean; onC
 
 // ===== WINES =====
 
-const WINE_TYPES = ["Todos", "Espumante", "Branco", "Rosé", "Tinto", "Fortificado", "Outros"];
-const CORE_WINE_TYPES = ["Espumante", "Branco", "Rosé", "Tinto", "Fortificado"];
+
+function FilterInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px] placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+    />
+  );
+}
+
+type ColFilters = {
+
+  internal_code: string;
+  name: string;
+  vintage: string;
+  wine_type: string;
+  volume: string;
+  cost_price: string;
+  sale_price: string;
+  markup: string;
+  stock: string;
+  monthly: string;
+  alert: "" | "comprar" | "ok" | "sem";
+};
+const EMPTY_FILTERS: ColFilters = {
+  internal_code: "", name: "", vintage: "", wine_type: "", volume: "",
+  cost_price: "", sale_price: "", markup: "", stock: "", monthly: "", alert: "",
+};
+
+function matchNum(filter: string, value: number | null | undefined): boolean {
+  const s = filter.trim();
+  if (!s) return true;
+  if (value == null || Number.isNaN(Number(value))) return false;
+  const n = Number(value);
+  const range = s.match(/^\s*(-?\d+(?:[.,]\d+)?)\s*-\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+  if (range) return n >= Number(range[1].replace(",", ".")) && n <= Number(range[2].replace(",", "."));
+  const op = s.match(/^\s*(>=|<=|>|<|=)\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+  if (op) {
+    const v = Number(op[2].replace(",", "."));
+    switch (op[1]) {
+      case ">=": return n >= v;
+      case "<=": return n <= v;
+      case ">": return n > v;
+      case "<": return n < v;
+      case "=": return n === v;
+    }
+  }
+  return String(n).includes(s.replace(",", "."));
+}
+function matchText(filter: string, value: string | null | undefined): boolean {
+  const s = filter.trim().toLowerCase();
+  if (!s) return true;
+  return (value ?? "").toLowerCase().includes(s);
+}
 
 function WinesSection() {
   const { restaurantId } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editWine, setEditWine] = useState<Wine | null>(null);
-  const [typeFilter, setTypeFilter] = useState<string>("Todos");
   const [onlyActive, setOnlyActive] = useState<boolean>(true);
+  const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
+  const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v as never }));
+  const hasAnyFilter = Object.values(filters).some((v) => v !== "");
+
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wines", restaurantId],
@@ -467,34 +524,39 @@ function WinesSection() {
   });
 
 
-  const filteredWines = (typeFilter === "Todos"
-    ? wines
-    : typeFilter === "Outros"
-      ? wines.filter((w) => {
-          const label = wineTypeLabel(w.wine_type);
-          return label !== "-" && !CORE_WINE_TYPES.includes(label);
-        })
-      : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter)
-  ).filter((w) => (onlyActive ? w.active_on_menu : true));
+  const filteredWines = wines
+    .filter((w) => (onlyActive ? w.active_on_menu : true))
+    .filter((w) => {
+      const markup = Number(w.cost_price) > 0 ? (Number(w.sale_price) / Number(w.cost_price) - 1) * 100 : null;
+      const stock = isGlassVol(w.volume) ? null : (stockMap[w.id]?.qty ?? null);
+      const monthly = isGlassVol(w.volume) ? null : (monthlySalesMap[w.id] ?? 0);
+      const min = computeMinStock(w, avg4mMap[w.id] ?? 0);
+      let alertStatus: "comprar" | "ok" | "sem" = "sem";
+      if (!isGlassVol(w.volume)) {
+        if (stock == null) alertStatus = "sem";
+        else if (stock <= min) alertStatus = "comprar";
+        else alertStatus = "ok";
+      }
+      return (
+        matchText(filters.internal_code, w.internal_code) &&
+        (matchText(filters.name, w.name) || matchText(filters.name, w.producer)) &&
+        matchText(filters.vintage, w.vintage != null ? String(w.vintage) : "") &&
+        matchText(filters.wine_type, wineTypeLabel(w.wine_type)) &&
+        matchText(filters.volume, w.volume) &&
+        matchNum(filters.cost_price, Number(w.cost_price)) &&
+        matchNum(filters.sale_price, Number(w.sale_price)) &&
+        matchNum(filters.markup, markup) &&
+        matchNum(filters.stock, stock) &&
+        matchNum(filters.monthly, monthly) &&
+        (filters.alert === "" || filters.alert === alertStatus)
+      );
+    });
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          {WINE_TYPES.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                typeFilter === t
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-          <label className="ml-2 flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
             <input
               type="checkbox"
               checked={onlyActive}
@@ -503,6 +565,15 @@ function WinesSection() {
             />
             Apenas ativos na carta
           </label>
+          {hasAnyFilter && (
+            <button
+              type="button"
+              onClick={() => setFilters(EMPTY_FILTERS)}
+              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Limpar filtros
+            </button>
+          )}
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -511,6 +582,7 @@ function WinesSection() {
           <Plus className="h-4 w-4" /> Novo vinho
         </button>
       </div>
+
 
       {/* Mobile: card list */}
       <div className="mt-4 space-y-2 sm:hidden">
@@ -521,7 +593,8 @@ function WinesSection() {
         )}
         {!isLoading && filteredWines.length === 0 && (
           <div className="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
-            {typeFilter === "Todos" ? "Nenhum vinho cadastrado ainda." : "Nenhum vinho encontrado para este tipo."}
+            {hasAnyFilter || onlyActive ? "Nenhum vinho encontrado com esses filtros." : "Nenhum vinho cadastrado ainda."}
+
           </div>
         )}
         {filteredWines.map((w) => {
@@ -592,6 +665,30 @@ function WinesSection() {
               <th className="px-4 py-3">Venda mensal</th>
               <th className="px-4 py-3">Alerta de compra</th>
             </tr>
+            <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
+              <th><FilterInput value={filters.internal_code} onChange={(v) => setF("internal_code", v)} placeholder="filtrar" /></th>
+              <th><FilterInput value={filters.name} onChange={(v) => setF("name", v)} placeholder="rótulo/produtor" /></th>
+              <th><FilterInput value={filters.vintage} onChange={(v) => setF("vintage", v)} placeholder="ex. 2020" /></th>
+              <th><FilterInput value={filters.wine_type} onChange={(v) => setF("wine_type", v)} placeholder="tipo" /></th>
+              <th><FilterInput value={filters.volume} onChange={(v) => setF("volume", v)} placeholder="ex. 750" /></th>
+              <th><FilterInput value={filters.cost_price} onChange={(v) => setF("cost_price", v)} placeholder=">50 ou 10-30" /></th>
+              <th><FilterInput value={filters.sale_price} onChange={(v) => setF("sale_price", v)} placeholder=">100" /></th>
+              <th><FilterInput value={filters.markup} onChange={(v) => setF("markup", v)} placeholder=">150" /></th>
+              <th><FilterInput value={filters.stock} onChange={(v) => setF("stock", v)} placeholder="<5" /></th>
+              <th><FilterInput value={filters.monthly} onChange={(v) => setF("monthly", v)} placeholder=">0" /></th>
+              <th>
+                <select
+                  value={filters.alert}
+                  onChange={(e) => setF("alert", e.target.value)}
+                  className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
+                >
+                  <option value="">Todos</option>
+                  <option value="comprar">Comprar</option>
+                  <option value="ok">Ok</option>
+                  <option value="sem">Sem contagem</option>
+                </select>
+              </th>
+            </tr>
           </thead>
           <tbody>
             {isLoading && (
@@ -599,9 +696,10 @@ function WinesSection() {
             )}
             {!isLoading && filteredWines.length === 0 && (
               <tr><td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">
-                {typeFilter === "Todos" ? "Nenhum vinho cadastrado ainda." : "Nenhum vinho encontrado para este tipo."}
+                {hasAnyFilter || onlyActive ? "Nenhum vinho encontrado com esses filtros." : "Nenhum vinho cadastrado ainda."}
               </td></tr>
             )}
+
             {filteredWines.map((w) => {
               const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
               return (

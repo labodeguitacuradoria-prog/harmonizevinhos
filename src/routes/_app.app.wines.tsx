@@ -355,8 +355,6 @@ function CategoryTab({ active, onClick, icon, children }: { active: boolean; onC
 
 // ===== WINES =====
 
-const WINE_TYPES = ["Todos", "Espumante", "Branco", "Rosé", "Tinto", "Fortificado", "Outros"];
-const CORE_WINE_TYPES = ["Espumante", "Branco", "Rosé", "Tinto", "Fortificado"];
 
 function FilterInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (

@@ -514,34 +514,39 @@ function WinesSection() {
   });
 
 
-  const filteredWines = (typeFilter === "Todos"
-    ? wines
-    : typeFilter === "Outros"
-      ? wines.filter((w) => {
-          const label = wineTypeLabel(w.wine_type);
-          return label !== "-" && !CORE_WINE_TYPES.includes(label);
-        })
-      : wines.filter((w) => wineTypeLabel(w.wine_type) === typeFilter)
-  ).filter((w) => (onlyActive ? w.active_on_menu : true));
+  const filteredWines = wines
+    .filter((w) => (onlyActive ? w.active_on_menu : true))
+    .filter((w) => {
+      const markup = Number(w.cost_price) > 0 ? (Number(w.sale_price) / Number(w.cost_price) - 1) * 100 : null;
+      const stock = isGlassVol(w.volume) ? null : (stockMap[w.id]?.qty ?? null);
+      const monthly = isGlassVol(w.volume) ? null : (monthlySalesMap[w.id] ?? 0);
+      const min = computeMinStock(w, avg4mMap[w.id] ?? 0);
+      let alertStatus: "comprar" | "ok" | "sem" = "sem";
+      if (!isGlassVol(w.volume)) {
+        if (stock == null) alertStatus = "sem";
+        else if (stock <= min) alertStatus = "comprar";
+        else alertStatus = "ok";
+      }
+      return (
+        matchText(filters.internal_code, w.internal_code) &&
+        (matchText(filters.name, w.name) || matchText(filters.name, w.producer)) &&
+        matchText(filters.vintage, w.vintage != null ? String(w.vintage) : "") &&
+        matchText(filters.wine_type, wineTypeLabel(w.wine_type)) &&
+        matchText(filters.volume, w.volume) &&
+        matchNum(filters.cost_price, Number(w.cost_price)) &&
+        matchNum(filters.sale_price, Number(w.sale_price)) &&
+        matchNum(filters.markup, markup) &&
+        matchNum(filters.stock, stock) &&
+        matchNum(filters.monthly, monthly) &&
+        (filters.alert === "" || filters.alert === alertStatus)
+      );
+    });
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          {WINE_TYPES.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                typeFilter === t
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-          <label className="ml-2 flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
             <input
               type="checkbox"
               checked={onlyActive}
@@ -550,6 +555,15 @@ function WinesSection() {
             />
             Apenas ativos na carta
           </label>
+          {hasAnyFilter && (
+            <button
+              type="button"
+              onClick={() => setFilters(EMPTY_FILTERS)}
+              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Limpar filtros
+            </button>
+          )}
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -558,6 +572,7 @@ function WinesSection() {
           <Plus className="h-4 w-4" /> Novo vinho
         </button>
       </div>
+
 
       {/* Mobile: card list */}
       <div className="mt-4 space-y-2 sm:hidden">

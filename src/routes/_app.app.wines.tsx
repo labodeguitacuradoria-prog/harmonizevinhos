@@ -583,7 +583,8 @@ function WinesSection() {
         )}
         {!isLoading && filteredWines.length === 0 && (
           <div className="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
-            {typeFilter === "Todos" ? "Nenhum vinho cadastrado ainda." : "Nenhum vinho encontrado para este tipo."}
+            {hasAnyFilter || onlyActive ? "Nenhum vinho encontrado com esses filtros." : "Nenhum vinho cadastrado ainda."}
+
           </div>
         )}
         {filteredWines.map((w) => {

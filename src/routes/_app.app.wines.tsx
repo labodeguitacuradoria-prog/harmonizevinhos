@@ -418,6 +418,8 @@ function WinesSection() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editWine, setEditWine] = useState<Wine | null>(null);
+  const [viewWine, setViewWine] = useState<Wine | null>(null);
+  const [overviewMetric, setOverviewMetric] = useState<"qty" | "revenue">("qty");
   const [onlyActive, setOnlyActive] = useState<boolean>(true);
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
   const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v as never }));

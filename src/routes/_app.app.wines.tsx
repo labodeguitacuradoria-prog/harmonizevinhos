@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info, AlertTriangle, Check as CheckIcon, Pencil } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { WineOverview } from "@/components/WineOverview";
 
 function isGlassVol(v: string | null | undefined) {
   if (!v) return false;

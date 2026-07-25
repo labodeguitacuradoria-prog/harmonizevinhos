@@ -727,15 +727,12 @@ function WinesSection() {
                 <tr key={w.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{w.internal_code ?? "-"}</td>
                   <td className="px-4 py-3">
-                    <button type="button" onClick={() => setEditWine(w)} className="flex items-center gap-2 text-left hover:text-primary">
-                      {w.image_url && <img src={w.image_url} alt="" className="h-8 w-8 rounded object-cover" />}
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-medium underline-offset-2 hover:underline">{w.name}</span>
-                          {!w.active_on_menu && <WineStatusBadge wine={w} />}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{w.producer ?? ""}</div>
+                    <button type="button" onClick={() => setEditWine(w)} className="text-left hover:text-primary">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium underline-offset-2 hover:underline">{w.name}</span>
+                        {!w.active_on_menu && <WineStatusBadge wine={w} />}
                       </div>
+                      <div className="text-xs text-muted-foreground">{w.producer ?? ""}</div>
                     </button>
                   </td>
                   <td className="px-4 py-3">{w.vintage ?? "-"}</td>

@@ -609,7 +609,7 @@ function WinesSection() {
             <button
               key={w.id}
               type="button"
-              onClick={() => setEditWine(w)}
+              onClick={() => setViewWine(w)}
               className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-left active:bg-muted/40"
             >
               <div className="flex items-start justify-between gap-2">

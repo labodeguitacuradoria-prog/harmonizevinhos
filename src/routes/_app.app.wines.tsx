@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info, AlertTriangle, Check as CheckIcon, Pencil } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { WineOverview } from "@/components/WineOverview";
 
 function isGlassVol(v: string | null | undefined) {
   if (!v) return false;
@@ -417,6 +418,8 @@ function WinesSection() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editWine, setEditWine] = useState<Wine | null>(null);
+  const [viewWine, setViewWine] = useState<Wine | null>(null);
+  const [overviewMetric, setOverviewMetric] = useState<"qty" | "revenue">("qty");
   const [onlyActive, setOnlyActive] = useState<boolean>(true);
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
   const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v as never }));
@@ -606,7 +609,7 @@ function WinesSection() {
             <button
               key={w.id}
               type="button"
-              onClick={() => setEditWine(w)}
+              onClick={() => setViewWine(w)}
               className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-left active:bg-muted/40"
             >
               <div className="flex items-start justify-between gap-2">
@@ -727,7 +730,7 @@ function WinesSection() {
                 <tr key={w.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{w.internal_code ?? "-"}</td>
                   <td className="px-4 py-3">
-                    <button type="button" onClick={() => setEditWine(w)} className="text-left hover:text-primary">
+                    <button type="button" onClick={() => setViewWine(w)} className="text-left hover:text-primary">
                       <div className="flex items-center gap-1.5">
                         <span className="font-medium underline-offset-2 hover:underline">{w.name}</span>
                         {!w.active_on_menu && <WineStatusBadge wine={w} />}
@@ -771,6 +774,17 @@ function WinesSection() {
       </div>
 
 
+      {viewWine && !editWine && (
+        <WineOverview
+          wine={viewWine}
+          restaurantId={restaurantId!}
+          onClose={() => setViewWine(null)}
+          onEdit={() => setEditWine(viewWine)}
+          metric={overviewMetric}
+          onMetricChange={setOverviewMetric}
+        />
+      )}
+
       {(showForm || editWine) && (
         <WineForm
           wine={editWine}
@@ -781,6 +795,7 @@ function WinesSection() {
             qc.invalidateQueries({ queryKey: ["wines"] });
             setShowForm(false);
             setEditWine(null);
+            setViewWine(null);
           }}
         />
       )}

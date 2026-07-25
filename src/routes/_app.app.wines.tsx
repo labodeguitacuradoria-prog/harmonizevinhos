@@ -774,6 +774,17 @@ function WinesSection() {
       </div>
 
 
+      {viewWine && !editWine && (
+        <WineOverview
+          wine={viewWine}
+          restaurantId={restaurantId!}
+          onClose={() => setViewWine(null)}
+          onEdit={() => setEditWine(viewWine)}
+          metric={overviewMetric}
+          onMetricChange={setOverviewMetric}
+        />
+      )}
+
       {(showForm || editWine) && (
         <WineForm
           wine={editWine}
@@ -784,6 +795,7 @@ function WinesSection() {
             qc.invalidateQueries({ queryKey: ["wines"] });
             setShowForm(false);
             setEditWine(null);
+            setViewWine(null);
           }}
         />
       )}

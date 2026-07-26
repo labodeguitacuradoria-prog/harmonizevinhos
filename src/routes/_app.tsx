@@ -43,6 +43,7 @@ function AppLayout() {
             <>
               <NavLink to="/app" icon={<Home className="h-4 w-4" />}>Início</NavLink>
               <NavLink to="/app/dashboard" icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
+              <NavLink to="/app/price-analysis" icon={<Sparkles className="h-4 w-4" />}>Análise de Preços</NavLink>
               <NavLink to="/app/cadastros" icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
               <NavLink to="/app/wines" icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
               <NavLink to="/app/suppliers" icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>

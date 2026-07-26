@@ -2,7 +2,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, X, FileText, Image as ImageIcon, Link2, Loader2 } from "lucide-react";
-import { normalizeProductImage } from "@/lib/image-normalize";
 
 type Props = {
   label: string;
@@ -11,9 +10,6 @@ type Props = {
   accept?: string;
   folder: string;
   kind?: "image" | "file";
-  /** When true (default for images), the file/URL is normalized to a
-   *  standardized white-background PNG with the subject at ~2/3 of frame. */
-  normalize?: boolean;
 };
 
 export function MediaUploader({
@@ -23,11 +19,9 @@ export function MediaUploader({
   accept = "image/*",
   folder,
   kind = "image",
-  normalize,
 }: Props) {
   const [uploading, setUploading] = useState(false);
   const [urlInput, setUrlInput] = useState("");
-  const shouldNormalize = (normalize ?? (kind === "image"));
 
   async function uploadBlob(blob: Blob, ext: string) {
     const path = `${folder}/${crypto.randomUUID()}.${ext}`;
@@ -46,15 +40,9 @@ export function MediaUploader({
   async function handleFile(file: File) {
     setUploading(true);
     try {
-      if (shouldNormalize) {
-        const blob = await normalizeProductImage(file);
-        const url = await uploadBlob(blob, "png");
-        if (url) onChange(url);
-      } else {
-        const ext = file.name.split(".").pop() ?? "bin";
-        const url = await uploadBlob(file, ext);
-        if (url) onChange(url);
-      }
+      const ext = file.name.split(".").pop() ?? "bin";
+      const url = await uploadBlob(file, ext);
+      if (url) onChange(url);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha no envio.");
     } finally {
@@ -67,23 +55,10 @@ export function MediaUploader({
     if (!v) return;
     setUploading(true);
     try {
-      if (shouldNormalize) {
-        const blob = await normalizeProductImage(v);
-        const url = await uploadBlob(blob, "png");
-        if (url) {
-          onChange(url);
-          setUrlInput("");
-        }
-      } else {
-        onChange(v);
-        setUrlInput("");
-      }
+      onChange(v);
+      setUrlInput("");
     } catch (e) {
-      toast.error(
-        e instanceof Error
-          ? e.message
-          : "Não foi possível processar a imagem dessa URL.",
-      );
+      toast.error(e instanceof Error ? e.message : "Não foi possível usar a URL.");
     } finally {
       setUploading(false);
     }
@@ -165,11 +140,6 @@ export function MediaUploader({
                 Usar URL
               </button>
             </div>
-          )}
-          {shouldNormalize && kind === "image" && (
-            <p className="text-[10px] text-muted-foreground/70">
-              A imagem é padronizada com fundo branco e a garrafa em ~2/3 do quadro.
-            </p>
           )}
         </>
       )}

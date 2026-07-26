@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiImageProxyRouteImport } from './routes/api.image-proxy'
 import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.index'
 import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
@@ -26,7 +25,6 @@ import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
 import { Route as AppAppSalesMonthlyRouteImport } from './routes/_app.app.sales-monthly'
 import { Route as AppAppSalesRouteImport } from './routes/_app.app.sales'
 import { Route as AppAppRestaurantProfileRouteImport } from './routes/_app.app.restaurant-profile'
-import { Route as AppAppNormalizeImagesRouteImport } from './routes/_app.app.normalize-images'
 import { Route as AppAppDashboardRouteImport } from './routes/_app.app.dashboard'
 import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage-fees'
 import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
@@ -45,11 +43,6 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiImageProxyRoute = ApiImageProxyRouteImport.update({
-  id: '/api/image-proxy',
-  path: '/api/image-proxy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppSupplierIndexRoute = AppSupplierIndexRouteImport.update({
@@ -118,11 +111,6 @@ const AppAppRestaurantProfileRoute = AppAppRestaurantProfileRouteImport.update({
   path: '/app/restaurant-profile',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAppNormalizeImagesRoute = AppAppNormalizeImagesRouteImport.update({
-  id: '/app/normalize-images',
-  path: '/app/normalize-images',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppAppDashboardRoute = AppAppDashboardRouteImport.update({
   id: '/app/dashboard',
   path: '/app/dashboard',
@@ -152,13 +140,11 @@ const AppAdminSuppliersRoute = AppAdminSuppliersRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/api/image-proxy': typeof ApiImageProxyRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
-  '/app/normalize-images': typeof AppAppNormalizeImagesRoute
   '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -176,13 +162,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/api/image-proxy': typeof ApiImageProxyRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
-  '/app/normalize-images': typeof AppAppNormalizeImagesRoute
   '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -202,13 +186,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
-  '/api/image-proxy': typeof ApiImageProxyRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
   '/_app/app/cadastros': typeof AppAppCadastrosRoute
   '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/_app/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/_app/app/dashboard': typeof AppAppDashboardRoute
-  '/_app/app/normalize-images': typeof AppAppNormalizeImagesRoute
   '/_app/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/_app/app/sales': typeof AppAppSalesRoute
   '/_app/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -228,13 +210,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/api/image-proxy'
     | '/admin/suppliers'
     | '/app/cadastros'
     | '/app/catalog-admin'
     | '/app/corkage-fees'
     | '/app/dashboard'
-    | '/app/normalize-images'
     | '/app/restaurant-profile'
     | '/app/sales'
     | '/app/sales-monthly'
@@ -252,13 +232,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/api/image-proxy'
     | '/admin/suppliers'
     | '/app/cadastros'
     | '/app/catalog-admin'
     | '/app/corkage-fees'
     | '/app/dashboard'
-    | '/app/normalize-images'
     | '/app/restaurant-profile'
     | '/app/sales'
     | '/app/sales-monthly'
@@ -277,13 +255,11 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/auth'
-    | '/api/image-proxy'
     | '/_app/admin/suppliers'
     | '/_app/app/cadastros'
     | '/_app/app/catalog-admin'
     | '/_app/app/corkage-fees'
     | '/_app/app/dashboard'
-    | '/_app/app/normalize-images'
     | '/_app/app/restaurant-profile'
     | '/_app/app/sales'
     | '/_app/app/sales-monthly'
@@ -303,7 +279,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ApiImageProxyRoute: typeof ApiImageProxyRoute
   ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
 }
 
@@ -328,13 +303,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/image-proxy': {
-      id: '/api/image-proxy'
-      path: '/api/image-proxy'
-      fullPath: '/api/image-proxy'
-      preLoaderRoute: typeof ApiImageProxyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/supplier/': {
@@ -428,13 +396,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppRestaurantProfileRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/app/normalize-images': {
-      id: '/_app/app/normalize-images'
-      path: '/app/normalize-images'
-      fullPath: '/app/normalize-images'
-      preLoaderRoute: typeof AppAppNormalizeImagesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/app/dashboard': {
       id: '/_app/app/dashboard'
       path: '/app/dashboard'
@@ -479,7 +440,6 @@ interface AppRouteChildren {
   AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
   AppAppCorkageFeesRoute: typeof AppAppCorkageFeesRoute
   AppAppDashboardRoute: typeof AppAppDashboardRoute
-  AppAppNormalizeImagesRoute: typeof AppAppNormalizeImagesRoute
   AppAppRestaurantProfileRoute: typeof AppAppRestaurantProfileRoute
   AppAppSalesRoute: typeof AppAppSalesRoute
   AppAppSalesMonthlyRoute: typeof AppAppSalesMonthlyRoute
@@ -500,7 +460,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,
   AppAppCorkageFeesRoute: AppAppCorkageFeesRoute,
   AppAppDashboardRoute: AppAppDashboardRoute,
-  AppAppNormalizeImagesRoute: AppAppNormalizeImagesRoute,
   AppAppRestaurantProfileRoute: AppAppRestaurantProfileRoute,
   AppAppSalesRoute: AppAppSalesRoute,
   AppAppSalesMonthlyRoute: AppAppSalesMonthlyRoute,
@@ -521,7 +480,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
-  ApiImageProxyRoute: ApiImageProxyRoute,
   ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,
 }
 export const routeTree = rootRouteImport

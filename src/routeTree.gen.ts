@@ -26,6 +26,7 @@ import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
 import { Route as AppAppSalesMonthlyRouteImport } from './routes/_app.app.sales-monthly'
 import { Route as AppAppSalesRouteImport } from './routes/_app.app.sales'
 import { Route as AppAppRestaurantProfileRouteImport } from './routes/_app.app.restaurant-profile'
+import { Route as AppAppNormalizeImagesRouteImport } from './routes/_app.app.normalize-images'
 import { Route as AppAppDashboardRouteImport } from './routes/_app.app.dashboard'
 import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage-fees'
 import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
@@ -117,6 +118,11 @@ const AppAppRestaurantProfileRoute = AppAppRestaurantProfileRouteImport.update({
   path: '/app/restaurant-profile',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppNormalizeImagesRoute = AppAppNormalizeImagesRouteImport.update({
+  id: '/app/normalize-images',
+  path: '/app/normalize-images',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAppDashboardRoute = AppAppDashboardRouteImport.update({
   id: '/app/dashboard',
   path: '/app/dashboard',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
+  '/app/normalize-images': typeof AppAppNormalizeImagesRoute
   '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
+  '/app/normalize-images': typeof AppAppNormalizeImagesRoute
   '/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/app/sales': typeof AppAppSalesRoute
   '/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/_app/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/_app/app/dashboard': typeof AppAppDashboardRoute
+  '/_app/app/normalize-images': typeof AppAppNormalizeImagesRoute
   '/_app/app/restaurant-profile': typeof AppAppRestaurantProfileRoute
   '/_app/app/sales': typeof AppAppSalesRoute
   '/_app/app/sales-monthly': typeof AppAppSalesMonthlyRoute
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/app/catalog-admin'
     | '/app/corkage-fees'
     | '/app/dashboard'
+    | '/app/normalize-images'
     | '/app/restaurant-profile'
     | '/app/sales'
     | '/app/sales-monthly'
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/app/catalog-admin'
     | '/app/corkage-fees'
     | '/app/dashboard'
+    | '/app/normalize-images'
     | '/app/restaurant-profile'
     | '/app/sales'
     | '/app/sales-monthly'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/_app/app/catalog-admin'
     | '/_app/app/corkage-fees'
     | '/_app/app/dashboard'
+    | '/_app/app/normalize-images'
     | '/_app/app/restaurant-profile'
     | '/_app/app/sales'
     | '/_app/app/sales-monthly'
@@ -416,6 +428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppRestaurantProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/normalize-images': {
+      id: '/_app/app/normalize-images'
+      path: '/app/normalize-images'
+      fullPath: '/app/normalize-images'
+      preLoaderRoute: typeof AppAppNormalizeImagesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/dashboard': {
       id: '/_app/app/dashboard'
       path: '/app/dashboard'
@@ -460,6 +479,7 @@ interface AppRouteChildren {
   AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
   AppAppCorkageFeesRoute: typeof AppAppCorkageFeesRoute
   AppAppDashboardRoute: typeof AppAppDashboardRoute
+  AppAppNormalizeImagesRoute: typeof AppAppNormalizeImagesRoute
   AppAppRestaurantProfileRoute: typeof AppAppRestaurantProfileRoute
   AppAppSalesRoute: typeof AppAppSalesRoute
   AppAppSalesMonthlyRoute: typeof AppAppSalesMonthlyRoute
@@ -480,6 +500,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,
   AppAppCorkageFeesRoute: AppAppCorkageFeesRoute,
   AppAppDashboardRoute: AppAppDashboardRoute,
+  AppAppNormalizeImagesRoute: AppAppNormalizeImagesRoute,
   AppAppRestaurantProfileRoute: AppAppRestaurantProfileRoute,
   AppAppSalesRoute: AppAppSalesRoute,
   AppAppSalesMonthlyRoute: AppAppSalesMonthlyRoute,

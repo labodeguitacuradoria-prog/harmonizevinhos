@@ -16,7 +16,6 @@ export function MediaUploader({
   label,
   value,
   onChange,
-  onChange: _onChange,
   accept = "image/*",
   folder,
   kind = "image",

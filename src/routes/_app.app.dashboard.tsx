@@ -611,20 +611,20 @@ function FaturamentoPanel({
       />
 
       <div className="mb-5 space-y-1 border-b border-border pb-4">
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-muted-foreground">
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <span>
             {monthLabel(currentYear, 0)} - {monthLabel(currentYear, currentMonth)}:
           </span>
-          <span className="font-semibold text-foreground">R$ {fmtBRL(currAcc)}</span>
-          <span className={diff >= 0 ? "text-primary font-semibold" : "text-destructive font-semibold"}>
+          <span className="text-foreground">R$ {fmtBRL(currAcc)}</span>
+          <span className={diff >= 0 ? "text-primary" : "text-destructive"}>
             {diff >= 0 ? "+" : ""}{diff.toFixed(1)}%
           </span>
         </div>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-muted-foreground">
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <span>
             {monthLabel(previousYear, 0)} - {monthLabel(previousYear, currentMonth)}:
           </span>
-          <span className="font-semibold text-foreground">R$ {fmtBRL(prevAcc)}</span>
+          <span className="text-foreground">R$ {fmtBRL(prevAcc)}</span>
         </div>
       </div>
 

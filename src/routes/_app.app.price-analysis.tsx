@@ -206,10 +206,14 @@ function PriceAnalysisPage() {
           <div className="flex items-center gap-2">
             <span className="text-primary text-lg font-semibold">R$</span>
             <input
-              type="number"
-              min={10}
-              value={entreePrice}
-              onChange={(e) => setEntreePrice(Math.max(1, Number(e.target.value) || 0))}
+              type="text"
+              inputMode="numeric"
+              value={entreePrice === 0 ? "" : String(entreePrice)}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^\d]/g, "");
+                setEntreePrice(raw === "" ? 0 : Number(raw));
+              }}
+              onBlur={() => { if (entreePrice < 1) setEntreePrice(1); }}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-lg font-semibold text-foreground focus:border-primary focus:outline-none"
             />
           </div>
@@ -241,10 +245,14 @@ function PriceAnalysisPage() {
             hint="Tamanho-alvo da nova carta."
           >
             <input
-              type="number"
-              min={5}
-              value={targetWineCount}
-              onChange={(e) => setTargetWineCount(Math.max(5, Number(e.target.value) || 5))}
+              type="text"
+              inputMode="numeric"
+              value={targetWineCount === 0 ? "" : String(targetWineCount)}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^\d]/g, "");
+                setTargetWineCount(raw === "" ? 0 : Number(raw));
+              }}
+              onBlur={() => { if (targetWineCount < 5) setTargetWineCount(5); }}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-lg font-semibold text-foreground focus:border-primary focus:outline-none"
             />
           </ControlCard>

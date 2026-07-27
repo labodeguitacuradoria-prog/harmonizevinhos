@@ -193,3 +193,16 @@
     margin: 0;
   }
 }
+
+/* Global: remove spinner arrows from every number input across the app.
+   The visual style requires numeric entry to be typed or picked from a menu,
+   never through up/down arrows on the input itself. */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

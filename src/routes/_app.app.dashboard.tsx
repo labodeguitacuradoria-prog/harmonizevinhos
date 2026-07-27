@@ -610,19 +610,22 @@ function FaturamentoPanel({
         title="Faturamento — mensal e acumulado"
       />
 
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MiniStat
-          label={`Último mês (${monthLabel(lastMonth.year, lastMonth.month)})`}
-          value={`R$ ${fmtBRL(revLast)}`}
-          tone="primary"
-        />
-        <MiniStat label={`Acumulado ${currentYear}`} value={`R$ ${fmtBRL(revYear)}`} />
-        <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
-        <MiniStat
-          label="Δ acumulado vs ano anterior"
-          value={`${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%`}
-          tone={diff >= 0 ? "primary" : "danger"}
-        />
+      <div className="mb-5 space-y-1 border-b border-border pb-4">
+        <div className="flex items-center gap-3 text-sm">
+          <span className="text-muted-foreground">
+            {monthLabel(currentYear, 0)} - {monthLabel(currentYear, currentMonth)}:
+          </span>
+          <span className="font-semibold text-foreground">R$ {fmtBRL(currAcc)}</span>
+          <span className={diff >= 0 ? "text-primary font-semibold" : "text-destructive font-semibold"}>
+            {diff >= 0 ? "+" : ""}{diff.toFixed(1)}%
+          </span>
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <span className="text-muted-foreground">
+            {monthLabel(previousYear, 0)} - {monthLabel(previousYear, currentMonth)}:
+          </span>
+          <span className="font-semibold text-foreground">R$ {fmtBRL(prevAcc)}</span>
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">

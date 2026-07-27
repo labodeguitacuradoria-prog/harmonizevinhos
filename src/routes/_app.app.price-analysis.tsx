@@ -245,10 +245,14 @@ function PriceAnalysisPage() {
             hint="Tamanho-alvo da nova carta."
           >
             <input
-              type="number"
-              min={5}
-              value={targetWineCount}
-              onChange={(e) => setTargetWineCount(Math.max(5, Number(e.target.value) || 5))}
+              type="text"
+              inputMode="numeric"
+              value={targetWineCount === 0 ? "" : String(targetWineCount)}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^\d]/g, "");
+                setTargetWineCount(raw === "" ? 0 : Number(raw));
+              }}
+              onBlur={() => { if (targetWineCount < 5) setTargetWineCount(5); }}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-lg font-semibold text-foreground focus:border-primary focus:outline-none"
             />
           </ControlCard>

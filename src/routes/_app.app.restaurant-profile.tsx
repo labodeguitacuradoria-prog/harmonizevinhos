@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Building2, Save, Plus, Trash2, Mail, Phone, Globe, Instagram, FileText, Clock, MapPin, Users } from "lucide-react";
+import { formatBRPhone } from "@/lib/phone-format";
 
 export const Route = createFileRoute("/_app/app/restaurant-profile")({
   component: RestaurantProfile,
@@ -381,10 +382,10 @@ function RestaurantProfile() {
                   <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                   <input 
                     value={contact.phone || ""} 
-                    onChange={e => handleUpdateContactLocal(contact.id, { phone: e.target.value })}
-                    onBlur={e => handleSaveContact(contact.id, { phone: e.target.value })}
+                    onChange={e => handleUpdateContactLocal(contact.id, { phone: formatBRPhone(e.target.value) })}
+                    onBlur={e => handleSaveContact(contact.id, { phone: formatBRPhone(e.target.value) })}
                     className="w-full border-none bg-transparent p-0 text-xs focus:ring-0 focus:outline-none"
-                    placeholder="Telefone"
+                    placeholder="+55 48 99125 3825"
                   />
                 </div>
               </div>

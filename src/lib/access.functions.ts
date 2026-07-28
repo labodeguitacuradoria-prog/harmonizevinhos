@@ -78,15 +78,27 @@ export const inviteRestaurantUser = createServerFn({ method: "POST" })
     await assertCanManage(context, data.restaurant_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Se for fornecedor, valida que o supplier pertence a este restaurante
+    // Se for fornecedor, valida que o supplier está ligado a este restaurante
+    // (via restaurant_supplier_access ou via wines.supplier_id).
     if (data.role === "supplier") {
-      const { data: sup } = await supabaseAdmin
-        .from("suppliers")
-        .select("id")
-        .eq("id", data.supplier_id!)
-        .eq("restaurant_id", data.restaurant_id)
-        .maybeSingle();
-      if (!sup) throw new Error("Fornecedor não pertence a este restaurante.");
+      const [{ data: acc }, { data: wineSup }] = await Promise.all([
+        supabaseAdmin
+          .from("restaurant_supplier_access")
+          .select("supplier_id")
+          .eq("restaurant_id", data.restaurant_id)
+          .eq("supplier_id", data.supplier_id!)
+          .maybeSingle(),
+        supabaseAdmin
+          .from("wines")
+          .select("supplier_id")
+          .eq("restaurant_id", data.restaurant_id)
+          .eq("supplier_id", data.supplier_id!)
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (!acc && !wineSup) {
+        throw new Error("Fornecedor não vinculado a este restaurante.");
+      }
     }
 
     let userId: string | undefined;

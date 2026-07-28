@@ -1372,7 +1372,9 @@ function CmvPanel({
   lastMonth,
   wines,
   cmvByMonth,
+  cmvByMonthPrev,
   currentYear,
+  previousYear,
   targets,
 }: {
   cmvMonth: number;
@@ -1380,27 +1382,14 @@ function CmvPanel({
   lastMonth: { year: number; month: number };
   wines: WineRow[];
   cmvByMonth: number[];
+  cmvByMonthPrev: number[];
   currentYear: number;
+  previousYear: number;
   targets: TargetSet;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const annualTarget = resolveAnnualTarget(targets);
   const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
-  const high = wines
-    .filter((w) => {
-      const c = Number(w.cost_price) || 0;
-      const s = Number(w.sale_price) || 0;
-      return s > 0 && (c / s) * 100 > 33;
-    })
-    .map((w) => {
-      const c = Number(w.cost_price) || 0;
-      const s = Number(w.sale_price) || 0;
-      const cmv = (c / s) * 100;
-      const optimal = Math.round(c / 0.3);
-      return { ...w, cmv, optimal };
-    })
-    .sort((a, b) => b.cmv - a.cmv)
-    .slice(0, 10);
 
   return (
     <div>
@@ -1437,36 +1426,17 @@ function CmvPanel({
           invert
         />
       )}
-      <div className="section-title">Rótulos com CMV acima de 33%</div>
-      <table className="w-full text-left text-xs">
-        <thead className="text-[10px] uppercase tracking-wider text-muted-foreground">
-          <tr className="border-b border-border">
-            <th className="py-2">Rótulo</th>
-            <th className="py-2 text-center">CMV</th>
-            <th className="py-2 text-right">Preço sugerido</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {high.map((w) => (
-            <tr key={w.id}>
-              <td className="py-2 font-medium">{w.name}</td>
-              <td className="py-2 text-center">
-                <span className="rounded bg-[color:var(--wine)]/25 px-1.5 py-0.5 font-bold text-[#f4a5b0]">
-                  {w.cmv.toFixed(1)}%
-                </span>
-              </td>
-              <td className="py-2 text-right font-bold text-primary">R$ {w.optimal}</td>
-            </tr>
-          ))}
-          {high.length === 0 && (
-            <tr>
-              <td colSpan={3} className="py-6 text-center text-muted-foreground">
-                Nenhum rótulo com CMV acima de 33%. Excelente!
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <div className="section-title mt-4">CMV mês a mês — {currentYear} vs {previousYear}</div>
+      <BarChart
+        curr={cmvByMonth}
+        prev={cmvByMonthPrev}
+        currentYear={currentYear}
+        previousYear={previousYear}
+        valueSuffix="%"
+        decimals={1}
+        height={260}
+        targets={targets.monthly.length === 12 ? targets.monthly : undefined}
+      />
     </div>
   );
 }

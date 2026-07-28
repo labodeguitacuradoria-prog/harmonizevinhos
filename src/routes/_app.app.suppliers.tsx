@@ -367,10 +367,10 @@ function SupplierForm({
 
             <Section title="Contatos">
               <Field label="Telefone">
-                <input value={f.phone ?? ""} onChange={(e) => up("phone", e.target.value)} className={inp} />
+                <input value={f.phone ?? ""} onChange={(e) => up("phone", formatBRPhone(e.target.value))} placeholder="+55 48 99125 3825" className={inp} />
               </Field>
               <Field label="WhatsApp">
-                <input value={f.whatsapp ?? ""} onChange={(e) => up("whatsapp", e.target.value)} className={inp} />
+                <input value={f.whatsapp ?? ""} onChange={(e) => up("whatsapp", formatBRPhone(e.target.value))} placeholder="+55 48 99125 3825" className={inp} />
               </Field>
               <Field label="E-mail comercial">
                 <input
@@ -401,7 +401,7 @@ function SupplierForm({
                 <input value={f.primary_contact_role ?? ""} onChange={(e) => up("primary_contact_role", e.target.value)} className={inp} />
               </Field>
               <Field label="Telefone">
-                <input value={f.primary_contact_phone ?? ""} onChange={(e) => up("primary_contact_phone", e.target.value)} className={inp} />
+                <input value={f.primary_contact_phone ?? ""} onChange={(e) => up("primary_contact_phone", formatBRPhone(e.target.value))} placeholder="+55 48 99125 3825" className={inp} />
               </Field>
               <Field label="E-mail">
                 <input type="email" value={f.primary_contact_email ?? ""} onChange={(e) => up("primary_contact_email", e.target.value)} className={inp} />

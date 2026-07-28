@@ -255,10 +255,14 @@ function DashboardPage() {
 
     // CMV by month (based on wine sales only, since corkage has no cost)
     const cmvByMonth: number[] = Array(12).fill(0);
+    const cmvByMonthPrev: number[] = Array(12).fill(0);
     for (let i = 0; i < 12; i++) {
       const r = revWineByYearMonth[currentYear][i];
       const c = costWineByYearMonth[currentYear][i];
       cmvByMonth[i] = r > 0 ? (c / r) * 100 : 0;
+      const rp = revWineByYearMonth[previousYear][i];
+      const cp = costWineByYearMonth[previousYear][i];
+      cmvByMonthPrev[i] = rp > 0 ? (cp / rp) * 100 : 0;
     }
     const costYearTotal = costWineByYearMonth[currentYear].reduce((a, b) => a + b, 0);
     const revYearWineTotal = revWineByYearMonth[currentYear].reduce((a, b) => a + b, 0);

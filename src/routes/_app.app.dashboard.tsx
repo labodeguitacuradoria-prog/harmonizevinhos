@@ -14,7 +14,13 @@ import {
   Sparkles,
   TrendingUp,
   Info,
+  Target,
 } from "lucide-react";
+import DashboardTargetsEditor, {
+  targetsFor,
+  useDashboardTargets,
+  type IndicatorKey,
+} from "@/components/DashboardTargetsEditor";
 
 export const Route = createFileRoute("/_app/app/dashboard")({
   component: DashboardPage,

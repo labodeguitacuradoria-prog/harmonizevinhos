@@ -15,12 +15,14 @@ import {
   TrendingUp,
   Info,
   Target,
+  FileText,
 } from "lucide-react";
 import DashboardTargetsEditor, {
   targetsFor,
   useDashboardTargets,
   type IndicatorKey,
 } from "@/components/DashboardTargetsEditor";
+import SalesDiagnosticReport from "@/components/SalesDiagnosticReport";
 
 export const Route = createFileRoute("/_app/app/dashboard")({
   component: DashboardPage,

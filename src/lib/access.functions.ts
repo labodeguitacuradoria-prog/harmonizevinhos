@@ -59,11 +59,17 @@ export const createRestaurantWithAccess = createServerFn({ method: "POST" })
     return { id: rest.id, group_id: groupId };
   });
 
-const InviteSchema = z.object({
-  restaurant_id: z.string().uuid(),
-  email: z.string().trim().email(),
-  role: z.enum(roleValues),
-});
+const InviteSchema = z
+  .object({
+    restaurant_id: z.string().uuid(),
+    email: z.string().trim().email(),
+    role: z.enum(roleValues),
+    supplier_id: z.string().uuid().optional().nullable(),
+  })
+  .refine((d) => d.role !== "supplier" || !!d.supplier_id, {
+    message: "Selecione o fornecedor",
+    path: ["supplier_id"],
+  });
 
 export const inviteRestaurantUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -71,6 +77,17 @@ export const inviteRestaurantUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertCanManage(context, data.restaurant_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Se for fornecedor, valida que o supplier pertence a este restaurante
+    if (data.role === "supplier") {
+      const { data: sup } = await supabaseAdmin
+        .from("suppliers")
+        .select("id")
+        .eq("id", data.supplier_id!)
+        .eq("restaurant_id", data.restaurant_id)
+        .maybeSingle();
+      if (!sup) throw new Error("Fornecedor não pertence a este restaurante.");
+    }
 
     let userId: string | undefined;
     const { data: invited, error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
@@ -91,9 +108,21 @@ export const inviteRestaurantUser = createServerFn({ method: "POST" })
       user_id: userId,
       role: data.role,
       restaurant_id: data.restaurant_id,
+      supplier_id: data.role === "supplier" ? data.supplier_id : null,
     });
     if (roleErr && !roleErr.message.toLowerCase().includes("duplicate")) {
       throw new Error(roleErr.message);
+    }
+
+    if (data.role === "supplier") {
+      await supabaseAdmin.from("restaurant_supplier_access").upsert(
+        {
+          restaurant_id: data.restaurant_id,
+          supplier_id: data.supplier_id!,
+          enabled: true,
+        },
+        { onConflict: "restaurant_id,supplier_id" },
+      );
     }
     return { ok: true, user_id: userId };
   });

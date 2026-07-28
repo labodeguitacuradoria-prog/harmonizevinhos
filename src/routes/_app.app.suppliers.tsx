@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Plus, X, Pencil, FileText, Mail, Phone, Globe, MapPin, Search, Check } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
 import { formatBRPhone } from "@/lib/phone-format";
+import { formatCEP } from "@/lib/cep-format";
 
 type CatalogSupplier = {
   id: string;
@@ -359,7 +360,7 @@ function SupplierForm({
                 <input value={f.address_state ?? ""} onChange={(e) => up("address_state", e.target.value)} className={inp} />
               </Field>
               <Field label="CEP">
-                <input value={f.address_zip ?? ""} onChange={(e) => up("address_zip", e.target.value)} className={inp} />
+                <input value={f.address_zip ?? ""} onChange={(e) => up("address_zip", formatCEP(e.target.value))} placeholder="00000-000" inputMode="numeric" className={inp} />
               </Field>
               <Field label="País">
                 <input value={f.address_country ?? ""} onChange={(e) => up("address_country", e.target.value)} className={inp} />

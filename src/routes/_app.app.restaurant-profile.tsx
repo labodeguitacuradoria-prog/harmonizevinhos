@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Building2, Save, Plus, Trash2, Mail, Phone, Globe, Instagram, FileText, Clock, MapPin, Users } from "lucide-react";
 import { formatBRPhone } from "@/lib/phone-format";
+import { formatCEP } from "@/lib/cep-format";
 
 export const Route = createFileRoute("/_app/app/restaurant-profile")({
   component: RestaurantProfile,
@@ -246,7 +247,9 @@ function RestaurantProfile() {
                 <label className="text-sm font-medium">CEP</label>
                 <input 
                   value={restaurant?.address_zip_code || ""} 
-                  onChange={e => setRestaurant({ ...restaurant!, address_zip_code: e.target.value })}
+                  onChange={e => setRestaurant({ ...restaurant!, address_zip_code: formatCEP(e.target.value) })}
+                  placeholder="00000-000"
+                  inputMode="numeric"
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
               </div>

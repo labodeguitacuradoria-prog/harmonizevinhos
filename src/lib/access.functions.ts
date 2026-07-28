@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const roleValues = ["rest_owner", "staff"] as const;
+const roleValues = ["rest_owner", "staff", "supplier"] as const;
 const adminRoleValues = ["rest_admin", "rest_owner", "staff", "supplier"] as const;
 
 async function assertCanManage(context: any, restaurantId: string) {

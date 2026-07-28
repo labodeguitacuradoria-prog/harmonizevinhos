@@ -91,11 +91,14 @@ type TabKey =
 function DashboardPage() {
   const { restaurantId } = useAuth();
   const [tab, setTab] = useState<TabKey>("faturamento");
+  const [metasOpen, setMetasOpen] = useState(false);
 
   const now = new Date();
   const currentYear = now.getFullYear();
   const previousYear = currentYear - 1;
   const currentMonth = now.getMonth();
+
+  const { data: targets = [] } = useDashboardTargets(restaurantId, currentYear);
 
   const { data: wines = [] } = useQuery({
     queryKey: ["dash-wines", restaurantId],

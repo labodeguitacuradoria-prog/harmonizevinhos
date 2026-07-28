@@ -495,6 +495,7 @@ function DashboardPage() {
             revYear={agg.revYear}
             corkageAmtYear={agg.corkageAmtYear}
             currentMonth={currentMonth}
+            targets={targetsFor(targets, "faturamento")}
           />
         )}
         {tab === "garrafas" && (
@@ -504,6 +505,8 @@ function DashboardPage() {
             byYearMonth={agg.bottlesByYearMonth}
             currentYear={currentYear}
             previousYear={previousYear}
+            currentMonth={currentMonth}
+            targets={targetsFor(targets, "garrafas")}
           />
         )}
         {tab === "tacas" && (
@@ -513,6 +516,8 @@ function DashboardPage() {
             byYearMonth={agg.glassesByYearMonth}
             currentYear={currentYear}
             previousYear={previousYear}
+            currentMonth={currentMonth}
+            targets={targetsFor(targets, "tacas")}
           />
         )}
         {tab === "estoque" && (
@@ -521,6 +526,7 @@ function DashboardPage() {
             stockMap={stockMap}
             totalBottles={agg.stockBottles}
             totalValue={agg.stockValue}
+            targets={targetsFor(targets, "estoque")}
           />
         )}
         {tab === "preco" && (
@@ -532,6 +538,7 @@ function DashboardPage() {
             avgBottleYear={agg.avgBottle}
             avgGlassYear={agg.avgGlass}
             lastMonth={agg.lastAvg}
+            targets={targetsFor(targets, "preco")}
           />
         )}
         {tab === "cmv" && (
@@ -540,6 +547,9 @@ function DashboardPage() {
             cmvYear={agg.cmvYear}
             lastMonth={agg.lastCmv}
             wines={wines}
+            cmvByMonth={agg.cmvByMonth}
+            currentYear={currentYear}
+            targets={targetsFor(targets, "cmv")}
           />
         )}
         {tab === "rolha" && (
@@ -552,11 +562,22 @@ function DashboardPage() {
             corkageAmtByYearMonth={agg.corkageAmtByYearMonth}
             currentYear={currentYear}
             previousYear={previousYear}
+            currentMonth={currentMonth}
+            targets={targetsFor(targets, "rolha")}
           />
         )}
 
         {tab === "outras" && <OutrasPanel />}
       </div>
+
+      {restaurantId && (
+        <DashboardTargetsEditor
+          open={metasOpen}
+          onClose={() => setMetasOpen(false)}
+          restaurantId={restaurantId}
+          year={currentYear}
+        />
+      )}
     </div>
   );
 }

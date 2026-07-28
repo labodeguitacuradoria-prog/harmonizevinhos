@@ -457,7 +457,7 @@ function CatalogAdmin() {
         {loading && <div className="p-8 text-center">Carregando catálogo...</div>}
         {!loading && filtered.length === 0 && (
           <div className="p-8 text-center text-muted-foreground">
-            {statusTab === "pending" ? "Nenhum rótulo pendente de revisão." : "Nenhum item encontrado."}
+            {statusTab === "pending" ? "Nenhum rótulo pendente de revisão." : statusTab === "duplicates" ? "Nenhum rótulo duplicado (mesmo nome + safra) no catálogo aprovado." : "Nenhum item encontrado."}
           </div>
         )}
       </div>

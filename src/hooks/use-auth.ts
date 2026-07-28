@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { ensureActiveRestaurant, useActiveScope } from "@/lib/active-scope";
@@ -10,7 +11,7 @@ export type Membership = {
   name: string;
   city: string | null;
   groupId: string | null;
-  role: string; // rest_admin | rest_owner | staff | supplier | restaurant | owner
+  role: string;
 };
 
 export type GroupInfo = { id: string; name: string };
@@ -22,22 +23,16 @@ export interface UserContext {
   role: AppRole | null;
   restaurantId: string | null;
   supplierId: string | null;
-  // multi-restaurante
   memberships: Membership[];
   groups: GroupInfo[];
   activeGroupId: string | null;
-  activeRole: string | null; // papel específico no restaurante ativo
+  activeRole: string | null;
   canManageActive: boolean;
 }
 
 export function useAuth(): UserContext {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
-  const [roleLoading, setRoleLoading] = useState(true);
-  const [role, setRole] = useState<AppRole | null>(null);
-  const [supplierId, setSupplierId] = useState<string | null>(null);
-  const [memberships, setMemberships] = useState<Membership[]>([]);
-  const [groups, setGroups] = useState<GroupInfo[]>([]);
   const scope = useActiveScope();
 
   useEffect(() => {
@@ -56,21 +51,19 @@ export function useAuth(): UserContext {
 
   const userId = session?.user?.id ?? null;
 
-  useEffect(() => {
-    if (!userId) {
-      setRole(null);
-      setSupplierId(null);
-      setMemberships([]);
-      setGroups([]);
-      setRoleLoading(sessionLoading);
-      return;
-    }
-    setRoleLoading(true);
-    (async () => {
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role, restaurant_id, supplier_id")
-        .eq("user_id", userId);
+  const { data, isLoading: dataLoading } = useQuery({
+    queryKey: ["auth-context", userId],
+    enabled: !!userId,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const [{ data: roles }, { data: rs }, { data: gs }] = await Promise.all([
+        supabase
+          .from("user_roles")
+          .select("role, restaurant_id, supplier_id")
+          .eq("user_id", userId!),
+        supabase.rpc("my_restaurants", { _user_id: userId! }),
+        supabase.rpc("my_groups", { _user_id: userId! }),
+      ]);
 
       const admin = roles?.find((r) => r.role === "admin");
       const supplier = roles?.find((r) => r.role === "supplier");
@@ -78,34 +71,37 @@ export function useAuth(): UserContext {
         ["rest_admin", "rest_owner", "restaurant", "owner", "staff"].includes(r.role as string),
       );
 
-      if (admin) setRole("admin");
+      let role: AppRole | null = null;
+      let supplierId: string | null = null;
+      if (admin) role = "admin";
       else if (supplier) {
-        setRole("supplier");
-        setSupplierId(supplier.supplier_id ?? null);
-      } else if (anyRest) setRole("restaurant");
-      else setRole(null);
+        role = "supplier";
+        supplierId = supplier.supplier_id ?? null;
+      } else if (anyRest) role = "restaurant";
 
-      // memberships & groups
-      const { data: rs } = await supabase.rpc("my_restaurants", { _user_id: userId });
-      const list: Membership[] = (rs ?? []).map((r: any) => ({
+      const memberships: Membership[] = (rs ?? []).map((r: any) => ({
         restaurantId: r.restaurant_id,
         name: r.name,
         city: r.city,
         groupId: r.group_id,
         role: r.role,
       }));
-      setMemberships(list);
+      const groups: GroupInfo[] = (gs ?? []).map((g: any) => ({ id: g.group_id, name: g.name }));
 
-      const { data: gs } = await supabase.rpc("my_groups", { _user_id: userId });
-      setGroups((gs ?? []).map((g: any) => ({ id: g.group_id, name: g.name })));
+      return { role, supplierId, memberships, groups };
+    },
+  });
 
-      // garantir um restaurante ativo se houver memberships
-      const first = list[0]?.restaurantId ?? null;
-      ensureActiveRestaurant(first);
+  useEffect(() => {
+    if (data?.memberships?.length) {
+      ensureActiveRestaurant(data.memberships[0].restaurantId);
+    }
+  }, [data?.memberships]);
 
-      setRoleLoading(false);
-    })();
-  }, [userId, sessionLoading]);
+  const memberships = data?.memberships ?? [];
+  const groups = data?.groups ?? [];
+  const role = data?.role ?? null;
+  const supplierId = data?.supplierId ?? null;
 
   const active = memberships.find((m) => m.restaurantId === scope.activeRestaurantId) ?? null;
   const activeRole = active?.role ?? null;
@@ -115,9 +111,11 @@ export function useAuth(): UserContext {
   return {
     user: session?.user ?? null,
     session,
-    loading: sessionLoading || roleLoading,
+    loading: sessionLoading || (!!userId && dataLoading),
     role,
-    restaurantId: scope.activeGroupId ? null : scope.activeRestaurantId ?? active?.restaurantId ?? null,
+    restaurantId: scope.activeGroupId
+      ? null
+      : scope.activeRestaurantId ?? active?.restaurantId ?? null,
     supplierId,
     memberships,
     groups,

@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { Plus, X, Pencil, FileText, Mail, Phone, Globe, MapPin, Search, Check } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
+import { formatBRPhone } from "@/lib/phone-format";
 
 type CatalogSupplier = {
   id: string;

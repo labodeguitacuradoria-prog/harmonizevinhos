@@ -161,6 +161,29 @@ function CatalogAdmin() {
       alert("Nome é obrigatório.");
       return;
     }
+    // Duplicate check — same normalized name+producer+vintage should not create a second entry.
+    const norm = (s: string | null | undefined) =>
+      (s ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+    const nName = norm(editing.name);
+    const nProd = norm(editing.producer);
+    const nVint = editing.vintage ?? null;
+    const dupes = items.filter((i) => {
+      if (editing.id && i.id === editing.id) return false;
+      if (norm(i.name) !== nName) return false;
+      if (nProd && norm(i.producer) && norm(i.producer) !== nProd) return false;
+      if (nVint != null && i.vintage != null && i.vintage !== nVint) return false;
+      return true;
+    });
+    if (dupes.length > 0) {
+      const list = dupes
+        .slice(0, 5)
+        .map((d) => `• ${d.name}${d.producer ? " — " + d.producer : ""}${d.vintage ? " (" + d.vintage + ")" : ""} [${d.status}]`)
+        .join("\n");
+      const ok = confirm(
+        `Já existe(m) ${dupes.length} rótulo(s) similar(es) no catálogo:\n\n${list}\n\nDeseja salvar mesmo assim como um novo rótulo? Cancele para editar o existente e evitar duplicidade.`,
+      );
+      if (!ok) return;
+    }
     const rest: any = { ...editing };
     delete rest.id;
     delete rest.created_at;

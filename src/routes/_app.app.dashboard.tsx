@@ -15,12 +15,14 @@ import {
   TrendingUp,
   Info,
   Target,
+  FileText,
 } from "lucide-react";
 import DashboardTargetsEditor, {
   targetsFor,
   useDashboardTargets,
   type IndicatorKey,
 } from "@/components/DashboardTargetsEditor";
+import SalesDiagnosticReport from "@/components/SalesDiagnosticReport";
 
 export const Route = createFileRoute("/_app/app/dashboard")({
   component: DashboardPage,
@@ -92,6 +94,7 @@ function DashboardPage() {
   const { restaurantId } = useAuth();
   const [tab, setTab] = useState<TabKey>("faturamento");
   const [metasOpen, setMetasOpen] = useState(false);
+  const [diagOpen, setDiagOpen] = useState(false);
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -438,13 +441,22 @@ function DashboardPage() {
             Indicadores da adega em tempo real — clique nos botões para ver detalhes.
           </p>
         </div>
-        <button
-          onClick={() => setMetasOpen(true)}
-          className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
-          title="Definir metas mensais e anuais dos indicadores"
-        >
-          <Target size={14} /> Metas
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setDiagOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
+            title="Relatório de diagnóstico de vendas do mês e YTD"
+          >
+            <FileText size={14} /> Diagnóstico
+          </button>
+          <button
+            onClick={() => setMetasOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
+            title="Definir metas mensais e anuais dos indicadores"
+          >
+            <Target size={14} /> Metas
+          </button>
+        </div>
       </header>
 
       {/* KPI buttons row */}
@@ -571,12 +583,26 @@ function DashboardPage() {
       </div>
 
       {restaurantId && (
-        <DashboardTargetsEditor
-          open={metasOpen}
-          onClose={() => setMetasOpen(false)}
-          restaurantId={restaurantId}
-          year={currentYear}
-        />
+        <>
+          <DashboardTargetsEditor
+            open={metasOpen}
+            onClose={() => setMetasOpen(false)}
+            restaurantId={restaurantId}
+            year={currentYear}
+          />
+          <SalesDiagnosticReport
+            open={diagOpen}
+            onClose={() => setDiagOpen(false)}
+            wines={wines}
+            movements={movements}
+            corkage={corkage}
+            stockMap={stockMap}
+            targets={targets}
+            currentYear={currentYear}
+            previousYear={previousYear}
+            currentMonth={currentMonth}
+          />
+        </>
       )}
     </div>
   );

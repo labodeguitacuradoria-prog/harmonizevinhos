@@ -352,6 +352,7 @@ function DashboardPage() {
       revGlassesByYearMonth,
       revYear,
       cmvByMonth,
+      cmvByMonthPrev,
       cmvYear,
       stockBottles,
       stockValue,

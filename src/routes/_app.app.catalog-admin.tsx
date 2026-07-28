@@ -142,7 +142,7 @@ function CatalogAdmin() {
   const [items, setItems] = useState<WineCatalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusTab, setStatusTab] = useState<CatalogStatus>("pending");
+  const [statusTab, setStatusTab] = useState<CatalogStatus | "duplicates">("pending");
   const [editing, setEditing] = useState<Partial<WineCatalog> | null>(null);
   const [initialTab, setInitialTab] = useState<"geral" | "carac" | "midia">("geral");
   const [expandedId, setExpandedId] = useState<string | null>(null);

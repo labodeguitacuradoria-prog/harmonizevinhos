@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useScopedRestaurantIds } from "@/hooks/use-scoped-restaurants";
+import { setActiveGroup } from "@/lib/active-scope";
 import {
   DollarSign,
   Wine,
@@ -91,7 +93,8 @@ type TabKey =
   | "outras";
 
 function DashboardPage() {
-  const { restaurantId } = useAuth();
+  const { restaurantId, activeGroupId, groups, memberships } = useAuth();
+  const { ids: scopeIds, isGroup } = useScopedRestaurantIds();
   const [tab, setTab] = useState<TabKey>("faturamento");
   const [metasOpen, setMetasOpen] = useState(false);
   const [diagOpen, setDiagOpen] = useState(false);
@@ -101,52 +104,62 @@ function DashboardPage() {
   const previousYear = currentYear - 1;
   const currentMonth = now.getMonth();
 
+  // Metas continuam sendo por unidade — no modo consolidado, ocultamos edição
   const { data: targets = [] } = useDashboardTargets(restaurantId, currentYear);
 
+  const scopeKey = scopeIds.join(",");
+  const enabled = scopeIds.length > 0;
+
   const { data: wines = [] } = useQuery({
-    queryKey: ["dash-wines", restaurantId],
-    enabled: !!restaurantId,
+    queryKey: ["dash-wines", scopeKey],
+    enabled,
     queryFn: async () => {
       const { data } = await supabase
         .from("wines")
         .select("id,name,wine_type,volume,cost_price,sale_price,active_on_menu")
-        .eq("restaurant_id", restaurantId!);
+        .in("restaurant_id", scopeIds);
       return (data ?? []) as WineRow[];
     },
   });
 
   const { data: stockMap = {} } = useQuery<Record<string, number>>({
-    queryKey: ["dash-stock", restaurantId],
-    enabled: !!restaurantId,
+    queryKey: ["dash-stock", scopeKey],
+    enabled,
     queryFn: async () => {
+      // pega a última contagem fechada de cada restaurante do escopo
       const { data: sess } = await supabase
         .from("stock_count_sessions")
-        .select("id")
-        .eq("restaurant_id", restaurantId!)
+        .select("id, restaurant_id, reference_date")
+        .in("restaurant_id", scopeIds)
         .eq("status", "closed")
-        .order("reference_date", { ascending: false })
-        .limit(1);
-      const session = sess?.[0];
+        .order("reference_date", { ascending: false });
+      const latestByRest = new Map<string, string>();
+      for (const s of sess ?? []) {
+        if (!latestByRest.has(s.restaurant_id)) latestByRest.set(s.restaurant_id, s.id);
+      }
       const map: Record<string, number> = {};
-      if (!session) return map;
+      const sessionIds = Array.from(latestByRest.values());
+      if (sessionIds.length === 0) return map;
       const { data: items } = await supabase
         .from("stock_count_items")
         .select("wine_id, counted_qty")
-        .eq("session_id", session.id);
-      for (const it of items ?? []) map[it.wine_id] = it.counted_qty ?? 0;
+        .in("session_id", sessionIds);
+      for (const it of items ?? []) {
+        map[it.wine_id] = (map[it.wine_id] ?? 0) + (it.counted_qty ?? 0);
+      }
       return map;
     },
   });
 
   const { data: movements = [] } = useQuery<Movement[]>({
-    queryKey: ["dash-movements", restaurantId, currentYear],
-    enabled: !!restaurantId,
+    queryKey: ["dash-movements", scopeKey, currentYear],
+    enabled,
     queryFn: async () => {
       const start = new Date(previousYear, 0, 1).toISOString();
       const { data } = await supabase
         .from("inventory_movements")
         .select("wine_id, quantity, unit_price, unit_cost, occurred_at")
-        .eq("restaurant_id", restaurantId!)
+        .in("restaurant_id", scopeIds)
         .eq("movement_type", "sale")
         .gte("occurred_at", start);
       return (data ?? []) as Movement[];
@@ -155,13 +168,13 @@ function DashboardPage() {
 
   type CorkageRow = { reference_year: number; reference_month: number; quantity: number; total_amount: number };
   const { data: corkage = [] } = useQuery<CorkageRow[]>({
-    queryKey: ["dash-corkage", restaurantId],
-    enabled: !!restaurantId,
+    queryKey: ["dash-corkage", scopeKey],
+    enabled,
     queryFn: async () => {
       const { data } = await supabase
         .from("corkage_fees")
         .select("reference_year, reference_month, quantity, total_amount")
-        .eq("restaurant_id", restaurantId!)
+        .in("restaurant_id", scopeIds)
         .in("reference_year", [currentYear, previousYear]);
       return (data ?? []) as CorkageRow[];
     },
@@ -453,13 +466,34 @@ function DashboardPage() {
     },
   ];
 
+  const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;
+  const consolidatedUnitCount = isGroup ? memberships.filter((m) => m.groupId === activeGroupId).length : 0;
+
   return (
     <div className="p-6 md:p-10 space-y-6">
+      {isGroup && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/40 bg-[color:var(--wine)]/20 px-4 py-3">
+          <div className="text-[12px] text-foreground">
+            <span className="font-semibold text-primary">
+              Rede: {activeGroupName ?? "—"} — consolidado
+            </span>
+            <span className="text-muted-foreground"> ({consolidatedUnitCount} unidade{consolidatedUnitCount !== 1 ? "s" : ""})</span>
+          </div>
+          <button
+            onClick={() => setActiveGroup(null)}
+            className="rounded-md border border-primary/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-[color:var(--wine)]/30"
+          >
+            Ver uma unidade
+          </button>
+        </div>
+      )}
       <header className="flex items-center justify-between border-b border-border pb-4">
         <div>
           <h1 className="page-title">Painel de Controle</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Indicadores da adega em tempo real — clique nos botões para ver detalhes.
+            {isGroup
+              ? "Indicadores consolidados de todas as unidades da rede."
+              : "Indicadores da adega em tempo real — clique nos botões para ver detalhes."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -470,13 +504,15 @@ function DashboardPage() {
           >
             <FileText size={14} /> Diagnóstico
           </button>
-          <button
-            onClick={() => setMetasOpen(true)}
-            className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
-            title="Definir metas mensais e anuais dos indicadores"
-          >
-            <Target size={14} /> Metas
-          </button>
+          {!isGroup && (
+            <button
+              onClick={() => setMetasOpen(true)}
+              className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
+              title="Definir metas mensais e anuais dos indicadores"
+            >
+              <Target size={14} /> Metas
+            </button>
+          )}
         </div>
       </header>
 

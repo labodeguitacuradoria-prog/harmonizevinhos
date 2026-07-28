@@ -1307,6 +1307,10 @@ export type Database = {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_group: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_last_closed_stock: {
         Args: { p_restaurant_id: string }
         Returns: {
@@ -1322,6 +1326,23 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      my_groups: {
+        Args: { _user_id: string }
+        Returns: {
+          group_id: string
+          name: string
+        }[]
+      }
+      my_restaurants: {
+        Args: { _user_id: string }
+        Returns: {
+          city: string
+          group_id: string
+          name: string
+          restaurant_id: string
+          role: string
+        }[]
+      }
       owns_restaurant: {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean

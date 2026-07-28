@@ -1,63 +1,117 @@
 ## Objetivo
 
-Trazer para o nosso Cadastro Global de Vinhos a mesma lógica desenvolvida no Gemini AI Studio: em vez de digitar campo a campo, o Admin carrega uma **ficha técnica** (PDF/imagem) ou **cola um texto** e a IA preenche automaticamente todos os dados do vinho — que ficam editáveis antes de salvar. As fichas e textos originais são arquivados para consulta ("de onde veio cada número").
+Reformular `/app` (Início) em hub multi-restaurante, permitir criar restaurantes vinculados a redes, gerenciar mapa de acessos (chef/owner, staff) por unidade, e habilitar visão consolidada de rede no painel para `rest_admin` e `rest_owner`.
 
-## Como vai funcionar (visão do usuário)
+Decisões já confirmadas:
+- Papéis convidáveis por restaurante: **rest_owner (chef/owner)** e **staff**. Fornecedor continua em `/app/sharing` (gerido pelo rest_admin).
+- Visão consolidada da rede: apenas **rest_admin** e **rest_owner**.
 
-Na tela `/app/catalog-admin`, botão "Novo Vinho" abrirá o formulário atual acrescido de um **bloco "Extração por IA"** no topo, com duas abas:
+## 1. Banco (migração única)
 
-1. **Ficha técnica (PDF/Imagem)** — upload de arquivo (drag & drop). A IA lê e devolve JSON estruturado.
-2. **Texto colado** — textarea grande. O admin cola texto de site/catálogo. A IA extrai.
+**Schema**
+- Reusar `restaurant_groups` como rede e `restaurants.group_id`.
+- `user_roles` já suporta múltiplas linhas por usuário — sem alteração estrutural.
+- Índices em `user_roles(user_id)` e `user_roles(restaurant_id)`.
 
-Após a extração:
-- Todos os campos do formulário são pré-preenchidos (rótulo, tipo, estilo, uvas, álcool, açúcar, acidez, pH, meses em barrica, método de produção para espumantes, notas de degustação, harmonização).
-- É exibida uma nota "Extraído por IA — revise antes de salvar".
-- O admin edita/corrige o que precisar e clica em Salvar.
-- A ficha original (PDF/imagem) fica salva no Storage e linkada no registro; o texto original fica salvo em coluna dedicada — ambos consultáveis depois na tela de edição.
+**Funções `SECURITY DEFINER`**
+- `my_restaurants(_user_id uuid)` → `TABLE(restaurant_id, name, city, group_id, role)` unindo:
+  - `restaurants` onde `owner_id = _user_id`
+  - `restaurants` acessíveis via `user_roles(restaurant_id, role)`
+  - Retornando o "melhor" papel por unidade (rest_admin > rest_owner > staff > supplier).
+- `my_groups(_user_id uuid)` → `TABLE(group_id, name)` para redes onde o usuário é `rest_admin` **ou** `rest_owner` em ao menos uma unidade da rede (owner do `restaurant_groups` também entra).
+- `can_view_group(_user_id, _group_id)` → boolean: true se admin global, dono do grupo, ou tem papel `rest_admin`/`rest_owner` em qualquer unidade da rede.
 
-Para imagens do vinho: mantemos o `MediaUploader` atual (upload) e adicionamos **"Colar da URL"** (campo que aceita link direto e salva como `image_url`).
+**RLS**
+- `restaurants` SELECT: adicionar policy permitindo ler unidade quando o usuário tem qualquer linha em `user_roles` para aquele `restaurant_id` (além das policies atuais). Isso libera staff/rest_owner a listar seu(s) restaurante(s) na tela Início.
+- `restaurant_groups` SELECT: dono do grupo OU `can_view_group(auth.uid(), id)`.
 
-## O que muda no banco
+## 2. Server functions (`src/lib/access.functions.ts`)
 
-Novas colunas em `wine_catalog` (nenhuma quebra o que já existe):
+Todas `.middleware([requireSupabaseAuth])`, autorização checada dentro do handler:
 
-- `grapes_detail jsonb` — array `[{grape, pct, mesesBarrica}]` extraído (mantemos `grape text` como resumo legível).
-- `oak_months numeric` — meses médios em barrica.
-- `production_method text` — só para espumantes: `Tradicional | Charmat | Asti`.
-- `source_text text` — texto colado original (auditoria).
-- `source_file_url text` — link do PDF/imagem da ficha (o `tech_sheet_url` já existe, será reutilizado).
-- `extracted_by_ai boolean` — flag "veio de extração".
-- `extraction_notes text` — notas de degustação estruturadas (as 5 seções: Comentários / Visual / Olfativa / Gustativa / Harmonização).
+- `createRestaurantWithAccess({ name, city?, group_id?, new_group_name? })`
+  - Cria o `restaurant_groups` se `new_group_name` fornecido (owner = caller).
+  - Cria `restaurants` (owner_id = caller, group_id opcional).
+  - Insere `user_roles(rest_admin)` para o caller.
+- `inviteRestaurantUser({ restaurant_id, email, role: 'rest_owner' | 'staff' })`
+  - Autoriza: `can_manage_restaurant(caller, restaurant_id)`.
+  - `supabaseAdmin.auth.admin.inviteUserByEmail`, upsert em `profiles`, insert em `user_roles`.
+- `removeRestaurantAccess({ user_role_id })`
+  - Carrega row, autoriza pelo `restaurant_id`, deleta. Bloqueia auto-remoção do último `rest_admin` da unidade.
+- `listRestaurantAccess({ restaurant_id })`
+  - Retorna `[{ user_role_id, user_id, email, full_name, role, created_at }]` via join com `profiles`.
+- `listAllAccessMap()` — só admin global; retorna mapa completo para tela admin.
+- `adminRemoveAccess({ user_role_id })` e `adminInviteAccess({ restaurant_id, email, role })` — só admin global.
 
-## Como vai funcionar (visão técnica)
+## 3. `useAuth` — multi-restaurante
 
-- **`src/lib/wine-extraction.functions.ts`** (`createServerFn` + `requireSupabaseAuth` + verificação de admin):
-  - `extractFromFile({ fileBase64, mimeType })` → chama Lovable AI Gateway (`google/gemini-3-flash-preview`) com o arquivo em `image_url`/`file` block e o mesmo system prompt do Gemini Studio, exigindo JSON estruturado.
-  - `extractFromText({ text })` → mesma coisa via texto puro.
-  - Ambos retornam o DTO `ExtractedWine` (rótulo, tipo, estilo, grapes[], álcool, açúcar, acidezVal, ph, mesesBarrica, metodoProducao, informacoes_tecnicas, texto_original_ficha).
-  - Prompts vêm do `server.ts` do Gemini Studio (linhas 864–896 e 1010–1045).
+Substituir `restaurantId` único (mantendo compat) por:
+- `memberships: { restaurantId, name, groupId, role }[]`
+- `groups: { id, name }[]` (redes visíveis)
+- `activeRestaurantId` (persistido em `localStorage`)
+- `activeGroupId | null` (quando setado ≠ null, dashboard entra em modo consolidado)
+- `setActiveRestaurant(id)` e `setActiveGroup(id | null)`
 
-- **Frontend**: novo componente `<WineAiExtractor onExtracted={fill} />` colocado no topo do modal "Novo Vinho" e "Editar Vinho". Faz o upload/leitura, chama a server fn, mostra loader, popula o form.
+Campo `restaurantId` continua exposto = `activeRestaurantId` para não quebrar código existente. Campo `role` refletirá o papel na unidade ativa.
 
-- **Fichas armazenadas**: uso do bucket existente `product-media` numa pasta `wine-catalog-tech-sheets/`.
+## 4. Tela Início `/app` reformulada
 
-## O que NÃO é objetivo desta fase
+Substitui o dashboard atual da rota. Continua redirecionando `supplier` → `/supplier` e `admin` → `/admin`.
 
-- Nada muda no módulo de Harmonização (já existente) ou nas cartas de restaurante — este esforço é 100% no Cadastro Global.
-- Não trocamos o schema atual: apenas ADICIONAMOS colunas. O que já foi cadastrado continua funcionando.
-- Não subimos módulo de "leitura de códigos de barras" — separado.
+Seções:
+- **Meus restaurantes** — grid de cards (nome, cidade, rede, papel, badge dourado se ativo). Clique define ativo e leva a `/app/dashboard`.
+- **Minhas redes** — cards das redes visíveis com botão "Ver consolidado" (ativa `activeGroupId` e navega para `/app/dashboard`).
+- **+ Novo restaurante** — modal com: nome, cidade, seletor de rede (existente / criar nova / nenhuma). Usa `createRestaurantWithAccess`.
+- Cada card tem menu "Gerenciar acessos" → abre `AccessMapDialog` daquela unidade (visível para `rest_admin`).
 
-## Passos de implementação (ordem)
+## 5. Mapa de acessos por unidade (`AccessMapDialog`)
 
-1. **Migração** — adicionar as colunas novas em `wine_catalog` (todas nullable).
-2. **Server functions** de extração (`wine-extraction.functions.ts`) usando Lovable AI Gateway com structured output.
-3. **Componente `WineAiExtractor`** — bloco de UI com duas abas (arquivo/texto), loader dourado, mensagem de sucesso.
-4. **Integração no `catalog-admin.tsx`** — adicionar o extractor no topo do modal Novo/Editar; mapear campos extraídos → estado do form; salvar `source_text`/`source_file_url`/`extracted_by_ai`.
-5. **Campo "Colar URL da imagem"** ao lado do `MediaUploader` (imagem principal e ficha técnica).
-6. **Ver origem dos dados** — no modal de edição, se `extracted_by_ai=true`, botão "Ver ficha original" e "Ver texto original".
+Componente novo em `src/components/AccessMapDialog.tsx`, seguindo o padrão visual dourado.
 
-## Confirmações antes de começar
+- Header: nome do restaurante + rede.
+- Tabela: e-mail · nome · papel · desde · ações (remover).
+- Rodapé: form "Convidar usuário" → e-mail + papel (chef/owner ou staff) → `inviteRestaurantUser`.
+- Nota: "Fornecedores são gerenciados em Compartilhamento."
+- Só abre para quem passa em `can_manage_restaurant`.
 
-1. **Bloco de IA** aparece só no cadastro Global (admin) — ok? Ou também no cadastro de vinhos do restaurante (`/app/wines`)?
-2. **Modelo**: uso `google/gemini-3-flash-preview` via Lovable AI (mesma família do Gemini Studio, sem precisar da sua chave). Ok?
-3. **Aprovar** este plano para eu executar? Como você mesmo disse na conversa anterior, isto substitui a estrutura antiga do Cadastro Global — vou manter os campos existentes e apenas ampliar.
+## 6. Seletor de contexto no sidebar (`_app.tsx`)
+
+Bloco no topo da sidebar:
+- Dropdown com todos os `memberships` (agrupados por rede) + opção "Consolidado — Rede X" para cada rede visível ao papel elegível.
+- Ao trocar, chama `setActiveRestaurant` / `setActiveGroup` e `router.invalidate()` + `queryClient.invalidateQueries()`.
+
+## 7. Painel consolidado de rede
+
+Em `/app/dashboard`:
+- Quando `activeGroupId` estiver setado, buscar `restaurantIds` de todos os restaurantes daquele grupo e agregar as queries existentes por `.in('restaurant_id', ids)`.
+- Header do painel mostra "Rede X — consolidado (N unidades)" com botão "Voltar para uma unidade".
+- KPIs, gráficos, metas: agregação nativa por soma; métricas de média (preço médio, CMV) recalculadas a partir dos totais consolidados.
+- Metas: no modo consolidado, ocultar edição de metas (metas continuam por unidade). Exibir soma das metas mensais das unidades como referência dourada.
+
+## 8. Mapa de acessos global (admin)
+
+Nova rota `/admin/access-map` (link já existente no menu admin apenas para admin):
+- Filtros: rede, restaurante, papel, busca por e-mail.
+- Tabela full: usuário × restaurante × papel × ações (convidar / remover / alterar papel).
+- Usa `listAllAccessMap` + `adminInviteAccess` + `adminRemoveAccess`.
+
+## Arquivos afetados
+
+- `supabase/migrations/*` — nova migração
+- `src/hooks/use-auth.ts` — multi-restaurante
+- `src/lib/access.functions.ts` — novo
+- `src/routes/_app.tsx` — seletor de contexto
+- `src/routes/_app.app.index.tsx` — reescrita da tela Início
+- `src/routes/_app.app.dashboard.tsx` — modo consolidado
+- `src/routes/_app.admin.access-map.tsx` — novo
+- `src/routes/_app.admin.index.tsx` — link para o mapa
+- `src/components/AccessMapDialog.tsx` — novo
+- `src/components/RestaurantContextSwitcher.tsx` — novo
+
+## Fora deste escopo
+
+- Alterar tela `/app/sharing` (fornecedores continuam lá).
+- Convite/gestão de outros papéis além de chef/owner e staff no mapa.
+- Comparativo entre unidades dentro do painel consolidado (só soma agora; comparativo unidade-a-unidade fica para próxima iteração se desejar).
+
+Confirma que posso executar nesta ordem (migração → auth → server fns → tela Início → sidebar → dashboard consolidado → admin map)?

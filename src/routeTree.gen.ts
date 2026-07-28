@@ -31,6 +31,7 @@ import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage
 import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
 import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
+import { Route as AppAdminAccessMapRouteImport } from './routes/_app.admin.access-map'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -142,10 +143,16 @@ const AppAdminSuppliersRoute = AppAdminSuppliersRouteImport.update({
   path: '/admin/suppliers',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminAccessMapRoute = AppAdminAccessMapRouteImport.update({
+  id: '/admin/access-map',
+  path: '/admin/access-map',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_app/admin/access-map': typeof AppAdminAccessMapRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
   '/_app/app/cadastros': typeof AppAppCadastrosRoute
   '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/admin/access-map'
     | '/admin/suppliers'
     | '/app/cadastros'
     | '/app/catalog-admin'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/admin/access-map'
     | '/admin/suppliers'
     | '/app/cadastros'
     | '/app/catalog-admin'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/auth'
+    | '/_app/admin/access-map'
     | '/_app/admin/suppliers'
     | '/_app/app/cadastros'
     | '/_app/app/catalog-admin'
@@ -450,10 +462,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSuppliersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/access-map': {
+      id: '/_app/admin/access-map'
+      path: '/admin/access-map'
+      fullPath: '/admin/access-map'
+      preLoaderRoute: typeof AppAdminAccessMapRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppAdminAccessMapRoute: typeof AppAdminAccessMapRoute
   AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
   AppAppCadastrosRoute: typeof AppAppCadastrosRoute
   AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
@@ -475,6 +495,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminAccessMapRoute: AppAdminAccessMapRoute,
   AppAdminSuppliersRoute: AppAdminSuppliersRoute,
   AppAppCadastrosRoute: AppAppCadastrosRoute,
   AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,

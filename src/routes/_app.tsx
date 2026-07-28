@@ -2,7 +2,8 @@ import { createFileRoute, Outlet, useNavigate, Link, useRouter } from "@tanstack
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, ClipboardCheck, Database, Building2, FolderCog, LayoutDashboard, Coins, Sparkles } from "lucide-react";
+import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, ClipboardCheck, Database, Building2, FolderCog, LayoutDashboard, Coins, Sparkles, Map } from "lucide-react";
+import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -38,7 +39,8 @@ function AppLayout() {
           <Wine className="h-6 w-6 text-primary" />
           <span className="page-title text-base leading-tight">Gestão de Vinhos<br/><span className="text-xs text-muted-foreground font-normal">para Restaurantes</span></span>
         </div>
-        <nav className="flex flex-row gap-1 overflow-x-auto no-scrollbar px-3 pb-3 md:flex-col md:gap-1 md:overflow-visible md:pb-0">
+        {role === "restaurant" && <RestaurantContextSwitcher />}
+        <nav className="flex flex-row gap-1 overflow-x-auto no-scrollbar px-3 pb-3 md:flex-col md:gap-1 md:overflow-visible md:pb-0 md:pt-3">
           {role === "restaurant" && (
             <>
               <NavLink to="/app" icon={<Home className="h-4 w-4" />}>Início</NavLink>
@@ -65,10 +67,10 @@ function AppLayout() {
           {role === "admin" && (
             <>
               <NavLink to="/admin" icon={<ShieldCheck className="h-4 w-4" />}>Admin</NavLink>
+              <NavLink to="/admin/access-map" icon={<Map className="h-4 w-4" />}>Mapa de acessos</NavLink>
               <NavLink to="/admin/suppliers" icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
               <NavLink to="/app/catalog-admin" icon={<Database className="h-4 w-4" />}>Catálogo Global</NavLink>
               <NavLink to="/app/supplier-catalog-admin" icon={<Users className="h-4 w-4" />}>Catálogo de Fornecedores</NavLink>
-
             </>
           )}
         </nav>

@@ -1358,11 +1358,6 @@ function PrecoPanel({
     </div>
   );
 }
-        <MiniStat label="Taça (ano)" value={`R$ ${fmtBRL(avgGlassYear)}`} />
-      </div>
-    </div>
-  );
-}
 
 function CmvPanel({
   cmvMonth,

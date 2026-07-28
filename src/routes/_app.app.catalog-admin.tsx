@@ -249,20 +249,45 @@ function CatalogAdmin() {
     if (!error) fetchCatalog();
   }
 
+  const normKey = (s: string | null | undefined) =>
+    (s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+
+  const duplicateIds = useMemo(() => {
+    const groups = new Map<string, string[]>();
+    for (const i of items) {
+      if (i.status !== "approved") continue;
+      const key = `${normKey(i.name)}|${i.vintage ?? ""}`;
+      if (!normKey(i.name)) continue;
+      const arr = groups.get(key) ?? [];
+      arr.push(i.id);
+      groups.set(key, arr);
+    }
+    const dupIds = new Set<string>();
+    for (const arr of groups.values()) if (arr.length > 1) arr.forEach(id => dupIds.add(id));
+    return dupIds;
+  }, [items]);
+
   const counts = useMemo(() => ({
     pending: items.filter(i => i.status === "pending").length,
     approved: items.filter(i => i.status === "approved").length,
     rejected: items.filter(i => i.status === "rejected").length,
-  }), [items]);
+    duplicates: duplicateIds.size,
+  }), [items, duplicateIds]);
 
   const filtered = useMemo(() => items
-    .filter(i => i.status === statusTab)
+    .filter(i => statusTab === "duplicates" ? duplicateIds.has(i.id) : i.status === statusTab)
     .filter(i =>
       !search ||
       i.name.toLowerCase().includes(search.toLowerCase()) ||
       (i.producer ?? "").toLowerCase().includes(search.toLowerCase()) ||
       (i.barcode ?? "").includes(search)
-    ), [items, statusTab, search]);
+    )
+    .sort((a, b) => {
+      if (statusTab !== "duplicates") return 0;
+      const ka = `${normKey(a.name)}|${a.vintage ?? ""}`;
+      const kb = `${normKey(b.name)}|${b.vintage ?? ""}`;
+      return ka.localeCompare(kb);
+    }), [items, statusTab, search, duplicateIds]);
 
   function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" = "geral") {
     setInitialTab(tab);

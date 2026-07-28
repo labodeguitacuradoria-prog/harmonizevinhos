@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Wine, BarChart3, Users, Shield } from "lucide-react";
+import { Wine } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -85,22 +85,3 @@ function Landing() {
   );
 }
 
-function Feature({
-  icon,
-  title,
-  text,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-6">
-      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
-        {icon}
-      </div>
-      <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-muted-foreground">{text}</p>
-    </div>
-  );
-}

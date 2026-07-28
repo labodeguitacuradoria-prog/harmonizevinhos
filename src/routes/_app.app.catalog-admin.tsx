@@ -142,7 +142,7 @@ function CatalogAdmin() {
   const [items, setItems] = useState<WineCatalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusTab, setStatusTab] = useState<CatalogStatus>("pending");
+  const [statusTab, setStatusTab] = useState<CatalogStatus | "duplicates">("pending");
   const [editing, setEditing] = useState<Partial<WineCatalog> | null>(null);
   const [initialTab, setInitialTab] = useState<"geral" | "carac" | "midia">("geral");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -249,20 +249,45 @@ function CatalogAdmin() {
     if (!error) fetchCatalog();
   }
 
+  const normKey = (s: string | null | undefined) =>
+    (s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+
+  const duplicateIds = useMemo(() => {
+    const groups = new Map<string, string[]>();
+    for (const i of items) {
+      if (i.status !== "approved") continue;
+      const key = `${normKey(i.name)}|${i.vintage ?? ""}`;
+      if (!normKey(i.name)) continue;
+      const arr = groups.get(key) ?? [];
+      arr.push(i.id);
+      groups.set(key, arr);
+    }
+    const dupIds = new Set<string>();
+    for (const arr of groups.values()) if (arr.length > 1) arr.forEach(id => dupIds.add(id));
+    return dupIds;
+  }, [items]);
+
   const counts = useMemo(() => ({
     pending: items.filter(i => i.status === "pending").length,
     approved: items.filter(i => i.status === "approved").length,
     rejected: items.filter(i => i.status === "rejected").length,
-  }), [items]);
+    duplicates: duplicateIds.size,
+  }), [items, duplicateIds]);
 
   const filtered = useMemo(() => items
-    .filter(i => i.status === statusTab)
+    .filter(i => statusTab === "duplicates" ? duplicateIds.has(i.id) : i.status === statusTab)
     .filter(i =>
       !search ||
       i.name.toLowerCase().includes(search.toLowerCase()) ||
       (i.producer ?? "").toLowerCase().includes(search.toLowerCase()) ||
       (i.barcode ?? "").includes(search)
-    ), [items, statusTab, search]);
+    )
+    .sort((a, b) => {
+      if (statusTab !== "duplicates") return 0;
+      const ka = `${normKey(a.name)}|${a.vintage ?? ""}`;
+      const kb = `${normKey(b.name)}|${b.vintage ?? ""}`;
+      return ka.localeCompare(kb);
+    }), [items, statusTab, search, duplicateIds]);
 
   function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" = "geral") {
     setInitialTab(tab);
@@ -297,6 +322,9 @@ function CatalogAdmin() {
 
         <TabButton active={statusTab === "rejected"} onClick={() => setStatusTab("rejected")} icon={<Ban className="h-4 w-4" />}>
           Rejeitados <span className="ml-1 rounded-full bg-rose-500/20 px-2 text-xs text-rose-500">{counts.rejected}</span>
+        </TabButton>
+        <TabButton active={statusTab === "duplicates"} onClick={() => setStatusTab("duplicates")} icon={<AlertTriangle className="h-4 w-4" />}>
+          Duplicados <span className="ml-1 rounded-full bg-orange-500/20 px-2 text-xs text-orange-400">{counts.duplicates}</span>
         </TabButton>
       </div>
 
@@ -429,7 +457,7 @@ function CatalogAdmin() {
         {loading && <div className="p-8 text-center">Carregando catálogo...</div>}
         {!loading && filtered.length === 0 && (
           <div className="p-8 text-center text-muted-foreground">
-            {statusTab === "pending" ? "Nenhum rótulo pendente de revisão." : "Nenhum item encontrado."}
+            {statusTab === "pending" ? "Nenhum rótulo pendente de revisão." : statusTab === "duplicates" ? "Nenhum rótulo duplicado (mesmo nome + safra) no catálogo aprovado." : "Nenhum item encontrado."}
           </div>
         )}
       </div>

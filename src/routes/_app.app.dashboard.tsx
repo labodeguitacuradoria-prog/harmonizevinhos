@@ -1118,11 +1118,13 @@ function EstoquePanel({
   stockMap,
   totalBottles,
   totalValue,
+  targets,
 }: {
   wines: WineRow[];
   stockMap: Record<string, number>;
   totalBottles: number;
   totalValue: number;
+  targets: TargetSet;
 }) {
   const byType: Record<string, { bottles: number; value: number }> = {};
   let totalCost = 0;
@@ -1136,6 +1138,7 @@ function EstoquePanel({
     totalCost += q * (Number(w.cost_price) || 0);
   }
   const rows = Object.entries(byType).sort((a, b) => b[1].value - a[1].value);
+  const annualTarget = resolveAnnualTarget(targets);
 
   return (
     <div>
@@ -1145,6 +1148,14 @@ function EstoquePanel({
         <MiniStat label="Valor de venda" value={`R$ ${fmtBRL(totalValue)}`} />
         <MiniStat label="Valor de custo" value={`R$ ${fmtBRL(totalCost)}`} />
       </div>
+      {annualTarget !== null && (
+        <TargetSummary
+          label="Meta de estoque (garrafas)"
+          achieved={totalBottles}
+          target={annualTarget}
+          valueSuffix=" gfa"
+        />
+      )}
       <table className="w-full text-left text-xs">
         <thead className="text-[10px] uppercase tracking-wider text-muted-foreground">
           <tr className="border-b border-border">
@@ -1182,6 +1193,7 @@ function PrecoPanel({
   avgBottleYear,
   avgGlassYear,
   lastMonth,
+  targets,
 }: {
   avgAll: number;
   avgBottle: number;
@@ -1190,8 +1202,11 @@ function PrecoPanel({
   avgBottleYear: number;
   avgGlassYear: number;
   lastMonth: { year: number; month: number };
+  targets: TargetSet;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
+  const annualTarget = resolveAnnualTarget(targets);
+  const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
   return (
     <div>
       <SectionHeader
@@ -1199,6 +1214,24 @@ function PrecoPanel({
         title="Preço médio praticado"
         subtitle={`Referência: último mês com dados (${ml}). Ao lado, média do ano corrente.`}
       />
+      {monthTarget > 0 && (
+        <TargetSummary
+          label={`Meta de preço médio — ${ml}`}
+          achieved={avgAll}
+          target={monthTarget}
+          valuePrefix="R$ "
+          decimals={2}
+        />
+      )}
+      {annualTarget !== null && (
+        <TargetSummary
+          label="Meta de preço médio (ano)"
+          achieved={avgAllYear}
+          target={annualTarget}
+          valuePrefix="R$ "
+          decimals={2}
+        />
+      )}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
         <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
@@ -1216,13 +1249,21 @@ function CmvPanel({
   cmvYear,
   lastMonth,
   wines,
+  cmvByMonth,
+  currentYear,
+  targets,
 }: {
   cmvMonth: number;
   cmvYear: number;
   lastMonth: { year: number; month: number };
   wines: WineRow[];
+  cmvByMonth: number[];
+  currentYear: number;
+  targets: TargetSet;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
+  const annualTarget = resolveAnnualTarget(targets);
+  const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
   const high = wines
     .filter((w) => {
       const c = Number(w.cost_price) || 0;
@@ -1254,6 +1295,26 @@ function CmvPanel({
           tone={cmvYear <= 33 ? "primary" : "danger"}
         />
       </div>
+      {monthTarget > 0 && (
+        <TargetSummary
+          label={`Meta de CMV — ${ml}`}
+          achieved={cmvMonth}
+          target={monthTarget}
+          valueSuffix="%"
+          decimals={1}
+          invert
+        />
+      )}
+      {annualTarget !== null && (
+        <TargetSummary
+          label="Meta de CMV (ano)"
+          achieved={cmvYear}
+          target={annualTarget}
+          valueSuffix="%"
+          decimals={1}
+          invert
+        />
+      )}
       <div className="section-title">Rótulos com CMV acima de 33%</div>
       <table className="w-full text-left text-xs">
         <thead className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -1297,6 +1358,8 @@ function RolhaPanel({
   corkageAmtByYearMonth,
   currentYear,
   previousYear,
+  currentMonth,
+  targets,
 }: {
   amtLast: number;
   qtyLast: number;
@@ -1306,11 +1369,15 @@ function RolhaPanel({
   corkageAmtByYearMonth: Record<number, number[]>;
   currentYear: number;
   previousYear: number;
+  currentMonth: number;
+  targets: TargetSet;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const curr = corkageAmtByYearMonth[currentYear];
   const prev = corkageAmtByYearMonth[previousYear];
   const prevYearTotal = prev.reduce((a, b) => a + b, 0);
+  const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
+  const annualTarget = resolveAnnualTarget(targets);
   return (
     <div>
       <SectionHeader
@@ -1324,6 +1391,14 @@ function RolhaPanel({
         <MiniStat label={`Valor ${currentYear}`} value={`R$ ${fmtBRL(amtYear)}`} />
         <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
       </div>
+      {annualTarget !== null && (
+        <TargetSummary
+          label={`Meta anual ${currentYear}`}
+          achieved={currAcc}
+          target={annualTarget}
+          valuePrefix="R$ "
+        />
+      )}
       <BarChart
         curr={curr}
         prev={prev}
@@ -1331,6 +1406,7 @@ function RolhaPanel({
         previousYear={previousYear}
         valuePrefix="R$ "
         height={260}
+        targets={targets.monthly.length === 12 ? targets.monthly : undefined}
       />
       <div className="mt-4 rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-3 text-center text-[11px] text-muted-foreground">
         Para lançar ou ajustar taxas de rolha,{" "}
@@ -1342,6 +1418,7 @@ function RolhaPanel({
     </div>
   );
 }
+
 
 
 function OutrasPanel() {

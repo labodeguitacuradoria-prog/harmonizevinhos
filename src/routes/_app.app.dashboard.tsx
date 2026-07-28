@@ -14,7 +14,13 @@ import {
   Sparkles,
   TrendingUp,
   Info,
+  Target,
 } from "lucide-react";
+import DashboardTargetsEditor, {
+  targetsFor,
+  useDashboardTargets,
+  type IndicatorKey,
+} from "@/components/DashboardTargetsEditor";
 
 export const Route = createFileRoute("/_app/app/dashboard")({
   component: DashboardPage,
@@ -85,11 +91,14 @@ type TabKey =
 function DashboardPage() {
   const { restaurantId } = useAuth();
   const [tab, setTab] = useState<TabKey>("faturamento");
+  const [metasOpen, setMetasOpen] = useState(false);
 
   const now = new Date();
   const currentYear = now.getFullYear();
   const previousYear = currentYear - 1;
   const currentMonth = now.getMonth();
+
+  const { data: targets = [] } = useDashboardTargets(restaurantId, currentYear);
 
   const { data: wines = [] } = useQuery({
     queryKey: ["dash-wines", restaurantId],
@@ -429,6 +438,13 @@ function DashboardPage() {
             Indicadores da adega em tempo real — clique nos botões para ver detalhes.
           </p>
         </div>
+        <button
+          onClick={() => setMetasOpen(true)}
+          className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
+          title="Definir metas mensais e anuais dos indicadores"
+        >
+          <Target size={14} /> Metas
+        </button>
       </header>
 
       {/* KPI buttons row */}
@@ -479,6 +495,7 @@ function DashboardPage() {
             revYear={agg.revYear}
             corkageAmtYear={agg.corkageAmtYear}
             currentMonth={currentMonth}
+            targets={targetsFor(targets, "faturamento")}
           />
         )}
         {tab === "garrafas" && (
@@ -488,6 +505,8 @@ function DashboardPage() {
             byYearMonth={agg.bottlesByYearMonth}
             currentYear={currentYear}
             previousYear={previousYear}
+            currentMonth={currentMonth}
+            targets={targetsFor(targets, "garrafas")}
           />
         )}
         {tab === "tacas" && (
@@ -497,6 +516,8 @@ function DashboardPage() {
             byYearMonth={agg.glassesByYearMonth}
             currentYear={currentYear}
             previousYear={previousYear}
+            currentMonth={currentMonth}
+            targets={targetsFor(targets, "tacas")}
           />
         )}
         {tab === "estoque" && (
@@ -505,6 +526,7 @@ function DashboardPage() {
             stockMap={stockMap}
             totalBottles={agg.stockBottles}
             totalValue={agg.stockValue}
+            targets={targetsFor(targets, "estoque")}
           />
         )}
         {tab === "preco" && (
@@ -516,6 +538,7 @@ function DashboardPage() {
             avgBottleYear={agg.avgBottle}
             avgGlassYear={agg.avgGlass}
             lastMonth={agg.lastAvg}
+            targets={targetsFor(targets, "preco")}
           />
         )}
         {tab === "cmv" && (
@@ -524,6 +547,9 @@ function DashboardPage() {
             cmvYear={agg.cmvYear}
             lastMonth={agg.lastCmv}
             wines={wines}
+            cmvByMonth={agg.cmvByMonth}
+            currentYear={currentYear}
+            targets={targetsFor(targets, "cmv")}
           />
         )}
         {tab === "rolha" && (
@@ -536,11 +562,22 @@ function DashboardPage() {
             corkageAmtByYearMonth={agg.corkageAmtByYearMonth}
             currentYear={currentYear}
             previousYear={previousYear}
+            currentMonth={currentMonth}
+            targets={targetsFor(targets, "rolha")}
           />
         )}
 
         {tab === "outras" && <OutrasPanel />}
       </div>
+
+      {restaurantId && (
+        <DashboardTargetsEditor
+          open={metasOpen}
+          onClose={() => setMetasOpen(false)}
+          restaurantId={restaurantId}
+          year={currentYear}
+        />
+      )}
     </div>
   );
 }
@@ -569,6 +606,7 @@ function FaturamentoPanel({
   revYear,
   corkageAmtYear,
   currentMonth,
+  targets,
 }: {
   revByYearMonth: Record<number, number[]>;
   revBottlesByYearMonth: Record<number, number[]>;
@@ -581,6 +619,7 @@ function FaturamentoPanel({
   revYear: number;
   corkageAmtYear: number;
   currentMonth: number;
+  targets: TargetSet;
 }) {
   const curr = revByYearMonth[currentYear];
   const prev = revByYearMonth[previousYear];
@@ -589,6 +628,8 @@ function FaturamentoPanel({
   const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const prevAcc = prev.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const diff = prevAcc > 0 ? ((currAcc - prevAcc) / prevAcc) * 100 : 0;
+  const annualTarget = resolveAnnualTarget(targets);
+  const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
 
   const [pieMode, setPieMode] = useState<"mes" | "ano">("mes");
   const useMonth = pieMode === "mes" && lastMonth.month >= 0;
@@ -628,6 +669,23 @@ function FaturamentoPanel({
         </div>
       </div>
 
+      {annualTarget !== null && (
+        <TargetSummary
+          label={`Meta anual ${currentYear}`}
+          achieved={currAcc}
+          target={annualTarget}
+          valuePrefix="R$ "
+        />
+      )}
+      {monthTarget > 0 && lastMonth.month >= 0 && (
+        <TargetSummary
+          label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}
+          achieved={revLast}
+          target={monthTarget}
+          valuePrefix="R$ "
+        />
+      )}
+
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <BarChart
@@ -637,6 +695,7 @@ function FaturamentoPanel({
             previousYear={previousYear}
             valuePrefix="R$ "
             height={280}
+            targets={targets.monthly.length === 12 ? targets.monthly : undefined}
           />
         </div>
         <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
@@ -764,17 +823,23 @@ function SimpleYearPanel({
   byYearMonth,
   currentYear,
   previousYear,
+  currentMonth,
+  targets,
 }: {
   title: string;
   unit: string;
   byYearMonth: Record<number, number[]>;
   currentYear: number;
   previousYear: number;
+  currentMonth: number;
+  targets: TargetSet;
 }) {
   const curr = byYearMonth[currentYear];
   const prev = byYearMonth[previousYear];
   const currTotal = curr.reduce((a, b) => a + b, 0);
   const prevTotal = prev.reduce((a, b) => a + b, 0);
+  const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
+  const annualTarget = resolveAnnualTarget(targets);
 
   return (
     <div>
@@ -787,6 +852,14 @@ function SimpleYearPanel({
         <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
         <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
       </div>
+      {annualTarget !== null && (
+        <TargetSummary
+          label={`Meta anual ${currentYear}`}
+          achieved={currAcc}
+          target={annualTarget}
+          valueSuffix={` ${unit}`}
+        />
+      )}
       <BarChart
         curr={curr}
         prev={prev}
@@ -794,10 +867,12 @@ function SimpleYearPanel({
         previousYear={previousYear}
         valueSuffix={` ${unit}`}
         height={240}
+        targets={targets.monthly.length === 12 ? targets.monthly : undefined}
       />
     </div>
   );
 }
+
 
 function niceMax(v: number) {
   if (v <= 0) return 1;
@@ -820,6 +895,7 @@ function BarChart({
   valuePrefix = "",
   valueSuffix = "",
   height = 260,
+  targets,
 }: {
   curr: number[];
   prev: number[];
@@ -828,8 +904,11 @@ function BarChart({
   valuePrefix?: string;
   valueSuffix?: string;
   height?: number;
+  targets?: number[];
 }) {
-  const rawMax = Math.max(1, ...curr, ...prev);
+  const hasTargets = !!targets && targets.some((t) => t > 0);
+  const targetsForMax = hasTargets ? targets!.filter((t) => t > 0) : [];
+  const rawMax = Math.max(1, ...curr, ...prev, ...targetsForMax);
   const maxVal = niceMax(rawMax);
   const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => maxVal * f);
   const axisWidth = 68;
@@ -880,6 +959,9 @@ function BarChart({
               {MONTHS.map((mo, i) => {
                 const cPct = (curr[i] / maxVal) * 100;
                 const pPct = (prev[i] / maxVal) * 100;
+                const tVal = targets?.[i] ?? 0;
+                const tPct = tVal > 0 ? (tVal / maxVal) * 100 : 0;
+                const met = tVal > 0 && curr[i] >= tVal;
                 return (
                   <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-0.5">
                     <div
@@ -896,10 +978,27 @@ function BarChart({
                       className="w-2/5 rounded-t transition-all"
                       style={{
                         height: `${cPct}%`,
-                        background: "linear-gradient(180deg, var(--gold), var(--wine))",
+                        background: met
+                          ? "linear-gradient(180deg, var(--gold), #6a4a08)"
+                          : "linear-gradient(180deg, var(--gold), var(--wine))",
                       }}
-                      title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}`}
+                      title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}${
+                        tVal > 0 ? ` • Meta: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}` : ""
+                      }`}
                     />
+
+                    {/* Target dashed line per month */}
+                    {tVal > 0 && (
+                      <div
+                        className="pointer-events-none absolute left-[10%] right-[10%]"
+                        style={{
+                          bottom: `${tPct}%`,
+                          height: 0,
+                          borderTop: "2px dashed var(--gold)",
+                        }}
+                        title={`Meta ${mo}: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}`}
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -923,7 +1022,6 @@ function BarChart({
           <span
             className="inline-block h-3 w-3 rounded"
             style={{ background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)" }}
-
           />
           <span className="text-muted-foreground">{previousYear}</span>
         </div>
@@ -934,21 +1032,99 @@ function BarChart({
           />
           <span className="text-muted-foreground">{currentYear}</span>
         </div>
+        {hasTargets && (
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-block h-0.5 w-6"
+              style={{ borderTop: "2px dashed var(--gold)" }}
+            />
+            <span className="text-muted-foreground">Meta mensal</span>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+function TargetSummary({
+  label,
+  achieved,
+  target,
+  unit,
+  valuePrefix = "",
+  valueSuffix = "",
+  decimals = 0,
+  invert = false,
+}: {
+  label: string;
+  achieved: number;
+  target: number | null;
+  unit?: string;
+  valuePrefix?: string;
+  valueSuffix?: string;
+  decimals?: number;
+  invert?: boolean;
+}) {
+  if (target === null || !isFinite(target) || target <= 0) return null;
+  const pct = target > 0 ? (achieved / target) * 100 : 0;
+  const clamped = Math.max(0, Math.min(100, pct));
+  // invert=true → menor é melhor (ex: CMV)
+  const good = invert ? achieved <= target : achieved >= target;
+  const barColor = good ? "var(--gold)" : "var(--wine)";
+  const fmt = (n: number) =>
+    n.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  return (
+    <div className="mb-4 rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
+      <div className="mb-1.5 flex items-center justify-between text-[11px]">
+        <span className="font-semibold uppercase tracking-wider text-primary">{label}</span>
+        <span className={good ? "text-primary" : "text-[#f4a5b0]"}>
+          {valuePrefix}
+          {fmt(achieved)}
+          {valueSuffix}
+          {unit ? ` ${unit}` : ""}{" "}
+          <span className="text-muted-foreground">/ meta {valuePrefix}
+            {fmt(target)}
+            {valueSuffix}
+            {unit ? ` ${unit}` : ""}
+          </span>{" "}
+          <span className="font-bold">({pct.toFixed(0)}%)</span>
+        </span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--gray)]">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{ width: `${clamped}%`, background: barColor }}
+        />
+      </div>
+    </div>
+  );
+}
+
+type TargetSet = { monthly: number[]; annual: number | null };
+
+function resolveAnnualTarget(t: TargetSet): number | null {
+  if (t.annual !== null && t.annual > 0) return t.annual;
+  if (t.monthly.length === 12) {
+    const s = t.monthly.reduce((a, b) => a + b, 0);
+    if (s > 0) return s;
+  }
+  return null;
+}
+
+
 
 function EstoquePanel({
   wines,
   stockMap,
   totalBottles,
   totalValue,
+  targets,
 }: {
   wines: WineRow[];
   stockMap: Record<string, number>;
   totalBottles: number;
   totalValue: number;
+  targets: TargetSet;
 }) {
   const byType: Record<string, { bottles: number; value: number }> = {};
   let totalCost = 0;
@@ -962,6 +1138,7 @@ function EstoquePanel({
     totalCost += q * (Number(w.cost_price) || 0);
   }
   const rows = Object.entries(byType).sort((a, b) => b[1].value - a[1].value);
+  const annualTarget = resolveAnnualTarget(targets);
 
   return (
     <div>
@@ -971,6 +1148,14 @@ function EstoquePanel({
         <MiniStat label="Valor de venda" value={`R$ ${fmtBRL(totalValue)}`} />
         <MiniStat label="Valor de custo" value={`R$ ${fmtBRL(totalCost)}`} />
       </div>
+      {annualTarget !== null && (
+        <TargetSummary
+          label="Meta de estoque (garrafas)"
+          achieved={totalBottles}
+          target={annualTarget}
+          valueSuffix=" gfa"
+        />
+      )}
       <table className="w-full text-left text-xs">
         <thead className="text-[10px] uppercase tracking-wider text-muted-foreground">
           <tr className="border-b border-border">
@@ -1008,6 +1193,7 @@ function PrecoPanel({
   avgBottleYear,
   avgGlassYear,
   lastMonth,
+  targets,
 }: {
   avgAll: number;
   avgBottle: number;
@@ -1016,8 +1202,11 @@ function PrecoPanel({
   avgBottleYear: number;
   avgGlassYear: number;
   lastMonth: { year: number; month: number };
+  targets: TargetSet;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
+  const annualTarget = resolveAnnualTarget(targets);
+  const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
   return (
     <div>
       <SectionHeader
@@ -1025,6 +1214,24 @@ function PrecoPanel({
         title="Preço médio praticado"
         subtitle={`Referência: último mês com dados (${ml}). Ao lado, média do ano corrente.`}
       />
+      {monthTarget > 0 && (
+        <TargetSummary
+          label={`Meta de preço médio — ${ml}`}
+          achieved={avgAll}
+          target={monthTarget}
+          valuePrefix="R$ "
+          decimals={2}
+        />
+      )}
+      {annualTarget !== null && (
+        <TargetSummary
+          label="Meta de preço médio (ano)"
+          achieved={avgAllYear}
+          target={annualTarget}
+          valuePrefix="R$ "
+          decimals={2}
+        />
+      )}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
         <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
@@ -1042,13 +1249,21 @@ function CmvPanel({
   cmvYear,
   lastMonth,
   wines,
+  cmvByMonth,
+  currentYear,
+  targets,
 }: {
   cmvMonth: number;
   cmvYear: number;
   lastMonth: { year: number; month: number };
   wines: WineRow[];
+  cmvByMonth: number[];
+  currentYear: number;
+  targets: TargetSet;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
+  const annualTarget = resolveAnnualTarget(targets);
+  const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
   const high = wines
     .filter((w) => {
       const c = Number(w.cost_price) || 0;
@@ -1080,6 +1295,26 @@ function CmvPanel({
           tone={cmvYear <= 33 ? "primary" : "danger"}
         />
       </div>
+      {monthTarget > 0 && (
+        <TargetSummary
+          label={`Meta de CMV — ${ml}`}
+          achieved={cmvMonth}
+          target={monthTarget}
+          valueSuffix="%"
+          decimals={1}
+          invert
+        />
+      )}
+      {annualTarget !== null && (
+        <TargetSummary
+          label="Meta de CMV (ano)"
+          achieved={cmvYear}
+          target={annualTarget}
+          valueSuffix="%"
+          decimals={1}
+          invert
+        />
+      )}
       <div className="section-title">Rótulos com CMV acima de 33%</div>
       <table className="w-full text-left text-xs">
         <thead className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -1123,6 +1358,8 @@ function RolhaPanel({
   corkageAmtByYearMonth,
   currentYear,
   previousYear,
+  currentMonth,
+  targets,
 }: {
   amtLast: number;
   qtyLast: number;
@@ -1132,11 +1369,15 @@ function RolhaPanel({
   corkageAmtByYearMonth: Record<number, number[]>;
   currentYear: number;
   previousYear: number;
+  currentMonth: number;
+  targets: TargetSet;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const curr = corkageAmtByYearMonth[currentYear];
   const prev = corkageAmtByYearMonth[previousYear];
   const prevYearTotal = prev.reduce((a, b) => a + b, 0);
+  const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
+  const annualTarget = resolveAnnualTarget(targets);
   return (
     <div>
       <SectionHeader
@@ -1150,6 +1391,14 @@ function RolhaPanel({
         <MiniStat label={`Valor ${currentYear}`} value={`R$ ${fmtBRL(amtYear)}`} />
         <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
       </div>
+      {annualTarget !== null && (
+        <TargetSummary
+          label={`Meta anual ${currentYear}`}
+          achieved={currAcc}
+          target={annualTarget}
+          valuePrefix="R$ "
+        />
+      )}
       <BarChart
         curr={curr}
         prev={prev}
@@ -1157,6 +1406,7 @@ function RolhaPanel({
         previousYear={previousYear}
         valuePrefix="R$ "
         height={260}
+        targets={targets.monthly.length === 12 ? targets.monthly : undefined}
       />
       <div className="mt-4 rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-3 text-center text-[11px] text-muted-foreground">
         Para lançar ou ajustar taxas de rolha,{" "}
@@ -1168,6 +1418,7 @@ function RolhaPanel({
     </div>
   );
 }
+
 
 
 function OutrasPanel() {

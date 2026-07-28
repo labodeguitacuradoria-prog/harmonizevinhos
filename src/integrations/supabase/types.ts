@@ -58,6 +58,50 @@ export type Database = {
           },
         ]
       }
+      dashboard_targets: {
+        Row: {
+          created_at: string
+          id: string
+          indicator: string
+          notes: string | null
+          reference_month: number | null
+          reference_year: number
+          restaurant_id: string
+          target_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          indicator: string
+          notes?: string | null
+          reference_month?: number | null
+          reference_year: number
+          restaurant_id: string
+          target_value: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          indicator?: string
+          notes?: string | null
+          reference_month?: number | null
+          reference_year?: number
+          restaurant_id?: string
+          target_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_targets_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       glasses: {
         Row: {
           brand: string | null

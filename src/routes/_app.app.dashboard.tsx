@@ -274,10 +274,13 @@ function DashboardPage() {
       stockValue += q * (Number(w.sale_price) || 0);
     }
 
-    // Preço médio por mês
+    // Preço médio por mês — ano atual e anterior
     const avgAllByMonth: number[] = Array(12).fill(0);
     const avgBottleByMonth: number[] = Array(12).fill(0);
     const avgGlassByMonth: number[] = Array(12).fill(0);
+    const avgAllByMonthPrev: number[] = Array(12).fill(0);
+    const avgBottleByMonthPrev: number[] = Array(12).fill(0);
+    const avgGlassByMonthPrev: number[] = Array(12).fill(0);
     for (let i = 0; i < 12; i++) {
       const b = bottlesByYearMonth[currentYear][i];
       const g = glassesByYearMonth[currentYear][i];
@@ -286,6 +289,13 @@ function DashboardPage() {
       avgBottleByMonth[i] = b > 0 ? rb / b : 0;
       avgGlassByMonth[i] = g > 0 ? rg / g : 0;
       avgAllByMonth[i] = b + g > 0 ? (rb + rg) / (b + g) : 0;
+      const bp = bottlesByYearMonth[previousYear][i];
+      const gp = glassesByYearMonth[previousYear][i];
+      const rbp = revBottlesByYearMonth[previousYear][i];
+      const rgp = revGlassesByYearMonth[previousYear][i];
+      avgBottleByMonthPrev[i] = bp > 0 ? rbp / bp : 0;
+      avgGlassByMonthPrev[i] = gp > 0 ? rgp / gp : 0;
+      avgAllByMonthPrev[i] = bp + gp > 0 ? (rbp + rgp) / (bp + gp) : 0;
     }
 
     // Preço médio anual
@@ -346,6 +356,12 @@ function DashboardPage() {
       avgBottle,
       avgGlass,
       avgAll,
+      avgAllByMonth,
+      avgBottleByMonth,
+      avgGlassByMonth,
+      avgAllByMonthPrev,
+      avgBottleByMonthPrev,
+      avgGlassByMonthPrev,
       lastRev,
       lastBottles,
       lastGlasses,
@@ -549,6 +565,14 @@ function DashboardPage() {
             avgAllYear={agg.avgAll}
             avgBottleYear={agg.avgBottle}
             avgGlassYear={agg.avgGlass}
+            avgAllByMonth={agg.avgAllByMonth}
+            avgBottleByMonth={agg.avgBottleByMonth}
+            avgGlassByMonth={agg.avgGlassByMonth}
+            avgAllByMonthPrev={agg.avgAllByMonthPrev}
+            avgBottleByMonthPrev={agg.avgBottleByMonthPrev}
+            avgGlassByMonthPrev={agg.avgGlassByMonthPrev}
+            currentYear={currentYear}
+            previousYear={previousYear}
             lastMonth={agg.lastAvg}
             targets={targetsFor(targets, "preco")}
           />
@@ -1218,6 +1242,14 @@ function PrecoPanel({
   avgAllYear,
   avgBottleYear,
   avgGlassYear,
+  avgAllByMonth,
+  avgBottleByMonth,
+  avgGlassByMonth,
+  avgAllByMonthPrev,
+  avgBottleByMonthPrev,
+  avgGlassByMonthPrev,
+  currentYear,
+  previousYear,
   lastMonth,
   targets,
 }: {
@@ -1227,12 +1259,31 @@ function PrecoPanel({
   avgAllYear: number;
   avgBottleYear: number;
   avgGlassYear: number;
+  avgAllByMonth: number[];
+  avgBottleByMonth: number[];
+  avgGlassByMonth: number[];
+  avgAllByMonthPrev: number[];
+  avgBottleByMonthPrev: number[];
+  avgGlassByMonthPrev: number[];
+  currentYear: number;
+  previousYear: number;
   lastMonth: { year: number; month: number };
   targets: TargetSet;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const annualTarget = resolveAnnualTarget(targets);
   const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
+  const [view, setView] = useState<"all" | "bottle" | "glass">("all");
+  const curr =
+    view === "bottle" ? avgBottleByMonth : view === "glass" ? avgGlassByMonth : avgAllByMonth;
+  const prev =
+    view === "bottle"
+      ? avgBottleByMonthPrev
+      : view === "glass"
+        ? avgGlassByMonthPrev
+        : avgAllByMonthPrev;
+  const viewLabel =
+    view === "bottle" ? "Garrafas" : view === "glass" ? "Taças" : "Geral";
   return (
     <div>
       <SectionHeader
@@ -1258,13 +1309,51 @@ function PrecoPanel({
           decimals={2}
         />
       )}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
         <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
         <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
         <MiniStat label={`Taça — ${ml}`} value={`R$ ${fmtBRL(avgGlass)}`} />
         <MiniStat label="Geral (ano)" value={`R$ ${fmtBRL(avgAllYear)}`} />
         <MiniStat label="Garrafa (ano)" value={`R$ ${fmtBRL(avgBottleYear)}`} />
         <MiniStat label="Taça (ano)" value={`R$ ${fmtBRL(avgGlassYear)}`} />
+      </div>
+
+      <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+            Preço médio mensal — {viewLabel}
+          </div>
+          <div className="flex overflow-hidden rounded-md border border-border text-[10px]">
+            {(
+              [
+                { k: "all", label: "Geral" },
+                { k: "bottle", label: "Garrafas" },
+                { k: "glass", label: "Taças" },
+              ] as const
+            ).map((o) => (
+              <button
+                key={o.k}
+                onClick={() => setView(o.k)}
+                className={`px-2 py-1 ${
+                  view === o.k
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-primary"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <BarChart
+          curr={curr}
+          prev={prev}
+          currentYear={currentYear}
+          previousYear={previousYear}
+          valuePrefix="R$ "
+          height={260}
+          targets={targets.monthly.length === 12 ? targets.monthly : undefined}
+        />
       </div>
     </div>
   );

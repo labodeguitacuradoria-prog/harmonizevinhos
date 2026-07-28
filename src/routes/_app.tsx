@@ -67,10 +67,10 @@ function AppLayout() {
           {role === "admin" && (
             <>
               <NavLink to="/admin" icon={<ShieldCheck className="h-4 w-4" />}>Admin</NavLink>
+              <NavLink to="/admin/access-map" icon={<Map className="h-4 w-4" />}>Mapa de acessos</NavLink>
               <NavLink to="/admin/suppliers" icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
               <NavLink to="/app/catalog-admin" icon={<Database className="h-4 w-4" />}>Catálogo Global</NavLink>
               <NavLink to="/app/supplier-catalog-admin" icon={<Users className="h-4 w-4" />}>Catálogo de Fornecedores</NavLink>
-
             </>
           )}
         </nav>

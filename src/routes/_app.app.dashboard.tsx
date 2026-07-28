@@ -606,6 +606,7 @@ function FaturamentoPanel({
   revYear,
   corkageAmtYear,
   currentMonth,
+  targets,
 }: {
   revByYearMonth: Record<number, number[]>;
   revBottlesByYearMonth: Record<number, number[]>;
@@ -618,6 +619,7 @@ function FaturamentoPanel({
   revYear: number;
   corkageAmtYear: number;
   currentMonth: number;
+  targets: TargetSet;
 }) {
   const curr = revByYearMonth[currentYear];
   const prev = revByYearMonth[previousYear];
@@ -626,6 +628,8 @@ function FaturamentoPanel({
   const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const prevAcc = prev.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const diff = prevAcc > 0 ? ((currAcc - prevAcc) / prevAcc) * 100 : 0;
+  const annualTarget = resolveAnnualTarget(targets);
+  const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
 
   const [pieMode, setPieMode] = useState<"mes" | "ano">("mes");
   const useMonth = pieMode === "mes" && lastMonth.month >= 0;
@@ -665,6 +669,23 @@ function FaturamentoPanel({
         </div>
       </div>
 
+      {annualTarget !== null && (
+        <TargetSummary
+          label={`Meta anual ${currentYear}`}
+          achieved={currAcc}
+          target={annualTarget}
+          valuePrefix="R$ "
+        />
+      )}
+      {monthTarget > 0 && lastMonth.month >= 0 && (
+        <TargetSummary
+          label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}
+          achieved={revLast}
+          target={monthTarget}
+          valuePrefix="R$ "
+        />
+      )}
+
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <BarChart
@@ -674,6 +695,7 @@ function FaturamentoPanel({
             previousYear={previousYear}
             valuePrefix="R$ "
             height={280}
+            targets={targets.monthly.length === 12 ? targets.monthly : undefined}
           />
         </div>
         <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">

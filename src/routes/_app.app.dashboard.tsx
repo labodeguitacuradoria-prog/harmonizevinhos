@@ -94,6 +94,7 @@ function DashboardPage() {
   const { restaurantId } = useAuth();
   const [tab, setTab] = useState<TabKey>("faturamento");
   const [metasOpen, setMetasOpen] = useState(false);
+  const [diagOpen, setDiagOpen] = useState(false);
 
   const now = new Date();
   const currentYear = now.getFullYear();

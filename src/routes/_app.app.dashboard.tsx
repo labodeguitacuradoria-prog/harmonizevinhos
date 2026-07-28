@@ -466,13 +466,34 @@ function DashboardPage() {
     },
   ];
 
+  const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;
+  const consolidatedUnitCount = isGroup ? memberships.filter((m) => m.groupId === activeGroupId).length : 0;
+
   return (
     <div className="p-6 md:p-10 space-y-6">
+      {isGroup && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/40 bg-[color:var(--wine)]/20 px-4 py-3">
+          <div className="text-[12px] text-foreground">
+            <span className="font-semibold text-primary">
+              Rede: {activeGroupName ?? "—"} — consolidado
+            </span>
+            <span className="text-muted-foreground"> ({consolidatedUnitCount} unidade{consolidatedUnitCount !== 1 ? "s" : ""})</span>
+          </div>
+          <button
+            onClick={() => setActiveGroup(null)}
+            className="rounded-md border border-primary/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-[color:var(--wine)]/30"
+          >
+            Ver uma unidade
+          </button>
+        </div>
+      )}
       <header className="flex items-center justify-between border-b border-border pb-4">
         <div>
           <h1 className="page-title">Painel de Controle</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Indicadores da adega em tempo real — clique nos botões para ver detalhes.
+            {isGroup
+              ? "Indicadores consolidados de todas as unidades da rede."
+              : "Indicadores da adega em tempo real — clique nos botões para ver detalhes."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -483,13 +504,15 @@ function DashboardPage() {
           >
             <FileText size={14} /> Diagnóstico
           </button>
-          <button
-            onClick={() => setMetasOpen(true)}
-            className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
-            title="Definir metas mensais e anuais dos indicadores"
-          >
-            <Target size={14} /> Metas
-          </button>
+          {!isGroup && (
+            <button
+              onClick={() => setMetasOpen(true)}
+              className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
+              title="Definir metas mensais e anuais dos indicadores"
+            >
+              <Target size={14} /> Metas
+            </button>
+          )}
         </div>
       </header>
 

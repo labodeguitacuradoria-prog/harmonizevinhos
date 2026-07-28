@@ -274,10 +274,13 @@ function DashboardPage() {
       stockValue += q * (Number(w.sale_price) || 0);
     }
 
-    // Preço médio por mês
+    // Preço médio por mês — ano atual e anterior
     const avgAllByMonth: number[] = Array(12).fill(0);
     const avgBottleByMonth: number[] = Array(12).fill(0);
     const avgGlassByMonth: number[] = Array(12).fill(0);
+    const avgAllByMonthPrev: number[] = Array(12).fill(0);
+    const avgBottleByMonthPrev: number[] = Array(12).fill(0);
+    const avgGlassByMonthPrev: number[] = Array(12).fill(0);
     for (let i = 0; i < 12; i++) {
       const b = bottlesByYearMonth[currentYear][i];
       const g = glassesByYearMonth[currentYear][i];
@@ -286,6 +289,13 @@ function DashboardPage() {
       avgBottleByMonth[i] = b > 0 ? rb / b : 0;
       avgGlassByMonth[i] = g > 0 ? rg / g : 0;
       avgAllByMonth[i] = b + g > 0 ? (rb + rg) / (b + g) : 0;
+      const bp = bottlesByYearMonth[previousYear][i];
+      const gp = glassesByYearMonth[previousYear][i];
+      const rbp = revBottlesByYearMonth[previousYear][i];
+      const rgp = revGlassesByYearMonth[previousYear][i];
+      avgBottleByMonthPrev[i] = bp > 0 ? rbp / bp : 0;
+      avgGlassByMonthPrev[i] = gp > 0 ? rgp / gp : 0;
+      avgAllByMonthPrev[i] = bp + gp > 0 ? (rbp + rgp) / (bp + gp) : 0;
     }
 
     // Preço médio anual

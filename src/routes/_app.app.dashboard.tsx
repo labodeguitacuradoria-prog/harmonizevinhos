@@ -857,6 +857,7 @@ function BarChart({
   valuePrefix = "",
   valueSuffix = "",
   height = 260,
+  targets,
 }: {
   curr: number[];
   prev: number[];
@@ -865,8 +866,11 @@ function BarChart({
   valuePrefix?: string;
   valueSuffix?: string;
   height?: number;
+  targets?: number[];
 }) {
-  const rawMax = Math.max(1, ...curr, ...prev);
+  const hasTargets = !!targets && targets.some((t) => t > 0);
+  const targetsForMax = hasTargets ? targets!.filter((t) => t > 0) : [];
+  const rawMax = Math.max(1, ...curr, ...prev, ...targetsForMax);
   const maxVal = niceMax(rawMax);
   const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => maxVal * f);
   const axisWidth = 68;
@@ -917,6 +921,9 @@ function BarChart({
               {MONTHS.map((mo, i) => {
                 const cPct = (curr[i] / maxVal) * 100;
                 const pPct = (prev[i] / maxVal) * 100;
+                const tVal = targets?.[i] ?? 0;
+                const tPct = tVal > 0 ? (tVal / maxVal) * 100 : 0;
+                const met = tVal > 0 && curr[i] >= tVal;
                 return (
                   <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-0.5">
                     <div
@@ -933,10 +940,27 @@ function BarChart({
                       className="w-2/5 rounded-t transition-all"
                       style={{
                         height: `${cPct}%`,
-                        background: "linear-gradient(180deg, var(--gold), var(--wine))",
+                        background: met
+                          ? "linear-gradient(180deg, var(--gold), #6a4a08)"
+                          : "linear-gradient(180deg, var(--gold), var(--wine))",
                       }}
-                      title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}`}
+                      title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}${
+                        tVal > 0 ? ` • Meta: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}` : ""
+                      }`}
                     />
+
+                    {/* Target dashed line per month */}
+                    {tVal > 0 && (
+                      <div
+                        className="pointer-events-none absolute left-[10%] right-[10%]"
+                        style={{
+                          bottom: `${tPct}%`,
+                          height: 0,
+                          borderTop: "2px dashed var(--gold)",
+                        }}
+                        title={`Meta ${mo}: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}`}
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -960,7 +984,6 @@ function BarChart({
           <span
             className="inline-block h-3 w-3 rounded"
             style={{ background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)" }}
-
           />
           <span className="text-muted-foreground">{previousYear}</span>
         </div>
@@ -971,10 +994,86 @@ function BarChart({
           />
           <span className="text-muted-foreground">{currentYear}</span>
         </div>
+        {hasTargets && (
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-block h-0.5 w-6"
+              style={{ borderTop: "2px dashed var(--gold)" }}
+            />
+            <span className="text-muted-foreground">Meta mensal</span>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+function TargetSummary({
+  label,
+  achieved,
+  target,
+  unit,
+  valuePrefix = "",
+  valueSuffix = "",
+  decimals = 0,
+  invert = false,
+}: {
+  label: string;
+  achieved: number;
+  target: number | null;
+  unit?: string;
+  valuePrefix?: string;
+  valueSuffix?: string;
+  decimals?: number;
+  invert?: boolean;
+}) {
+  if (target === null || !isFinite(target) || target <= 0) return null;
+  const pct = target > 0 ? (achieved / target) * 100 : 0;
+  const clamped = Math.max(0, Math.min(100, pct));
+  // invert=true → menor é melhor (ex: CMV)
+  const good = invert ? achieved <= target : achieved >= target;
+  const barColor = good ? "var(--gold)" : "var(--wine)";
+  const fmt = (n: number) =>
+    n.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  return (
+    <div className="mb-4 rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
+      <div className="mb-1.5 flex items-center justify-between text-[11px]">
+        <span className="font-semibold uppercase tracking-wider text-primary">{label}</span>
+        <span className={good ? "text-primary" : "text-[#f4a5b0]"}>
+          {valuePrefix}
+          {fmt(achieved)}
+          {valueSuffix}
+          {unit ? ` ${unit}` : ""}{" "}
+          <span className="text-muted-foreground">/ meta {valuePrefix}
+            {fmt(target)}
+            {valueSuffix}
+            {unit ? ` ${unit}` : ""}
+          </span>{" "}
+          <span className="font-bold">({pct.toFixed(0)}%)</span>
+        </span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--gray)]">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{ width: `${clamped}%`, background: barColor }}
+        />
+      </div>
+    </div>
+  );
+}
+
+type TargetSet = { monthly: number[]; annual: number | null };
+
+function resolveAnnualTarget(t: TargetSet): number | null {
+  if (t.annual !== null && t.annual > 0) return t.annual;
+  if (t.monthly.length === 12) {
+    const s = t.monthly.reduce((a, b) => a + b, 0);
+    if (s > 0) return s;
+  }
+  return null;
+}
+
+
 
 function EstoquePanel({
   wines,

@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const roleValues = ["rest_owner", "staff"] as const;
+const roleValues = ["rest_owner", "staff", "supplier"] as const;
 const adminRoleValues = ["rest_admin", "rest_owner", "staff", "supplier"] as const;
 
 async function assertCanManage(context: any, restaurantId: string) {
@@ -59,11 +59,17 @@ export const createRestaurantWithAccess = createServerFn({ method: "POST" })
     return { id: rest.id, group_id: groupId };
   });
 
-const InviteSchema = z.object({
-  restaurant_id: z.string().uuid(),
-  email: z.string().trim().email(),
-  role: z.enum(roleValues),
-});
+const InviteSchema = z
+  .object({
+    restaurant_id: z.string().uuid(),
+    email: z.string().trim().email(),
+    role: z.enum(roleValues),
+    supplier_id: z.string().uuid().optional().nullable(),
+  })
+  .refine((d) => d.role !== "supplier" || !!d.supplier_id, {
+    message: "Selecione o fornecedor",
+    path: ["supplier_id"],
+  });
 
 export const inviteRestaurantUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -71,6 +77,29 @@ export const inviteRestaurantUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertCanManage(context, data.restaurant_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Se for fornecedor, valida que o supplier está ligado a este restaurante
+    // (via restaurant_supplier_access ou via wines.supplier_id).
+    if (data.role === "supplier") {
+      const [{ data: acc }, { data: wineSup }] = await Promise.all([
+        supabaseAdmin
+          .from("restaurant_supplier_access")
+          .select("supplier_id")
+          .eq("restaurant_id", data.restaurant_id)
+          .eq("supplier_id", data.supplier_id!)
+          .maybeSingle(),
+        supabaseAdmin
+          .from("wines")
+          .select("supplier_id")
+          .eq("restaurant_id", data.restaurant_id)
+          .eq("supplier_id", data.supplier_id!)
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (!acc && !wineSup) {
+        throw new Error("Fornecedor não vinculado a este restaurante.");
+      }
+    }
 
     let userId: string | undefined;
     const { data: invited, error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
@@ -91,9 +120,21 @@ export const inviteRestaurantUser = createServerFn({ method: "POST" })
       user_id: userId,
       role: data.role,
       restaurant_id: data.restaurant_id,
+      supplier_id: data.role === "supplier" ? data.supplier_id : null,
     });
     if (roleErr && !roleErr.message.toLowerCase().includes("duplicate")) {
       throw new Error(roleErr.message);
+    }
+
+    if (data.role === "supplier") {
+      await supabaseAdmin.from("restaurant_supplier_access").upsert(
+        {
+          restaurant_id: data.restaurant_id,
+          supplier_id: data.supplier_id!,
+          enabled: true,
+        },
+        { onConflict: "restaurant_id,supplier_id" },
+      );
     }
     return { ok: true, user_id: userId };
   });
@@ -142,10 +183,14 @@ export const listRestaurantAccess = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("user_roles")
-      .select("id, user_id, role, created_at")
+      .select("id, user_id, role, supplier_id, created_at")
       .eq("restaurant_id", data.restaurant_id);
     const userIds = Array.from(new Set((rows ?? []).map((r) => r.user_id)));
-    let profiles: Record<string, { email: string | null; full_name: string | null }> = {};
+    const supIds = Array.from(
+      new Set((rows ?? []).map((r) => r.supplier_id).filter(Boolean) as string[]),
+    );
+    const profiles: Record<string, { email: string | null; full_name: string | null }> = {};
+    const suppliers: Record<string, string> = {};
     if (userIds.length > 0) {
       const { data: pRows } = await supabaseAdmin
         .from("profiles")
@@ -155,6 +200,13 @@ export const listRestaurantAccess = createServerFn({ method: "GET" })
         profiles[p.id] = { email: p.email, full_name: p.full_name };
       }
     }
+    if (supIds.length > 0) {
+      const { data: sRows } = await supabaseAdmin
+        .from("suppliers")
+        .select("id, name")
+        .in("id", supIds);
+      for (const s of sRows ?? []) suppliers[s.id] = s.name;
+    }
     return (rows ?? []).map((r) => ({
       user_role_id: r.id,
       user_id: r.user_id,
@@ -162,6 +214,8 @@ export const listRestaurantAccess = createServerFn({ method: "GET" })
       created_at: r.created_at,
       email: profiles[r.user_id]?.email ?? null,
       full_name: profiles[r.user_id]?.full_name ?? null,
+      supplier_id: r.supplier_id,
+      supplier_name: r.supplier_id ? suppliers[r.supplier_id] ?? null : null,
     }));
   });
 

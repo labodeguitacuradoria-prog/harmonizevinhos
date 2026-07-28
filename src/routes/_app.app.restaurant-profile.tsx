@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Building2, Save, Plus, Trash2, Mail, Phone, Globe, Instagram, FileText, Clock, MapPin, Users } from "lucide-react";
 import { formatBRPhone } from "@/lib/phone-format";
+import { formatCEP } from "@/lib/cep-format";
 
 export const Route = createFileRoute("/_app/app/restaurant-profile")({
   component: RestaurantProfile,

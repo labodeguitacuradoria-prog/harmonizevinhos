@@ -74,38 +74,6 @@ function Landing() {
           </div>
         </section>
 
-        <section className="grid gap-6 pb-24 md:grid-cols-3">
-          <Feature
-            icon={<Wine className="h-5 w-5" />}
-            title="Catálogo e adega"
-            text="Cadastre rótulos, safras, produtores e acompanhe quantidade em estoque em tempo real."
-          />
-          <Feature
-            icon={<BarChart3 className="h-5 w-5" />}
-            title="Vendas e margens"
-            text="Registre saídas, veja markup praticado e o desempenho de cada rótulo."
-          />
-          <Feature
-            icon={<Users className="h-5 w-5" />}
-            title="Portal do fornecedor"
-            text="Compartilhe dados (com sua autorização) e fortaleça a relação com importadores e produtores."
-          />
-        </section>
-
-        <section className="rounded-lg border border-border bg-card p-8">
-          <div className="flex items-start gap-4">
-            <Shield className="mt-1 h-6 w-6 text-primary" />
-            <div>
-              <h2 className="text-xl font-semibold">
-                Você controla quem vê seus dados.
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Por padrão, nenhum fornecedor enxerga estoque, vendas ou preço
-                do seu restaurante. Você libera caso a caso.
-              </p>
-            </div>
-          </div>
-        </section>
       </main>
 
       <footer className="mt-16 border-t border-border">

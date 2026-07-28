@@ -589,7 +589,9 @@ function DashboardPage() {
             lastMonth={agg.lastCmv}
             wines={wines}
             cmvByMonth={agg.cmvByMonth}
+            cmvByMonthPrev={agg.cmvByMonthPrev}
             currentYear={currentYear}
+            previousYear={previousYear}
             targets={targetsFor(targets, "cmv")}
           />
         )}

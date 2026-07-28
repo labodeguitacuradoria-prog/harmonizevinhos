@@ -39,7 +39,8 @@ function AppLayout() {
           <Wine className="h-6 w-6 text-primary" />
           <span className="page-title text-base leading-tight">Gestão de Vinhos<br/><span className="text-xs text-muted-foreground font-normal">para Restaurantes</span></span>
         </div>
-        <nav className="flex flex-row gap-1 overflow-x-auto no-scrollbar px-3 pb-3 md:flex-col md:gap-1 md:overflow-visible md:pb-0">
+        {role === "restaurant" && <RestaurantContextSwitcher />}
+        <nav className="flex flex-row gap-1 overflow-x-auto no-scrollbar px-3 pb-3 md:flex-col md:gap-1 md:overflow-visible md:pb-0 md:pt-3">
           {role === "restaurant" && (
             <>
               <NavLink to="/app" icon={<Home className="h-4 w-4" />}>Início</NavLink>

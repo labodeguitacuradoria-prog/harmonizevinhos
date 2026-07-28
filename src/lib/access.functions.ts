@@ -183,10 +183,14 @@ export const listRestaurantAccess = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("user_roles")
-      .select("id, user_id, role, created_at")
+      .select("id, user_id, role, supplier_id, created_at")
       .eq("restaurant_id", data.restaurant_id);
     const userIds = Array.from(new Set((rows ?? []).map((r) => r.user_id)));
-    let profiles: Record<string, { email: string | null; full_name: string | null }> = {};
+    const supIds = Array.from(
+      new Set((rows ?? []).map((r) => r.supplier_id).filter(Boolean) as string[]),
+    );
+    const profiles: Record<string, { email: string | null; full_name: string | null }> = {};
+    const suppliers: Record<string, string> = {};
     if (userIds.length > 0) {
       const { data: pRows } = await supabaseAdmin
         .from("profiles")
@@ -196,6 +200,13 @@ export const listRestaurantAccess = createServerFn({ method: "GET" })
         profiles[p.id] = { email: p.email, full_name: p.full_name };
       }
     }
+    if (supIds.length > 0) {
+      const { data: sRows } = await supabaseAdmin
+        .from("suppliers")
+        .select("id, name")
+        .in("id", supIds);
+      for (const s of sRows ?? []) suppliers[s.id] = s.name;
+    }
     return (rows ?? []).map((r) => ({
       user_role_id: r.id,
       user_id: r.user_id,
@@ -203,6 +214,8 @@ export const listRestaurantAccess = createServerFn({ method: "GET" })
       created_at: r.created_at,
       email: profiles[r.user_id]?.email ?? null,
       full_name: profiles[r.user_id]?.full_name ?? null,
+      supplier_id: r.supplier_id,
+      supplier_name: r.supplier_id ? suppliers[r.supplier_id] ?? null : null,
     }));
   });
 

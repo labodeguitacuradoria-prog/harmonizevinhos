@@ -823,17 +823,23 @@ function SimpleYearPanel({
   byYearMonth,
   currentYear,
   previousYear,
+  currentMonth,
+  targets,
 }: {
   title: string;
   unit: string;
   byYearMonth: Record<number, number[]>;
   currentYear: number;
   previousYear: number;
+  currentMonth: number;
+  targets: TargetSet;
 }) {
   const curr = byYearMonth[currentYear];
   const prev = byYearMonth[previousYear];
   const currTotal = curr.reduce((a, b) => a + b, 0);
   const prevTotal = prev.reduce((a, b) => a + b, 0);
+  const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
+  const annualTarget = resolveAnnualTarget(targets);
 
   return (
     <div>
@@ -846,6 +852,14 @@ function SimpleYearPanel({
         <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
         <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
       </div>
+      {annualTarget !== null && (
+        <TargetSummary
+          label={`Meta anual ${currentYear}`}
+          achieved={currAcc}
+          target={annualTarget}
+          valueSuffix={` ${unit}`}
+        />
+      )}
       <BarChart
         curr={curr}
         prev={prev}
@@ -853,10 +867,12 @@ function SimpleYearPanel({
         previousYear={previousYear}
         valueSuffix={` ${unit}`}
         height={240}
+        targets={targets.monthly.length === 12 ? targets.monthly : undefined}
       />
     </div>
   );
 }
+
 
 function niceMax(v: number) {
   if (v <= 0) return 1;

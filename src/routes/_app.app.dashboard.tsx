@@ -565,6 +565,14 @@ function DashboardPage() {
             avgAllYear={agg.avgAll}
             avgBottleYear={agg.avgBottle}
             avgGlassYear={agg.avgGlass}
+            avgAllByMonth={agg.avgAllByMonth}
+            avgBottleByMonth={agg.avgBottleByMonth}
+            avgGlassByMonth={agg.avgGlassByMonth}
+            avgAllByMonthPrev={agg.avgAllByMonthPrev}
+            avgBottleByMonthPrev={agg.avgBottleByMonthPrev}
+            avgGlassByMonthPrev={agg.avgGlassByMonthPrev}
+            currentYear={currentYear}
+            previousYear={previousYear}
             lastMonth={agg.lastAvg}
             targets={targetsFor(targets, "preco")}
           />

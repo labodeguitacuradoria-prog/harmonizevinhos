@@ -441,13 +441,22 @@ function DashboardPage() {
             Indicadores da adega em tempo real — clique nos botões para ver detalhes.
           </p>
         </div>
-        <button
-          onClick={() => setMetasOpen(true)}
-          className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
-          title="Definir metas mensais e anuais dos indicadores"
-        >
-          <Target size={14} /> Metas
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setDiagOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
+            title="Relatório de diagnóstico de vendas do mês e YTD"
+          >
+            <FileText size={14} /> Diagnóstico
+          </button>
+          <button
+            onClick={() => setMetasOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"
+            title="Definir metas mensais e anuais dos indicadores"
+          >
+            <Target size={14} /> Metas
+          </button>
+        </div>
       </header>
 
       {/* KPI buttons row */}

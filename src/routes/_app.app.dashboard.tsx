@@ -829,10 +829,6 @@ function FaturamentoPanel({
         </div>
       </div>
 
-
-      <p className="mt-3 text-[11px] text-muted-foreground">
-        Inclui R$ {fmtBRL(corkageAmtYear)} de taxa de rolha no ano corrente.
-      </p>
     </div>
   );
 }

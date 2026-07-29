@@ -762,15 +762,15 @@ function FaturamentoPanel({
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(220px,240px)_1fr_minmax(240px,300px)]">
-        <div className="flex flex-col gap-3">
+      <div className="grid gap-4 lg:grid-cols-[minmax(150px,165px)_1fr_minmax(220px,260px)]">
+        <div className="flex flex-col gap-2">
           {monthTarget > 0 && lastMonth.month >= 0 && (
             <TargetGauge
               label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}
               achieved={revLast}
               target={monthTarget}
               valuePrefix="R$ "
-              size="lg"
+              size="sm"
             />
           )}
           {annualTarget !== null && (
@@ -779,7 +779,7 @@ function FaturamentoPanel({
               achieved={currAcc}
               target={annualTarget}
               valuePrefix="R$ "
-              size="lg"
+              size="sm"
             />
           )}
         </div>

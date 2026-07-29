@@ -1204,7 +1204,7 @@ function TargetGauge({
   const bigVal = size === "lg" ? "text-2xl" : size === "md" ? "text-xl" : "text-lg";
 
   return (
-    <div className="flex flex-col items-center rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
+    <div className="mb-3 mr-3 inline-flex flex-col items-center align-top rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
       <div className="mb-1 text-center text-[10px] font-semibold uppercase tracking-wider text-primary">
         {label}
       </div>

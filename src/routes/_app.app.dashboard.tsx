@@ -762,15 +762,15 @@ function FaturamentoPanel({
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(220px,240px)_1fr_minmax(240px,300px)]">
-        <div className="flex flex-col gap-3">
+      <div className="grid gap-4 lg:grid-cols-[minmax(150px,165px)_1fr_minmax(220px,260px)]">
+        <div className="flex flex-col gap-2">
           {monthTarget > 0 && lastMonth.month >= 0 && (
             <TargetGauge
               label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}
               achieved={revLast}
               target={monthTarget}
               valuePrefix="R$ "
-              size="lg"
+              size="sm"
             />
           )}
           {annualTarget !== null && (
@@ -779,7 +779,7 @@ function FaturamentoPanel({
               achieved={currAcc}
               target={annualTarget}
               valuePrefix="R$ "
-              size="lg"
+              size="sm"
             />
           )}
         </div>
@@ -829,10 +829,6 @@ function FaturamentoPanel({
         </div>
       </div>
 
-
-      <p className="mt-3 text-[11px] text-muted-foreground">
-        Inclui R$ {fmtBRL(corkageAmtYear)} de taxa de rolha no ano corrente.
-      </p>
     </div>
   );
 }
@@ -1187,13 +1183,13 @@ function TargetGauge({
   const fmt = (n: number) =>
     n.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 
-  const dims = size === "lg" ? { w: 200, h: 116 } : size === "md" ? { w: 160, h: 94 } : { w: 130, h: 78 };
+  const dims = size === "lg" ? { w: 160, h: 94 } : size === "md" ? { w: 140, h: 84 } : { w: 120, h: 72 };
   const w = dims.w;
   const h = dims.h;
   const cx = w / 2;
   const cy = h - 6;
   const r = w / 2 - 12;
-  const stroke = size === "lg" ? 14 : size === "md" ? 12 : 10;
+  const stroke = size === "lg" ? 12 : size === "md" ? 10 : 9;
   // Semicircle from 180deg to 0deg (left → right)
   const arc = (fromPct: number, toPct: number) => {
     const a1 = Math.PI * (1 - Math.min(100, Math.max(0, fromPct)) / 100);
@@ -1205,11 +1201,11 @@ function TargetGauge({
     const large = Math.abs(toPct - fromPct) > 50 ? 1 : 0;
     return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
   };
-  const bigVal = size === "lg" ? "text-2xl" : size === "md" ? "text-xl" : "text-lg";
+  const bigVal = size === "lg" ? "text-xl" : size === "md" ? "text-lg" : "text-base";
 
   return (
-    <div className="mb-3 mr-3 inline-flex flex-col items-center align-top rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
-      <div className="mb-1 text-center text-[10px] font-semibold uppercase tracking-wider text-primary">
+    <div className="flex flex-col items-center rounded-lg border border-border bg-[color:var(--surface-2)] p-2">
+      <div className="mb-1 text-center text-[9px] font-semibold uppercase tracking-wider text-primary">
         {label}
       </div>
       <div className="relative" style={{ width: w, height: h }}>

@@ -762,25 +762,28 @@ function FaturamentoPanel({
         </div>
       </div>
 
-      {annualTarget !== null && (
-        <TargetSummary
-          label={`Meta anual ${currentYear}`}
-          achieved={currAcc}
-          target={annualTarget}
-          valuePrefix="R$ "
-        />
-      )}
-      {monthTarget > 0 && lastMonth.month >= 0 && (
-        <TargetSummary
-          label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}
-          achieved={revLast}
-          target={monthTarget}
-          valuePrefix="R$ "
-        />
-      )}
-
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid gap-5 lg:grid-cols-[minmax(220px,240px)_1fr_minmax(240px,300px)]">
+        <div className="flex flex-col gap-3">
+          {monthTarget > 0 && lastMonth.month >= 0 && (
+            <TargetGauge
+              label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}
+              achieved={revLast}
+              target={monthTarget}
+              valuePrefix="R$ "
+              size="lg"
+            />
+          )}
+          {annualTarget !== null && (
+            <TargetGauge
+              label={`Meta anual ${currentYear}`}
+              achieved={currAcc}
+              target={annualTarget}
+              valuePrefix="R$ "
+              size="lg"
+            />
+          )}
+        </div>
+        <div>
           <BarChart
             curr={curr}
             prev={prev}
@@ -825,6 +828,7 @@ function FaturamentoPanel({
           />
         </div>
       </div>
+
 
       <p className="mt-3 text-[11px] text-muted-foreground">
         Inclui R$ {fmtBRL(corkageAmtYear)} de taxa de rolha no ano corrente.

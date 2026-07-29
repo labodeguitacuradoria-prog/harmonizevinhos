@@ -1139,7 +1139,7 @@ function BarChart({
   );
 }
 
-function TargetSummary({
+function TargetGauge({
   label,
   achieved,
   target,
@@ -1148,6 +1148,7 @@ function TargetSummary({
   valueSuffix = "",
   decimals = 0,
   invert = false,
+  size = "sm",
 }: {
   label: string;
   achieved: number;
@@ -1157,41 +1158,99 @@ function TargetSummary({
   valueSuffix?: string;
   decimals?: number;
   invert?: boolean;
+  size?: "sm" | "md" | "lg";
 }) {
   if (target === null || !isFinite(target) || target <= 0) return null;
   const pct = target > 0 ? (achieved / target) * 100 : 0;
-  const clamped = Math.max(0, Math.min(100, pct));
-  // invert=true → menor é melhor (ex: CMV)
+  const clamped = Math.max(0, Math.min(150, pct));
   const good = invert ? achieved <= target : achieved >= target;
-  const barColor = good ? "var(--gold)" : "var(--wine)";
+  // Color scale: red < 40, amber 40-80, gold 80-110, green >110 (or invert reversed)
+  const colorFor = (p: number) => {
+    const effective = invert ? 100 - Math.min(p, 100) + Math.max(0, 100 - p) : p;
+    const v = invert ? (achieved <= target ? 100 : Math.max(0, 200 - p)) : p;
+    if (invert) {
+      if (achieved <= target * 0.9) return "#22c55e";
+      if (achieved <= target) return "var(--gold)";
+      if (achieved <= target * 1.15) return "#f59e0b";
+      return "#ef4444";
+    }
+    if (v < 40) return "#ef4444";
+    if (v < 80) return "#f59e0b";
+    if (v <= 110) return "var(--gold)";
+    return "#22c55e";
+  };
+  const color = colorFor(pct);
   const fmt = (n: number) =>
     n.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+
+  const dims = size === "lg" ? { w: 200, h: 116 } : size === "md" ? { w: 160, h: 94 } : { w: 130, h: 78 };
+  const w = dims.w;
+  const h = dims.h;
+  const cx = w / 2;
+  const cy = h - 6;
+  const r = w / 2 - 12;
+  const stroke = size === "lg" ? 14 : size === "md" ? 12 : 10;
+  // Semicircle from 180deg to 0deg (left → right)
+  const arc = (fromPct: number, toPct: number) => {
+    const a1 = Math.PI * (1 - Math.min(100, Math.max(0, fromPct)) / 100);
+    const a2 = Math.PI * (1 - Math.min(100, Math.max(0, toPct)) / 100);
+    const x1 = cx + r * Math.cos(a1);
+    const y1 = cy - r * Math.sin(a1);
+    const x2 = cx + r * Math.cos(a2);
+    const y2 = cy - r * Math.sin(a2);
+    const large = Math.abs(toPct - fromPct) > 50 ? 1 : 0;
+    return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
+  };
+  const bigVal = size === "lg" ? "text-2xl" : size === "md" ? "text-xl" : "text-lg";
+
   return (
-    <div className="mb-4 rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
-      <div className="mb-1.5 flex items-center justify-between text-[11px]">
-        <span className="font-semibold uppercase tracking-wider text-primary">{label}</span>
-        <span className={good ? "text-primary" : "text-[#f4a5b0]"}>
-          {valuePrefix}
-          {fmt(achieved)}
-          {valueSuffix}
-          {unit ? ` ${unit}` : ""}{" "}
-          <span className="text-muted-foreground">/ meta {valuePrefix}
-            {fmt(target)}
-            {valueSuffix}
-            {unit ? ` ${unit}` : ""}
-          </span>{" "}
-          <span className="font-bold">({pct.toFixed(0)}%)</span>
-        </span>
+    <div className="flex flex-col items-center rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
+      <div className="mb-1 text-center text-[10px] font-semibold uppercase tracking-wider text-primary">
+        {label}
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--gray)]">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${clamped}%`, background: barColor }}
-        />
+      <div className="relative" style={{ width: w, height: h }}>
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+          <path
+            d={arc(0, 100)}
+            stroke="var(--gray)"
+            strokeWidth={stroke}
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d={arc(0, Math.min(100, clamped))}
+            stroke={color}
+            strokeWidth={stroke}
+            fill="none"
+            strokeLinecap="round"
+          />
+          {/* Target tick at 100% */}
+          <circle cx={cx + r * Math.cos(0)} cy={cy} r={2} fill="var(--gold)" />
+          <circle cx={cx - r} cy={cy} r={2} fill="var(--gray)" />
+        </svg>
+        <div className="absolute inset-x-0 bottom-1 flex flex-col items-center">
+          <div className={`${bigVal} font-bold leading-none`} style={{ color }}>
+            {pct.toFixed(0)}%
+          </div>
+        </div>
+      </div>
+      <div className="mt-1 flex flex-col items-center gap-0.5 text-center text-[10px] text-muted-foreground">
+        <div>
+          <span className={good ? "text-primary font-semibold" : "text-[#f4a5b0] font-semibold"}>
+            {valuePrefix}{fmt(achieved)}{valueSuffix}{unit ? ` ${unit}` : ""}
+          </span>
+        </div>
+        <div>
+          meta: {valuePrefix}{fmt(target)}{valueSuffix}{unit ? ` ${unit}` : ""}
+        </div>
       </div>
     </div>
   );
 }
+
+// Backwards-compatible alias — all previous usages render as a gauge now.
+const TargetSummary = TargetGauge;
+
 
 type TargetSet = { monthly: number[]; annual: number | null };
 

@@ -1187,13 +1187,13 @@ function TargetGauge({
   const fmt = (n: number) =>
     n.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 
-  const dims = size === "lg" ? { w: 200, h: 116 } : size === "md" ? { w: 160, h: 94 } : { w: 130, h: 78 };
+  const dims = size === "lg" ? { w: 160, h: 94 } : size === "md" ? { w: 140, h: 84 } : { w: 120, h: 72 };
   const w = dims.w;
   const h = dims.h;
   const cx = w / 2;
   const cy = h - 6;
   const r = w / 2 - 12;
-  const stroke = size === "lg" ? 14 : size === "md" ? 12 : 10;
+  const stroke = size === "lg" ? 12 : size === "md" ? 10 : 9;
   // Semicircle from 180deg to 0deg (left → right)
   const arc = (fromPct: number, toPct: number) => {
     const a1 = Math.PI * (1 - Math.min(100, Math.max(0, fromPct)) / 100);

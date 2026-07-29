@@ -1205,11 +1205,11 @@ function TargetGauge({
     const large = Math.abs(toPct - fromPct) > 50 ? 1 : 0;
     return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
   };
-  const bigVal = size === "lg" ? "text-2xl" : size === "md" ? "text-xl" : "text-lg";
+  const bigVal = size === "lg" ? "text-xl" : size === "md" ? "text-lg" : "text-base";
 
   return (
-    <div className="mb-3 mr-3 inline-flex flex-col items-center align-top rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
-      <div className="mb-1 text-center text-[10px] font-semibold uppercase tracking-wider text-primary">
+    <div className="flex flex-col items-center rounded-lg border border-border bg-[color:var(--surface-2)] p-2">
+      <div className="mb-1 text-center text-[9px] font-semibold uppercase tracking-wider text-primary">
         {label}
       </div>
       <div className="relative" style={{ width: w, height: h }}>

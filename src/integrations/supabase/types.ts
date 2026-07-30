@@ -1149,23 +1149,32 @@ export type Database = {
           country: string | null
           created_at: string
           elaboration: string | null
+          extracted_by_ai: boolean
+          extraction_notes: string | null
           gallery_urls: string[] | null
           grape: string | null
+          grapes_detail: Json | null
           id: string
           image_url: string | null
           internal_code: string | null
           min_stock_override: number | null
           name: string
+          oak_months: number | null
           pairing_notes: string | null
           producer: string | null
+          production_method: string | null
           region: string | null
           restaurant_id: string
           sale_price: number
           serving_temp_max: number | null
           serving_temp_min: number | null
+          sommelier_weights: Json | null
+          source_file_url: string | null
+          source_text: string | null
           style: string | null
           sugar_g_l: number | null
           sugar_level: string | null
+          suggested_retail_price: number | null
           supplier_id: string | null
           suppliers: string[] | null
           tannin: string | null
@@ -1195,23 +1204,32 @@ export type Database = {
           country?: string | null
           created_at?: string
           elaboration?: string | null
+          extracted_by_ai?: boolean
+          extraction_notes?: string | null
           gallery_urls?: string[] | null
           grape?: string | null
+          grapes_detail?: Json | null
           id?: string
           image_url?: string | null
           internal_code?: string | null
           min_stock_override?: number | null
           name: string
+          oak_months?: number | null
           pairing_notes?: string | null
           producer?: string | null
+          production_method?: string | null
           region?: string | null
           restaurant_id: string
           sale_price?: number
           serving_temp_max?: number | null
           serving_temp_min?: number | null
+          sommelier_weights?: Json | null
+          source_file_url?: string | null
+          source_text?: string | null
           style?: string | null
           sugar_g_l?: number | null
           sugar_level?: string | null
+          suggested_retail_price?: number | null
           supplier_id?: string | null
           suppliers?: string[] | null
           tannin?: string | null
@@ -1241,23 +1259,32 @@ export type Database = {
           country?: string | null
           created_at?: string
           elaboration?: string | null
+          extracted_by_ai?: boolean
+          extraction_notes?: string | null
           gallery_urls?: string[] | null
           grape?: string | null
+          grapes_detail?: Json | null
           id?: string
           image_url?: string | null
           internal_code?: string | null
           min_stock_override?: number | null
           name?: string
+          oak_months?: number | null
           pairing_notes?: string | null
           producer?: string | null
+          production_method?: string | null
           region?: string | null
           restaurant_id?: string
           sale_price?: number
           serving_temp_max?: number | null
           serving_temp_min?: number | null
+          sommelier_weights?: Json | null
+          source_file_url?: string | null
+          source_text?: string | null
           style?: string | null
           sugar_g_l?: number | null
           sugar_level?: string | null
+          suggested_retail_price?: number | null
           supplier_id?: string | null
           suppliers?: string[] | null
           tannin?: string | null

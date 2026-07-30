@@ -9,6 +9,7 @@ import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { WineOverview } from "@/components/WineOverview";
 import { WineListImportDialog } from "@/components/WineListImportDialog";
+import { WineFieldsEditor, WineFormTabs, type WineFields } from "@/components/WineFieldsEditor";
 
 function isGlassVol(v: string | null | undefined) {
   if (!v) return false;
@@ -870,113 +871,125 @@ function WineForm({
   onSaved: () => void;
 }) {
   const isEdit = !!wine;
-  const initialType = wine?.wine_type ? (LEGACY_TYPE_MAP[wine.wine_type] ?? wine.wine_type) : "Tinto";
-  const typeInList = DEFAULT_TYPES.includes(initialType);
-  const initialVolume = wine?.volume ?? "750 ml";
-  const volumeInList = DEFAULT_VOLUMES.includes(initialVolume);
-
   const [tab, setTab] = useState<"geral" | "carac" | "midia">("geral");
-
-  const initialStyle = wine?.style ?? "";
-  const styleInList = STYLES.includes(initialStyle);
-
-  const [f, setF] = useState({
-    name: wine?.name ?? "",
-    producer: wine?.producer ?? "",
-    vintage: wine?.vintage ? String(wine.vintage) : "",
-    region: wine?.region ?? "",
-    appellation: wine?.appellation ?? "",
-    country: wine?.country ?? "",
-    grape: wine?.grape ?? "",
-    wine_type: typeInList ? initialType : "__custom",
-    wine_type_custom: typeInList ? "" : initialType,
-    style: styleInList ? initialStyle : (initialStyle ? "__custom" : ""),
-    style_custom: styleInList ? "" : initialStyle,
-    volume: volumeInList ? initialVolume : "__custom",
-    volume_custom: volumeInList ? "" : initialVolume,
-    cost_price: wine ? String(wine.cost_price) : "",
-    sale_price: wine ? String(wine.sale_price) : "",
-    supplier_id: wine?.supplier_id ?? "",
-    internal_code: wine?.internal_code ?? "",
-    alcohol_pct: wine?.alcohol_pct != null ? String(wine.alcohol_pct) : "",
-    sugar_level: wine?.sugar_level ?? "",
-    sugar_g_l: wine?.sugar_g_l != null ? String(wine.sugar_g_l) : "",
-    body: wine?.body ?? "",
-    tannin: wine?.tannin ?? "",
-    acidity: wine?.acidity ?? "",
-    acidity_g_l: wine?.acidity_g_l != null ? String(wine.acidity_g_l) : "",
-    acidity_ph: wine?.acidity_ph != null ? String(wine.acidity_ph) : "",
-    elaboration: wine?.elaboration ?? "",
-    aging: wine?.aging ?? "",
-    serving_temp_min: wine?.serving_temp_min != null ? String(wine.serving_temp_min) : "",
-    serving_temp_max: wine?.serving_temp_max != null ? String(wine.serving_temp_max) : "",
-    pairing_notes: wine?.pairing_notes ?? "",
-    tasting_notes: wine?.tasting_notes ?? "",
-    barcode: wine?.barcode ?? "",
-    active_on_menu: wine?.active_on_menu ?? true,
-    count_in_stock: wine?.count_in_stock ?? true,
-  });
-  const [suppliersList, setSuppliersList] = useState<string[]>(wine?.suppliers ?? []);
-  const [awardsList, setAwardsList] = useState<string[]>(wine?.awards ?? []);
-  const [videosList, setVideosList] = useState<Video[]>(
-    Array.isArray(wine?.videos) ? (wine!.videos as Video[]) : (wine?.video_url ? [{ title: "Vídeo", url: wine.video_url }] : [])
-  );
   const [scanOpen, setScanOpen] = useState(false);
-  const [image, setImage] = useState<string | null>(wine?.image_url ?? null);
-  const [gallery, setGallery] = useState<string[]>(wine?.gallery_urls ?? []);
-  const [techSheet, setTechSheet] = useState<string | null>(wine?.tech_sheet_url ?? null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const [item, setItem] = useState<WineFields>(() => ({
+    name: wine?.name ?? "",
+    producer: wine?.producer ?? null,
+    vintage: wine?.vintage ?? null,
+    region: wine?.region ?? null,
+    appellation: wine?.appellation ?? null,
+    country: wine?.country ?? null,
+    grape: wine?.grape ?? null,
+    wine_type: wine?.wine_type ? (LEGACY_TYPE_MAP[wine.wine_type] ?? wine.wine_type) : null,
+    style: wine?.style ?? null,
+    volume: wine?.volume ?? "750 ml",
+    suppliers: wine?.suppliers ?? null,
+    barcode: wine?.barcode ?? null,
+    alcohol_pct: wine?.alcohol_pct ?? null,
+    sugar_level: wine?.sugar_level ?? null,
+    sugar_g_l: wine?.sugar_g_l ?? null,
+    body: wine?.body ?? null,
+    tannin: wine?.tannin ?? null,
+    acidity: wine?.acidity ?? null,
+    acidity_g_l: wine?.acidity_g_l ?? null,
+    acidity_ph: wine?.acidity_ph ?? null,
+    elaboration: wine?.elaboration ?? null,
+    aging: wine?.aging ?? null,
+    serving_temp_min: wine?.serving_temp_min ?? null,
+    serving_temp_max: wine?.serving_temp_max ?? null,
+    tasting_notes: wine?.tasting_notes ?? null,
+    pairing_notes: wine?.pairing_notes ?? null,
+    awards: wine?.awards ?? null,
+    image_url: wine?.image_url ?? null,
+    gallery_urls: wine?.gallery_urls ?? null,
+    tech_sheet_url: wine?.tech_sheet_url ?? null,
+    videos: Array.isArray(wine?.videos)
+      ? (wine!.videos as Video[])
+      : wine?.video_url
+        ? [{ title: "Vídeo", url: wine.video_url }]
+        : null,
+    grapes_detail: (wine as any)?.grapes_detail ?? null,
+    oak_months: (wine as any)?.oak_months ?? null,
+    production_method: (wine as any)?.production_method ?? null,
+    sommelier_weights: (wine as any)?.sommelier_weights ?? null,
+    source_text: (wine as any)?.source_text ?? null,
+    source_file_url: (wine as any)?.source_file_url ?? null,
+    extracted_by_ai: (wine as any)?.extracted_by_ai ?? false,
+    extraction_notes: (wine as any)?.extraction_notes ?? null,
+    suggested_retail_price: (wine as any)?.suggested_retail_price ?? null,
+  }));
+
+  // Campos exclusivos do restaurante
+  const [internalCode, setInternalCode] = useState(wine?.internal_code ?? "");
+  const [costPrice, setCostPrice] = useState(wine ? String(wine.cost_price) : "");
+  const [salePrice, setSalePrice] = useState(wine ? String(wine.sale_price) : "");
+  const [supplierId, setSupplierId] = useState(wine?.supplier_id ?? "");
+  const [activeOnMenu, setActiveOnMenu] = useState(wine?.active_on_menu ?? true);
+  const [countInStock, setCountInStock] = useState(wine?.count_in_stock ?? true);
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (!item.name || !String(item.name).trim()) return toast.error("Informe o nome do rótulo.");
     setSaving(true);
-    const wineType = f.wine_type === "__custom" ? f.wine_type_custom.trim() : f.wine_type;
-    const volume = f.volume === "__custom" ? f.volume_custom.trim() : f.volume;
+    const videos = Array.isArray(item.videos) ? item.videos : [];
     const payload = {
       restaurant_id: restaurantId,
-      name: f.name,
-      producer: f.producer || null,
-      vintage: f.vintage ? Number(f.vintage) : null,
-      region: f.region || null,
-      appellation: f.appellation || null,
-      country: f.country || null,
-      grape: f.grape || null,
-      wine_type: wineType || null,
-      style: (f.style === "__custom" ? f.style_custom.trim() : f.style) || null,
-      volume: volume || null,
-      cost_price: Number(f.cost_price) || 0,
-      sale_price: Number(f.sale_price) || 0,
-      supplier_id: f.supplier_id || null,
-      suppliers: suppliersList.length ? suppliersList : null,
-      internal_code: f.internal_code.trim() || null,
-      alcohol_pct: f.alcohol_pct ? Number(f.alcohol_pct) : null,
-      sugar_level: f.sugar_level || null,
-      sugar_g_l: f.sugar_g_l ? Number(f.sugar_g_l) : null,
-      body: f.body || null,
-      tannin: f.tannin || null,
-      acidity: f.acidity || null,
-      acidity_g_l: f.acidity_g_l ? Number(f.acidity_g_l) : null,
-      acidity_ph: f.acidity_ph ? Number(f.acidity_ph) : null,
-      elaboration: f.elaboration || null,
-      aging: f.aging || null,
-      serving_temp_min: f.serving_temp_min ? Number(f.serving_temp_min) : null,
-      serving_temp_max: f.serving_temp_max ? Number(f.serving_temp_max) : null,
-      pairing_notes: f.pairing_notes || null,
-      tasting_notes: f.tasting_notes || null,
-      awards: awardsList.length ? awardsList : null,
-      image_url: image,
-      gallery_urls: gallery.length ? gallery : null,
-      tech_sheet_url: techSheet,
-      video_url: videosList[0]?.url ?? null,
-      videos: videosList.length ? videosList : null,
-      barcode: f.barcode.trim() || null,
-      active_on_menu: f.active_on_menu,
-      count_in_stock: f.count_in_stock,
+      name: String(item.name).trim(),
+      producer: item.producer || null,
+      vintage: item.vintage ?? null,
+      region: item.region || null,
+      appellation: item.appellation || null,
+      country: item.country || null,
+      grape: item.grape || null,
+      wine_type: item.wine_type || null,
+      style: item.style || null,
+      volume: item.volume || null,
+      suppliers: Array.isArray(item.suppliers) && item.suppliers.length ? item.suppliers : null,
+      barcode: (item.barcode ?? "").toString().trim() || null,
+      alcohol_pct: item.alcohol_pct ?? null,
+      sugar_level: item.sugar_level || null,
+      sugar_g_l: item.sugar_g_l ?? null,
+      body: item.body || null,
+      tannin: item.tannin || null,
+      acidity: item.acidity || null,
+      acidity_g_l: item.acidity_g_l ?? null,
+      acidity_ph: item.acidity_ph ?? null,
+      elaboration: item.elaboration || null,
+      aging: item.aging || null,
+      serving_temp_min: item.serving_temp_min ?? null,
+      serving_temp_max: item.serving_temp_max ?? null,
+      tasting_notes: item.tasting_notes || null,
+      pairing_notes: item.pairing_notes || null,
+      awards: Array.isArray(item.awards) && item.awards.length ? item.awards : null,
+      image_url: item.image_url || null,
+      gallery_urls: Array.isArray(item.gallery_urls) && item.gallery_urls.length ? item.gallery_urls : null,
+      tech_sheet_url: item.tech_sheet_url || null,
+      video_url: videos[0]?.url ?? null,
+      videos: videos.length ? videos : null,
+      grapes_detail: Array.isArray(item.grapes_detail) && item.grapes_detail.length ? item.grapes_detail : null,
+      oak_months: item.oak_months ?? null,
+      production_method: item.production_method || null,
+      sommelier_weights: item.sommelier_weights ?? null,
+      source_text: item.source_text || null,
+      source_file_url: item.source_file_url || null,
+      extracted_by_ai: !!item.extracted_by_ai,
+      extraction_notes: item.extraction_notes || null,
+      suggested_retail_price: item.suggested_retail_price ?? null,
+      // exclusivos do restaurante
+      internal_code: internalCode.trim() || null,
+      cost_price: Number(costPrice) || 0,
+      sale_price: Number(salePrice) || 0,
+      supplier_id: supplierId || null,
+      active_on_menu: activeOnMenu,
+      count_in_stock: countInStock,
     };
     const { error } = isEdit
-      ? await supabase.from("wines").update(payload).eq("id", wine!.id)
-      : await supabase.from("wines").insert(payload);
+      ? await supabase.from("wines").update(payload as any).eq("id", wine!.id)
+      : await supabase.from("wines").insert(payload as any);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success(isEdit ? "Vinho atualizado" : "Vinho cadastrado");
@@ -1002,124 +1015,83 @@ function WineForm({
         </p>
       )}
 
-      <div className="mb-4 flex gap-1 border-b border-border">
-        <FormTab active={tab === "geral"} onClick={() => setTab("geral")}>Geral</FormTab>
-        <FormTab active={tab === "carac"} onClick={() => setTab("carac")}>Características</FormTab>
-        <FormTab active={tab === "midia"} onClick={() => setTab("midia")}>Mídia</FormTab>
-      </div>
+      <WineFormTabs tab={tab} onChange={setTab} />
 
       <form onSubmit={save} className="space-y-4">
-        {tab === "geral" && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <CatalogSearch
-                onPick={(c) => {
-                  setF((prev) => ({
-                    ...prev,
-                    name: prev.name || c.name || "",
-                    producer: prev.producer || c.producer || "",
-                    vintage: prev.vintage || (c.vintage ? String(c.vintage) : ""),
-                    region: prev.region || c.region || "",
-                    appellation: prev.appellation || (c as any).appellation || "",
-                    country: prev.country || c.country || "",
-                    grape: prev.grape || c.grape || "",
-                    wine_type: prev.wine_type === "Tinto" && c.wine_type
-                      ? (DEFAULT_TYPES.includes(c.wine_type) ? c.wine_type : "__custom")
-                      : prev.wine_type,
-                    wine_type_custom: !DEFAULT_TYPES.includes(c.wine_type ?? "") ? (c.wine_type ?? "") : prev.wine_type_custom,
-                    alcohol_pct: prev.alcohol_pct || (c.alcohol_pct != null ? String(c.alcohol_pct) : ""),
-                    sugar_level: prev.sugar_level || c.sugar_level || "",
-                    body: prev.body || c.body || "",
-                    tannin: prev.tannin || c.tannin || "",
-                    acidity: prev.acidity || c.acidity || "",
-                    aging: prev.aging || c.aging || "",
-                    serving_temp_min: prev.serving_temp_min || (c.serving_temp_min != null ? String(c.serving_temp_min) : ""),
-                    serving_temp_max: prev.serving_temp_max || (c.serving_temp_max != null ? String(c.serving_temp_max) : ""),
-                    pairing_notes: prev.pairing_notes || c.pairing_notes || "",
-                    tasting_notes: prev.tasting_notes || c.tasting_notes || "",
-                    barcode: prev.barcode || c.barcode || "",
-                  }));
-                  if (!image && c.image_url) setImage(c.image_url);
-                }}
-              />
-            </div>
-            <Field label="Nome*" required value={f.name} onChange={(v) => setF({ ...f, name: v })} hint="Nome do rótulo como aparece no contra-rótulo, sem incluir produtor ou safra." placeholder="Ex: Alpha Cabernet Sauvignon" />
-            <Field label="Código no restaurante" value={f.internal_code} onChange={(v) => setF({ ...f, internal_code: v })} hint="Código interno usado pelo restaurante para identificar o rótulo (PDV, carta, planilha)." placeholder="Ex: V-014" />
-            <Field label="Produtor" value={f.producer} onChange={(v) => setF({ ...f, producer: v })} hint="Vinícola ou produtor responsável pela elaboração do vinho." placeholder="Ex: Viña Montes" />
-            <Field label="Safra" value={f.vintage} onChange={(v) => setF({ ...f, vintage: v })} hint="Ano da colheita das uvas. Deixe em branco para vinhos sem safra (NV)." placeholder="Ex: 2020" />
-            <Field label="Região" value={f.region} onChange={(v) => setF({ ...f, region: v })} hint="Região vitivinícola, denominação ou apelação de origem." placeholder="Ex: Vale do Colchagua" />
-            <Field label="País" value={f.country} onChange={(v) => setF({ ...f, country: v })} hint="País de origem do vinho, por extenso e em português." placeholder="Ex: Chile" />
-            <Field label="AOP / Denominação" value={f.appellation} onChange={(v) => setF({ ...f, appellation: v })} hint="Somente vinhos europeus. Denominação de Origem Protegida — França: AOP/AOC; Itália: DOC/DOCG; Espanha: DO/DOCa; Portugal: DOP/DOC; Alemanha: g.U./Prädikatswein." placeholder="Ex: AOC Saint-Émilion Grand Cru" />
-            <Field label="Uvas" value={f.grape} onChange={(v) => setF({ ...f, grape: v })} hint="Castas/uvas e seus percentuais quando houver corte. Separe por vírgula." placeholder="Ex: Cabernet Sauvignon 85%, Merlot 15%" />
-            <SelectWithCustom
-              label="Tipo"
-              hint="Categoria geral do vinho. Use 'Outro' apenas quando nenhuma das opções padrão se aplicar."
-              value={f.wine_type}
-              custom={f.wine_type_custom}
-              options={DEFAULT_TYPES}
-              onChange={(v, c) => setF({ ...f, wine_type: v, wine_type_custom: c })}
+        <WineFieldsEditor
+          tab={tab}
+          item={item}
+          onChange={setItem}
+          mediaFolder="wines"
+          generalTop={
+            <CatalogSearch
+              onPick={(c) =>
+                setItem((prev) => ({
+                  ...prev,
+                  name: prev.name || c.name || "",
+                  producer: prev.producer || c.producer,
+                  vintage: prev.vintage ?? c.vintage,
+                  region: prev.region || c.region,
+                  appellation: prev.appellation || (c as any).appellation || null,
+                  country: prev.country || c.country,
+                  grape: prev.grape || c.grape,
+                  wine_type: prev.wine_type || c.wine_type,
+                  alcohol_pct: prev.alcohol_pct ?? c.alcohol_pct,
+                  sugar_level: prev.sugar_level || c.sugar_level,
+                  body: prev.body || c.body,
+                  tannin: prev.tannin || c.tannin,
+                  acidity: prev.acidity || c.acidity,
+                  aging: prev.aging || c.aging,
+                  serving_temp_min: prev.serving_temp_min ?? c.serving_temp_min,
+                  serving_temp_max: prev.serving_temp_max ?? c.serving_temp_max,
+                  pairing_notes: prev.pairing_notes || c.pairing_notes,
+                  tasting_notes: prev.tasting_notes || c.tasting_notes,
+                  barcode: prev.barcode || c.barcode,
+                  image_url: prev.image_url || c.image_url,
+                }))
+              }
             />
-            <SelectWithCustom
-              label="Volume"
-              hint="Capacidade da garrafa ou medida da dose (Taça). Use 'Outro' para volumes não listados."
-              value={f.volume}
-              custom={f.volume_custom}
-              options={DEFAULT_VOLUMES}
-              onChange={(v, c) => setF({ ...f, volume: v, volume_custom: c })}
-            />
-            <Field label="Preço de Custo (R$)" type="number" value={f.cost_price} onChange={(v) => setF({ ...f, cost_price: v })} hint="Valor pago ao fornecedor por unidade (garrafa/dose). Usado para cálculo de margem." placeholder="Ex: 85.00" />
-            <Field label="Preço de Venda (R$)" type="number" value={f.sale_price} onChange={(v) => setF({ ...f, sale_price: v })} hint="Preço cobrado do cliente final, conforme a carta do restaurante." placeholder="Ex: 220.00" />
-            <label className="block sm:col-span-2">
-              <span className="text-sm font-medium">Fornecedor</span>
-              <select
-                value={f.supplier_id}
-                onChange={(e) => setF({ ...f, supplier_id: e.target.value })}
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">Sem fornecedor</option>
-                {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </label>
-            <label className="block sm:col-span-2">
-              <span className="text-sm font-medium">Código de barras</span>
-              <div className="mt-1 flex gap-2">
-                <input
-                  value={f.barcode}
-                  onChange={(e) => setF({ ...f, barcode: e.target.value })}
-                  placeholder="EAN / UPC"
-                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                />
+          }
+          generalPricing={
+            <>
+              <Field label="Código no restaurante" value={internalCode} onChange={setInternalCode} hint="Código interno usado pelo restaurante para identificar o rótulo (PDV, carta, planilha)." placeholder="Ex: V-014" />
+              <Field label="Preço de Custo (R$)" type="number" value={costPrice} onChange={setCostPrice} hint="Valor pago ao fornecedor por unidade (garrafa/dose). Usado para cálculo de margem." placeholder="Ex: 85.00" />
+              <Field label="Preço de Venda (R$)" type="number" value={salePrice} onChange={setSalePrice} hint="Preço cobrado do cliente final, conforme a carta do restaurante." placeholder="Ex: 220.00" />
+              <label className="block">
+                <FieldLabel hint="Fornecedor cadastrado do restaurante responsável por este rótulo.">Fornecedor (cadastro do restaurante)</FieldLabel>
+                <select
+                  value={supplierId}
+                  onChange={(e) => setSupplierId(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">Sem fornecedor</option>
+                  {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </label>
+              <div className="md:col-span-2">
                 <button
                   type="button"
                   onClick={() => setScanOpen(true)}
                   className="flex items-center gap-2 rounded-md border border-input px-3 py-2 text-sm hover:bg-accent"
                 >
-                  <ScanLine className="h-4 w-4" /> Escanear
+                  <ScanLine className="h-4 w-4" /> Escanear código de barras
                 </button>
               </div>
-            </label>
-            <div className="sm:col-span-2 mt-2 rounded-md border border-border bg-muted/30 p-3">
+            </>
+          }
+          generalExtras={
+            <div className="md:col-span-2 rounded-md border border-border bg-muted/30 p-3">
               <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</div>
               <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
                 <label className="flex items-start gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={f.active_on_menu}
-                    onChange={(e) => setF({ ...f, active_on_menu: e.target.checked })}
-                    className="mt-0.5 h-4 w-4"
-                  />
+                  <input type="checkbox" checked={activeOnMenu} onChange={(e) => setActiveOnMenu(e.target.checked)} className="mt-0.5 h-4 w-4" />
                   <span>
                     <span className="font-medium">Ativo na carta</span>
                     <span className="block text-xs text-muted-foreground">Aparece como rótulo disponível para venda.</span>
                   </span>
                 </label>
                 <label className="flex items-start gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={f.count_in_stock}
-                    onChange={(e) => setF({ ...f, count_in_stock: e.target.checked })}
-                    className="mt-0.5 h-4 w-4"
-                  />
+                  <input type="checkbox" checked={countInStock} onChange={(e) => setCountInStock(e.target.checked)} className="mt-0.5 h-4 w-4" />
                   <span>
                     <span className="font-medium">Contar no estoque</span>
                     <span className="block text-xs text-muted-foreground">Entra na lista da contagem do staff.</span>
@@ -1127,74 +1099,14 @@ function WineForm({
                 </label>
               </div>
             </div>
-          </div>
-        )}
+          }
+        />
+
         {scanOpen && (
           <BarcodeScanner
-            onDetected={(code) => { setF((prev) => ({ ...prev, barcode: code.trim() })); setScanOpen(false); }}
+            onDetected={(code) => { setItem((prev) => ({ ...prev, barcode: code.trim() })); setScanOpen(false); }}
             onClose={() => setScanOpen(false)}
           />
-        )}
-
-        {tab === "carac" && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <SelectWithCustom
-              label="Estilo"
-              hint="Estilo/subcategoria do vinho (ex.: Encorpado e complexo, Fresco e frutado)."
-              value={f.style}
-              custom={f.style_custom}
-              options={STYLES}
-              onChange={(v, c) => setF({ ...f, style: v, style_custom: c })}
-            />
-            <Field label="Teor alcoólico (%)" type="number" value={f.alcohol_pct} onChange={(v) => setF({ ...f, alcohol_pct: v })} hint="Porcentagem de álcool em volume, conforme rótulo." placeholder="Ex: 13.5" />
-            <SelectField label="Açúcar" value={f.sugar_level} options={SUGAR_LEVELS} onChange={(v) => setF({ ...f, sugar_level: v })} hint="Nível de açúcar residual (seco, meio-seco, demi-sec, doce...)." />
-            <Field label="Açúcar residual (g/L)" type="number" value={f.sugar_g_l} onChange={(v) => setF({ ...f, sugar_g_l: v })} hint="Concentração de açúcar residual em gramas por litro." placeholder="Ex: 4.5" />
-            <SelectField label="Corpo" value={f.body} options={BODY} onChange={(v) => setF({ ...f, body: v })} hint="Sensação de peso/estrutura do vinho na boca." />
-            <SelectField label="Taninos" value={f.tannin} options={INTENSITY} onChange={(v) => setF({ ...f, tannin: v })} hint="Intensidade dos taninos (adstringência). Mais relevante em tintos." />
-            <SelectField label="Acidez" value={f.acidity} options={INTENSITY} onChange={(v) => setF({ ...f, acidity: v })} hint="Percepção de acidez/frescor no paladar." />
-            <Field label="Acidez total (g/L)" type="number" value={f.acidity_g_l} onChange={(v) => setF({ ...f, acidity_g_l: v })} hint="Acidez total em gramas de ácido tartárico por litro." placeholder="Ex: 5.8" />
-            <Field label="pH" type="number" value={f.acidity_ph} onChange={(v) => setF({ ...f, acidity_ph: v })} hint="Valor de pH do vinho." placeholder="Ex: 3.5" />
-            <Field label="Elaboração" value={f.elaboration} onChange={(v) => setF({ ...f, elaboration: v })} hint="Método de vinificação: fermentação, maceração, tanques, etc." placeholder="Ex: Fermentação em inox, maceração 20 dias" className="sm:col-span-2" />
-            <Field label="Maturação" value={f.aging} onChange={(v) => setF({ ...f, aging: v })} hint="Envelhecimento: barricas, tempo em garrafa, etc." placeholder="Ex: 12 meses em barrica de carvalho francês (30% novas)" className="sm:col-span-2" />
-            <Field label="Temp. mín. serviço (°C)" type="number" value={f.serving_temp_min} onChange={(v) => setF({ ...f, serving_temp_min: v })} hint="Temperatura mínima recomendada para servir." placeholder="Ex: 16" />
-            <Field label="Temp. máx. serviço (°C)" type="number" value={f.serving_temp_max} onChange={(v) => setF({ ...f, serving_temp_max: v })} hint="Temperatura máxima recomendada para servir." placeholder="Ex: 18" />
-            <TextArea label="Notas de degustação" value={f.tasting_notes} onChange={(v) => setF({ ...f, tasting_notes: v })} className="sm:col-span-2" hint="Descrição sensorial: cor, aromas, sabor, corpo, taninos e final de boca." placeholder="Ex: Rubi intenso. Aromas de frutas negras maduras, especiarias e notas de baunilha. Taninos firmes, corpo médio e final persistente." />
-            <TextArea label="Harmonização" value={f.pairing_notes} onChange={(v) => setF({ ...f, pairing_notes: v })} className="sm:col-span-2" hint="Sugestões gastronômicas: pratos, proteínas, queijos e temperos que combinam." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro e queijos curados." />
-            <div className="sm:col-span-2">
-              <StringListEditor
-                label="Premiações"
-                hint="Lista de prêmios e pontuações relevantes."
-                placeholder="Ex: 92 pts Wine Spectator"
-                values={awardsList}
-                onChange={setAwardsList}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <StringListEditor
-                label="Fornecedores"
-                hint="Um ou mais fornecedores deste rótulo para o restaurante."
-                placeholder="Ex: Mistral"
-                values={suppliersList}
-                onChange={setSuppliersList}
-              />
-            </div>
-          </div>
-        )}
-
-        {tab === "midia" && (
-          <div className="space-y-4">
-            <MediaUploader label="Imagem principal do rótulo" value={image} onChange={setImage} folder="wines" />
-            <MediaGallery label="Galeria de imagens" values={gallery} onChange={setGallery} folder="wines" />
-            <MediaUploader
-              label="Ficha técnica (PDF)"
-              value={techSheet}
-              onChange={setTechSheet}
-              accept="application/pdf"
-              folder="wines/tech"
-              kind="file"
-            />
-            <VideoListEditor values={videosList} onChange={setVideosList} />
-          </div>
         )}
 
         <div className="mt-2 flex flex-wrap justify-end gap-2 border-t border-border pt-4">
@@ -1212,6 +1124,7 @@ function WineForm({
     </Modal>
   );
 }
+
 
 // ===== GLASSES =====
 

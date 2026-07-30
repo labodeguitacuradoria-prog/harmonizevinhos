@@ -115,11 +115,6 @@ const ExtractedSchema = z.object({
 
 export type ExtractedWine = z.infer<typeof ExtractedSchema>;
 
-async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data } = await context.supabase.rpc("is_admin", { _user_id: context.userId });
-  if (!data) throw new Error("Apenas administradores podem usar a extração por IA.");
-}
-
 async function callModel(userContent: unknown): Promise<ExtractedWine> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada.");
@@ -232,8 +227,7 @@ const FileInput = z.object({
 export const extractWineFromFile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => FileInput.parse(d))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+  .handler(async ({ data }) => {
     let base64 = data.fileBase64;
     const c = base64.indexOf(",");
     if (c !== -1) base64 = base64.substring(c + 1);
@@ -257,8 +251,7 @@ const TextInput = z.object({ text: z.string().min(10) });
 export const extractWineFromText = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => TextInput.parse(d))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+  .handler(async ({ data }) => {
     const userContent = [
       {
         type: "text" as const,

@@ -138,11 +138,15 @@ export function WineListImportDialog({
   wines,
   onClose,
   onApplied,
+  hidden = false,
+  onDiscard,
 }: {
   restaurantId: string;
   wines: ExistingWine[];
   onClose: () => void;
   onApplied: () => void;
+  hidden?: boolean;
+  onDiscard?: () => void;
 }) {
   const [step, setStep] = useState<"upload" | "processing" | "review">("upload");
   const [mode, setMode] = useState<"file" | "text">("file");

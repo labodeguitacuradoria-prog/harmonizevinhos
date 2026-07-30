@@ -419,6 +419,8 @@ function WinesSection() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [importMounted, setImportMounted] = useState(false);
+  const [importKey, setImportKey] = useState(0);
   const [editWine, setEditWine] = useState<Wine | null>(null);
   const [viewWine, setViewWine] = useState<Wine | null>(null);
   const [overviewMetric, setOverviewMetric] = useState<"qty" | "revenue">("qty");

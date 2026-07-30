@@ -4,10 +4,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info, AlertTriangle, Check as CheckIcon, Pencil } from "lucide-react";
+import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info, FileUp, AlertTriangle, Check as CheckIcon, Pencil } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { WineOverview } from "@/components/WineOverview";
+import { WineListImportDialog } from "@/components/WineListImportDialog";
 
 function isGlassVol(v: string | null | undefined) {
   if (!v) return false;
@@ -417,6 +418,7 @@ function WinesSection() {
   const { restaurantId } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editWine, setEditWine] = useState<Wine | null>(null);
   const [viewWine, setViewWine] = useState<Wine | null>(null);
   const [overviewMetric, setOverviewMetric] = useState<"qty" | "revenue">("qty");
@@ -581,12 +583,21 @@ function WinesSection() {
             </button>
           )}
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" /> Novo vinho
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" /> Novo vinho
+          </button>
+          <button
+            onClick={() => setShowImport(true)}
+            title="Ler um PDF ou foto da carta de vinhos e cadastrar/atualizar os rótulos"
+            className="flex items-center gap-2 rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-accent"
+          >
+            <FileUp className="h-4 w-4" /> Importar carta
+          </button>
+        </div>
       </div>
 
 
@@ -782,6 +793,28 @@ function WinesSection() {
           onEdit={() => setEditWine(viewWine)}
           metric={overviewMetric}
           onMetricChange={setOverviewMetric}
+        />
+      )}
+
+      {showImport && (
+        <WineListImportDialog
+          restaurantId={restaurantId!}
+          wines={wines.map((w) => ({
+            id: w.id,
+            name: w.name,
+            producer: w.producer,
+            vintage: w.vintage,
+            volume: w.volume,
+            wine_type: w.wine_type,
+            sale_price: Number(w.sale_price),
+            internal_code: w.internal_code,
+            active_on_menu: w.active_on_menu,
+          }))}
+          onClose={() => setShowImport(false)}
+          onApplied={() => {
+            qc.invalidateQueries({ queryKey: ["wines"] });
+            setShowImport(false);
+          }}
         />
       )}
 

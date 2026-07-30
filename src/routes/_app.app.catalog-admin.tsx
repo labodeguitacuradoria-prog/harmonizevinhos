@@ -17,48 +17,7 @@ export const Route = createFileRoute("/_app/app/catalog-admin")({
   component: CatalogAdmin,
 });
 
-// Sugar residual classification (g/L) — Espumantes use the sparkling-wine scale;
-// still wines fall back to the general "Seco/Meio-seco/Suave/Doce" labels.
-const SPARKLING_SUGAR_TABLE: { label: string; max: number }[] = [
-  { label: "Nature / Brut Nature", max: 3 },
-  { label: "Extra Brut", max: 8 },
-  { label: "Brut", max: 15 },
-  { label: "Sec / Seco / Extra Sec", max: 20 },
-  { label: "Demi-Sec / Meio-Doce", max: 60 },
-  { label: "Doce / Doux / Moscatel", max: Infinity },
-];
-const SPARKLING_SUGAR_LABELS = SPARKLING_SUGAR_TABLE.map((t) => t.label);
-
-export function classifySparklingSugar(g: number | null | undefined): string | null {
-  if (g == null || !Number.isFinite(g)) return null;
-  for (const row of SPARKLING_SUGAR_TABLE) if (g <= row.max) return row.label;
-  return null;
-}
-
-// Convert any product-media reference (signed URL or path) to our same-origin proxy.
-export function toProxiedFileUrl(u: string | null | undefined): string | null {
-  if (!u) return null;
-  return `/api/public/catalog-file?u=${encodeURIComponent(u)}`;
-}
-
 type CatalogStatus = "pending" | "approved" | "rejected";
-
-const TYPES = ["Espumante", "Branco", "Rosé", "Tinto", "Fortificado", "Sobremesa", "Outros"];
-const STYLES = [
-  "ESPUMANTE",
-  "BRANCO LEVE",
-  "BRANCO AROMÁTICO",
-  "BRANCO ENCORPADO",
-  "ROSÉ",
-  "TINTO LEVE",
-  "TINTO MÉDIO",
-  "TINTO ENCORPADO",
-  "FORTIFICADO",
-];
-const SUGAR_LEVELS = ["Seco", "Meio-seco", "Suave", "Doce"];
-const INTENSITY = ["Baixo", "Médio", "Alto"];
-const BODY = ["Leve", "Médio", "Encorpado"];
-const VOLUMES = ["750 ml", "375 ml", "187 ml", "1500 ml", "Outro"];
 
 type Video = { title: string; url: string };
 
@@ -113,33 +72,6 @@ type WineCatalog = {
     intensidadeAromatica: number | null;
   } | null;
 };
-
-type GrapeRow = { grape: string; pct: number | null; mesesBarrica: number | null };
-
-const SOMMELIER_AXES: {
-  key: keyof NonNullable<WineCatalog["sommelier_weights"]>;
-  label: string;
-  min: string;
-  max: string;
-}[] = [
-  { key: "corpo", label: "Corpo / Peso", min: "Leve", max: "Encorpado" },
-  { key: "acidez", label: "Acidez / Frescor", min: "Plana", max: "Vibrante" },
-  { key: "taninos", label: "Taninos / Estrutura", min: "Nulo", max: "Forte" },
-  { key: "docura", label: "Doçura / Residual", min: "Seco", max: "Doce" },
-  { key: "estagioBarrica", label: "Estágio em Barrica", min: "Sem madeira", max: "Muito amadeirado" },
-  { key: "intensidadeAromatica", label: "Intensidade Aromática", min: "Delicado", max: "Exuberante" },
-];
-
-function FieldLabel({ children, hint }: { children: React.ReactNode; hint: string }) {
-  return (
-    <label className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-      <span>{children}</span>
-      <span title={hint} className="inline-flex h-3.5 w-3.5 cursor-help items-center justify-center text-muted-foreground/60 hover:text-primary">
-        <Info className="h-3 w-3" />
-      </span>
-    </label>
-  );
-}
 
 function CatalogAdmin() {
   const { role, user } = useAuth();

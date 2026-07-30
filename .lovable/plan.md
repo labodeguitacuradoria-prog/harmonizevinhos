@@ -1,34 +1,59 @@
-## Convite de usuário Fornecedor no Mapa de Acessos
+## Importar Carta de Vinhos (PDF ou Foto) com IA
 
-Hoje o Mapa de Acessos (do Rest Admin/Owner) só convida `staff` e `rest_owner`. Fornecedores só aparecem em `/app/sharing`, que apenas **habilita/desabilita** um fornecedor já existente para ver dados do restaurante — não convida a pessoa que representa o fornecedor. Vamos preencher essa lacuna.
+Novo botão **Importar carta** ao lado de **+ Novo vinho**, na aba Vinhos. O usuário envia o PDF ou a foto da carta, a IA lê todos os rótulos, o sistema compara com o que já existe no restaurante e apresenta uma tela de validação antes de gravar.
 
-### O que passa a existir
+### Fluxo do usuário
 
-No `AccessMapDialog` (aberto pelo Rest Admin em um restaurante), além de "Staff" e "Chef/Owner", adicionar a opção **Fornecedor**:
+```text
+[Importar carta] → upload PDF/fotos → IA lê a carta
+        ↓
+Tela de conferência (3 grupos)
+  • NOVOS      → criar rótulo
+  • ALTERADOS  → preço/safra/volume mudou (mostra antes → depois)
+  • IGUAIS     → nada a fazer
+        ↓
+Usuário marca/desmarca linha por linha e edita valores
+        ↓
+[Aplicar seleção] → insere novos + atualiza existentes
+```
 
-- Ao selecionar "Fornecedor", aparece um segundo campo: **selecionar o fornecedor** (dropdown com todos os fornecedores já cadastrados naquele restaurante — `suppliers` filtrados por `restaurant_id`).
-- Se o restaurante ainda não tem fornecedores cadastrados, mostrar mensagem: "Cadastre o fornecedor em Cadastros → Fornecedores antes de convidar o usuário."
-- Campo de email + botão "Convidar".
-- Ao enviar: cria o usuário auth (se não existir), cria linha em `public.user_roles` com `role='supplier'`, `supplier_id=<escolhido>`, `restaurant_id=<atual>`. Também garante linha em `public.restaurant_supplier_access` com `enabled=true` para o par (restaurante, fornecedor).
+### O que a IA extrai de cada linha da carta
 
-Na lista de usuários do restaurante, exibir também os fornecedores vinculados, com badge "Fornecedor — Nome do fornecedor" e botão de remover (que apaga só a linha de `user_roles`; a habilitação em `restaurant_supplier_access` continua até o Rest Admin desmarcar em `/app/sharing`).
+Nome do rótulo, produtor, safra, país, região, uvas, tipo (Tinto/Branco/Espumante/Rosé/Fortificado), volume (750 ml, taça, etc.), preço de venda, código interno quando a carta traz, e a seção da carta onde apareceu. Cada item vem com um nível de confiança para destacar em amarelo o que ficou duvidoso.
+
+### Como o sistema decide "novo" x "alterado"
+
+Comparação contra os vinhos do restaurante ativo, nesta ordem:
+1. Código interno igual.
+2. Nome + produtor + safra + volume iguais (ignorando acentos e maiúsculas).
+3. Similaridade textual alta de nome + produtor (usando `pg_trgm`, já instalado), com safra/volume compatíveis.
+
+Sem correspondência = **novo**. Com correspondência e algum campo diferente = **alterado**, listando somente os campos que mudaram.
+
+### Decisões adotadas (padrões escolhidos)
+
+- **Preço de custo**: cartas trazem apenas preço de venda, então rótulos novos entram com custo `0` e ficam sinalizados na lista de conferência como "custo pendente". Preço de custo de rótulos já cadastrados nunca é sobrescrito pela carta.
+- **Enriquecimento**: ao aplicar, se o rótulo bate com um registro aprovado do Catálogo Global, os campos técnicos (região, uvas, notas, imagem, temperatura etc.) são preenchidos automaticamente; a carta continua sendo a fonte para nome, safra, volume e preço.
+- **Rótulos que sumiram da carta**: aparecem em um bloco "Não encontrados nesta carta" com a opção de desmarcar `active_on_menu` — nunca são apagados.
+- **Histórico protegido**: a atualização só altera `wines.sale_price`; movimentos, contagens e faturamento passados permanecem intactos (já usam `unit_cost`/`unit_price` gravados no momento do lançamento).
 
 ### Detalhes técnicos
 
-**`src/lib/access.functions.ts`**
-- Ampliar `roleValues` no `inviteUnitUser` de `["rest_owner","staff"]` para `["rest_owner","staff","supplier"]`.
-- Adicionar campo opcional `supplier_id: z.string().uuid().optional()` no schema; validar que é obrigatório quando `role === 'supplier'` e opcional/ignorado nos demais.
-- Validar que o `supplier_id` recebido pertence ao `restaurant_id` do convite (SELECT em `suppliers` com ambos os filtros) antes de inserir em `user_roles`.
-- Após inserir `user_roles`, fazer `upsert` em `restaurant_supplier_access` (restaurant_id, supplier_id, enabled=true) — idempotente.
-- Em `listUnitUsers`, já retorna `supplier_id`; enriquecer com `supplier_name` fazendo join simples em memória (SELECT `id,name` de `suppliers` para os IDs presentes) para exibir o nome sem alterar RLS.
+**Arquivos novos**
+- `src/lib/winelist-import.functions.ts` — server function `extractWineListFromFile` (autenticada), envia o PDF/imagem ao Lovable AI Gateway com um prompt de sommelier especializado em carta de vinhos e `Output.object` de um array de itens. Suporta várias páginas/fotos (uma chamada por arquivo, resultados concatenados e deduplicados).
+- `src/components/WineListImportDialog.tsx` — modal em três passos: upload → processando → conferência com as abas Novos / Alterados / Iguais / Fora da carta. Cada linha tem checkbox e campos editáveis (nome, safra, volume, preço, tipo, código).
 
-**`src/components/AccessMapDialog.tsx`**
-- Adicionar `supplier` ao seletor de papel; quando escolhido, renderizar `<select>` populado por `useQuery` em `suppliers` filtrando `restaurant_id`.
-- Estado local `supplierId`; enviar no payload quando papel = supplier; limpar ao trocar de papel.
-- Na tabela, mostrar `Fornecedor — {supplier_name}` quando `role === 'supplier'`.
+**Arquivos alterados**
+- `src/routes/_app.app.wines.tsx` — botão **Importar carta** ao lado de **+ Novo vinho**, estado do modal e `invalidateQueries(["wines"])` ao concluir.
 
-### Fora de escopo (para deixar claro)
+**Banco**
+- Nenhuma tabela nova é obrigatória. O arquivo enviado é guardado no bucket `product-media` e registrado em `restaurant_wine_lists` (tabela já existente) como versão da carta, para rastreabilidade de "de onde veio esse preço".
 
-- Não muda o fluxo de `/app/sharing` (habilitar/desabilitar visibilidade do fornecedor continua lá).
-- Não muda RLS existente do papel `supplier` — as políticas já filtram por `supplier_id_of(auth.uid())` combinado com `restaurant_supplier_access`.
-- Não muda o Mapa de Acessos global do Admin (`/admin/access-map`), que já lista `supplier_id`; só ganha o `supplier_name` no display por consequência.
+**Aplicação das mudanças**
+- Inserções e updates são feitos pelo cliente Supabase já autenticado, respeitando as RLS atuais de `wines`; o trigger `auto_submit_to_catalog` continua alimentando o Catálogo Global normalmente.
+- Processamento em lotes com barra de progresso e resumo final ("12 novos, 34 preços atualizados, 5 sem alteração").
+
+### Limites conhecidos
+
+- Fotos de carta com baixa resolução ou fontes decorativas reduzem a precisão; por isso toda linha passa pela tela de validação antes de gravar.
+- Cartas muito longas são processadas em blocos de páginas para não estourar o limite de tokens do modelo.

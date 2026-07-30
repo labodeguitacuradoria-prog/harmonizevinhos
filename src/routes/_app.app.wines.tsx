@@ -802,8 +802,10 @@ function WinesSection() {
         />
       )}
 
-      {showImport && (
+      {importMounted && (
         <WineListImportDialog
+          key={importKey}
+          hidden={!showImport}
           restaurantId={restaurantId!}
           wines={wines.map((w) => ({
             id: w.id,
@@ -817,9 +819,16 @@ function WinesSection() {
             active_on_menu: w.active_on_menu,
           }))}
           onClose={() => setShowImport(false)}
+          onDiscard={() => {
+            setShowImport(false);
+            setImportMounted(false);
+            setImportKey((k) => k + 1);
+          }}
           onApplied={() => {
             qc.invalidateQueries({ queryKey: ["wines"] });
             setShowImport(false);
+            setImportMounted(false);
+            setImportKey((k) => k + 1);
           }}
         />
       )}

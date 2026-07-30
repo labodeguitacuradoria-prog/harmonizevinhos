@@ -373,7 +373,7 @@ export function WineListImportDialog({
         tech_sheet_url: c?.tech_sheet_url ?? null,
         catalog_id: c?.id ?? null,
       };
-      const { error } = await supabase.from("wines").insert(payload);
+      const { error } = await supabase.from("wines").insert(payload as never);
       if (error) failed++;
       else created++;
       done++;
@@ -385,7 +385,7 @@ export function WineListImportDialog({
       if (r.price) upd.sale_price = Number(r.price);
       if (r.vintage) upd.vintage = Number(r.vintage);
       if (r.internal_code) upd.internal_code = r.internal_code;
-      const { error } = await supabase.from("wines").update(upd).eq("id", r.match!.id);
+      const { error } = await supabase.from("wines").update(upd as never).eq("id", r.match!.id);
       if (error) failed++;
       else updated++;
       done++;

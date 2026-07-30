@@ -138,11 +138,15 @@ export function WineListImportDialog({
   wines,
   onClose,
   onApplied,
+  hidden = false,
+  onDiscard,
 }: {
   restaurantId: string;
   wines: ExistingWine[];
   onClose: () => void;
   onApplied: () => void;
+  hidden?: boolean;
+  onDiscard?: () => void;
 }) {
   const [step, setStep] = useState<"upload" | "processing" | "review">("upload");
   const [mode, setMode] = useState<"file" | "text">("file");
@@ -416,20 +420,48 @@ export function WineListImportDialog({
     changed.filter((r) => r.selected).length +
     missing.filter((m) => m.selected).length;
 
+  const hasWork = step === "review" || step === "processing";
+
+  function handleDiscard() {
+    if (hasWork && !window.confirm("Descartar esta importação? Os rótulos lidos serão perdidos.")) return;
+    onDiscard?.();
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:items-center">
+    <div
+      className={`fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:items-center ${
+        hidden ? "hidden" : ""
+      }`}
+    >
       <div className="my-auto flex max-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col rounded-lg border border-border bg-card shadow-lg">
         <div className="flex items-center justify-between border-b border-border p-5">
           <div>
             <h3 className="text-lg font-semibold">Importar carta de vinhos</h3>
             <p className="text-xs text-muted-foreground">
-              Envie o PDF ou a foto da carta — a IA lê os rótulos e você confere antes de gravar.
+              {hasWork
+                ? "Você pode minimizar e voltar ao painel — a leitura fica guardada até você aplicar ou descartar."
+                : "Envie o PDF ou a foto da carta — a IA lê os rótulos e você confere antes de gravar."}
             </p>
           </div>
-          <button onClick={onClose} className="rounded-md p-1 hover:bg-accent">
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            {hasWork && (
+              <button
+                onClick={handleDiscard}
+                className="rounded-md border border-border px-3 py-1.5 text-xs font-bold uppercase text-muted-foreground hover:text-destructive"
+              >
+                Descartar
+              </button>
+            )}
+            <button
+              onClick={hasWork ? onClose : handleDiscard}
+              title={hasWork ? "Minimizar (mantém a leitura)" : "Fechar"}
+              className="rounded-md p-1 hover:bg-accent"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
+
 
         <div className="overflow-y-auto p-5">
           {step === "upload" && (

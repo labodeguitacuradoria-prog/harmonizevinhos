@@ -419,6 +419,8 @@ function WinesSection() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [importMounted, setImportMounted] = useState(false);
+  const [importKey, setImportKey] = useState(0);
   const [editWine, setEditWine] = useState<Wine | null>(null);
   const [viewWine, setViewWine] = useState<Wine | null>(null);
   const [overviewMetric, setOverviewMetric] = useState<"qty" | "revenue">("qty");
@@ -591,11 +593,15 @@ function WinesSection() {
             <Plus className="h-4 w-4" /> Novo vinho
           </button>
           <button
-            onClick={() => setShowImport(true)}
+            onClick={() => {
+              setImportMounted(true);
+              setShowImport(true);
+            }}
             title="Ler um PDF ou foto da carta de vinhos e cadastrar/atualizar os rótulos"
             className="flex items-center gap-2 rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-accent"
           >
-            <FileUp className="h-4 w-4" /> Importar carta
+            <FileUp className="h-4 w-4" />
+            {importMounted && !showImport ? "Retomar importação" : "Importar carta"}
           </button>
         </div>
       </div>
@@ -796,8 +802,10 @@ function WinesSection() {
         />
       )}
 
-      {showImport && (
+      {importMounted && (
         <WineListImportDialog
+          key={importKey}
+          hidden={!showImport}
           restaurantId={restaurantId!}
           wines={wines.map((w) => ({
             id: w.id,
@@ -811,9 +819,16 @@ function WinesSection() {
             active_on_menu: w.active_on_menu,
           }))}
           onClose={() => setShowImport(false)}
+          onDiscard={() => {
+            setShowImport(false);
+            setImportMounted(false);
+            setImportKey((k) => k + 1);
+          }}
           onApplied={() => {
             qc.invalidateQueries({ queryKey: ["wines"] });
             setShowImport(false);
+            setImportMounted(false);
+            setImportKey((k) => k + 1);
           }}
         />
       )}

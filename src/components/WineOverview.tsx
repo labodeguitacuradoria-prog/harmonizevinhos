@@ -139,8 +139,6 @@ export function WineOverview({
   const curr = useMemo(() => (metric === "qty" ? series?.wQty[currentYear] : series?.wRev[currentYear]) ?? Array(12).fill(0), [series, metric, currentYear]);
   const prev = useMemo(() => (metric === "qty" ? series?.wQty[previousYear] : series?.wRev[previousYear]) ?? Array(12).fill(0), [series, metric, previousYear]);
 
-  const currTotal = curr.reduce((a, b) => a + b, 0);
-  const prevTotal = prev.reduce((a, b) => a + b, 0);
 
   const participation = series && series.restaurantTotal > 0 ? (series.wineTotal / series.restaurantTotal) * 100 : 0;
 
@@ -285,21 +283,26 @@ export function WineOverview({
                   <div className="text-sm font-semibold">{currentYear} vs {previousYear}</div>
                 </div>
               </div>
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-primary">
-                {metric === "revenue" ? "Faturamento" : "Quantidade"}
+              <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
+                <button
+                  type="button"
+                  onClick={() => onMetricChange("qty")}
+                  className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
+                    metric === "qty" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Quantidade
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onMetricChange("revenue")}
+                  className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
+                    metric === "revenue" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Faturamento
+                </button>
               </div>
-            </div>
-
-            <div className="mb-2 grid grid-cols-2 gap-3">
-              <MiniStat
-                label={`Acumulado ${currentYear}`}
-                value={metric === "revenue" ? `R$ ${fmtBRL(currTotal)}` : `${fmtBRL(currTotal)} un`}
-                tone="primary"
-              />
-              <MiniStat
-                label={`${previousYear} completo`}
-                value={metric === "revenue" ? `R$ ${fmtBRL(prevTotal)}` : `${fmtBRL(prevTotal)} un`}
-              />
             </div>
 
             <div className="min-h-0 flex-1">
@@ -436,14 +439,6 @@ function Kpi({ label, value, hint, tone, icon }: { label: string; value: string;
   );
 }
 
-function MiniStat({ label, value, tone }: { label: string; value: string; tone?: "primary" }) {
-  return (
-    <div className={`rounded-lg border ${tone === "primary" ? "border-primary/40 bg-primary/10" : "border-border bg-card"} px-3 py-2`}>
-      <div className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={`text-sm font-semibold ${tone === "primary" ? "text-primary" : "text-foreground"}`}>{value}</div>
-    </div>
-  );
-}
 
 function BarChart({
   curr,

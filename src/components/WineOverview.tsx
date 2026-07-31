@@ -470,6 +470,7 @@ function BarChart({
   valuePrefix = "",
   valueSuffix = "",
   height = 240,
+  fill = false,
 }: {
   curr: number[];
   prev: number[];
@@ -478,6 +479,7 @@ function BarChart({
   valuePrefix?: string;
   valueSuffix?: string;
   height?: number;
+  fill?: boolean;
 }) {
   const rawMax = Math.max(1, ...curr, ...prev);
   const maxVal = niceMax(rawMax);
@@ -485,8 +487,9 @@ function BarChart({
   const axisWidth = 68;
 
   return (
-    <div>
-      <div className="relative w-full" style={{ height }}>
+    <div className={fill ? "flex h-full flex-col" : undefined}>
+      <div className={`relative w-full ${fill ? "min-h-0 flex-1" : ""}`} style={fill ? undefined : { height }}>
+
         <div className="absolute inset-0" style={{ paddingLeft: axisWidth, paddingBottom: 22 }}>
           <div className="relative h-full w-full">
             {ticks.map((t, i) => (

@@ -285,21 +285,26 @@ export function WineOverview({
                   <div className="text-sm font-semibold">{currentYear} vs {previousYear}</div>
                 </div>
               </div>
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-primary">
-                {metric === "revenue" ? "Faturamento" : "Quantidade"}
+              <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
+                <button
+                  type="button"
+                  onClick={() => onMetricChange("qty")}
+                  className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
+                    metric === "qty" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Quantidade
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onMetricChange("revenue")}
+                  className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
+                    metric === "revenue" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Faturamento
+                </button>
               </div>
-            </div>
-
-            <div className="mb-2 grid grid-cols-2 gap-3">
-              <MiniStat
-                label={`Acumulado ${currentYear}`}
-                value={metric === "revenue" ? `R$ ${fmtBRL(currTotal)}` : `${fmtBRL(currTotal)} un`}
-                tone="primary"
-              />
-              <MiniStat
-                label={`${previousYear} completo`}
-                value={metric === "revenue" ? `R$ ${fmtBRL(prevTotal)}` : `${fmtBRL(prevTotal)} un`}
-              />
             </div>
 
             <div className="min-h-0 flex-1">

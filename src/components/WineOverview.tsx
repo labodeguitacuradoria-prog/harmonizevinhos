@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Pencil, Wine as WineIcon, Package, TrendingUp, PieChart as PieIcon } from "lucide-react";
+import { X, Pencil, FileText, Wine as WineIcon, Package, TrendingUp, PieChart as PieIcon } from "lucide-react";
+
 
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -143,19 +144,34 @@ export function WineOverview({
 
   const participation = series && series.restaurantTotal > 0 ? (series.wineTotal / series.restaurantTotal) * 100 : 0;
 
+  const [notesOpen, setNotesOpen] = useState(false);
+  const grapes = (wine.grape || "")
+    .split(/[,;/•]|\se\s/gi)
+    .map((g) => g.trim())
+    .filter(Boolean);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-6xl rounded-2xl border border-border bg-card shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm">
+      <div className="flex h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <div className="flex items-center gap-3">
-            <WineIcon className="h-5 w-5 text-primary" />
-            <div>
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <WineIcon className="h-5 w-5 shrink-0 text-primary" />
+            <div className="min-w-0">
               <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Rótulo</div>
-              <h2 className="text-lg font-semibold tracking-tight">{wine.name}</h2>
+              <h2 className="truncate text-lg font-semibold tracking-tight">{wine.name}</h2>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
+            {(wine.tasting_notes || wine.pairing_notes) && (
+              <button
+                type="button"
+                onClick={() => setNotesOpen(true)}
+                className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:border-primary/40 hover:text-primary"
+              >
+                <FileText className="h-3.5 w-3.5" /> Notas
+              </button>
+            )}
             <button
               type="button"
               onClick={onEdit}
@@ -175,19 +191,18 @@ export function WineOverview({
         </div>
 
         {/* Cover row: image + info */}
-        <div className="grid gap-6 border-b border-border p-6 md:grid-cols-[220px_1fr_260px]">
-          <div className="flex items-center justify-center rounded-xl border border-border bg-background p-3">
+        <div className="grid shrink-0 gap-5 border-b border-border px-6 py-4 md:grid-cols-[210px_1fr_220px]" style={{ height: "40%" }}>
+          <div className="flex h-full items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
             {wine.image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={wine.image_url} alt={wine.name} className="max-h-64 w-auto object-contain" />
+              <img src={wine.image_url} alt={wine.name} className="h-3/4 w-auto max-w-full object-contain" />
             ) : (
-              <div className="flex h-64 w-full items-center justify-center text-xs text-muted-foreground">
+              <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
                 Sem imagem
               </div>
             )}
           </div>
 
-          <div className="space-y-3 text-sm">
+          <div className="flex min-w-0 flex-col gap-3 overflow-hidden text-sm">
             <div className="flex flex-wrap items-center gap-2">
               {wine.internal_code && (
                 <span className="rounded-full border border-border bg-background px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
@@ -211,51 +226,38 @@ export function WineOverview({
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[12px]">
-              <InfoRow label="Produtor" value={wine.producer} />
-              <InfoRow label="Safra" value={wine.vintage ? String(wine.vintage) : null} />
-              <InfoRow label="País" value={wine.country} />
-              <InfoRow label="Região" value={wine.region} />
-              <InfoRow label="AOP / Denominação" value={wine.appellation} />
-              <InfoRow label="Uvas" value={wine.grape} />
-              <InfoRow label="Estilo" value={wine.style} />
-              <InfoRow label="Álcool" value={wine.alcohol_pct != null ? `${wine.alcohol_pct}%` : null} />
-              <InfoRow label="Açúcar" value={wine.sugar_level} />
-              <InfoRow label="Corpo" value={wine.body} />
-              <InfoRow label="Taninos" value={wine.tannin} />
-              <InfoRow label="Acidez" value={wine.acidity} />
-            </div>
-
-            {(wine.pairing_notes || wine.tasting_notes) && (
-              <div className="space-y-2 rounded-lg border border-dashed border-border bg-background/40 p-3 text-[12px]">
-                {wine.tasting_notes && (
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Notas de degustação</div>
-                    <div className="mt-0.5 text-foreground/90">{wine.tasting_notes}</div>
-                  </div>
-                )}
-                {wine.pairing_notes && (
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Harmonização</div>
-                    <div className="mt-0.5 text-foreground/90">{wine.pairing_notes}</div>
-                  </div>
+            <div className="grid min-h-0 flex-1 grid-cols-[1fr_1fr_auto] gap-x-6 gap-y-1.5 overflow-hidden text-[12px]">
+              <div className="space-y-1.5">
+                <InfoRow label="Produtor" value={wine.producer} />
+                <InfoRow label="Safra" value={wine.vintage ? String(wine.vintage) : null} />
+                <InfoRow label="País" value={wine.country} />
+              </div>
+              <div className="space-y-1.5">
+                <InfoRow label="Região" value={wine.region} />
+                <InfoRow label="AOP / Denominação" value={wine.appellation} />
+                <div className="grid grid-cols-2 gap-x-4">
+                  <InfoRow label="Estilo" value={wine.style} />
+                  <InfoRow label="Álcool" value={wine.alcohol_pct != null ? `${wine.alcohol_pct}%` : null} />
+                </div>
+              </div>
+              <div className="min-w-[120px]">
+                <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Uvas</span>
+                {grapes.length ? (
+                  <ul className="mt-0.5 space-y-0.5 overflow-y-auto pr-1 text-foreground/90" style={{ maxHeight: "100%" }}>
+                    {grapes.map((g) => (
+                      <li key={g} className="truncate">{g}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-foreground/90">—</div>
                 )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* KPI column */}
-          <div className="space-y-3">
+          <div className="flex flex-col justify-center gap-3">
             <Kpi label="Preço de venda" value={`R$ ${fmtBRL(Number(wine.sale_price), 2)}`} tone="primary" />
-            <Kpi label="Custo" value={`R$ ${fmtBRL(Number(wine.cost_price), 2)}`} />
-            <Kpi
-              label="Markup"
-              value={
-                Number(wine.cost_price) > 0
-                  ? `${(((Number(wine.sale_price) / Number(wine.cost_price)) - 1) * 100).toFixed(0)}%`
-                  : "—"
-              }
-            />
             <Kpi
               label="Estoque atual"
               value={
@@ -272,10 +274,10 @@ export function WineOverview({
         </div>
 
         {/* Charts */}
-        <div className="grid gap-6 p-6 md:grid-cols-[1fr_320px]">
+        <div className="grid min-h-0 flex-1 gap-5 p-5 md:grid-cols-[1fr_300px]">
           {/* Sales bar chart */}
-          <div className="rounded-xl border border-border bg-background/40 p-4">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-h-0 flex-col rounded-xl border border-border bg-background/40 p-3">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
                 <div>
@@ -305,7 +307,7 @@ export function WineOverview({
               </div>
             </div>
 
-            <div className="mb-4 grid grid-cols-2 gap-3">
+            <div className="mb-2 grid grid-cols-2 gap-3">
               <MiniStat
                 label={`Acumulado ${currentYear}`}
                 value={metric === "revenue" ? `R$ ${fmtBRL(currTotal)}` : `${fmtBRL(currTotal)} un`}
@@ -317,24 +319,26 @@ export function WineOverview({
               />
             </div>
 
-            <BarChart
-              curr={curr}
-              prev={prev}
-              currentYear={currentYear}
-              previousYear={previousYear}
-              valuePrefix={metric === "revenue" ? "R$ " : ""}
-              valueSuffix={metric === "qty" ? " un" : ""}
-              height={240}
-            />
+            <div className="min-h-0 flex-1">
+              <BarChart
+                curr={curr}
+                prev={prev}
+                currentYear={currentYear}
+                previousYear={previousYear}
+                valuePrefix={metric === "revenue" ? "R$ " : ""}
+                valueSuffix={metric === "qty" ? " un" : ""}
+                fill
+              />
+            </div>
           </div>
 
           {/* Pie: participation */}
-          <div className="rounded-xl border border-border bg-background/40 p-4">
-            <div className="mb-4 flex items-center gap-2">
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-background/40 p-3">
+            <div className="mb-2 flex items-center gap-2">
               <PieIcon className="h-4 w-4 text-primary" />
               <div>
                 <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Participação no restaurante</div>
-                <div className="text-sm font-semibold">Faturamento (últimos 24 meses)</div>
+                <div className="text-sm font-semibold">Faturamento (24 meses)</div>
               </div>
             </div>
             <ParticipationPie
@@ -346,9 +350,86 @@ export function WineOverview({
           </div>
         </div>
       </div>
+
+      {notesOpen && (
+        <NotesModal
+          wineName={wine.name}
+          tasting={wine.tasting_notes}
+          pairing={wine.pairing_notes}
+          onClose={() => setNotesOpen(false)}
+        />
+      )}
     </div>
   );
 }
+
+function toParagraphs(text: string) {
+  const byBreaks = text.split(/\n{1,}/).map((t) => t.trim()).filter(Boolean);
+  if (byBreaks.length > 1) return byBreaks;
+  const sentences = text.match(/[^.!?]+[.!?]*/g)?.map((s) => s.trim()).filter(Boolean) ?? [text];
+  const out: string[] = [];
+  for (let i = 0; i < sentences.length; i += 2) {
+    out.push(sentences.slice(i, i + 2).join(" "));
+  }
+  return out;
+}
+
+function NotesModal({
+  wineName,
+  tasting,
+  pairing,
+  onClose,
+}: {
+  wineName: string;
+  tasting: string | null;
+  pairing: string | null;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-3">
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Notas</div>
+            <h3 className="truncate text-base font-semibold">{wineName}</h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground"
+            aria-label="Fechar notas"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="space-y-6 overflow-y-auto px-6 py-5 text-[13px] leading-relaxed">
+          {tasting && (
+            <section>
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Notas de degustação</div>
+              <div className="space-y-3 text-foreground/90">
+                {toParagraphs(tasting).map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
+              </div>
+            </section>
+          )}
+          {pairing && (
+            <section>
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Harmonização</div>
+              <div className="space-y-3 text-foreground/90">
+                {toParagraphs(pairing).map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
+              </div>
+            </section>
+          )}
+          {!tasting && !pairing && <div className="text-muted-foreground">Sem notas cadastradas.</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
@@ -389,6 +470,7 @@ function BarChart({
   valuePrefix = "",
   valueSuffix = "",
   height = 240,
+  fill = false,
 }: {
   curr: number[];
   prev: number[];
@@ -397,6 +479,7 @@ function BarChart({
   valuePrefix?: string;
   valueSuffix?: string;
   height?: number;
+  fill?: boolean;
 }) {
   const rawMax = Math.max(1, ...curr, ...prev);
   const maxVal = niceMax(rawMax);
@@ -404,8 +487,9 @@ function BarChart({
   const axisWidth = 68;
 
   return (
-    <div>
-      <div className="relative w-full" style={{ height }}>
+    <div className={fill ? "flex h-full flex-col" : undefined}>
+      <div className={`relative w-full ${fill ? "min-h-0 flex-1" : ""}`} style={fill ? undefined : { height }}>
+
         <div className="absolute inset-0" style={{ paddingLeft: axisWidth, paddingBottom: 22 }}>
           <div className="relative h-full w-full">
             {ticks.map((t, i) => (

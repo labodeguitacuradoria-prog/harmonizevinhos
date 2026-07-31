@@ -285,25 +285,8 @@ export function WineOverview({
                   <div className="text-sm font-semibold">{currentYear} vs {previousYear}</div>
                 </div>
               </div>
-              <div className="inline-flex rounded-md border border-border bg-card p-0.5 text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => onMetricChange("qty")}
-                  className={`rounded px-3 py-1 font-semibold uppercase tracking-wide transition ${
-                    metric === "qty" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Quantidade
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onMetricChange("revenue")}
-                  className={`rounded px-3 py-1 font-semibold uppercase tracking-wide transition ${
-                    metric === "revenue" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Faturamento
-                </button>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+                {metric === "revenue" ? "Faturamento" : "Quantidade"}
               </div>
             </div>
 

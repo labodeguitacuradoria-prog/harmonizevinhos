@@ -139,8 +139,6 @@ export function WineOverview({
   const curr = useMemo(() => (metric === "qty" ? series?.wQty[currentYear] : series?.wRev[currentYear]) ?? Array(12).fill(0), [series, metric, currentYear]);
   const prev = useMemo(() => (metric === "qty" ? series?.wQty[previousYear] : series?.wRev[previousYear]) ?? Array(12).fill(0), [series, metric, previousYear]);
 
-  const currTotal = curr.reduce((a, b) => a + b, 0);
-  const prevTotal = prev.reduce((a, b) => a + b, 0);
 
   const participation = series && series.restaurantTotal > 0 ? (series.wineTotal / series.restaurantTotal) * 100 : 0;
 
@@ -441,14 +439,6 @@ function Kpi({ label, value, hint, tone, icon }: { label: string; value: string;
   );
 }
 
-function MiniStat({ label, value, tone }: { label: string; value: string; tone?: "primary" }) {
-  return (
-    <div className={`rounded-lg border ${tone === "primary" ? "border-primary/40 bg-primary/10" : "border-border bg-card"} px-3 py-2`}>
-      <div className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={`text-sm font-semibold ${tone === "primary" ? "text-primary" : "text-foreground"}`}>{value}</div>
-    </div>
-  );
-}
 
 function BarChart({
   curr,

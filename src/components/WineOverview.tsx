@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Pencil, Wine as WineIcon, Package, TrendingUp, PieChart as PieIcon } from "lucide-react";
+import { X, Pencil, FileText, Wine as WineIcon, Package, TrendingUp, PieChart as PieIcon } from "lucide-react";
+
 
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 

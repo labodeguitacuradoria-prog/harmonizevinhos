@@ -225,6 +225,45 @@ export type Database = {
           },
         ]
       }
+      pairing_knowledge: {
+        Row: {
+          active: boolean
+          created_at: string
+          guidance: string
+          id: string
+          keywords: string[]
+          kind: string
+          notes: string | null
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          guidance: string
+          id?: string
+          keywords?: string[]
+          kind?: string
+          notes?: string | null
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          guidance?: string
+          id?: string
+          keywords?: string[]
+          kind?: string
+          notes?: string | null
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           active: boolean

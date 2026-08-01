@@ -109,7 +109,7 @@ Escreva agora APENAS o parecer de harmonização em EXATAMENTE três parágrafos
 
     const explanation = text
       .replace(/<\/?P>/g, "\n\n")
-      .replace(/\n{3,}/g, "\n\n")
+      .replace(/\n+/g, "\n\n")
       .trim();
 
     return { ...profile, explanation, rules: matched.map((r) => r.title) };

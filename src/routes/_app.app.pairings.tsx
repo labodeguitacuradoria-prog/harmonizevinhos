@@ -54,7 +54,7 @@ function PairingsPage() {
   }
 
   const paragraphs = (profile?.explanation ?? "")
-    .split(/\n\s*\n|\\n\\n/)
+    .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean);
 

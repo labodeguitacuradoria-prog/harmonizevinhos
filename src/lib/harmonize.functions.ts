@@ -73,17 +73,24 @@ export const harmonizeDish = createServerFn({ method: "POST" })
           .join("\n")}`
       : "";
 
+    const outputContract = `\n\nCONTRATO DE SAÍDA (INVIOLÁVEL): responda APENAS com um objeto JSON contendo EXATAMENTE estas chaves, com estes nomes literais: "name" (string), "intensity", "acidity", "fat", "sweetness", "salt", "spice", "bitterness" (inteiros de 0 a 10), "peixe_gordo" e "sobremesa" (booleanos), "ingredients" (array de strings), "cookingMethod" (string) e "explanation" (string). Nunca renomeie, traduza ou acrescente chaves.
+No campo "explanation", os três parágrafos devem ser separados pelo marcador literal <P> em vez de quebras de linha. É proibido usar qualquer caractere de quebra de linha real dentro das strings do JSON.`;
+
     const gateway = createLovableAiGateway(apiKey);
     const model = gateway("google/gemini-3-flash-preview");
 
     try {
       const { output } = await generateText({
         model,
-        system: DISH_DECOMPOSITION_PROMPT + knowledgeBlock,
+        system: DISH_DECOMPOSITION_PROMPT + knowledgeBlock + outputContract,
         prompt: `Decomponha o seguinte prato do cardápio: "${data.dish}"`,
         output: Output.object({ schema: ProfileSchema }),
       });
-      return { ...output, rules: matched.map((r) => r.title) };
+      const explanation = output.explanation
+        .replace(/<\/?P>/g, "\n\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+      return { ...output, explanation, rules: matched.map((r) => r.title) };
     } catch (e) {
       if (NoObjectGeneratedError.isInstance(e)) {
         throw new Error("A IA não conseguiu estruturar a análise. Tente detalhar melhor o prato.");
@@ -91,3 +98,4 @@ export const harmonizeDish = createServerFn({ method: "POST" })
       throw e;
     }
   });
+

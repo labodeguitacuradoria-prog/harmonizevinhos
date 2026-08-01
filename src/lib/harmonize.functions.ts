@@ -20,10 +20,13 @@ const ProfileSchema = z.object({
   sobremesa: z.boolean(),
   ingredients: z.array(z.string()),
   cookingMethod: z.string(),
-  explanation: z.string(),
 });
 
-export type DishProfile = z.infer<typeof ProfileSchema> & { rules?: string[] };
+export type DishProfile = z.infer<typeof ProfileSchema> & {
+  explanation: string;
+  rules?: string[];
+};
+
 
 export const harmonizeDish = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => DishInput.parse(d))

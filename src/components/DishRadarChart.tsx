@@ -4,7 +4,7 @@ type Props = { values: { label: string; value: number }[]; size?: number };
 export function DishRadarChart({ values, size = 260 }: Props) {
   const cx = size / 2;
   const cy = size / 2;
-  const r = size / 2 - 34;
+  const r = size / 2 - 52;
   const n = values.length;
 
   const point = (i: number, v: number) => {
@@ -36,7 +36,7 @@ export function DishRadarChart({ values, size = 260 }: Props) {
         return <circle key={i} cx={x} cy={y} r={3} fill="#D4AF37" />;
       })}
       {values.map((v, i) => {
-        const [x, y] = point(i, 12.4);
+        const [x, y] = point(i, 11.6);
         return (
           <text
             key={v.label}

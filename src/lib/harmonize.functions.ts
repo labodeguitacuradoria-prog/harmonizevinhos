@@ -76,29 +76,43 @@ export const harmonizeDish = createServerFn({ method: "POST" })
           .join("\n")}`
       : "";
 
-    const outputContract = `\n\nCONTRATO DE SAÍDA (INVIOLÁVEL): responda APENAS com um objeto JSON contendo EXATAMENTE estas chaves, com estes nomes literais: "name" (string), "intensity", "acidity", "fat", "sweetness", "salt", "spice", "bitterness" (inteiros de 0 a 10), "peixe_gordo" e "sobremesa" (booleanos), "ingredients" (array de strings), "cookingMethod" (string) e "explanation" (string). Nunca renomeie, traduza ou acrescente chaves.
-No campo "explanation", os três parágrafos devem ser separados pelo marcador literal <P> em vez de quebras de linha. É proibido usar qualquer caractere de quebra de linha real dentro das strings do JSON.`;
-
     const gateway = createLovableAiGateway(apiKey);
     const model = gateway("google/gemini-3-flash-preview");
+    const system = DISH_DECOMPOSITION_PROMPT + knowledgeBlock;
 
+    // 1) Vetor sensorial estruturado (JSON curto e estável)
+    let profile: z.infer<typeof ProfileSchema>;
     try {
       const { output } = await generateText({
         model,
-        system: DISH_DECOMPOSITION_PROMPT + knowledgeBlock + outputContract,
-        prompt: `Decomponha o seguinte prato do cardápio: "${data.dish}"`,
+        system,
+        prompt: `Decomponha o seguinte prato do cardápio: "${data.dish}".
+Responda APENAS com o objeto JSON dos blocos de sabor, sem o parecer textual: chaves literais "name", "intensity", "acidity", "fat", "sweetness", "salt", "spice", "bitterness" (inteiros de 0 a 10), "peixe_gordo", "sobremesa" (booleanos), "ingredients" (array de strings) e "cookingMethod" (string). Nunca renomeie chaves.`,
         output: Output.object({ schema: ProfileSchema }),
       });
-      const explanation = output.explanation
-        .replace(/<\/?P>/g, "\n\n")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim();
-      return { ...output, explanation, rules: matched.map((r) => r.title) };
+      profile = output;
     } catch (e) {
       if (NoObjectGeneratedError.isInstance(e)) {
         throw new Error("A IA não conseguiu estruturar a análise. Tente detalhar melhor o prato.");
       }
       throw e;
     }
+
+    // 2) Parecer do sommelier em três parágrafos (texto puro, sem risco de JSON truncado)
+    const { text } = await generateText({
+      model,
+      system,
+      prompt: `Prato: "${data.dish}".
+Perfil sensorial já calculado (0 a 10): intensidade ${profile.intensity}, acidez ${profile.acidity}, gordura ${profile.fat}, doçura ${profile.sweetness}, sal/umami ${profile.salt}, picância ${profile.spice}, amargor/tostado ${profile.bitterness}. Peixe gordo: ${profile.peixe_gordo ? "sim" : "não"}. Sobremesa: ${profile.sobremesa ? "sim" : "não"}.
+Escreva agora APENAS o parecer de harmonização em EXATAMENTE três parágrafos separados por linha em branco, seguindo rigorosamente as diretrizes: 1) análise sensorial, 2) abordagem nacional (vinhos brasileiros), 3) abordagem internacional. Sem títulos, listas ou JSON.`,
+    });
+
+    const explanation = text
+      .replace(/<\/?P>/g, "\n\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
+    return { ...profile, explanation, rules: matched.map((r) => r.title) };
   });
+
 

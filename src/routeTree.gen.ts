@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as HarmonizarRouteImport } from './routes/harmonizar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +36,11 @@ import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
 import { Route as AppAdminAccessMapRouteImport } from './routes/_app.admin.access-map'
 
+const HarmonizarRoute = HarmonizarRouteImport.update({
+  id: '/harmonizar',
+  path: '/harmonizar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -164,6 +170,7 @@ const AppAdminAccessMapRoute = AppAdminAccessMapRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/harmonizar': typeof HarmonizarRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/harmonizar': typeof HarmonizarRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/harmonizar': typeof HarmonizarRoute
   '/_app/admin/access-map': typeof AppAdminAccessMapRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
   '/_app/app/cadastros': typeof AppAppCadastrosRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/harmonizar'
     | '/admin/access-map'
     | '/admin/suppliers'
     | '/app/cadastros'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/harmonizar'
     | '/admin/access-map'
     | '/admin/suppliers'
     | '/app/cadastros'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/auth'
+    | '/harmonizar'
     | '/_app/admin/access-map'
     | '/_app/admin/suppliers'
     | '/_app/app/cadastros'
@@ -327,11 +339,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  HarmonizarRoute: typeof HarmonizarRoute
   ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/harmonizar': {
+      id: '/harmonizar'
+      path: '/harmonizar'
+      fullPath: '/harmonizar'
+      preLoaderRoute: typeof HarmonizarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -564,6 +584,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  HarmonizarRoute: HarmonizarRoute,
   ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,
 }
 export const routeTree = rootRouteImport

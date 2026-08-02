@@ -1,69 +1,103 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Wine, UtensilsCrossed } from "lucide-react";
-import { PairingStudio } from "@/components/PairingStudio";
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { harmonizeDish, type DishProfile } from "@/lib/harmonize.functions";
+import { TypewriterText } from "@/components/TypewriterText";
+import capa from "@/assets/harmonizar-capa.png.asset.json";
 
 export const Route = createFileRoute("/harmonizar")({
   head: () => ({
     meta: [
-      { title: "Harmonização de Vinhos com IA — Sommelier Virtual" },
+      { title: "Me conte o prato que escolho o vinho perfeito" },
       {
         name: "description",
         content:
-          "Descreva seu prato e receba gratuitamente a análise sensorial e sugestões de harmonização de vinhos nacionais e internacionais. Sem cadastro.",
+          "Descreva seu prato e receba gratuitamente sugestões de harmonização de vinhos nacionais e internacionais. Sem cadastro.",
       },
-      { property: "og:title", content: "Harmonização de Vinhos com IA — Sommelier Virtual" },
+      { property: "og:title", content: "Me conte o prato que escolho o vinho perfeito" },
       {
         property: "og:description",
-        content:
-          "Sommelier virtual gratuito: análise sensorial do prato e sugestões de vinhos, sem precisar criar conta.",
+        content: "Sommelier virtual gratuito: descreva o prato e descubra o vinho ideal.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PublicPairings,
 });
 
 function PublicPairings() {
+  const [dish, setDish] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [profile, setProfile] = useState<DishProfile | null>(null);
+  const run = useServerFn(harmonizeDish);
+
+  async function analyze() {
+    const text = dish.trim();
+    if (text.length < 3 || busy) return;
+    setBusy(true);
+    setProfile(null);
+    try {
+      setProfile(await run({ data: { dish: text } }));
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível analisar o prato.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Wine className="h-6 w-6 text-primary" />
-            <span className="page-title text-base">Sommelier Virtual</span>
-          </div>
-          <nav className="flex items-center gap-3 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-primary">
-              Para restaurantes
-            </Link>
-            <Link
-              to="/auth"
-              className="rounded-md border border-border px-3 py-1.5 text-xs font-bold uppercase text-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              Entrar
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <main className="relative min-h-screen w-full overflow-x-hidden bg-background">
+      <img
+        src={capa.url}
+        alt="Taça de vinho sobre a mesa de um restaurante"
+        className="fixed inset-0 h-full w-full object-cover"
+      />
+      <div className="fixed inset-0 bg-background/55" />
 
-      <main className="mx-auto w-full max-w-6xl px-6 py-8">
-        <h1 className="page-title mb-2 flex items-center gap-2 text-primary">
-          <UtensilsCrossed className="h-5 w-5" /> Harmonizações
+      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-6 py-16">
+        <h1 className="max-w-2xl text-3xl font-light uppercase leading-tight tracking-wide text-foreground sm:text-5xl">
+          Me conte o prato que
+          <br />
+          escolho o vinho perfeito
         </h1>
-        <p className="mb-6 max-w-2xl text-sm text-muted-foreground">
-          Livre e sem cadastro: descreva o prato e o sommelier de IA decompõe os blocos de sabor e
-          sugere caminhos de harmonização nacionais e internacionais.
-        </p>
 
-        <PairingStudio />
-      </main>
-
-      <footer className="mt-12 border-t border-border">
-        <div className="mx-auto max-w-6xl px-6 py-6 text-xs text-muted-foreground">
-          Gestão de Vinhos — módulo público de harmonização.
+        <div className="mt-8 flex w-full max-w-2xl items-center gap-2 rounded-full border border-border/80 bg-background/60 px-6 py-3 backdrop-blur-sm focus-within:border-primary">
+          <input
+            value={dish}
+            onChange={(e) => setDish(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && analyze()}
+            placeholder="Digite aqui."
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          <button
+            onClick={analyze}
+            disabled={busy || dish.trim().length < 3}
+            aria-label="Harmonizar"
+            className="text-muted-foreground transition hover:text-primary disabled:opacity-40"
+          >
+            {busy ? (
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            ) : (
+              <ArrowRight className="h-5 w-5" />
+            )}
+          </button>
         </div>
-      </footer>
-    </div>
+
+        {profile && (
+          <section className="mt-10 max-w-3xl rounded-xl border border-border bg-card/85 p-6 backdrop-blur-sm">
+            <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-primary">
+              {profile.name}
+            </div>
+            <TypewriterText
+              text={profile.explanation}
+              className="whitespace-pre-line text-sm leading-relaxed text-foreground/90"
+            />
+          </section>
+        )}
+      </div>
+    </main>
   );
 }

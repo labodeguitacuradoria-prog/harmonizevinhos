@@ -4,16 +4,16 @@ import { Wine } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Gestão de Vinhos para Restaurantes" },
+      { title: "Harmonize Vinhos" },
       {
         name: "description",
         content:
-          "Plataforma completa para gestão da carta de vinhos, estoque e relacionamento com fornecedores.",
+          "Plataforma completa para harmonização de vinhos com comidas de forma simples e descomplicada",
       },
-      { property: "og:title", content: "Gestão de Vinhos para Restaurantes" },
+      { property: "og:title", content: "Harmonize Vinhos" },
       {
         property: "og:description",
-        content: "Gestão de adega, vendas e portal para fornecedores em um só lugar.",
+        content: "Plataforma completa para harmonização de vinhos com comidas de forma simples e descomplicada",
       },
     ],
   }),

@@ -31,11 +31,18 @@ function Landing() {
           </div>
           <nav className="flex items-center gap-3">
             <Link
+              to="/harmonizar"
+              className="rounded-md px-4 py-2 text-sm font-medium text-primary hover:bg-accent"
+            >
+              Harmonizar um prato
+            </Link>
+            <Link
               to="/auth"
               className="rounded-md px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
             >
               Entrar
             </Link>
+
             <Link
               to="/auth"
               search={{ mode: "signup" }}

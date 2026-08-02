@@ -78,6 +78,13 @@ function Landing() {
             >
               Já tenho acesso
             </Link>
+            <Link
+              to="/harmonizar"
+              className="rounded-md border border-primary px-5 py-3 text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              Harmonizar um prato (grátis, sem cadastro)
+            </Link>
+
           </div>
         </section>
 

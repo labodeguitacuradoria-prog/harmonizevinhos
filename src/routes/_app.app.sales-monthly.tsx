@@ -39,6 +39,8 @@ function MonthlySalesPage() {
   const [qty, setQty] = useState<Record<string, string>>({});
   const [revenue, setRevenue] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wines-monthly", restaurantId],

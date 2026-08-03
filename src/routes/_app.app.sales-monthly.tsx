@@ -146,6 +146,14 @@ function MonthlySalesPage() {
             />
           </label>
           <button
+            onClick={() => setImportOpen(true)}
+            title="Importar vendas de PDF, planilha ou foto usando IA"
+            className="flex items-center gap-1.5 rounded-md border border-border bg-transparent px-3 py-2 text-xs font-medium text-primary transition hover:bg-primary hover:text-primary-foreground"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Importar com IA
+          </button>
+          <button
             onClick={saveAll}
             disabled={saving || filled.length === 0}
             className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
@@ -155,6 +163,31 @@ function MonthlySalesPage() {
           </button>
         </div>
       </div>
+
+      {importOpen && (
+        <SalesImportDialog
+          wines={wines}
+          mode={mode}
+          month={month}
+          onClose={() => setImportOpen(false)}
+          onApply={(entries) => {
+            const q = { ...qty };
+            const r = { ...revenue };
+            for (const e of entries) {
+              q[e.wineId] = String(Number(q[e.wineId] || 0) + Number(e.qty || 0));
+              if (Number(e.revenue) > 0) {
+                r[e.wineId] = String(Number(r[e.wineId] || 0) + Number(e.revenue));
+              }
+            }
+            setQty(q);
+            setRevenue(r);
+            setImportOpen(false);
+            toast.success(`${entries.length} linha(s) importada(s). Revise e clique em Salvar.`);
+          }}
+        />
+      )}
+
+
 
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">

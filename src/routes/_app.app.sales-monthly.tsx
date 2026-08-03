@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Save } from "lucide-react";
+import { Search, Save, Sparkles } from "lucide-react";
+import { SalesImportDialog } from "@/components/SalesImportDialog";
+
 
 export const Route = createFileRoute("/_app/app/sales-monthly")({
   component: MonthlySalesPage,

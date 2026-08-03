@@ -1369,6 +1369,7 @@ export type Database = {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
       }
+      can_access_product_media: { Args: { _path: string }; Returns: boolean }
       can_manage_restaurant: {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean

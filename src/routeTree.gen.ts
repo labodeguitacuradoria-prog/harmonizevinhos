@@ -9,36 +9,40 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as HarmonizarRouteImport } from './routes/harmonizar'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.index'
-import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as HarmonizarRouteImport } from './routes/harmonizar'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
-import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
-import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
-import { Route as AppAppSuppliersRouteImport } from './routes/_app.app.suppliers'
-import { Route as AppAppSupplierCatalogAdminRouteImport } from './routes/_app.app.supplier-catalog-admin'
-import { Route as AppAppStockCountsAdminRouteImport } from './routes/_app.app.stock-counts-admin'
-import { Route as AppAppStockCountsRouteImport } from './routes/_app.app.stock-counts'
-import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
-import { Route as AppAppSalesMonthlyRouteImport } from './routes/_app.app.sales-monthly'
-import { Route as AppAppSalesRouteImport } from './routes/_app.app.sales'
-import { Route as AppAppRestaurantProfileRouteImport } from './routes/_app.app.restaurant-profile'
-import { Route as AppAppPriceAnalysisRouteImport } from './routes/_app.app.price-analysis'
-import { Route as AppAppPairingsRouteImport } from './routes/_app.app.pairings'
-import { Route as AppAppPairingKnowledgeRouteImport } from './routes/_app.app.pairing-knowledge'
-import { Route as AppAppDashboardRouteImport } from './routes/_app.app.dashboard'
-import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage-fees'
-import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
-import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros'
-import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
 import { Route as AppAdminAccessMapRouteImport } from './routes/_app.admin.access-map'
+import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
+import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
+import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros'
+import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
+import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage-fees'
+import { Route as AppAppDashboardRouteImport } from './routes/_app.app.dashboard'
+import { Route as AppAppPairingKnowledgeRouteImport } from './routes/_app.app.pairing-knowledge'
+import { Route as AppAppPairingsRouteImport } from './routes/_app.app.pairings'
+import { Route as AppAppPriceAnalysisRouteImport } from './routes/_app.app.price-analysis'
+import { Route as AppAppRestaurantProfileRouteImport } from './routes/_app.app.restaurant-profile'
+import { Route as AppAppSalesRouteImport } from './routes/_app.app.sales'
+import { Route as AppAppSalesMonthlyRouteImport } from './routes/_app.app.sales-monthly'
+import { Route as AppAppSharingRouteImport } from './routes/_app.app.sharing'
+import { Route as AppAppStockCountsRouteImport } from './routes/_app.app.stock-counts'
+import { Route as AppAppStockCountsAdminRouteImport } from './routes/_app.app.stock-counts-admin'
+import { Route as AppAppSupplierCatalogAdminRouteImport } from './routes/_app.app.supplier-catalog-admin'
+import { Route as AppAppSuppliersRouteImport } from './routes/_app.app.suppliers'
+import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
+import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.index'
+import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
 
-const HarmonizarRoute = HarmonizarRouteImport.update({
-  id: '/harmonizar',
-  path: '/harmonizar',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -46,18 +50,24 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppRoute = AppRouteImport.update({
-  id: '/_app',
+const HarmonizarRoute = HarmonizarRouteImport.update({
+  id: '/harmonizar',
+  path: '/harmonizar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AppRoute,
 } as any)
-const AppSupplierIndexRoute = AppSupplierIndexRouteImport.update({
-  id: '/supplier/',
-  path: '/supplier/',
+const AppAdminAccessMapRoute = AppAdminAccessMapRouteImport.update({
+  id: '/admin/access-map',
+  path: '/admin/access-map',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminSuppliersRoute = AppAdminSuppliersRouteImport.update({
+  id: '/admin/suppliers',
+  path: '/admin/suppliers',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppIndexRoute = AppAppIndexRouteImport.update({
@@ -65,24 +75,69 @@ const AppAppIndexRoute = AppAppIndexRouteImport.update({
   path: '/app/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
+const AppAppCadastrosRoute = AppAppCadastrosRouteImport.update({
+  id: '/app/cadastros',
+  path: '/app/cadastros',
   getParentRoute: () => AppRoute,
 } as any)
-const ApiPublicCatalogFileRoute = ApiPublicCatalogFileRouteImport.update({
-  id: '/api/public/catalog-file',
-  path: '/api/public/catalog-file',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppAppWinesRoute = AppAppWinesRouteImport.update({
-  id: '/app/wines',
-  path: '/app/wines',
+const AppAppCatalogAdminRoute = AppAppCatalogAdminRouteImport.update({
+  id: '/app/catalog-admin',
+  path: '/app/catalog-admin',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAppSuppliersRoute = AppAppSuppliersRouteImport.update({
-  id: '/app/suppliers',
-  path: '/app/suppliers',
+const AppAppCorkageFeesRoute = AppAppCorkageFeesRouteImport.update({
+  id: '/app/corkage-fees',
+  path: '/app/corkage-fees',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppDashboardRoute = AppAppDashboardRouteImport.update({
+  id: '/app/dashboard',
+  path: '/app/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppPairingKnowledgeRoute = AppAppPairingKnowledgeRouteImport.update({
+  id: '/app/pairing-knowledge',
+  path: '/app/pairing-knowledge',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppPairingsRoute = AppAppPairingsRouteImport.update({
+  id: '/app/pairings',
+  path: '/app/pairings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppPriceAnalysisRoute = AppAppPriceAnalysisRouteImport.update({
+  id: '/app/price-analysis',
+  path: '/app/price-analysis',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppRestaurantProfileRoute = AppAppRestaurantProfileRouteImport.update({
+  id: '/app/restaurant-profile',
+  path: '/app/restaurant-profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSalesRoute = AppAppSalesRouteImport.update({
+  id: '/app/sales',
+  path: '/app/sales',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSalesMonthlyRoute = AppAppSalesMonthlyRouteImport.update({
+  id: '/app/sales-monthly',
+  path: '/app/sales-monthly',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppSharingRoute = AppAppSharingRouteImport.update({
+  id: '/app/sharing',
+  path: '/app/sharing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppStockCountsRoute = AppAppStockCountsRouteImport.update({
+  id: '/app/stock-counts',
+  path: '/app/stock-counts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppStockCountsAdminRoute = AppAppStockCountsAdminRouteImport.update({
+  id: '/app/stock-counts-admin',
+  path: '/app/stock-counts-admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppSupplierCatalogAdminRoute =
@@ -91,80 +146,25 @@ const AppAppSupplierCatalogAdminRoute =
     path: '/app/supplier-catalog-admin',
     getParentRoute: () => AppRoute,
   } as any)
-const AppAppStockCountsAdminRoute = AppAppStockCountsAdminRouteImport.update({
-  id: '/app/stock-counts-admin',
-  path: '/app/stock-counts-admin',
+const AppAppSuppliersRoute = AppAppSuppliersRouteImport.update({
+  id: '/app/suppliers',
+  path: '/app/suppliers',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAppStockCountsRoute = AppAppStockCountsRouteImport.update({
-  id: '/app/stock-counts',
-  path: '/app/stock-counts',
+const AppAppWinesRoute = AppAppWinesRouteImport.update({
+  id: '/app/wines',
+  path: '/app/wines',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAppSharingRoute = AppAppSharingRouteImport.update({
-  id: '/app/sharing',
-  path: '/app/sharing',
+const AppSupplierIndexRoute = AppSupplierIndexRouteImport.update({
+  id: '/supplier/',
+  path: '/supplier/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAppSalesMonthlyRoute = AppAppSalesMonthlyRouteImport.update({
-  id: '/app/sales-monthly',
-  path: '/app/sales-monthly',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAppSalesRoute = AppAppSalesRouteImport.update({
-  id: '/app/sales',
-  path: '/app/sales',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAppRestaurantProfileRoute = AppAppRestaurantProfileRouteImport.update({
-  id: '/app/restaurant-profile',
-  path: '/app/restaurant-profile',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAppPriceAnalysisRoute = AppAppPriceAnalysisRouteImport.update({
-  id: '/app/price-analysis',
-  path: '/app/price-analysis',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAppPairingsRoute = AppAppPairingsRouteImport.update({
-  id: '/app/pairings',
-  path: '/app/pairings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAppPairingKnowledgeRoute = AppAppPairingKnowledgeRouteImport.update({
-  id: '/app/pairing-knowledge',
-  path: '/app/pairing-knowledge',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAppDashboardRoute = AppAppDashboardRouteImport.update({
-  id: '/app/dashboard',
-  path: '/app/dashboard',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAppCorkageFeesRoute = AppAppCorkageFeesRouteImport.update({
-  id: '/app/corkage-fees',
-  path: '/app/corkage-fees',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAppCatalogAdminRoute = AppAppCatalogAdminRouteImport.update({
-  id: '/app/catalog-admin',
-  path: '/app/catalog-admin',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAppCadastrosRoute = AppAppCadastrosRouteImport.update({
-  id: '/app/cadastros',
-  path: '/app/cadastros',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminSuppliersRoute = AppAdminSuppliersRouteImport.update({
-  id: '/admin/suppliers',
-  path: '/admin/suppliers',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppAdminAccessMapRoute = AppAdminAccessMapRouteImport.update({
-  id: '/admin/access-map',
-  path: '/admin/access-map',
-  getParentRoute: () => AppRoute,
+const ApiPublicCatalogFileRoute = ApiPublicCatalogFileRouteImport.update({
+  id: '/api/public/catalog-file',
+  path: '/api/public/catalog-file',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -345,18 +345,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/harmonizar': {
-      id: '/harmonizar'
-      path: '/harmonizar'
-      fullPath: '/harmonizar'
-      preLoaderRoute: typeof HarmonizarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -366,26 +359,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/supplier/': {
-      id: '/_app/supplier/'
-      path: '/supplier'
-      fullPath: '/supplier/'
-      preLoaderRoute: typeof AppSupplierIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/': {
-      id: '/_app/app/'
-      path: '/app'
-      fullPath: '/app/'
-      preLoaderRoute: typeof AppAppIndexRouteImport
-      parentRoute: typeof AppRoute
+    '/harmonizar': {
+      id: '/harmonizar'
+      path: '/harmonizar'
+      fullPath: '/harmonizar'
+      preLoaderRoute: typeof HarmonizarRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/admin/': {
       id: '/_app/admin/'
@@ -394,123 +380,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/api/public/catalog-file': {
-      id: '/api/public/catalog-file'
-      path: '/api/public/catalog-file'
-      fullPath: '/api/public/catalog-file'
-      preLoaderRoute: typeof ApiPublicCatalogFileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_app/app/wines': {
-      id: '/_app/app/wines'
-      path: '/app/wines'
-      fullPath: '/app/wines'
-      preLoaderRoute: typeof AppAppWinesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/suppliers': {
-      id: '/_app/app/suppliers'
-      path: '/app/suppliers'
-      fullPath: '/app/suppliers'
-      preLoaderRoute: typeof AppAppSuppliersRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/supplier-catalog-admin': {
-      id: '/_app/app/supplier-catalog-admin'
-      path: '/app/supplier-catalog-admin'
-      fullPath: '/app/supplier-catalog-admin'
-      preLoaderRoute: typeof AppAppSupplierCatalogAdminRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/stock-counts-admin': {
-      id: '/_app/app/stock-counts-admin'
-      path: '/app/stock-counts-admin'
-      fullPath: '/app/stock-counts-admin'
-      preLoaderRoute: typeof AppAppStockCountsAdminRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/stock-counts': {
-      id: '/_app/app/stock-counts'
-      path: '/app/stock-counts'
-      fullPath: '/app/stock-counts'
-      preLoaderRoute: typeof AppAppStockCountsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/sharing': {
-      id: '/_app/app/sharing'
-      path: '/app/sharing'
-      fullPath: '/app/sharing'
-      preLoaderRoute: typeof AppAppSharingRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/sales-monthly': {
-      id: '/_app/app/sales-monthly'
-      path: '/app/sales-monthly'
-      fullPath: '/app/sales-monthly'
-      preLoaderRoute: typeof AppAppSalesMonthlyRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/sales': {
-      id: '/_app/app/sales'
-      path: '/app/sales'
-      fullPath: '/app/sales'
-      preLoaderRoute: typeof AppAppSalesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/restaurant-profile': {
-      id: '/_app/app/restaurant-profile'
-      path: '/app/restaurant-profile'
-      fullPath: '/app/restaurant-profile'
-      preLoaderRoute: typeof AppAppRestaurantProfileRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/price-analysis': {
-      id: '/_app/app/price-analysis'
-      path: '/app/price-analysis'
-      fullPath: '/app/price-analysis'
-      preLoaderRoute: typeof AppAppPriceAnalysisRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/pairings': {
-      id: '/_app/app/pairings'
-      path: '/app/pairings'
-      fullPath: '/app/pairings'
-      preLoaderRoute: typeof AppAppPairingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/pairing-knowledge': {
-      id: '/_app/app/pairing-knowledge'
-      path: '/app/pairing-knowledge'
-      fullPath: '/app/pairing-knowledge'
-      preLoaderRoute: typeof AppAppPairingKnowledgeRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/dashboard': {
-      id: '/_app/app/dashboard'
-      path: '/app/dashboard'
-      fullPath: '/app/dashboard'
-      preLoaderRoute: typeof AppAppDashboardRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/corkage-fees': {
-      id: '/_app/app/corkage-fees'
-      path: '/app/corkage-fees'
-      fullPath: '/app/corkage-fees'
-      preLoaderRoute: typeof AppAppCorkageFeesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/catalog-admin': {
-      id: '/_app/app/catalog-admin'
-      path: '/app/catalog-admin'
-      fullPath: '/app/catalog-admin'
-      preLoaderRoute: typeof AppAppCatalogAdminRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/app/cadastros': {
-      id: '/_app/app/cadastros'
-      path: '/app/cadastros'
-      fullPath: '/app/cadastros'
-      preLoaderRoute: typeof AppAppCadastrosRouteImport
+    '/_app/admin/access-map': {
+      id: '/_app/admin/access-map'
+      path: '/admin/access-map'
+      fullPath: '/admin/access-map'
+      preLoaderRoute: typeof AppAdminAccessMapRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin/suppliers': {
@@ -520,12 +394,138 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminSuppliersRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/admin/access-map': {
-      id: '/_app/admin/access-map'
-      path: '/admin/access-map'
-      fullPath: '/admin/access-map'
-      preLoaderRoute: typeof AppAdminAccessMapRouteImport
+    '/_app/app/': {
+      id: '/_app/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppAppIndexRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/app/cadastros': {
+      id: '/_app/app/cadastros'
+      path: '/app/cadastros'
+      fullPath: '/app/cadastros'
+      preLoaderRoute: typeof AppAppCadastrosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/catalog-admin': {
+      id: '/_app/app/catalog-admin'
+      path: '/app/catalog-admin'
+      fullPath: '/app/catalog-admin'
+      preLoaderRoute: typeof AppAppCatalogAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/corkage-fees': {
+      id: '/_app/app/corkage-fees'
+      path: '/app/corkage-fees'
+      fullPath: '/app/corkage-fees'
+      preLoaderRoute: typeof AppAppCorkageFeesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/dashboard': {
+      id: '/_app/app/dashboard'
+      path: '/app/dashboard'
+      fullPath: '/app/dashboard'
+      preLoaderRoute: typeof AppAppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/pairing-knowledge': {
+      id: '/_app/app/pairing-knowledge'
+      path: '/app/pairing-knowledge'
+      fullPath: '/app/pairing-knowledge'
+      preLoaderRoute: typeof AppAppPairingKnowledgeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/pairings': {
+      id: '/_app/app/pairings'
+      path: '/app/pairings'
+      fullPath: '/app/pairings'
+      preLoaderRoute: typeof AppAppPairingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/price-analysis': {
+      id: '/_app/app/price-analysis'
+      path: '/app/price-analysis'
+      fullPath: '/app/price-analysis'
+      preLoaderRoute: typeof AppAppPriceAnalysisRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/restaurant-profile': {
+      id: '/_app/app/restaurant-profile'
+      path: '/app/restaurant-profile'
+      fullPath: '/app/restaurant-profile'
+      preLoaderRoute: typeof AppAppRestaurantProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/sales': {
+      id: '/_app/app/sales'
+      path: '/app/sales'
+      fullPath: '/app/sales'
+      preLoaderRoute: typeof AppAppSalesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/sales-monthly': {
+      id: '/_app/app/sales-monthly'
+      path: '/app/sales-monthly'
+      fullPath: '/app/sales-monthly'
+      preLoaderRoute: typeof AppAppSalesMonthlyRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/sharing': {
+      id: '/_app/app/sharing'
+      path: '/app/sharing'
+      fullPath: '/app/sharing'
+      preLoaderRoute: typeof AppAppSharingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/stock-counts': {
+      id: '/_app/app/stock-counts'
+      path: '/app/stock-counts'
+      fullPath: '/app/stock-counts'
+      preLoaderRoute: typeof AppAppStockCountsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/stock-counts-admin': {
+      id: '/_app/app/stock-counts-admin'
+      path: '/app/stock-counts-admin'
+      fullPath: '/app/stock-counts-admin'
+      preLoaderRoute: typeof AppAppStockCountsAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/supplier-catalog-admin': {
+      id: '/_app/app/supplier-catalog-admin'
+      path: '/app/supplier-catalog-admin'
+      fullPath: '/app/supplier-catalog-admin'
+      preLoaderRoute: typeof AppAppSupplierCatalogAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/suppliers': {
+      id: '/_app/app/suppliers'
+      path: '/app/suppliers'
+      fullPath: '/app/suppliers'
+      preLoaderRoute: typeof AppAppSuppliersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/wines': {
+      id: '/_app/app/wines'
+      path: '/app/wines'
+      fullPath: '/app/wines'
+      preLoaderRoute: typeof AppAppWinesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/supplier/': {
+      id: '/_app/supplier/'
+      path: '/supplier'
+      fullPath: '/supplier/'
+      preLoaderRoute: typeof AppSupplierIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/api/public/catalog-file': {
+      id: '/api/public/catalog-file'
+      path: '/api/public/catalog-file'
+      fullPath: '/api/public/catalog-file'
+      preLoaderRoute: typeof ApiPublicCatalogFileRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -590,3 +590,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -391,7 +391,10 @@ export const sendAccessPasswordReset = createServerFn({ method: "POST" })
     const { data: u } = await supabaseAdmin.auth.admin.getUserById(row.user_id);
     const email = u?.user?.email;
     if (!email) throw new Error("Usuário sem e-mail");
-    const { error } = await supabaseAdmin.auth.admin.generateLink({ type: "recovery", email });
+    const site = process.env['SITE_URL'] ?? 'https://harmonizevinhos.lovable.app';
+    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+      redirectTo: `${site}/reset-password`,
+    });
     if (error) throw new Error(error.message);
     return { ok: true, email };
   });

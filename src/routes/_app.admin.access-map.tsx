@@ -8,7 +8,8 @@ import {
   adminRemoveAccess,
   listAllAccessMap,
 } from "@/lib/access.functions";
-import { ShieldCheck, UserPlus, Trash2 } from "lucide-react";
+import { ShieldCheck, UserPlus, Trash2, Settings2 } from "lucide-react";
+import AccessManageDialog, { type ManageTarget } from "@/components/AccessManageDialog";
 
 export const Route = createFileRoute("/_app/admin/access-map")({
   component: AccessMapAdmin,
@@ -37,6 +38,7 @@ function AccessMapAdmin() {
   const [filterRole, setFilterRole] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [manage, setManage] = useState<ManageTarget | null>(null);
 
   useEffect(() => {
     if (!loading && role !== "admin") navigate({ to: "/app" });
@@ -153,6 +155,22 @@ function AccessMapAdmin() {
                   </td>
                   <td className="px-3 py-2 text-right">
                     <button
+                      onClick={() =>
+                        setManage({
+                          user_role_id: r.user_role_id,
+                          email: r.email,
+                          full_name: r.full_name,
+                          role: r.role,
+                          supplier_id: r.supplier_id,
+                          restaurant_name: r.restaurant_name,
+                        })
+                      }
+                      className="mr-1 rounded-md p-1 text-muted-foreground hover:text-primary"
+                      aria-label="Gerenciar"
+                    >
+                      <Settings2 size={16} />
+                    </button>
+                    <button
                       onClick={() => {
                         if (confirm("Remover vínculo?")) removeMut.mutate(r.user_role_id);
                       }}
@@ -176,6 +194,14 @@ function AccessMapAdmin() {
             setInviteOpen(false);
             qc.invalidateQueries({ queryKey: ["admin-access-map"] });
           }}
+        />
+      )}
+      {manage && (
+        <AccessManageDialog
+          target={manage}
+          isGlobalAdmin
+          onClose={() => setManage(null)}
+          onChanged={() => qc.invalidateQueries({ queryKey: ["admin-access-map"] })}
         />
       )}
       {err && <div className="mt-2 text-xs text-red-400">{err}</div>}

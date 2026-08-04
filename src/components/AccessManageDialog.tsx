@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { X, KeyRound, Mail, RefreshCw, Repeat } from "lucide-react";
 import {
@@ -53,47 +52,21 @@ export default function AccessManageDialog({
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const wrap = <T,>(fn: (v: T) => Promise<any>, ok: string) =>
-    useMutation({
-      mutationFn: fn,
-      onSuccess: () => {
-        setErr(null);
-        setMsg(ok);
-        onChanged();
-      },
-      onError: (e: any) => {
-        setMsg(null);
-        setErr(e?.message ?? "Falha na operação");
-      },
-    });
-
-  const roleMut = wrap(
-    () =>
-      roleFn({
-        data: {
-          user_role_id: target.user_role_id,
-          role: role as any,
-          supplier_id: role === "supplier" ? supplierId || null : null,
-        },
-      }),
-    "Papel atualizado.",
-  );
-  const resetMut = wrap(
-    () => resetFn({ data: { user_role_id: target.user_role_id } }),
-    "E-mail de redefinição de senha enviado.",
-  );
-  const pwMut = wrap(
-    () => setPwFn({ data: { user_role_id: target.user_role_id, password } }),
-    "Senha redefinida.",
-  );
-  const emailMut = wrap(
-    () => emailFn({ data: { user_role_id: target.user_role_id, email: newEmail.trim() } }),
-    "E-mail de acesso alterado.",
-  );
-  const transferMut = wrap(
-    () => transferFn({ data: { user_role_id: target.user_role_id, email: transferEmail.trim() } }),
-    "Acesso transferido para o novo e-mail.",
-  );
+  const [pending, setPending] = useState<string | null>(null);
+  const run = async (key: string, fn: () => Promise<any>, ok: string) => {
+    setPending(key);
+    try {
+      await fn();
+      setErr(null);
+      setMsg(ok);
+      onChanged();
+    } catch (e: any) {
+      setMsg(null);
+      setErr(e?.message ?? "Falha na operação");
+    } finally {
+      setPending(null);
+    }
+  };
 
   const input =
     "w-full rounded-md border border-border bg-[color:var(--surface-2)] px-3 py-2 text-sm focus:border-primary focus:outline-none";
@@ -154,8 +127,15 @@ export default function AccessManageDialog({
               </select>
             )}
             <button
-              onClick={() => roleMut.mutate(undefined as any)}
-              disabled={roleMut.isPending}
+              onClick={() => run("role", () =>
+                  roleFn({
+                    data: {
+                      user_role_id: target.user_role_id,
+                      role: role as any,
+                      supplier_id: role === "supplier" ? supplierId || null : null,
+                    },
+                  }), "Papel atualizado.")}
+              disabled={pending === "role"}
               className={`${btn} mt-3 w-full`}
             >
               <RefreshCw size={14} /> Salvar papel
@@ -165,8 +145,8 @@ export default function AccessManageDialog({
           <div className={section}>
             <div className={label}>Senha</div>
             <button
-              onClick={() => resetMut.mutate(undefined as any)}
-              disabled={resetMut.isPending}
+              onClick={() => run("reset", () => resetFn({ data: { user_role_id: target.user_role_id } }), "E-mail de redefinição de senha enviado.")}
+              disabled={pending === "reset"}
               className={`${btn} w-full`}
             >
               <Mail size={14} /> Enviar e-mail de redefinição
@@ -181,8 +161,8 @@ export default function AccessManageDialog({
                   className={input}
                 />
                 <button
-                  onClick={() => pwMut.mutate(undefined as any)}
-                  disabled={pwMut.isPending || password.length < 8}
+                  onClick={() => run("pw", () => setPwFn({ data: { user_role_id: target.user_role_id, password } }), "Senha redefinida.")}
+                  disabled={pending === "pw" || password.length < 8}
                   className={btn}
                 >
                   <KeyRound size={14} /> Definir
@@ -202,8 +182,8 @@ export default function AccessManageDialog({
                   className={input}
                 />
                 <button
-                  onClick={() => emailMut.mutate(undefined as any)}
-                  disabled={emailMut.isPending || !newEmail.includes("@")}
+                  onClick={() => run("email", () => emailFn({ data: { user_role_id: target.user_role_id, email: newEmail.trim() } }), "E-mail de acesso alterado.")}
+                  disabled={pending === "email" || !newEmail.includes("@")}
                   className={btn}
                 >
                   Substituir
@@ -228,9 +208,9 @@ export default function AccessManageDialog({
               <button
                 onClick={() => {
                   if (!confirm("Transferir este acesso e remover o atual?")) return;
-                  transferMut.mutate(undefined as any);
+                  run("transfer", () => transferFn({ data: { user_role_id: target.user_role_id, email: transferEmail.trim() } }), "Acesso transferido para o novo e-mail.");
                 }}
-                disabled={transferMut.isPending || !transferEmail.includes("@")}
+                disabled={pending === "transfer" || !transferEmail.includes("@")}
                 className={btn}
               >
                 <Repeat size={14} /> Transferir

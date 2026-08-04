@@ -309,3 +309,201 @@ export const adminRemoveAccess = createServerFn({ method: "POST" })
     if (delErr) throw new Error(delErr.message);
     return { ok: true };
   });
+
+// ---------------------------------------------------------------------------
+// Gestão de acessos existentes (alterar papel, senha, e-mail, reenviar convite)
+// ---------------------------------------------------------------------------
+
+const ChangeRoleSchema = z.object({
+  user_role_id: z.string().uuid(),
+  role: z.enum(adminRoleValues),
+  supplier_id: z.string().uuid().nullable().optional(),
+});
+
+/** Altera o papel de um vínculo. Gestores do restaurante ou admin global. */
+export const changeAccessRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => ChangeRoleSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("user_roles")
+      .select("id, user_id, role, restaurant_id")
+      .eq("id", data.user_role_id)
+      .maybeSingle();
+    if (!row) throw new Error("Vínculo não encontrado");
+    if (row.role === "admin") throw new Error("Não é possível alterar o admin global");
+
+    const { data: isAdmin } = await context.supabase.rpc("is_admin", {
+      _user_id: context.userId,
+    });
+    if (!isAdmin) {
+      if (!row.restaurant_id) throw new Error("Forbidden");
+      await assertCanManage(context, row.restaurant_id);
+      if (data.role === "rest_admin") throw new Error("Somente o admin global define administradores");
+    }
+    if (data.role === "supplier" && !data.supplier_id) throw new Error("Selecione o fornecedor");
+
+    // impedir deixar a unidade sem administrador
+    if (row.role === "rest_admin" && data.role !== "rest_admin" && row.restaurant_id) {
+      const { data: admins } = await supabaseAdmin
+        .from("user_roles")
+        .select("id")
+        .eq("restaurant_id", row.restaurant_id)
+        .eq("role", "rest_admin");
+      if ((admins?.length ?? 0) <= 1) {
+        throw new Error("Não é possível remover o último administrador da unidade.");
+      }
+    }
+
+    const { error } = await supabaseAdmin
+      .from("user_roles")
+      .update({
+        role: data.role,
+        supplier_id: data.role === "supplier" ? data.supplier_id! : null,
+      })
+      .eq("id", data.user_role_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+const ResetSchema = z.object({ user_role_id: z.string().uuid() });
+
+/** Envia e-mail de redefinição de senha ao usuário do vínculo. */
+export const sendAccessPasswordReset = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => ResetSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id, restaurant_id")
+      .eq("id", data.user_role_id)
+      .maybeSingle();
+    if (!row) throw new Error("Vínculo não encontrado");
+    const { data: isAdmin } = await context.supabase.rpc("is_admin", {
+      _user_id: context.userId,
+    });
+    if (!isAdmin) {
+      if (!row.restaurant_id) throw new Error("Forbidden");
+      await assertCanManage(context, row.restaurant_id);
+    }
+    const { data: u } = await supabaseAdmin.auth.admin.getUserById(row.user_id);
+    const email = u?.user?.email;
+    if (!email) throw new Error("Usuário sem e-mail");
+    const site = process.env['SITE_URL'] ?? 'https://harmonizevinhos.lovable.app';
+    const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+      redirectTo: `${site}/reset-password`,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true, email };
+  });
+
+const SetPasswordSchema = z.object({
+  user_role_id: z.string().uuid(),
+  password: z.string().min(8).max(72),
+});
+
+/** Define diretamente a senha do usuário. Somente admin global. */
+export const adminSetUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => SetPasswordSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("id", data.user_role_id)
+      .maybeSingle();
+    if (!row) throw new Error("Vínculo não encontrado");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(row.user_id, {
+      password: data.password,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+const ChangeEmailSchema = z.object({
+  user_role_id: z.string().uuid(),
+  email: z.string().trim().email(),
+});
+
+/** Substitui o e-mail de acesso do usuário. Somente admin global. */
+export const adminChangeUserEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => ChangeEmailSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("id", data.user_role_id)
+      .maybeSingle();
+    if (!row) throw new Error("Vínculo não encontrado");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(row.user_id, {
+      email: data.email,
+      email_confirm: true,
+    });
+    if (error) throw new Error(error.message);
+    await supabaseAdmin.from("profiles").upsert({ id: row.user_id, email: data.email });
+    return { ok: true };
+  });
+
+const TransferSchema = z.object({
+  user_role_id: z.string().uuid(),
+  email: z.string().trim().email(),
+});
+
+/**
+ * Transfere um vínculo para outra pessoa: convida/localiza o novo e-mail,
+ * cria o mesmo papel para ele e remove o vínculo anterior.
+ */
+export const transferAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => TransferSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("user_roles")
+      .select("id, user_id, role, restaurant_id, supplier_id")
+      .eq("id", data.user_role_id)
+      .maybeSingle();
+    if (!row) throw new Error("Vínculo não encontrado");
+    if (row.role === "admin") throw new Error("Não é possível transferir o admin global");
+    const { data: isAdmin } = await context.supabase.rpc("is_admin", {
+      _user_id: context.userId,
+    });
+    if (!isAdmin) {
+      if (!row.restaurant_id) throw new Error("Forbidden");
+      await assertCanManage(context, row.restaurant_id);
+    }
+
+    let newUserId: string | undefined;
+    const { data: invited, error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      data.email,
+    );
+    if (invited?.user) newUserId = invited.user.id;
+    else if (invErr) {
+      const { data: list } = await supabaseAdmin.auth.admin.listUsers();
+      const found = list?.users.find((u) => u.email?.toLowerCase() === data.email.toLowerCase());
+      if (!found) throw new Error(invErr.message);
+      newUserId = found.id;
+    }
+    if (!newUserId) throw new Error("Não foi possível criar/localizar o usuário");
+    if (newUserId === row.user_id) throw new Error("O e-mail informado já é o titular do acesso");
+
+    await supabaseAdmin.from("profiles").upsert({ id: newUserId, email: data.email });
+    const { error: insErr } = await supabaseAdmin.from("user_roles").insert({
+      user_id: newUserId,
+      role: row.role,
+      restaurant_id: row.restaurant_id,
+      supplier_id: row.supplier_id,
+    });
+    if (insErr && !insErr.message.toLowerCase().includes("duplicate")) {
+      throw new Error(insErr.message);
+    }
+    await supabaseAdmin.from("user_roles").delete().eq("id", row.id);
+    return { ok: true, user_id: newUserId };
+  });

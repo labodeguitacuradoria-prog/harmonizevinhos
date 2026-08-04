@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { X, UserPlus, Trash2 } from "lucide-react";
+import { X, UserPlus, Trash2, Settings2 } from "lucide-react";
+import AccessManageDialog, { type ManageTarget } from "@/components/AccessManageDialog";
 import { supabase } from "@/integrations/supabase/client";
 import {
   listRestaurantAccess,
@@ -40,6 +41,7 @@ export default function AccessMapDialog({
   const [role, setRole] = useState<RoleOption>("staff");
   const [supplierId, setSupplierId] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
+  const [manage, setManage] = useState<ManageTarget | null>(null);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["access-map", restaurantId],
@@ -162,6 +164,21 @@ export default function AccessMapDialog({
                   </td>
                   <td className="px-3 py-2 text-right">
                     <button
+                      onClick={() =>
+                        setManage({
+                          user_role_id: r.user_role_id,
+                          email: r.email,
+                          full_name: r.full_name,
+                          role: r.role,
+                          supplier_id: r.supplier_id,
+                        })
+                      }
+                      className="mr-1 rounded-md p-1 text-muted-foreground hover:text-primary"
+                      aria-label="Gerenciar"
+                    >
+                      <Settings2 size={16} />
+                    </button>
+                    <button
                       onClick={() => {
                         if (confirm("Remover acesso?")) removeMut.mutate(r.user_role_id);
                       }}
@@ -249,6 +266,15 @@ export default function AccessMapDialog({
           </p>
         </div>
       </div>
+      {manage && (
+        <AccessManageDialog
+          target={manage}
+          isGlobalAdmin={false}
+          suppliers={suppliersSorted}
+          onClose={() => setManage(null)}
+          onChanged={() => qc.invalidateQueries({ queryKey: ["access-map", restaurantId] })}
+        />
+      )}
     </div>
   );
 }

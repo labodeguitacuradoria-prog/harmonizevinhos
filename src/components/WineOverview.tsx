@@ -282,7 +282,7 @@ export function WineOverview({
         {/* Charts */}
         <div className="grid gap-5 p-5 md:grid-cols-[1fr_300px]">
           {/* Sales bar chart */}
-          <div className="flex min-h-0 flex-col rounded-xl border border-border bg-background/40 p-3">
+          <div className="flex min-h-[360px] flex-col rounded-xl border border-border bg-background/40 p-3">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />

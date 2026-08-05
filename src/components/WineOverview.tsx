@@ -226,7 +226,7 @@ export function WineOverview({
               </div>
             </div>
 
-            <div className="grid min-h-0 flex-1 grid-cols-[1.4fr_1fr] gap-x-6 overflow-hidden text-[12px]">
+            <div className="grid grid-cols-[1.4fr_1fr] gap-x-6 text-[12px]">
               <div className="space-y-1.5">
                 <div className="grid grid-cols-[1fr_auto] gap-x-4">
                   <InfoRow label="Produtor" value={wine.producer} />

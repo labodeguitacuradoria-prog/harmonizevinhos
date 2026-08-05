@@ -179,11 +179,13 @@ export function WineOverview({
         </div>
 
 
+        {/* Scrollable body */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
         {/* Cover row: image + info */}
-        <div className="grid shrink-0 gap-5 border-b border-border px-6 py-4 md:grid-cols-[210px_1fr_220px]" style={{ height: "40%" }}>
-          <div className="flex h-full items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
+        <div className="grid gap-5 border-b border-border px-6 py-4 md:grid-cols-[210px_1fr_220px]">
+          <div className="flex min-h-[220px] items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
             {wine.image_url ? (
-              <img src={wine.image_url} alt={wine.name} className="h-3/4 w-auto max-w-full object-contain" />
+              <img src={wine.image_url} alt={wine.name} className="max-h-[220px] w-auto max-w-full object-contain" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
                 Sem imagem
@@ -191,7 +193,8 @@ export function WineOverview({
             )}
           </div>
 
-          <div className="flex min-w-0 flex-col gap-3 overflow-hidden text-sm">
+          <div className="flex min-w-0 flex-col gap-3 text-sm">
+
             <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
               <div className="min-w-0">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">

@@ -329,7 +329,7 @@ export function WineOverview({
             </div>
 
 
-            <div className="min-h-0 flex-1">
+            <div className="min-h-[300px] flex-1">
               <BarChart
                 curr={curr}
                 prev={prev}

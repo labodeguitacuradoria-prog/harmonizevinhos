@@ -485,76 +485,59 @@ function BarChart({
 }) {
   const rawMax = Math.max(1, ...curr, ...prev);
   const maxVal = niceMax(rawMax);
-  const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => maxVal * f);
-  const axisWidth = 68;
+  const gridColor = "color-mix(in oklab, var(--gold) 16%, transparent)";
 
   return (
     <div className={fill ? "flex h-full flex-col" : undefined}>
       <div className={`relative w-full ${fill ? "min-h-0 flex-1" : ""}`} style={fill ? undefined : { height }}>
-
-        <div className="absolute inset-0" style={{ paddingLeft: axisWidth, paddingBottom: 22 }}>
-          <div className="relative h-full w-full">
-            {ticks.map((t, i) => (
-              <div
-                key={i}
-                className="absolute left-0 right-0 flex items-center"
-                style={{ top: `${(i / (ticks.length - 1)) * 100}%`, transform: "translateY(-0.5px)" }}
-              >
-                <span
-                  className="absolute right-full pr-2 text-[10px] text-muted-foreground whitespace-nowrap"
-                  style={{ transform: "translateY(-50%)" }}
-                >
-                  {valuePrefix}{fmtBRL(t)}{valueSuffix}
-                </span>
-                <div className="h-px w-full" style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }} />
-              </div>
-            ))}
-            <div className="absolute inset-0 flex">
-              {MONTHS.map((_, i) => (
-                <div key={i} className="flex-1 border-l" style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 30%, transparent)" }} />
-              ))}
-              <div className="border-l" style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }} />
-            </div>
-            <div className="absolute inset-0 flex items-end justify-between gap-2">
+        <div className="absolute inset-0" style={{ paddingBottom: 20 }}>
+          <div
+            className="relative h-full w-full rounded-md"
+            style={{
+              backgroundImage: `linear-gradient(to right, ${gridColor} 1px, transparent 1px), linear-gradient(to bottom, ${gridColor} 1px, transparent 1px)`,
+              backgroundSize: "22px 22px",
+              border: "1px solid color-mix(in oklab, var(--gold) 22%, transparent)",
+            }}
+          >
+            <div className="absolute inset-0 flex items-end justify-between gap-1.5 px-1.5 pt-5">
               {MONTHS.map((mo, i) => {
                 const cPct = (curr[i] / maxVal) * 100;
                 const pPct = (prev[i] / maxVal) * 100;
                 return (
-                  <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-0.5">
-                    <div
-                      className="w-2/5 rounded-t transition-all"
-                      style={{
-                        height: `${pPct}%`,
-                        background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)",
-                        boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
-                      }}
-                      title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
-                    />
-                    <div
-                      className="w-2/5 rounded-t transition-all"
-                      style={{ height: `${cPct}%`, background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
-                      title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}`}
-                    />
+                  <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-[3px]">
+                    <div className="flex h-full w-2/5 flex-col justify-end">
+                      <div className="text-center text-[10px] font-semibold leading-none text-foreground/80">
+                        {prev[i] ? `${valuePrefix}${fmtBRL(prev[i])}` : ""}
+                      </div>
+                      <div
+                        className="mt-1 w-full rounded-t transition-all"
+                        style={{
+                          height: `${pPct}%`,
+                          background: "linear-gradient(180deg, #dcdcdc, #7a7a7a)",
+                        }}
+                        title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
+                      />
+                    </div>
+                    <div className="flex h-full w-2/5 flex-col justify-end">
+                      <div className="text-center text-[10px] font-semibold leading-none text-primary">
+                        {curr[i] ? `${valuePrefix}${fmtBRL(curr[i])}` : ""}
+                      </div>
+                      <div
+                        className="mt-1 w-full rounded-t transition-all"
+                        style={{ height: `${cPct}%`, background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
+                        title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}`}
+                      />
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 flex justify-between gap-2" style={{ paddingLeft: axisWidth }}>
+        <div className="absolute bottom-0 left-0 right-0 flex justify-between gap-1.5 px-1.5">
           {MONTHS.map((mo) => (
             <div key={mo} className="flex-1 text-center text-[10px] text-muted-foreground">{mo}</div>
           ))}
-        </div>
-      </div>
-      <div className="mt-3 flex items-center justify-center gap-6 text-[11px]">
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded" style={{ background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)" }} />
-          <span className="text-muted-foreground">{previousYear}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded" style={{ background: "linear-gradient(180deg, var(--gold), var(--wine))" }} />
-          <span className="text-muted-foreground">{currentYear}</span>
         </div>
       </div>
     </div>
@@ -563,38 +546,39 @@ function BarChart({
 
 function ParticipationPie({ share, wineValue, totalValue, wineName }: { share: number; wineValue: number; totalValue: number; wineName: string }) {
   const size = 200;
-  const r = 82;
+  const stroke = 26;
+  const r = (size - stroke) / 2 - 6;
   const cx = size / 2;
   const cy = size / 2;
   const frac = Math.max(0, Math.min(1, totalValue > 0 ? wineValue / totalValue : 0));
-
-  const angle = frac * 2 * Math.PI;
-  const large = frac > 0.5 ? 1 : 0;
-  const x = cx + r * Math.sin(angle);
-  const y = cy - r * Math.cos(angle);
-  const wineSlice = frac >= 0.9999
-    ? `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.01} ${cy - r} Z`
-    : `M ${cx} ${cy} L ${cx} ${cy - r} A ${r} ${r} 0 ${large} 1 ${x} ${y} Z`;
-  const restSlice = frac >= 0.9999
-    ? ""
-    : `M ${cx} ${cy} L ${x} ${y} A ${r} ${r} 0 ${large === 1 ? 0 : 1} 1 ${cx} ${cy - r} Z`;
+  const circ = 2 * Math.PI * r;
 
   return (
     <div className="flex flex-col items-center gap-3">
       {totalValue > 0 ? (
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          {restSlice && <path d={restSlice} fill="#3a3a3a" stroke="var(--card)" strokeWidth={1.5} />}
-          <path d={wineSlice} fill="url(#pgrad)" stroke="var(--card)" strokeWidth={1.5} />
           <defs>
             <linearGradient id="pgrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--gold)" />
               <stop offset="100%" stopColor="var(--wine)" />
             </linearGradient>
           </defs>
-          <text x={cx} y={cy - 4} textAnchor="middle" className="fill-primary" style={{ fontSize: 22, fontWeight: 700 }}>
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#3a3a3a" strokeWidth={stroke} />
+          <circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke="url(#pgrad)"
+            strokeWidth={stroke}
+            strokeLinecap="butt"
+            strokeDasharray={`${circ * frac} ${circ}`}
+            transform={`rotate(-90 ${cx} ${cy})`}
+          />
+          <text x={cx} y={cy - 2} textAnchor="middle" className="fill-primary" style={{ fontSize: 30, fontWeight: 700 }}>
             {share.toFixed(1)}%
           </text>
-          <text x={cx} y={cy + 14} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 10 }}>
+          <text x={cx} y={cy + 20} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11 }}>
             do faturamento
           </text>
         </svg>
@@ -626,3 +610,4 @@ function ParticipationPie({ share, wineValue, totalValue, wineName }: { share: n
     </div>
   );
 }
+

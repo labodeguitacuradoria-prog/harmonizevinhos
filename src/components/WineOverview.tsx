@@ -153,15 +153,14 @@ export function WineOverview({
       <div className="flex h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
         {/* Header */}
         <div className="flex shrink-0 items-center justify-end gap-2 border-b border-border px-6 py-2.5">
-          {(wine.tasting_notes || wine.pairing_notes) && (
-            <button
-              type="button"
-              onClick={() => setNotesOpen(true)}
-              className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:border-primary/40 hover:text-primary"
-            >
-              <FileText className="h-3.5 w-3.5" /> Notas
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setNotesOpen(true)}
+            className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:border-primary/40 hover:text-primary"
+          >
+            <FileText className="h-3.5 w-3.5" /> Características
+          </button>
+
           <button
             type="button"
             onClick={onEdit}

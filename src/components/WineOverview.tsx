@@ -343,7 +343,7 @@ export function WineOverview({
           </div>
 
           {/* Pie: participation */}
-          <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-background/40 p-3">
+          <div className="flex flex-col rounded-xl border border-border bg-background/40 p-3">
             <div className="mb-2 flex items-center gap-2">
               <PieIcon className="h-4 w-4 text-primary" />
               <div>

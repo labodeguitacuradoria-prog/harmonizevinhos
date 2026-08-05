@@ -152,41 +152,33 @@ export function WineOverview({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm">
       <div className="flex h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
         {/* Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <WineIcon className="h-5 w-5 shrink-0 text-primary" />
-            <div className="min-w-0">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Rótulo</div>
-              <h2 className="truncate text-lg font-semibold tracking-tight">{wine.name}</h2>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {(wine.tasting_notes || wine.pairing_notes) && (
-              <button
-                type="button"
-                onClick={() => setNotesOpen(true)}
-                className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:border-primary/40 hover:text-primary"
-              >
-                <FileText className="h-3.5 w-3.5" /> Notas
-              </button>
-            )}
+        <div className="flex shrink-0 items-center justify-end gap-2 border-b border-border px-6 py-2.5">
+          {(wine.tasting_notes || wine.pairing_notes) && (
             <button
               type="button"
-              onClick={onEdit}
-              className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-primary/20"
+              onClick={() => setNotesOpen(true)}
+              className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:border-primary/40 hover:text-primary"
             >
-              <Pencil className="h-3.5 w-3.5" /> Editar
+              <FileText className="h-3.5 w-3.5" /> Notas
             </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground"
-              aria-label="Fechar"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={onEdit}
+            className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-primary/20"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Editar
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground"
+            aria-label="Fechar"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
+
 
         {/* Cover row: image + info */}
         <div className="grid shrink-0 gap-5 border-b border-border px-6 py-4 md:grid-cols-[210px_1fr_220px]" style={{ height: "40%" }}>

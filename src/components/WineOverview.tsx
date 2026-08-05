@@ -152,41 +152,33 @@ export function WineOverview({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm">
       <div className="flex h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
         {/* Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <WineIcon className="h-5 w-5 shrink-0 text-primary" />
-            <div className="min-w-0">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Rótulo</div>
-              <h2 className="truncate text-lg font-semibold tracking-tight">{wine.name}</h2>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {(wine.tasting_notes || wine.pairing_notes) && (
-              <button
-                type="button"
-                onClick={() => setNotesOpen(true)}
-                className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:border-primary/40 hover:text-primary"
-              >
-                <FileText className="h-3.5 w-3.5" /> Notas
-              </button>
-            )}
+        <div className="flex shrink-0 items-center justify-end gap-2 border-b border-border px-6 py-2.5">
+          {(wine.tasting_notes || wine.pairing_notes) && (
             <button
               type="button"
-              onClick={onEdit}
-              className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-primary/20"
+              onClick={() => setNotesOpen(true)}
+              className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:border-primary/40 hover:text-primary"
             >
-              <Pencil className="h-3.5 w-3.5" /> Editar
+              <FileText className="h-3.5 w-3.5" /> Notas
             </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground"
-              aria-label="Fechar"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={onEdit}
+            className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-primary/20"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Editar
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground"
+            aria-label="Fechar"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
+
 
         {/* Cover row: image + info */}
         <div className="grid shrink-0 gap-5 border-b border-border px-6 py-4 md:grid-cols-[210px_1fr_220px]" style={{ height: "40%" }}>
@@ -201,57 +193,73 @@ export function WineOverview({
           </div>
 
           <div className="flex min-w-0 flex-col gap-3 overflow-hidden text-sm">
-            <div className="flex flex-wrap items-center gap-2">
-              {wine.internal_code && (
-                <span className="rounded-full border border-border bg-background px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
-                  {wine.internal_code}
-                </span>
-              )}
-              {wine.wine_type && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                  {wine.wine_type}
-                </span>
-              )}
-              {wine.volume && (
-                <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
-                  {wine.volume}
-                </span>
-              )}
-              {!wine.active_on_menu && (
-                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-500">
-                  Fora da carta
-                </span>
-              )}
-            </div>
-
-            <div className="grid min-h-0 flex-1 grid-cols-[1fr_1fr_auto] gap-x-6 gap-y-1.5 overflow-hidden text-[12px]">
-              <div className="space-y-1.5">
-                <InfoRow label="Produtor" value={wine.producer} />
-                <InfoRow label="Safra" value={wine.vintage ? String(wine.vintage) : null} />
-                <InfoRow label="País" value={wine.country} />
-              </div>
-              <div className="space-y-1.5">
-                <InfoRow label="Região" value={wine.region} />
-                <InfoRow label="AOP / Denominação" value={wine.appellation} />
-                <div className="grid grid-cols-2 gap-x-4">
-                  <InfoRow label="Estilo" value={wine.style} />
-                  <InfoRow label="Álcool" value={wine.alcohol_pct != null ? `${wine.alcohol_pct}%` : null} />
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+              <div className="min-w-0">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Rótulo
                 </div>
+                <h2 className="truncate text-2xl font-semibold tracking-tight">{wine.name}</h2>
               </div>
-              <div className="min-w-[120px]">
-                <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Uvas</span>
-                {grapes.length ? (
-                  <ul className="mt-0.5 space-y-0.5 overflow-y-auto pr-1 text-foreground/90" style={{ maxHeight: "100%" }}>
-                    {grapes.map((g) => (
-                      <li key={g} className="truncate">{g}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-foreground/90">—</div>
+              <div className="flex flex-wrap items-center gap-2 self-end pb-1">
+                {wine.internal_code && (
+                  <span className="rounded-full border border-border bg-background px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+                    {wine.internal_code}
+                  </span>
+                )}
+                {wine.wine_type && (
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                    {wine.wine_type}
+                  </span>
+                )}
+                {wine.volume && (
+                  <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
+                    {wine.volume}
+                  </span>
+                )}
+                {!wine.active_on_menu && (
+                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-500">
+                    Fora da carta
+                  </span>
                 )}
               </div>
             </div>
+
+            <div className="grid min-h-0 flex-1 grid-cols-[1.4fr_1fr] gap-x-6 overflow-hidden text-[12px]">
+              <div className="space-y-1.5">
+                <div className="grid grid-cols-[1fr_auto] gap-x-4">
+                  <InfoRow label="Produtor" value={wine.producer} />
+                  <InfoRow label="Safra" value={wine.vintage ? String(wine.vintage) : null} />
+                </div>
+                <InfoRow label="Região" value={wine.region} />
+                <InfoRow label="AOP / Denominação" value={wine.appellation} />
+                <div className="grid grid-cols-[1fr_auto] gap-x-4">
+                  <InfoRow label="Estilo" value={wine.style} />
+                  <InfoRow label="País" value={wine.country} />
+                </div>
+              </div>
+              <div className="flex min-w-[130px] min-h-0 flex-col gap-1.5">
+                <InfoRow
+                  label="Álcool"
+                  value={wine.alcohol_pct != null ? `${wine.alcohol_pct}%` : null}
+                />
+                <div className="flex min-h-0 flex-col">
+                  <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Uvas
+                  </span>
+                  {grapes.length ? (
+                    <ul className="mt-0.5 min-h-0 space-y-0.5 overflow-y-auto pr-1 text-foreground/90">
+                      {grapes.map((g) => (
+                        <li key={g} className="truncate">{g}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-foreground/90">—</div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
+
 
           {/* KPI column */}
           <div className="flex flex-col justify-center gap-3">
@@ -278,32 +286,48 @@ export function WineOverview({
             <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Vendas do rótulo</div>
-                  <div className="text-sm font-semibold">{currentYear} vs {previousYear}</div>
+                <div className="text-sm font-semibold">Vendas do Rótulo</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 text-[11px]">
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="inline-block h-3 w-3 rounded-sm"
+                      style={{ background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)" }}
+                    />
+                    <span className="text-muted-foreground">{previousYear}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="inline-block h-3 w-3 rounded-sm"
+                      style={{ background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
+                    />
+                    <span className="text-muted-foreground">{currentYear}</span>
+                  </span>
+                </div>
+                <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
+                  <button
+                    type="button"
+                    onClick={() => onMetricChange("qty")}
+                    className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
+                      metric === "qty" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Quantidade
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMetricChange("revenue")}
+                    className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
+                      metric === "revenue" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Faturamento
+                  </button>
                 </div>
               </div>
-              <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
-                <button
-                  type="button"
-                  onClick={() => onMetricChange("qty")}
-                  className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
-                    metric === "qty" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Quantidade
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onMetricChange("revenue")}
-                  className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
-                    metric === "revenue" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Faturamento
-                </button>
-              </div>
             </div>
+
 
             <div className="min-h-0 flex-1">
               <BarChart
@@ -461,76 +485,59 @@ function BarChart({
 }) {
   const rawMax = Math.max(1, ...curr, ...prev);
   const maxVal = niceMax(rawMax);
-  const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => maxVal * f);
-  const axisWidth = 68;
+  const gridColor = "color-mix(in oklab, var(--gold) 16%, transparent)";
 
   return (
     <div className={fill ? "flex h-full flex-col" : undefined}>
       <div className={`relative w-full ${fill ? "min-h-0 flex-1" : ""}`} style={fill ? undefined : { height }}>
-
-        <div className="absolute inset-0" style={{ paddingLeft: axisWidth, paddingBottom: 22 }}>
-          <div className="relative h-full w-full">
-            {ticks.map((t, i) => (
-              <div
-                key={i}
-                className="absolute left-0 right-0 flex items-center"
-                style={{ top: `${(i / (ticks.length - 1)) * 100}%`, transform: "translateY(-0.5px)" }}
-              >
-                <span
-                  className="absolute right-full pr-2 text-[10px] text-muted-foreground whitespace-nowrap"
-                  style={{ transform: "translateY(-50%)" }}
-                >
-                  {valuePrefix}{fmtBRL(t)}{valueSuffix}
-                </span>
-                <div className="h-px w-full" style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }} />
-              </div>
-            ))}
-            <div className="absolute inset-0 flex">
-              {MONTHS.map((_, i) => (
-                <div key={i} className="flex-1 border-l" style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 30%, transparent)" }} />
-              ))}
-              <div className="border-l" style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }} />
-            </div>
-            <div className="absolute inset-0 flex items-end justify-between gap-2">
+        <div className="absolute inset-0" style={{ paddingBottom: 20 }}>
+          <div
+            className="relative h-full w-full rounded-md"
+            style={{
+              backgroundImage: `linear-gradient(to right, ${gridColor} 1px, transparent 1px), linear-gradient(to bottom, ${gridColor} 1px, transparent 1px)`,
+              backgroundSize: "22px 22px",
+              border: "1px solid color-mix(in oklab, var(--gold) 22%, transparent)",
+            }}
+          >
+            <div className="absolute inset-0 flex items-end justify-between gap-1.5 px-1.5 pt-5">
               {MONTHS.map((mo, i) => {
                 const cPct = (curr[i] / maxVal) * 100;
                 const pPct = (prev[i] / maxVal) * 100;
                 return (
-                  <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-0.5">
-                    <div
-                      className="w-2/5 rounded-t transition-all"
-                      style={{
-                        height: `${pPct}%`,
-                        background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)",
-                        boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
-                      }}
-                      title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
-                    />
-                    <div
-                      className="w-2/5 rounded-t transition-all"
-                      style={{ height: `${cPct}%`, background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
-                      title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}`}
-                    />
+                  <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-[3px]">
+                    <div className="flex h-full w-2/5 flex-col justify-end">
+                      <div className="text-center text-[10px] font-semibold leading-none text-foreground/80">
+                        {prev[i] ? `${valuePrefix}${fmtBRL(prev[i])}` : ""}
+                      </div>
+                      <div
+                        className="mt-1 w-full rounded-t transition-all"
+                        style={{
+                          height: `${pPct}%`,
+                          background: "linear-gradient(180deg, #dcdcdc, #7a7a7a)",
+                        }}
+                        title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
+                      />
+                    </div>
+                    <div className="flex h-full w-2/5 flex-col justify-end">
+                      <div className="text-center text-[10px] font-semibold leading-none text-primary">
+                        {curr[i] ? `${valuePrefix}${fmtBRL(curr[i])}` : ""}
+                      </div>
+                      <div
+                        className="mt-1 w-full rounded-t transition-all"
+                        style={{ height: `${cPct}%`, background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
+                        title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}`}
+                      />
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 flex justify-between gap-2" style={{ paddingLeft: axisWidth }}>
+        <div className="absolute bottom-0 left-0 right-0 flex justify-between gap-1.5 px-1.5">
           {MONTHS.map((mo) => (
             <div key={mo} className="flex-1 text-center text-[10px] text-muted-foreground">{mo}</div>
           ))}
-        </div>
-      </div>
-      <div className="mt-3 flex items-center justify-center gap-6 text-[11px]">
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded" style={{ background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)" }} />
-          <span className="text-muted-foreground">{previousYear}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded" style={{ background: "linear-gradient(180deg, var(--gold), var(--wine))" }} />
-          <span className="text-muted-foreground">{currentYear}</span>
         </div>
       </div>
     </div>
@@ -539,38 +546,39 @@ function BarChart({
 
 function ParticipationPie({ share, wineValue, totalValue, wineName }: { share: number; wineValue: number; totalValue: number; wineName: string }) {
   const size = 200;
-  const r = 82;
+  const stroke = 26;
+  const r = (size - stroke) / 2 - 6;
   const cx = size / 2;
   const cy = size / 2;
   const frac = Math.max(0, Math.min(1, totalValue > 0 ? wineValue / totalValue : 0));
-
-  const angle = frac * 2 * Math.PI;
-  const large = frac > 0.5 ? 1 : 0;
-  const x = cx + r * Math.sin(angle);
-  const y = cy - r * Math.cos(angle);
-  const wineSlice = frac >= 0.9999
-    ? `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.01} ${cy - r} Z`
-    : `M ${cx} ${cy} L ${cx} ${cy - r} A ${r} ${r} 0 ${large} 1 ${x} ${y} Z`;
-  const restSlice = frac >= 0.9999
-    ? ""
-    : `M ${cx} ${cy} L ${x} ${y} A ${r} ${r} 0 ${large === 1 ? 0 : 1} 1 ${cx} ${cy - r} Z`;
+  const circ = 2 * Math.PI * r;
 
   return (
     <div className="flex flex-col items-center gap-3">
       {totalValue > 0 ? (
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          {restSlice && <path d={restSlice} fill="#3a3a3a" stroke="var(--card)" strokeWidth={1.5} />}
-          <path d={wineSlice} fill="url(#pgrad)" stroke="var(--card)" strokeWidth={1.5} />
           <defs>
             <linearGradient id="pgrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--gold)" />
               <stop offset="100%" stopColor="var(--wine)" />
             </linearGradient>
           </defs>
-          <text x={cx} y={cy - 4} textAnchor="middle" className="fill-primary" style={{ fontSize: 22, fontWeight: 700 }}>
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#3a3a3a" strokeWidth={stroke} />
+          <circle
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill="none"
+            stroke="url(#pgrad)"
+            strokeWidth={stroke}
+            strokeLinecap="butt"
+            strokeDasharray={`${circ * frac} ${circ}`}
+            transform={`rotate(-90 ${cx} ${cy})`}
+          />
+          <text x={cx} y={cy - 2} textAnchor="middle" className="fill-primary" style={{ fontSize: 30, fontWeight: 700 }}>
             {share.toFixed(1)}%
           </text>
-          <text x={cx} y={cy + 14} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 10 }}>
+          <text x={cx} y={cy + 20} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11 }}>
             do faturamento
           </text>
         </svg>
@@ -602,3 +610,4 @@ function ParticipationPie({ share, wineValue, totalValue, wineName }: { share: n
     </div>
   );
 }
+

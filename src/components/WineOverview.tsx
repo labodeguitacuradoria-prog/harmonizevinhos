@@ -249,7 +249,7 @@ export function WineOverview({
                     Uvas
                   </span>
                   {grapes.length ? (
-                    <ul className="mt-0.5 min-h-0 space-y-0.5 overflow-y-auto pr-1 text-foreground/90">
+                    <ul className="mt-0.5 space-y-0.5 pr-1 text-foreground/90">
                       {grapes.map((g) => (
                         <li key={g} className="truncate">{g}</li>
                       ))}

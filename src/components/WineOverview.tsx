@@ -153,15 +153,14 @@ export function WineOverview({
       <div className="flex h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
         {/* Header */}
         <div className="flex shrink-0 items-center justify-end gap-2 border-b border-border px-6 py-2.5">
-          {(wine.tasting_notes || wine.pairing_notes) && (
-            <button
-              type="button"
-              onClick={() => setNotesOpen(true)}
-              className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:border-primary/40 hover:text-primary"
-            >
-              <FileText className="h-3.5 w-3.5" /> Notas
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setNotesOpen(true)}
+            className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:border-primary/40 hover:text-primary"
+          >
+            <FileText className="h-3.5 w-3.5" /> Características
+          </button>
+
           <button
             type="button"
             onClick={onEdit}
@@ -180,11 +179,13 @@ export function WineOverview({
         </div>
 
 
+        {/* Scrollable body */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
         {/* Cover row: image + info */}
-        <div className="grid shrink-0 gap-5 border-b border-border px-6 py-4 md:grid-cols-[210px_1fr_220px]" style={{ height: "40%" }}>
-          <div className="flex h-full items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
+        <div className="grid gap-5 border-b border-border px-6 py-4 md:grid-cols-[210px_1fr_220px]">
+          <div className="flex min-h-[220px] items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
             {wine.image_url ? (
-              <img src={wine.image_url} alt={wine.name} className="h-3/4 w-auto max-w-full object-contain" />
+              <img src={wine.image_url} alt={wine.name} className="max-h-[220px] w-auto max-w-full object-contain" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
                 Sem imagem
@@ -192,7 +193,8 @@ export function WineOverview({
             )}
           </div>
 
-          <div className="flex min-w-0 flex-col gap-3 overflow-hidden text-sm">
+          <div className="flex min-w-0 flex-col gap-3 text-sm">
+
             <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
               <div className="min-w-0">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -224,7 +226,7 @@ export function WineOverview({
               </div>
             </div>
 
-            <div className="grid min-h-0 flex-1 grid-cols-[1.4fr_1fr] gap-x-6 overflow-hidden text-[12px]">
+            <div className="grid grid-cols-[1.4fr_1fr] gap-x-6 text-[12px]">
               <div className="space-y-1.5">
                 <div className="grid grid-cols-[1fr_auto] gap-x-4">
                   <InfoRow label="Produtor" value={wine.producer} />
@@ -247,7 +249,7 @@ export function WineOverview({
                     Uvas
                   </span>
                   {grapes.length ? (
-                    <ul className="mt-0.5 min-h-0 space-y-0.5 overflow-y-auto pr-1 text-foreground/90">
+                    <ul className="mt-0.5 space-y-0.5 pr-1 text-foreground/90">
                       {grapes.map((g) => (
                         <li key={g} className="truncate">{g}</li>
                       ))}
@@ -280,9 +282,9 @@ export function WineOverview({
         </div>
 
         {/* Charts */}
-        <div className="grid min-h-0 flex-1 gap-5 p-5 md:grid-cols-[1fr_300px]">
+        <div className="grid gap-5 p-5 md:grid-cols-[1fr_300px]">
           {/* Sales bar chart */}
-          <div className="flex min-h-0 flex-col rounded-xl border border-border bg-background/40 p-3">
+          <div className="flex min-h-[360px] flex-col rounded-xl border border-border bg-background/40 p-3">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
@@ -329,7 +331,7 @@ export function WineOverview({
             </div>
 
 
-            <div className="min-h-0 flex-1">
+            <div className="min-h-[300px] flex-1">
               <BarChart
                 curr={curr}
                 prev={prev}
@@ -343,7 +345,7 @@ export function WineOverview({
           </div>
 
           {/* Pie: participation */}
-          <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-background/40 p-3">
+          <div className="flex flex-col rounded-xl border border-border bg-background/40 p-3">
             <div className="mb-2 flex items-center gap-2">
               <PieIcon className="h-4 w-4 text-primary" />
               <div>
@@ -359,6 +361,8 @@ export function WineOverview({
             />
           </div>
         </div>
+        </div>
+
       </div>
 
       {notesOpen && (

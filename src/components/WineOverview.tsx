@@ -286,32 +286,48 @@ export function WineOverview({
             <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Vendas do rótulo</div>
-                  <div className="text-sm font-semibold">{currentYear} vs {previousYear}</div>
+                <div className="text-sm font-semibold">Vendas do Rótulo</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 text-[11px]">
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="inline-block h-3 w-3 rounded-sm"
+                      style={{ background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)" }}
+                    />
+                    <span className="text-muted-foreground">{previousYear}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="inline-block h-3 w-3 rounded-sm"
+                      style={{ background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
+                    />
+                    <span className="text-muted-foreground">{currentYear}</span>
+                  </span>
+                </div>
+                <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
+                  <button
+                    type="button"
+                    onClick={() => onMetricChange("qty")}
+                    className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
+                      metric === "qty" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Quantidade
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMetricChange("revenue")}
+                    className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
+                      metric === "revenue" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Faturamento
+                  </button>
                 </div>
               </div>
-              <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
-                <button
-                  type="button"
-                  onClick={() => onMetricChange("qty")}
-                  className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
-                    metric === "qty" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Quantidade
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onMetricChange("revenue")}
-                  className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wide rounded-md transition ${
-                    metric === "revenue" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Faturamento
-                </button>
-              </div>
             </div>
+
 
             <div className="min-h-0 flex-1">
               <BarChart

@@ -193,57 +193,73 @@ export function WineOverview({
           </div>
 
           <div className="flex min-w-0 flex-col gap-3 overflow-hidden text-sm">
-            <div className="flex flex-wrap items-center gap-2">
-              {wine.internal_code && (
-                <span className="rounded-full border border-border bg-background px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
-                  {wine.internal_code}
-                </span>
-              )}
-              {wine.wine_type && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                  {wine.wine_type}
-                </span>
-              )}
-              {wine.volume && (
-                <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
-                  {wine.volume}
-                </span>
-              )}
-              {!wine.active_on_menu && (
-                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-500">
-                  Fora da carta
-                </span>
-              )}
-            </div>
-
-            <div className="grid min-h-0 flex-1 grid-cols-[1fr_1fr_auto] gap-x-6 gap-y-1.5 overflow-hidden text-[12px]">
-              <div className="space-y-1.5">
-                <InfoRow label="Produtor" value={wine.producer} />
-                <InfoRow label="Safra" value={wine.vintage ? String(wine.vintage) : null} />
-                <InfoRow label="País" value={wine.country} />
-              </div>
-              <div className="space-y-1.5">
-                <InfoRow label="Região" value={wine.region} />
-                <InfoRow label="AOP / Denominação" value={wine.appellation} />
-                <div className="grid grid-cols-2 gap-x-4">
-                  <InfoRow label="Estilo" value={wine.style} />
-                  <InfoRow label="Álcool" value={wine.alcohol_pct != null ? `${wine.alcohol_pct}%` : null} />
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+              <div className="min-w-0">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Rótulo
                 </div>
+                <h2 className="truncate text-2xl font-semibold tracking-tight">{wine.name}</h2>
               </div>
-              <div className="min-w-[120px]">
-                <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Uvas</span>
-                {grapes.length ? (
-                  <ul className="mt-0.5 space-y-0.5 overflow-y-auto pr-1 text-foreground/90" style={{ maxHeight: "100%" }}>
-                    {grapes.map((g) => (
-                      <li key={g} className="truncate">{g}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-foreground/90">—</div>
+              <div className="flex flex-wrap items-center gap-2 self-end pb-1">
+                {wine.internal_code && (
+                  <span className="rounded-full border border-border bg-background px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+                    {wine.internal_code}
+                  </span>
+                )}
+                {wine.wine_type && (
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                    {wine.wine_type}
+                  </span>
+                )}
+                {wine.volume && (
+                  <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
+                    {wine.volume}
+                  </span>
+                )}
+                {!wine.active_on_menu && (
+                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-500">
+                    Fora da carta
+                  </span>
                 )}
               </div>
             </div>
+
+            <div className="grid min-h-0 flex-1 grid-cols-[1.4fr_1fr] gap-x-6 overflow-hidden text-[12px]">
+              <div className="space-y-1.5">
+                <div className="grid grid-cols-[1fr_auto] gap-x-4">
+                  <InfoRow label="Produtor" value={wine.producer} />
+                  <InfoRow label="Safra" value={wine.vintage ? String(wine.vintage) : null} />
+                </div>
+                <InfoRow label="Região" value={wine.region} />
+                <InfoRow label="AOP / Denominação" value={wine.appellation} />
+                <div className="grid grid-cols-[1fr_auto] gap-x-4">
+                  <InfoRow label="Estilo" value={wine.style} />
+                  <InfoRow label="País" value={wine.country} />
+                </div>
+              </div>
+              <div className="flex min-w-[130px] min-h-0 flex-col gap-1.5">
+                <InfoRow
+                  label="Álcool"
+                  value={wine.alcohol_pct != null ? `${wine.alcohol_pct}%` : null}
+                />
+                <div className="flex min-h-0 flex-col">
+                  <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Uvas
+                  </span>
+                  {grapes.length ? (
+                    <ul className="mt-0.5 min-h-0 space-y-0.5 overflow-y-auto pr-1 text-foreground/90">
+                      {grapes.map((g) => (
+                        <li key={g} className="truncate">{g}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-foreground/90">—</div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
+
 
           {/* KPI column */}
           <div className="flex flex-col justify-center gap-3">

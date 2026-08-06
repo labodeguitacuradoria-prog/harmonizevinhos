@@ -98,6 +98,9 @@ function DashboardPage() {
   const [tab, setTab] = useState<TabKey>("faturamento");
   const [metasOpen, setMetasOpen] = useState(false);
   const [diagOpen, setDiagOpen] = useState(false);
+  const [periodOpen, setPeriodOpen] = useState(false);
+  const [period, setPeriod] = useState<{ year: number; month: number } | null>(null);
+
 
   const now = new Date();
   const currentYear = now.getFullYear();

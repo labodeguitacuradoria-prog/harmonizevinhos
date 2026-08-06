@@ -698,6 +698,9 @@ function DashboardPage() {
             cmvYear={agg.cmvYear}
             lastMonth={agg.lastCmv}
             wines={wines}
+            movements={movements}
+            wineById={wineById}
+
             cmvByMonth={agg.cmvByMonth}
             cmvByMonthPrev={agg.cmvByMonthPrev}
             currentYear={currentYear}

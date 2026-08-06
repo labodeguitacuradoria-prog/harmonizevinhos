@@ -408,7 +408,7 @@ function DashboardPage() {
       corkageAmtYear,
       corkageQtyYear,
     };
-  }, [movements, corkage, wineById, wines, stockMap, currentYear, previousYear, currentMonth]);
+  }, [movements, corkage, wineById, wines, stockMap, currentYear, previousYear, currentMonth, period]);
 
 
   const TABS: Array<{

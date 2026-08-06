@@ -523,7 +523,68 @@ function DashboardPage() {
               <Target size={14} /> Metas
             </button>
           )}
+          <div className="relative">
+            <button
+              onClick={() => setPeriodOpen((v) => !v)}
+              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-[11px] font-semibold uppercase tracking-wider transition ${
+                period ? "border-primary bg-[color:var(--wine)]/20 text-primary" : "border-border bg-card text-primary hover:border-primary"
+              }`}
+              title="Escolher o mês de referência do painel"
+            >
+              <CalendarRange size={14} />
+              {period ? monthLabel(period.year, period.month) : "Mês"}
+            </button>
+            {periodOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setPeriodOpen(false)} />
+                <div className="absolute right-0 z-50 mt-2 w-64 rounded-lg border border-border bg-card p-3 shadow-xl">
+                  <button
+                    onClick={() => {
+                      setPeriod(null);
+                      setPeriodOpen(false);
+                    }}
+                    className={`mb-2 w-full rounded-md border px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider ${
+                      !period ? "border-primary text-primary" : "border-border text-muted-foreground hover:border-primary/60"
+                    }`}
+                  >
+                    Último mês com dados
+                  </button>
+                  {[currentYear, previousYear].map((y) => (
+                    <div key={y} className="mb-2">
+                      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {y}
+                      </div>
+                      <div className="grid grid-cols-4 gap-1">
+                        {MONTHS.map((m, i) => {
+                          const disabled = y === currentYear && i > currentMonth;
+                          const active = period?.year === y && period?.month === i;
+                          return (
+                            <button
+                              key={m}
+                              disabled={disabled}
+                              onClick={() => {
+                                setPeriod({ year: y, month: i });
+                                setPeriodOpen(false);
+                              }}
+                              className={`rounded-md border px-1 py-1 text-[10px] font-semibold uppercase transition ${
+                                active
+                                  ? "border-primary bg-[color:var(--wine)]/25 text-primary"
+                                  : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"
+                              } disabled:cursor-not-allowed disabled:opacity-30`}
+                            >
+                              {m}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
+
       </header>
 
       {/* KPI buttons row */}

@@ -1543,6 +1543,8 @@ function CmvPanel({
   cmvYear,
   lastMonth,
   wines,
+  movements,
+  wineById,
   cmvByMonth,
   cmvByMonthPrev,
   currentYear,
@@ -1553,6 +1555,8 @@ function CmvPanel({
   cmvYear: number;
   lastMonth: { year: number; month: number };
   wines: WineRow[];
+  movements: Movement[];
+  wineById: Record<string, WineRow>;
   cmvByMonth: number[];
   cmvByMonthPrev: number[];
   currentYear: number;
@@ -1562,10 +1566,75 @@ function CmvPanel({
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const annualTarget = resolveAnnualTarget(targets);
   const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
+  const [auditOpen, setAuditOpen] = useState(false);
+
+  const audit = useMemo(() => {
+    type Line = {
+      name: string;
+      qty: number;
+      unitCost: number;
+      unitPrice: number;
+      cost: number;
+      revenue: number;
+      costFallback: boolean;
+    };
+    const map = new Map<string, Line>();
+    let cost = 0;
+    let revenue = 0;
+    for (const m of movements) {
+      const d = new Date(m.occurred_at);
+      if (d.getFullYear() !== lastMonth.year || d.getMonth() !== lastMonth.month) continue;
+      const w = wineById[m.wine_id];
+      const q = m.quantity ?? 0;
+      const price = Number(m.unit_price ?? w?.sale_price ?? 0);
+      const unitCost = Number(m.unit_cost ?? w?.cost_price ?? 0);
+      const c = unitCost * q;
+      const r = price * q;
+      cost += c;
+      revenue += r;
+      const key = m.wine_id;
+      const prev = map.get(key);
+      if (prev) {
+        prev.qty += q;
+        prev.cost += c;
+        prev.revenue += r;
+        prev.unitCost = prev.qty ? prev.cost / prev.qty : 0;
+        prev.unitPrice = prev.qty ? prev.revenue / prev.qty : 0;
+        prev.costFallback = prev.costFallback || m.unit_cost == null;
+      } else {
+        map.set(key, {
+          name: w?.name ?? "Rótulo removido",
+          qty: q,
+          unitCost,
+          unitPrice: price,
+          cost: c,
+          revenue: r,
+          costFallback: m.unit_cost == null,
+        });
+      }
+    }
+    const lines = Array.from(map.values()).sort((a, b) => b.revenue - a.revenue);
+    const zeroCost = lines.filter((l) => l.cost === 0 && l.revenue > 0);
+    return {
+      lines,
+      cost,
+      revenue,
+      cmv: revenue > 0 ? (cost / revenue) * 100 : 0,
+      zeroCost,
+    };
+  }, [movements, wineById, lastMonth.year, lastMonth.month]);
 
   return (
     <div>
       <SectionHeader icon={<Percent size={14} />} title="CMV do restaurante" subtitle="Custo da mercadoria vendida (custo / preço de venda das vendas de vinhos)." />
+      <div className="mb-3 rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-3 text-[11px] text-muted-foreground">
+        <span className="font-semibold text-primary">Como o CMV é calculado:</span> soma do
+        (custo unitário × quantidade vendida) ÷ soma do (preço de venda × quantidade vendida), somente
+        vendas de vinho do mês. A taxa de rolha fica fora (não tem custo de mercadoria). O custo usado é o
+        <em> custo histórico registrado na venda</em>; quando a venda não tem custo gravado, cai para o
+        custo atual do cadastro do rótulo — se o rótulo estiver com custo zerado, o CMV cai
+        artificialmente.
+      </div>
       <div className="mb-5 grid grid-cols-2 gap-3">
         <MiniStat
           label={`CMV — ${ml}`}
@@ -1577,6 +1646,85 @@ function CmvPanel({
           value={`${cmvYear.toFixed(1)}%`}
           tone={cmvYear <= 33 ? "primary" : "danger"}
         />
+      </div>
+      <div className="mb-4 rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-[11px] text-foreground">
+            <span className="text-muted-foreground">Memória de cálculo {ml}: </span>
+            custo <b className="text-primary">R$ {fmtBRL(audit.cost, 2)}</b> ÷ receita{" "}
+            <b className="text-primary">R$ {fmtBRL(audit.revenue, 2)}</b> ={" "}
+            <b className="text-primary">{audit.cmv.toFixed(1)}%</b>
+          </div>
+          <button
+            onClick={() => setAuditOpen((v) => !v)}
+            className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-primary hover:border-primary"
+          >
+            <Calculator size={12} /> {auditOpen ? "Ocultar detalhe" : "Ver rótulo por rótulo"}
+          </button>
+        </div>
+        {audit.zeroCost.length > 0 && (
+          <div className="mt-2 text-[10px] text-[color:var(--danger,#e05a5a)]">
+            Atenção: {audit.zeroCost.length} rótulo(s) vendido(s) sem custo informado — isso reduz o CMV
+            calculado. Revise o preço de custo no cadastro.
+          </div>
+        )}
+        {auditOpen && (
+          <div className="mt-3 max-h-72 overflow-auto rounded-md border border-border">
+            <table className="w-full text-[11px]">
+              <thead className="sticky top-0 bg-card text-[9px] uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-2 py-1.5 text-left">Rótulo</th>
+                  <th className="px-2 py-1.5 text-right">Qtd</th>
+                  <th className="px-2 py-1.5 text-right">Custo un.</th>
+                  <th className="px-2 py-1.5 text-right">Venda un.</th>
+                  <th className="px-2 py-1.5 text-right">Custo total</th>
+                  <th className="px-2 py-1.5 text-right">Receita</th>
+                  <th className="px-2 py-1.5 text-right">CMV</th>
+                </tr>
+              </thead>
+              <tbody>
+                {audit.lines.map((l, i) => (
+                  <tr key={i} className="border-t border-border/60">
+                    <td className="px-2 py-1.5 text-foreground">
+                      {l.name}
+                      {l.cost === 0 && l.revenue > 0 && (
+                        <span className="ml-1 text-[9px] text-muted-foreground">(sem custo)</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-1.5 text-right">{l.qty}</td>
+                    <td className="px-2 py-1.5 text-right">R$ {fmtBRL(l.unitCost, 2)}</td>
+                    <td className="px-2 py-1.5 text-right">R$ {fmtBRL(l.unitPrice, 2)}</td>
+                    <td className="px-2 py-1.5 text-right">R$ {fmtBRL(l.cost, 2)}</td>
+                    <td className="px-2 py-1.5 text-right">R$ {fmtBRL(l.revenue, 2)}</td>
+                    <td className="px-2 py-1.5 text-right text-primary">
+                      {l.revenue > 0 ? `${((l.cost / l.revenue) * 100).toFixed(1)}%` : "—"}
+                    </td>
+                  </tr>
+                ))}
+                {audit.lines.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-2 py-4 text-center text-muted-foreground">
+                      Sem vendas registradas em {ml}.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              <tfoot className="border-t border-primary/40 bg-card font-semibold">
+                <tr>
+                  <td className="px-2 py-1.5 text-primary">Total</td>
+                  <td className="px-2 py-1.5 text-right">
+                    {audit.lines.reduce((s, l) => s + l.qty, 0)}
+                  </td>
+                  <td />
+                  <td />
+                  <td className="px-2 py-1.5 text-right">R$ {fmtBRL(audit.cost, 2)}</td>
+                  <td className="px-2 py-1.5 text-right">R$ {fmtBRL(audit.revenue, 2)}</td>
+                  <td className="px-2 py-1.5 text-right text-primary">{audit.cmv.toFixed(1)}%</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
       </div>
       {monthTarget > 0 && (
         <TargetSummary
@@ -1611,6 +1759,7 @@ function CmvPanel({
     </div>
   );
 }
+
 
 function RolhaPanel({
   amtLast,

@@ -327,32 +327,39 @@ function DashboardPage() {
         ? (revBottlesYear + revGlassesYear) / (bottlesYearTotal + glassesYearTotal)
         : 0;
 
-    const lastRev = findLastMonthWithData(revByYearMonth, currentYear, previousYear, currentMonth);
-    const lastBottles = findLastMonthWithData(bottlesByYearMonth, currentYear, previousYear, currentMonth);
-    const lastGlasses = findLastMonthWithData(glassesByYearMonth, currentYear, previousYear, currentMonth);
-    const lastCmv = findLastMonthWithData(
-      { [currentYear]: cmvByMonth, [previousYear]: Array(12).fill(0) },
-      currentYear,
-      previousYear,
-      currentMonth,
-    );
-    const lastAvg = findLastMonthWithData(
-      { [currentYear]: avgAllByMonth, [previousYear]: Array(12).fill(0) },
-      currentYear,
-      previousYear,
-      currentMonth,
-    );
-    const lastCorkage = findLastMonthWithData(corkageAmtByYearMonth, currentYear, previousYear, currentMonth);
+    const pick = (byYM: Record<number, number[]>) => {
+      if (period) return { year: period.year, month: period.month };
+      return findLastMonthWithData(byYM, currentYear, previousYear, currentMonth);
+    };
 
+    const lastRev = pick(revByYearMonth);
+    const lastBottles = pick(bottlesByYearMonth);
+    const lastGlasses = pick(glassesByYearMonth);
+    const lastCmv = pick({ [currentYear]: cmvByMonth, [previousYear]: cmvByMonthPrev });
+    const lastAvg = pick({ [currentYear]: avgAllByMonth, [previousYear]: avgAllByMonthPrev });
+    const lastCorkage = pick(corkageAmtByYearMonth);
+
+    const isPrev = (p: { year: number; month: number }) => p.year === previousYear;
     const revLast = lastRev.month >= 0 ? revByYearMonth[lastRev.year][lastRev.month] : 0;
     const bottlesLast = lastBottles.month >= 0 ? bottlesByYearMonth[lastBottles.year][lastBottles.month] : 0;
     const glassesLast = lastGlasses.month >= 0 ? glassesByYearMonth[lastGlasses.year][lastGlasses.month] : 0;
-    const cmvLast = lastCmv.month >= 0 ? cmvByMonth[lastCmv.month] : 0;
-    const avgLast = lastAvg.month >= 0 ? avgAllByMonth[lastAvg.month] : 0;
-    const avgBottleLast = lastAvg.month >= 0 ? avgBottleByMonth[lastAvg.month] : 0;
-    const avgGlassLast = lastAvg.month >= 0 ? avgGlassByMonth[lastAvg.month] : 0;
+    const cmvLast =
+      lastCmv.month >= 0 ? (isPrev(lastCmv) ? cmvByMonthPrev[lastCmv.month] : cmvByMonth[lastCmv.month]) : 0;
+    const avgLast =
+      lastAvg.month >= 0
+        ? (isPrev(lastAvg) ? avgAllByMonthPrev[lastAvg.month] : avgAllByMonth[lastAvg.month])
+        : 0;
+    const avgBottleLast =
+      lastAvg.month >= 0
+        ? (isPrev(lastAvg) ? avgBottleByMonthPrev[lastAvg.month] : avgBottleByMonth[lastAvg.month])
+        : 0;
+    const avgGlassLast =
+      lastAvg.month >= 0
+        ? (isPrev(lastAvg) ? avgGlassByMonthPrev[lastAvg.month] : avgGlassByMonth[lastAvg.month])
+        : 0;
     const corkageAmtLast = lastCorkage.month >= 0 ? corkageAmtByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
     const corkageQtyLast = lastCorkage.month >= 0 ? corkageQtyByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+
     const corkageAmtYear = corkageAmtByYearMonth[currentYear].reduce((a, b) => a + b, 0);
     const corkageQtyYear = corkageQtyByYearMonth[currentYear].reduce((a, b) => a + b, 0);
 

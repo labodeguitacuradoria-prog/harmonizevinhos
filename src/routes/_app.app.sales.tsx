@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/app/sales")({
   component: SalesPage,
@@ -12,8 +13,9 @@ type SaleRow = {
   id: string;
   quantity: number;
   unit_price: number | null;
+  unit_cost: number | null;
   occurred_at: string;
-  wines: { name?: string; producer?: string; vintage?: number } | null;
+  wines: { name?: string; producer?: string; vintage?: number; cost_price?: number } | null;
 };
 
 function formatMonth(iso: string) {
@@ -29,6 +31,7 @@ function SalesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQty, setEditQty] = useState<string>("");
   const [editRevenue, setEditRevenue] = useState<string>("");
+  const [editCost, setEditCost] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
 
   const { data: sales = [], isLoading } = useQuery<SaleRow[]>({
@@ -37,7 +40,7 @@ function SalesPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("inventory_movements")
-        .select("id, quantity, unit_price, occurred_at, movement_type, wines(name, producer, vintage)")
+        .select("id, quantity, unit_price, unit_cost, occurred_at, movement_type, wines(name, producer, vintage, cost_price)")
         .eq("restaurant_id", restaurantId!)
         .eq("movement_type", "sale")
         .order("occurred_at", { ascending: false })
@@ -47,10 +50,15 @@ function SalesPage() {
   });
 
   const updateMut = useMutation({
-    mutationFn: async ({ id, quantity, unit_price }: { id: string; quantity: number; unit_price: number }) => {
+    mutationFn: async ({
+      id,
+      quantity,
+      unit_price,
+      unit_cost,
+    }: { id: string; quantity: number; unit_price: number; unit_cost: number | null }) => {
       const { error } = await supabase
         .from("inventory_movements")
-        .update({ quantity, unit_price })
+        .update({ quantity, unit_price, unit_cost })
         .eq("id", id);
       if (error) throw error;
     },
@@ -58,6 +66,28 @@ function SalesPage() {
       qc.invalidateQueries({ queryKey: ["sales", restaurantId] });
       setEditingId(null);
     },
+  });
+
+  const fillCostsMut = useMutation({
+    mutationFn: async (rows: SaleRow[]) => {
+      const targets = rows.filter(
+        (r) => (r.unit_cost == null || Number(r.unit_cost) === 0) && Number(r.wines?.cost_price ?? 0) > 0,
+      );
+      if (targets.length === 0) throw new Error("Nenhum lançamento sem custo com preço de custo cadastrado.");
+      for (const t of targets) {
+        const { error } = await supabase
+          .from("inventory_movements")
+          .update({ unit_cost: Number(t.wines?.cost_price) })
+          .eq("id", t.id);
+        if (error) throw error;
+      }
+      return targets.length;
+    },
+    onSuccess: (n) => {
+      qc.invalidateQueries({ queryKey: ["sales", restaurantId] });
+      toast.success(`${n} lançamento(s) atualizado(s) com o custo atual do cadastro.`);
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const deleteMut = useMutation({
@@ -77,6 +107,7 @@ function SalesPage() {
 
   const filtered = selectedMonth === "all" ? sales : sales.filter((s) => formatMonth(s.occurred_at) === selectedMonth);
 
+  const missingCost = filtered.filter((s) => s.unit_cost == null || Number(s.unit_cost) === 0);
   const total = filtered.reduce((s, m) => s + m.quantity * Number(m.unit_price ?? 0), 0);
   const bottles = filtered.reduce((s, m) => s + m.quantity, 0);
 
@@ -84,6 +115,7 @@ function SalesPage() {
     setEditingId(s.id);
     setEditQty(String(s.quantity));
     setEditRevenue((s.quantity * Number(s.unit_price ?? 0)).toFixed(2));
+    setEditCost(s.unit_cost == null ? "" : String(s.unit_cost));
   };
 
   const saveEdit = (id: string) => {
@@ -91,7 +123,8 @@ function SalesPage() {
     const rev = Number(editRevenue);
     if (!q || q <= 0) return;
     const up = rev > 0 ? rev / q : 0;
-    updateMut.mutate({ id, quantity: q, unit_price: up });
+    const cost = editCost.trim() === "" ? null : Number(editCost);
+    updateMut.mutate({ id, quantity: q, unit_price: up, unit_cost: cost });
   };
 
   return (
@@ -124,6 +157,22 @@ function SalesPage() {
         </div>
       </div>
 
+      {missingCost.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+          <div className="text-sm">
+            <strong>{missingCost.length}</strong> lançamento(s) sem preço de custo — o CMV desse período fica subestimado.
+            Edite o custo linha por linha abaixo ou aplique o custo atual do cadastro.
+          </div>
+          <button
+            onClick={() => fillCostsMut.mutate(filtered)}
+            disabled={fillCostsMut.isPending}
+            className="rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50"
+          >
+            {fillCostsMut.isPending ? "Aplicando..." : "Aplicar custo atual do cadastro"}
+          </button>
+        </div>
+      )}
+
       <div className="mt-6 overflow-x-auto rounded-lg border border-border bg-card">
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -133,12 +182,13 @@ function SalesPage() {
               <th className="px-4 py-3">Qtd</th>
               <th className="px-4 py-3">Faturamento</th>
               <th className="px-4 py-3">Preço unit.</th>
+              <th className="px-4 py-3">Custo unit.</th>
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
-            {!isLoading && sales.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhuma venda registrada.</td></tr>}
+            {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
+            {!isLoading && sales.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Nenhuma venda registrada.</td></tr>}
             {filtered.map((s) => {
               const isEditing = editingId === s.id;
               const revenue = s.quantity * Number(s.unit_price ?? 0);
@@ -178,6 +228,22 @@ function SalesPage() {
                     )}
                   </td>
                   <td className="px-4 py-3">R$ {Number(s.unit_price ?? 0).toFixed(2)}</td>
+                  <td className="px-4 py-3">
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editCost}
+                        onChange={(e) => setEditCost(e.target.value)}
+                        placeholder={Number(s.wines?.cost_price ?? 0) > 0 ? Number(s.wines?.cost_price).toFixed(2) : "0,00"}
+                        className="no-spin w-24 rounded border border-border bg-background px-2 py-1"
+                      />
+                    ) : s.unit_cost != null && Number(s.unit_cost) > 0 ? (
+                      `R$ ${Number(s.unit_cost).toFixed(2)}`
+                    ) : (
+                      <span className="text-xs font-medium text-destructive">sem custo</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     {isEditing ? (
                       <div className="flex justify-end gap-2">

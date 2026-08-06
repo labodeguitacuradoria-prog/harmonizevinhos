@@ -18,6 +18,9 @@ import {
   Info,
   Target,
   FileText,
+  CalendarRange,
+  Calculator,
+
 } from "lucide-react";
 import DashboardTargetsEditor, {
   targetsFor,

@@ -32,7 +32,7 @@ function SalesPage() {
   const [editQty, setEditQty] = useState<string>("");
   const [editRevenue, setEditRevenue] = useState<string>("");
   const [editCost, setEditCost] = useState<string>("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
   const { data: sales = [], isLoading } = useQuery<SaleRow[]>({
     queryKey: ["sales", restaurantId],

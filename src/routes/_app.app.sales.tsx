@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
+
 
 export const Route = createFileRoute("/_app/app/sales")({
   component: SalesPage,
@@ -32,7 +34,7 @@ function SalesPage() {
   const [editQty, setEditQty] = useState<string>("");
   const [editRevenue, setEditRevenue] = useState<string>("");
   const [editCost, setEditCost] = useState<string>("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
   const { data: sales = [], isLoading } = useQuery<SaleRow[]>({
     queryKey: ["sales", restaurantId],
@@ -98,14 +100,31 @@ function SalesPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sales", restaurantId] }),
   });
 
-  const months = Array.from(new Set(sales.map((s) => formatMonth(s.occurred_at))))
-    .sort((a, b) => {
-      const [ma, ya] = a.split("/").map(Number);
-      const [mb, yb] = b.split("/").map(Number);
-      return (yb - ya) || (mb - ma);
-    });
+  const terms = search
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
 
-  const filtered = selectedMonth === "all" ? sales : sales.filter((s) => formatMonth(s.occurred_at) === selectedMonth);
+  const filtered = terms.length === 0
+    ? sales
+    : sales.filter((s) => {
+        const haystack = [
+          formatMonth(s.occurred_at),
+          new Date(s.occurred_at).toISOString().slice(0, 7),
+          s.wines?.name,
+          s.wines?.producer,
+          s.wines?.vintage,
+          s.quantity,
+          Number(s.unit_price ?? 0).toFixed(2),
+          Number(s.unit_cost ?? 0).toFixed(2),
+          (s.quantity * Number(s.unit_price ?? 0)).toFixed(2),
+        ]
+          .filter((v) => v !== null && v !== undefined)
+          .join(" ")
+          .toLowerCase();
+        return terms.every((t) => haystack.includes(t));
+      });
+
 
   const missingCost = filtered.filter((s) => s.unit_cost == null || Number(s.unit_cost) === 0);
   const total = filtered.reduce((s, m) => s + m.quantity * Number(m.unit_price ?? 0), 0);
@@ -134,17 +153,23 @@ function SalesPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Vendas</h1>
           <p className="mt-1 text-sm text-muted-foreground">Histórico de saídas registradas.</p>
         </div>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="rounded-md border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option value="all">Todos os meses</option>
-          {months.map((m) => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
       </div>
+
+      <div className="mt-6 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por mês (05/26 ou 2026-05), rótulo, produtor, safra, quantidade ou valores..."
+          className="w-full bg-transparent text-sm outline-none"
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="text-xs text-muted-foreground hover:text-foreground">
+            limpar
+          </button>
+        )}
+      </div>
+
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-5">

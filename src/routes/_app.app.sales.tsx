@@ -151,30 +151,19 @@ function SalesPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sales", restaurantId] }),
   });
 
-  const terms = search
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  const filtered = terms.length === 0
-    ? sales
-    : sales.filter((s) => {
-        const haystack = [
-          formatMonth(s.occurred_at),
-          new Date(s.occurred_at).toISOString().slice(0, 7),
-          s.wines?.name,
-          s.wines?.producer,
-          s.wines?.vintage,
-          s.quantity,
-          Number(s.unit_price ?? 0).toFixed(2),
-          Number(s.unit_cost ?? 0).toFixed(2),
-          (s.quantity * Number(s.unit_price ?? 0)).toFixed(2),
-        ]
-          .filter((v) => v !== null && v !== undefined)
-          .join(" ")
-          .toLowerCase();
-        return terms.every((t) => haystack.includes(t));
-      });
+  const filtered = sales.filter((s) => {
+    const monthStr = `${formatMonth(s.occurred_at)} ${new Date(s.occurred_at).toISOString().slice(0, 7)}`;
+    const label = [s.wines?.name, s.wines?.producer, s.wines?.vintage].filter(Boolean).join(" ");
+    const revenue = s.quantity * Number(s.unit_price ?? 0);
+    return (
+      matchText(filters.month, monthStr) &&
+      matchText(filters.name, label) &&
+      matchNum(filters.quantity, s.quantity) &&
+      matchNum(filters.revenue, revenue) &&
+      matchNum(filters.unit_price, Number(s.unit_price ?? 0)) &&
+      matchNum(filters.unit_cost, Number(s.unit_cost ?? 0))
+    );
+  });
 
 
   const missingCost = filtered.filter((s) => s.unit_cost == null || Number(s.unit_cost) === 0);

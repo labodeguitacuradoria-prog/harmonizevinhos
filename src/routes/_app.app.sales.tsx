@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search } from "lucide-react";
+
 
 
 export const Route = createFileRoute("/_app/app/sales")({
@@ -27,6 +27,55 @@ function formatMonth(iso: string) {
   return `${mm}/${yy}`;
 }
 
+function FilterInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px] placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+    />
+  );
+}
+
+type ColFilters = {
+  month: string;
+  name: string;
+  quantity: string;
+  revenue: string;
+  unit_price: string;
+  unit_cost: string;
+};
+const EMPTY_FILTERS: ColFilters = {
+  month: "", name: "", quantity: "", revenue: "", unit_price: "", unit_cost: "",
+};
+
+function matchNum(filter: string, value: number | null | undefined): boolean {
+  const s = filter.trim();
+  if (!s) return true;
+  if (value == null || Number.isNaN(Number(value))) return false;
+  const n = Number(value);
+  const range = s.match(/^\s*(-?\d+(?:[.,]\d+)?)\s*-\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+  if (range) return n >= Number(range[1].replace(",", ".")) && n <= Number(range[2].replace(",", "."));
+  const op = s.match(/^\s*(>=|<=|>|<|=)\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+  if (op) {
+    const v = Number(op[2].replace(",", "."));
+    switch (op[1]) {
+      case ">=": return n >= v;
+      case "<=": return n <= v;
+      case ">": return n > v;
+      case "<": return n < v;
+      case "=": return n === v;
+    }
+  }
+  return String(n).includes(s.replace(",", "."));
+}
+function matchText(filter: string, value: string | null | undefined): boolean {
+  const s = filter.trim().toLowerCase();
+  if (!s) return true;
+  return (value ?? "").toLowerCase().includes(s);
+}
+
 function SalesPage() {
   const { restaurantId } = useAuth();
   const qc = useQueryClient();
@@ -34,7 +83,9 @@ function SalesPage() {
   const [editQty, setEditQty] = useState<string>("");
   const [editRevenue, setEditRevenue] = useState<string>("");
   const [editCost, setEditCost] = useState<string>("");
-  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
+  const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v }));
+  const hasAnyFilter = Object.values(filters).some((v) => v !== "");
 
   const { data: sales = [], isLoading } = useQuery<SaleRow[]>({
     queryKey: ["sales", restaurantId],
@@ -100,30 +151,19 @@ function SalesPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sales", restaurantId] }),
   });
 
-  const terms = search
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  const filtered = terms.length === 0
-    ? sales
-    : sales.filter((s) => {
-        const haystack = [
-          formatMonth(s.occurred_at),
-          new Date(s.occurred_at).toISOString().slice(0, 7),
-          s.wines?.name,
-          s.wines?.producer,
-          s.wines?.vintage,
-          s.quantity,
-          Number(s.unit_price ?? 0).toFixed(2),
-          Number(s.unit_cost ?? 0).toFixed(2),
-          (s.quantity * Number(s.unit_price ?? 0)).toFixed(2),
-        ]
-          .filter((v) => v !== null && v !== undefined)
-          .join(" ")
-          .toLowerCase();
-        return terms.every((t) => haystack.includes(t));
-      });
+  const filtered = sales.filter((s) => {
+    const monthStr = `${formatMonth(s.occurred_at)} ${new Date(s.occurred_at).toISOString().slice(0, 7)}`;
+    const label = [s.wines?.name, s.wines?.producer, s.wines?.vintage].filter(Boolean).join(" ");
+    const revenue = s.quantity * Number(s.unit_price ?? 0);
+    return (
+      matchText(filters.month, monthStr) &&
+      matchText(filters.name, label) &&
+      matchNum(filters.quantity, s.quantity) &&
+      matchNum(filters.revenue, revenue) &&
+      matchNum(filters.unit_price, Number(s.unit_price ?? 0)) &&
+      matchNum(filters.unit_cost, Number(s.unit_cost ?? 0))
+    );
+  });
 
 
   const missingCost = filtered.filter((s) => s.unit_cost == null || Number(s.unit_cost) === 0);
@@ -153,22 +193,17 @@ function SalesPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Vendas</h1>
           <p className="mt-1 text-sm text-muted-foreground">Histórico de saídas registradas.</p>
         </div>
-      </div>
-
-      <div className="mt-6 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por mês (05/26 ou 2026-05), rótulo, produtor, safra, quantidade ou valores..."
-          className="w-full bg-transparent text-sm outline-none"
-        />
-        {search && (
-          <button onClick={() => setSearch("")} className="text-xs text-muted-foreground hover:text-foreground">
-            limpar
+        {hasAnyFilter && (
+          <button
+            type="button"
+            onClick={() => setFilters(EMPTY_FILTERS)}
+            className="self-start rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            Limpar filtros
           </button>
         )}
       </div>
+
 
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -210,7 +245,17 @@ function SalesPage() {
               <th className="px-4 py-3">Custo unit.</th>
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
+            <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
+              <th><FilterInput value={filters.month} onChange={(v) => setF("month", v)} placeholder="05/26" /></th>
+              <th><FilterInput value={filters.name} onChange={(v) => setF("name", v)} placeholder="rótulo/produtor" /></th>
+              <th><FilterInput value={filters.quantity} onChange={(v) => setF("quantity", v)} placeholder=">2" /></th>
+              <th><FilterInput value={filters.revenue} onChange={(v) => setF("revenue", v)} placeholder=">500" /></th>
+              <th><FilterInput value={filters.unit_price} onChange={(v) => setF("unit_price", v)} placeholder="100-300" /></th>
+              <th><FilterInput value={filters.unit_cost} onChange={(v) => setF("unit_cost", v)} placeholder="<50" /></th>
+              <th />
+            </tr>
           </thead>
+
           <tbody>
             {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
             {!isLoading && sales.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Nenhuma venda registrada.</td></tr>}

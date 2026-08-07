@@ -151,17 +151,22 @@ function SalesPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Vendas</h1>
           <p className="mt-1 text-sm text-muted-foreground">Histórico de saídas registradas.</p>
         </div>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="rounded-md border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option value="all">Todos os meses</option>
-          {months.map((m) => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
       </div>
+
+      <div className="mt-6 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por mês (05/26 ou 2026-05), rótulo, produtor, safra, quantidade ou valores..."
+          className="w-full bg-transparent text-sm outline-none"
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="text-xs text-muted-foreground hover:text-foreground">
+            limpar
+          </button>
+        )}
+
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-border bg-card p-5">

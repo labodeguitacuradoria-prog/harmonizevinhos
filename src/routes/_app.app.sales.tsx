@@ -245,7 +245,17 @@ function SalesPage() {
               <th className="px-4 py-3">Custo unit.</th>
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
+            <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
+              <th><FilterInput value={filters.month} onChange={(v) => setF("month", v)} placeholder="05/26" /></th>
+              <th><FilterInput value={filters.name} onChange={(v) => setF("name", v)} placeholder="rótulo/produtor" /></th>
+              <th><FilterInput value={filters.quantity} onChange={(v) => setF("quantity", v)} placeholder=">2" /></th>
+              <th><FilterInput value={filters.revenue} onChange={(v) => setF("revenue", v)} placeholder=">500" /></th>
+              <th><FilterInput value={filters.unit_price} onChange={(v) => setF("unit_price", v)} placeholder="100-300" /></th>
+              <th><FilterInput value={filters.unit_cost} onChange={(v) => setF("unit_cost", v)} placeholder="<50" /></th>
+              <th />
+            </tr>
           </thead>
+
           <tbody>
             {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
             {!isLoading && sales.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Nenhuma venda registrada.</td></tr>}

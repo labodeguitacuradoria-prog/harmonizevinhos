@@ -91,16 +91,28 @@ function SalesPage() {
     queryKey: ["sales", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("inventory_movements")
-        .select("id, quantity, unit_price, unit_cost, occurred_at, movement_type, wines(name, producer, vintage, cost_price)")
-        .eq("restaurant_id", restaurantId!)
-        .eq("movement_type", "sale")
-        .order("occurred_at", { ascending: false })
-        .limit(200);
-      return (data ?? []) as SaleRow[];
+      const currentYear = new Date().getFullYear();
+      const from = `${currentYear - 1}-01-01T00:00:00.000Z`;
+      const all: SaleRow[] = [];
+      const pageSize = 1000;
+      for (let page = 0; page < 20; page++) {
+        const { data, error } = await supabase
+          .from("inventory_movements")
+          .select("id, quantity, unit_price, unit_cost, occurred_at, movement_type, wines(name, producer, vintage, cost_price)")
+          .eq("restaurant_id", restaurantId!)
+          .eq("movement_type", "sale")
+          .gte("occurred_at", from)
+          .order("occurred_at", { ascending: false })
+          .range(page * pageSize, page * pageSize + pageSize - 1);
+        if (error) throw error;
+        const rows = (data ?? []) as SaleRow[];
+        all.push(...rows);
+        if (rows.length < pageSize) break;
+      }
+      return all;
     },
   });
+
 
   const updateMut = useMutation({
     mutationFn: async ({

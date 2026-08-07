@@ -98,14 +98,31 @@ function SalesPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sales", restaurantId] }),
   });
 
-  const months = Array.from(new Set(sales.map((s) => formatMonth(s.occurred_at))))
-    .sort((a, b) => {
-      const [ma, ya] = a.split("/").map(Number);
-      const [mb, yb] = b.split("/").map(Number);
-      return (yb - ya) || (mb - ma);
-    });
+  const terms = search
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
 
-  const filtered = selectedMonth === "all" ? sales : sales.filter((s) => formatMonth(s.occurred_at) === selectedMonth);
+  const filtered = terms.length === 0
+    ? sales
+    : sales.filter((s) => {
+        const haystack = [
+          formatMonth(s.occurred_at),
+          new Date(s.occurred_at).toISOString().slice(0, 7),
+          s.wines?.name,
+          s.wines?.producer,
+          s.wines?.vintage,
+          s.quantity,
+          Number(s.unit_price ?? 0).toFixed(2),
+          Number(s.unit_cost ?? 0).toFixed(2),
+          (s.quantity * Number(s.unit_price ?? 0)).toFixed(2),
+        ]
+          .filter((v) => v !== null && v !== undefined)
+          .join(" ")
+          .toLowerCase();
+        return terms.every((t) => haystack.includes(t));
+      });
+
 
   const missingCost = filtered.filter((s) => s.unit_cost == null || Number(s.unit_cost) === 0);
   const total = filtered.reduce((s, m) => s + m.quantity * Number(m.unit_price ?? 0), 0);

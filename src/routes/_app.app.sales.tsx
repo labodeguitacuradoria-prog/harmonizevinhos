@@ -193,22 +193,17 @@ function SalesPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Vendas</h1>
           <p className="mt-1 text-sm text-muted-foreground">Histórico de saídas registradas.</p>
         </div>
-      </div>
-
-      <div className="mt-6 flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por mês (05/26 ou 2026-05), rótulo, produtor, safra, quantidade ou valores..."
-          className="w-full bg-transparent text-sm outline-none"
-        />
-        {search && (
-          <button onClick={() => setSearch("")} className="text-xs text-muted-foreground hover:text-foreground">
-            limpar
+        {hasAnyFilter && (
+          <button
+            type="button"
+            onClick={() => setFilters(EMPTY_FILTERS)}
+            className="self-start rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            Limpar filtros
           </button>
         )}
       </div>
+
 
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

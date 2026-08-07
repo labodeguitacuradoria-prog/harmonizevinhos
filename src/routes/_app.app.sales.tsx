@@ -166,6 +166,7 @@ function SalesPage() {
             limpar
           </button>
         )}
+      </div>
 
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

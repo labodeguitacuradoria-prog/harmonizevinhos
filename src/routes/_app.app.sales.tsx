@@ -27,6 +27,55 @@ function formatMonth(iso: string) {
   return `${mm}/${yy}`;
 }
 
+function FilterInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px] placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+    />
+  );
+}
+
+type ColFilters = {
+  month: string;
+  name: string;
+  quantity: string;
+  revenue: string;
+  unit_price: string;
+  unit_cost: string;
+};
+const EMPTY_FILTERS: ColFilters = {
+  month: "", name: "", quantity: "", revenue: "", unit_price: "", unit_cost: "",
+};
+
+function matchNum(filter: string, value: number | null | undefined): boolean {
+  const s = filter.trim();
+  if (!s) return true;
+  if (value == null || Number.isNaN(Number(value))) return false;
+  const n = Number(value);
+  const range = s.match(/^\s*(-?\d+(?:[.,]\d+)?)\s*-\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+  if (range) return n >= Number(range[1].replace(",", ".")) && n <= Number(range[2].replace(",", "."));
+  const op = s.match(/^\s*(>=|<=|>|<|=)\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+  if (op) {
+    const v = Number(op[2].replace(",", "."));
+    switch (op[1]) {
+      case ">=": return n >= v;
+      case "<=": return n <= v;
+      case ">": return n > v;
+      case "<": return n < v;
+      case "=": return n === v;
+    }
+  }
+  return String(n).includes(s.replace(",", "."));
+}
+function matchText(filter: string, value: string | null | undefined): boolean {
+  const s = filter.trim().toLowerCase();
+  if (!s) return true;
+  return (value ?? "").toLowerCase().includes(s);
+}
+
 function SalesPage() {
   const { restaurantId } = useAuth();
   const qc = useQueryClient();
@@ -34,7 +83,9 @@ function SalesPage() {
   const [editQty, setEditQty] = useState<string>("");
   const [editRevenue, setEditRevenue] = useState<string>("");
   const [editCost, setEditCost] = useState<string>("");
-  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
+  const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v }));
+  const hasAnyFilter = Object.values(filters).some((v) => v !== "");
 
   const { data: sales = [], isLoading } = useQuery<SaleRow[]>({
     queryKey: ["sales", restaurantId],

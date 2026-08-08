@@ -932,7 +932,7 @@ function WineForm({
     source_file_url: (wine as any)?.source_file_url ?? null,
     extracted_by_ai: (wine as any)?.extracted_by_ai ?? false,
     extraction_notes: (wine as any)?.extraction_notes ?? null,
-    suggested_retail_price: (wine as any)?.suggested_retail_price ?? null,
+    catalog_id: (wine as any)?.catalog_id ?? null,
   }));
 
   // Campos exclusivos do restaurante

@@ -144,31 +144,43 @@ function ReorderAlertCell({
 }
 
 
-type CatalogPick = {
-  name: string;
-  producer: string | null;
-  vintage: number | null;
-  region: string | null;
-  country: string | null;
-  grape: string | null;
-  wine_type: string | null;
-  alcohol_pct: number | null;
-  sugar_level: string | null;
-  body: string | null;
-  tannin: string | null;
-  acidity: string | null;
-  aging: string | null;
-  serving_temp_min: number | null;
-  serving_temp_max: number | null;
-  pairing_notes: string | null;
-  tasting_notes: string | null;
-  barcode: string | null;
-  image_url: string | null;
-};
+type CatalogPick = Record<string, any> & { id: string; name: string };
+
+/** Campos que o rótulo do restaurante herda do Cadastro Global. */
+const CATALOG_INHERITED_FIELDS = [
+  "name", "producer", "vintage", "region", "appellation", "country", "grape",
+  "wine_type", "style", "volume", "barcode", "alcohol_pct",
+  "sugar_level", "sugar_g_l", "body", "tannin", "acidity", "acidity_g_l", "acidity_ph",
+  "elaboration", "aging", "oak_months", "production_method",
+  "serving_temp_min", "serving_temp_max", "pairing_notes", "tasting_notes",
+  "awards", "grapes_detail", "sommelier_weights", "videos", "suppliers",
+  "image_url", "gallery_urls", "tech_sheet_url", "source_text", "source_file_url",
+] as const;
+
+function isEmptyValue(v: any) {
+  if (v == null || v === "") return true;
+  if (Array.isArray(v)) return v.length === 0;
+  if (typeof v === "object") return Object.values(v).every((x) => x == null || x === "");
+  return false;
+}
+
+function mergeCatalogIntoWine<T extends Record<string, any>>(prev: T, c: CatalogPick): T {
+  const next: Record<string, any> = { ...prev };
+  for (const key of CATALOG_INHERITED_FIELDS) {
+    const incoming = (c as any)[key];
+    if (isEmptyValue(next[key]) && !isEmptyValue(incoming)) next[key] = incoming;
+  }
+  // vídeos legados do catálogo (video_url) quando não há array
+  if (isEmptyValue(next.videos) && (c as any).video_url) {
+    next.videos = [{ title: "Vídeo", url: (c as any).video_url }];
+  }
+  next.catalog_id = prev.catalog_id ?? c.id;
+  return next as T;
+}
 
 function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
   const [q, setQ] = useState("");
-  const [results, setResults] = useState<(CatalogPick & { id: string })[]>([]);
+  const [results, setResults] = useState<CatalogPick[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -178,7 +190,7 @@ function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
     const handle = setTimeout(async () => {
       const { data } = await supabase
         .from("wine_catalog")
-        .select("id,name,producer,vintage,region,appellation,country,grape,wine_type,alcohol_pct,sugar_level,body,tannin,acidity,aging,serving_temp_min,serving_temp_max,pairing_notes,tasting_notes,barcode,image_url")
+        .select("*")
         .eq("status", "approved")
         .or(`name.ilike.%${q}%,producer.ilike.%${q}%,barcode.eq.${q}`)
         .limit(8);
@@ -920,7 +932,7 @@ function WineForm({
     source_file_url: (wine as any)?.source_file_url ?? null,
     extracted_by_ai: (wine as any)?.extracted_by_ai ?? false,
     extraction_notes: (wine as any)?.extraction_notes ?? null,
-    suggested_retail_price: (wine as any)?.suggested_retail_price ?? null,
+    catalog_id: (wine as any)?.catalog_id ?? null,
   }));
 
   // Campos exclusivos do restaurante
@@ -978,7 +990,7 @@ function WineForm({
       source_file_url: item.source_file_url || null,
       extracted_by_ai: !!item.extracted_by_ai,
       extraction_notes: item.extraction_notes || null,
-      suggested_retail_price: item.suggested_retail_price ?? null,
+      ...(item.catalog_id ? { catalog_id: item.catalog_id } : {}),
       // exclusivos do restaurante
       internal_code: internalCode.trim() || null,
       cost_price: Number(costPrice) || 0,
@@ -1023,34 +1035,9 @@ function WineForm({
           item={item}
           onChange={setItem}
           mediaFolder="wines"
+          showSuggestedPrice={false}
           generalTop={
-            <CatalogSearch
-              onPick={(c) =>
-                setItem((prev) => ({
-                  ...prev,
-                  name: prev.name || c.name || "",
-                  producer: prev.producer || c.producer,
-                  vintage: prev.vintage ?? c.vintage,
-                  region: prev.region || c.region,
-                  appellation: prev.appellation || (c as any).appellation || null,
-                  country: prev.country || c.country,
-                  grape: prev.grape || c.grape,
-                  wine_type: prev.wine_type || c.wine_type,
-                  alcohol_pct: prev.alcohol_pct ?? c.alcohol_pct,
-                  sugar_level: prev.sugar_level || c.sugar_level,
-                  body: prev.body || c.body,
-                  tannin: prev.tannin || c.tannin,
-                  acidity: prev.acidity || c.acidity,
-                  aging: prev.aging || c.aging,
-                  serving_temp_min: prev.serving_temp_min ?? c.serving_temp_min,
-                  serving_temp_max: prev.serving_temp_max ?? c.serving_temp_max,
-                  pairing_notes: prev.pairing_notes || c.pairing_notes,
-                  tasting_notes: prev.tasting_notes || c.tasting_notes,
-                  barcode: prev.barcode || c.barcode,
-                  image_url: prev.image_url || c.image_url,
-                }))
-              }
-            />
+            <CatalogSearch onPick={(c) => setItem((prev) => mergeCatalogIntoWine(prev, c))} />
           }
           generalPricing={
             <>

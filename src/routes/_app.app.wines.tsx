@@ -146,6 +146,38 @@ function ReorderAlertCell({
 
 type CatalogPick = Record<string, any> & { id: string; name: string };
 
+/** Campos que o rótulo do restaurante herda do Cadastro Global. */
+const CATALOG_INHERITED_FIELDS = [
+  "name", "producer", "vintage", "region", "appellation", "country", "grape",
+  "wine_type", "style", "volume", "barcode", "alcohol_pct",
+  "sugar_level", "sugar_g_l", "body", "tannin", "acidity", "acidity_g_l", "acidity_ph",
+  "elaboration", "aging", "oak_months", "production_method",
+  "serving_temp_min", "serving_temp_max", "pairing_notes", "tasting_notes",
+  "awards", "grapes_detail", "sommelier_weights", "videos", "suppliers",
+  "image_url", "gallery_urls", "tech_sheet_url", "source_text", "source_file_url",
+] as const;
+
+function isEmptyValue(v: any) {
+  if (v == null || v === "") return true;
+  if (Array.isArray(v)) return v.length === 0;
+  if (typeof v === "object") return Object.values(v).every((x) => x == null || x === "");
+  return false;
+}
+
+function mergeCatalogIntoWine<T extends Record<string, any>>(prev: T, c: CatalogPick): T {
+  const next: Record<string, any> = { ...prev };
+  for (const key of CATALOG_INHERITED_FIELDS) {
+    const incoming = (c as any)[key];
+    if (isEmptyValue(next[key]) && !isEmptyValue(incoming)) next[key] = incoming;
+  }
+  // vídeos legados do catálogo (video_url) quando não há array
+  if (isEmptyValue(next.videos) && (c as any).video_url) {
+    next.videos = [{ title: "Vídeo", url: (c as any).video_url }];
+  }
+  next.catalog_id = prev.catalog_id ?? c.id;
+  return next as T;
+}
+
 function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<CatalogPick[]>([]);

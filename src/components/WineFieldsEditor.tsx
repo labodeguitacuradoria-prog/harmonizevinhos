@@ -395,7 +395,9 @@ export function WineFieldsEditor({
           <Select label="Estilo" hint="Estilo usado para harmonização." value={item.style ?? ""} onChange={(v) => set("style", v)} options={STYLES} />
           <Select label="Volume" hint="Capacidade da garrafa ou dose (Taça)." value={item.volume ?? ""} onChange={(v) => set("volume", v)} options={VOLUMES} />
           <Input label="Código de barras" hint="EAN / UPC do rótulo." placeholder="7891234567890" value={item.barcode ?? ""} onChange={(v) => set("barcode", v)} />
-          <NumberInput label="Preço sugerido de venda (R$)" hint="Preço sugerido de venda ao consumidor, quando informado pelo produtor/importador." placeholder="Ex: 189,90" value={item.suggested_retail_price ?? null} onChange={(v) => set("suggested_retail_price", v)} />
+          {showSuggestedPrice && (
+            <NumberInput label="Preço sugerido de venda (R$)" hint="Preço sugerido de venda ao consumidor, quando informado pelo produtor/importador." placeholder="Ex: 189,90" value={item.suggested_retail_price ?? null} onChange={(v) => set("suggested_retail_price", v)} />
+          )}
           {generalPricing}
 
           <div className="md:col-span-2">

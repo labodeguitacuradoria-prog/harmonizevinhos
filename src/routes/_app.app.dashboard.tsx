@@ -1257,8 +1257,15 @@ function TargetGauge({
     return "#22c55e";
   };
   const color = colorFor(pct);
-  const fmt = (n: number) =>
-    n.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  const fmt = (n: number) => {
+    const abs = Math.abs(n);
+    if (!unit && abs >= 1_000_000)
+      return `${(n / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 2 })} mi`;
+    if (!unit && abs >= 10_000)
+      return `${(n / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k`;
+    return n.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  };
+
 
   const dims = size === "lg" ? { w: 160, h: 94 } : size === "md" ? { w: 140, h: 84 } : { w: 120, h: 72 };
   const w = dims.w;

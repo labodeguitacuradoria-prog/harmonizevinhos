@@ -269,6 +269,7 @@ export function WineFieldsEditor({
   onChange,
   mediaFolder = "catalog",
   showExtractor = true,
+  showSuggestedPrice = true,
   generalTop,
   generalExtras,
   generalPricing,
@@ -278,6 +279,8 @@ export function WineFieldsEditor({
   onChange: (next: WineFields) => void;
   mediaFolder?: string;
   showExtractor?: boolean;
+  /** Preço sugerido ao consumidor é exclusivo do catálogo global. */
+  showSuggestedPrice?: boolean;
   /** Bloco acima da grade (ex: busca no catálogo global). */
   generalTop?: React.ReactNode;
   /** Campos exclusivos do restaurante (código interno, status...). */

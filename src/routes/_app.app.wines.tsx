@@ -1004,33 +1004,7 @@ function WineForm({
           onChange={setItem}
           mediaFolder="wines"
           generalTop={
-            <CatalogSearch
-              onPick={(c) =>
-                setItem((prev) => ({
-                  ...prev,
-                  name: prev.name || c.name || "",
-                  producer: prev.producer || c.producer,
-                  vintage: prev.vintage ?? c.vintage,
-                  region: prev.region || c.region,
-                  appellation: prev.appellation || (c as any).appellation || null,
-                  country: prev.country || c.country,
-                  grape: prev.grape || c.grape,
-                  wine_type: prev.wine_type || c.wine_type,
-                  alcohol_pct: prev.alcohol_pct ?? c.alcohol_pct,
-                  sugar_level: prev.sugar_level || c.sugar_level,
-                  body: prev.body || c.body,
-                  tannin: prev.tannin || c.tannin,
-                  acidity: prev.acidity || c.acidity,
-                  aging: prev.aging || c.aging,
-                  serving_temp_min: prev.serving_temp_min ?? c.serving_temp_min,
-                  serving_temp_max: prev.serving_temp_max ?? c.serving_temp_max,
-                  pairing_notes: prev.pairing_notes || c.pairing_notes,
-                  tasting_notes: prev.tasting_notes || c.tasting_notes,
-                  barcode: prev.barcode || c.barcode,
-                  image_url: prev.image_url || c.image_url,
-                }))
-              }
-            />
+            <CatalogSearch onPick={(c) => setItem((prev) => mergeCatalogIntoWine(prev, c))} />
           }
           generalPricing={
             <>

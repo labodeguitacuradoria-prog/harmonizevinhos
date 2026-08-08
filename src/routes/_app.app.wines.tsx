@@ -144,31 +144,11 @@ function ReorderAlertCell({
 }
 
 
-type CatalogPick = {
-  name: string;
-  producer: string | null;
-  vintage: number | null;
-  region: string | null;
-  country: string | null;
-  grape: string | null;
-  wine_type: string | null;
-  alcohol_pct: number | null;
-  sugar_level: string | null;
-  body: string | null;
-  tannin: string | null;
-  acidity: string | null;
-  aging: string | null;
-  serving_temp_min: number | null;
-  serving_temp_max: number | null;
-  pairing_notes: string | null;
-  tasting_notes: string | null;
-  barcode: string | null;
-  image_url: string | null;
-};
+type CatalogPick = Record<string, any> & { id: string; name: string };
 
 function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
   const [q, setQ] = useState("");
-  const [results, setResults] = useState<(CatalogPick & { id: string })[]>([]);
+  const [results, setResults] = useState<CatalogPick[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -178,7 +158,7 @@ function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
     const handle = setTimeout(async () => {
       const { data } = await supabase
         .from("wine_catalog")
-        .select("id,name,producer,vintage,region,appellation,country,grape,wine_type,alcohol_pct,sugar_level,body,tannin,acidity,aging,serving_temp_min,serving_temp_max,pairing_notes,tasting_notes,barcode,image_url")
+        .select("*")
         .eq("status", "approved")
         .or(`name.ilike.%${q}%,producer.ilike.%${q}%,barcode.eq.${q}`)
         .limit(8);

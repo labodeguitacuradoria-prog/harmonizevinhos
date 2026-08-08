@@ -990,7 +990,7 @@ function WineForm({
       source_file_url: item.source_file_url || null,
       extracted_by_ai: !!item.extracted_by_ai,
       extraction_notes: item.extraction_notes || null,
-      suggested_retail_price: item.suggested_retail_price ?? null,
+      ...(item.catalog_id ? { catalog_id: item.catalog_id } : {}),
       // exclusivos do restaurante
       internal_code: internalCode.trim() || null,
       cost_price: Number(costPrice) || 0,

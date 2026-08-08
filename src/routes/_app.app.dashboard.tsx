@@ -1288,12 +1288,16 @@ function TargetGauge({
   const bigVal = size === "lg" ? "text-xl" : size === "md" ? "text-lg" : "text-base";
 
   return (
-    <div className="flex flex-col items-center rounded-lg border border-border bg-[color:var(--surface-2)] p-2">
-      <div className="mb-1 text-center text-[9px] font-semibold uppercase tracking-wider text-primary">
+    <div className="flex w-full min-w-0 flex-col items-center overflow-hidden rounded-lg border border-border bg-[color:var(--surface-2)] p-2">
+      <div className="mb-1 w-full truncate text-center text-[9px] font-semibold uppercase tracking-wider text-primary">
         {label}
       </div>
-      <div className="relative" style={{ width: w, height: h }}>
-        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+      <div className="relative w-full" style={{ maxWidth: w, aspectRatio: `${w} / ${h}` }}>
+        <svg
+          viewBox={`0 0 ${w} ${h}`}
+          preserveAspectRatio="xMidYMid meet"
+          className="block h-full w-full"
+        >
           <path
             d={arc(0, 100)}
             stroke="var(--gray)"
@@ -1312,24 +1316,25 @@ function TargetGauge({
           <circle cx={cx + r * Math.cos(0)} cy={cy} r={2} fill="var(--gold)" />
           <circle cx={cx - r} cy={cy} r={2} fill="var(--gray)" />
         </svg>
-        <div className="absolute inset-x-0 bottom-1 flex flex-col items-center">
-          <div className={`${bigVal} font-bold leading-none`} style={{ color }}>
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center">
+          <div className={`${bigVal} font-bold leading-none tabular-nums`} style={{ color }}>
             {pct.toFixed(0)}%
           </div>
         </div>
       </div>
-      <div className="mt-1 flex flex-col items-center gap-0.5 text-center text-[10px] text-muted-foreground">
-        <div>
+      <div className="mt-1 flex w-full min-w-0 flex-col items-center gap-0.5 text-center text-[10px] leading-tight text-muted-foreground">
+        <div className="w-full break-words">
           <span className={good ? "text-primary font-semibold" : "text-[#f4a5b0] font-semibold"}>
             {valuePrefix}{fmt(achieved)}{valueSuffix}{unit ? ` ${unit}` : ""}
           </span>
         </div>
-        <div>
+        <div className="w-full break-words">
           meta: {valuePrefix}{fmt(target)}{valueSuffix}{unit ? ` ${unit}` : ""}
         </div>
       </div>
     </div>
   );
+
 }
 
 // Backwards-compatible alias — all previous usages render as a gauge now.

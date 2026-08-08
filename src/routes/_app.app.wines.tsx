@@ -1035,6 +1035,7 @@ function WineForm({
           item={item}
           onChange={setItem}
           mediaFolder="wines"
+          showSuggestedPrice={false}
           generalTop={
             <CatalogSearch onPick={(c) => setItem((prev) => mergeCatalogIntoWine(prev, c))} />
           }

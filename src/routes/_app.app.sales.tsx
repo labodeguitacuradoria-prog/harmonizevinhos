@@ -250,26 +250,10 @@ function SalesPage() {
         </div>
       </div>
 
-      {missingCost.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4">
-          <div className="text-sm">
-            <strong>{missingCost.length}</strong> lançamento(s) sem preço de custo — o CMV desse período fica subestimado.
-            Edite o custo linha por linha abaixo ou aplique o custo atual do cadastro.
-          </div>
-          <button
-            onClick={() => fillCostsMut.mutate(filtered)}
-            disabled={fillCostsMut.isPending}
-            className="rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50"
-          >
-            {fillCostsMut.isPending ? "Aplicando..." : "Aplicar custo atual do cadastro"}
-          </button>
-        </div>
-      )}
-
-      <div className="mt-6 overflow-x-auto rounded-lg border border-border bg-card">
+      <div className="mt-6 max-h-[65vh] overflow-auto rounded-lg border border-border bg-card">
         <table className="w-full text-sm">
-          <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
+          <thead className="sticky top-0 z-20 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <tr className="bg-card [&>th]:border-b [&>th]:border-border">
               <th className="px-4 py-3">Mês</th>
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Qtd</th>
@@ -278,7 +262,7 @@ function SalesPage() {
               <th className="px-4 py-3">Custo unit.</th>
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
-            <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
+            <tr className="bg-card [&>th]:border-b [&>th]:border-border [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
               <th><FilterInput value={filters.month} onChange={(v) => setF("month", v)} placeholder="05/26" /></th>
               <th><FilterInput value={filters.name} onChange={(v) => setF("name", v)} placeholder="rótulo/produtor" /></th>
               <th><FilterInput value={filters.quantity} onChange={(v) => setF("quantity", v)} placeholder=">2" /></th>
@@ -288,6 +272,7 @@ function SalesPage() {
               <th />
             </tr>
           </thead>
+
 
           <tbody>
             {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}

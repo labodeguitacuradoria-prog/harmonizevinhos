@@ -285,6 +285,7 @@ function SalesPage() {
                   </label>
                 </div>
               </th>
+              <th />
             </tr>
           </thead>
 

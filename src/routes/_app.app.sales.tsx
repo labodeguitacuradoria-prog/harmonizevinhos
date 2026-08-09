@@ -27,13 +27,13 @@ function formatMonth(iso: string) {
   return `${mm}/${yy}`;
 }
 
-function FilterInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+function FilterInput({ value, onChange, placeholder, className }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
   return (
     <input
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px] placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+      className={`w-full rounded border border-input bg-background px-1.5 py-1 text-[11px] placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none ${className ?? ""}`}
     />
   );
 }

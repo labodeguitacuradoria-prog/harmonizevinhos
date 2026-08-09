@@ -27,13 +27,13 @@ function formatMonth(iso: string) {
   return `${mm}/${yy}`;
 }
 
-function FilterInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+function FilterInput({ value, onChange, placeholder, className }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
   return (
     <input
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px] placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+      className={`w-full rounded border border-input bg-background px-1.5 py-1 text-[11px] placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none ${className ?? ""}`}
     />
   );
 }
@@ -272,9 +272,9 @@ function SalesPage() {
               <th><FilterInput value={filters.revenue} onChange={(v) => setF("revenue", v)} placeholder=">500" /></th>
               <th><FilterInput value={filters.unit_price} onChange={(v) => setF("unit_price", v)} placeholder="100-300" /></th>
               <th>
-                <div className="flex flex-col gap-1.5">
-                  <FilterInput value={filters.unit_cost} onChange={(v) => setF("unit_cost", v)} placeholder="<50" />
-                  <label className="flex cursor-pointer items-center gap-1.5 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <FilterInput value={filters.unit_cost} onChange={(v) => setF("unit_cost", v)} placeholder="<50" className="flex-1" />
+                  <label className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-[10px] text-muted-foreground">
                     <input
                       type="checkbox"
                       checked={filters.missingCost}

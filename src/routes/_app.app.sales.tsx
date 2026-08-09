@@ -45,9 +45,10 @@ type ColFilters = {
   revenue: string;
   unit_price: string;
   unit_cost: string;
+  missingCost: boolean;
 };
 const EMPTY_FILTERS: ColFilters = {
-  month: "", name: "", quantity: "", revenue: "", unit_price: "", unit_cost: "",
+  month: "", name: "", quantity: "", revenue: "", unit_price: "", unit_cost: "", missingCost: false,
 };
 
 function matchNum(filter: string, value: number | null | undefined): boolean {

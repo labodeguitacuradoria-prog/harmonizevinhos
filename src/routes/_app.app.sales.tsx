@@ -200,21 +200,42 @@ function SalesPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Vendas</h1>
           <p className="mt-1 text-sm text-muted-foreground">Histórico de saídas registradas.</p>
         </div>
-        {hasAnyFilter && (
-          <button
-            type="button"
-            onClick={() => setFilters(EMPTY_FILTERS)}
-            className="self-start rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-          >
-            Limpar filtros
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {hasAnyFilter && (
+            <button
+              type="button"
+              onClick={() => setFilters(EMPTY_FILTERS)}
+              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Limpar filtros
+            </button>
+          )}
+          {missingCost.length > 0 && (
+            <div className="flex items-center gap-1 rounded-full border border-border bg-card px-1 py-1">
+              <button
+                type="button"
+                onClick={() => fillCostsMut.mutate(filtered)}
+                disabled={fillCostsMut.isPending}
+                className="rounded-full px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+              >
+                {fillCostsMut.isPending ? "Aplicando..." : "Aplicar custo atual ao cadastro"}
+              </button>
+              <span
+                title={`${missingCost.length} lançamento(s) sem preço de custo — o CMV desse período fica subestimado. Ao aplicar, o custo atual cadastrado no rótulo é copiado para esses lançamentos.`}
+                className="flex h-5 w-5 items-center justify-center rounded-full border border-primary/50 text-[10px] font-bold text-primary"
+              >
+                i
+              </span>
+            </div>
+          )}
+        </div>
       </div>
+
 
 
 
@@ -229,26 +250,10 @@ function SalesPage() {
         </div>
       </div>
 
-      {missingCost.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4">
-          <div className="text-sm">
-            <strong>{missingCost.length}</strong> lançamento(s) sem preço de custo — o CMV desse período fica subestimado.
-            Edite o custo linha por linha abaixo ou aplique o custo atual do cadastro.
-          </div>
-          <button
-            onClick={() => fillCostsMut.mutate(filtered)}
-            disabled={fillCostsMut.isPending}
-            className="rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50"
-          >
-            {fillCostsMut.isPending ? "Aplicando..." : "Aplicar custo atual do cadastro"}
-          </button>
-        </div>
-      )}
-
-      <div className="mt-6 overflow-x-auto rounded-lg border border-border bg-card">
+      <div className="mt-6 max-h-[65vh] overflow-auto rounded-lg border border-border bg-card">
         <table className="w-full text-sm">
-          <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
+          <thead className="sticky top-0 z-20 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <tr className="bg-card [&>th]:border-b [&>th]:border-border">
               <th className="px-4 py-3">Mês</th>
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Qtd</th>
@@ -257,7 +262,7 @@ function SalesPage() {
               <th className="px-4 py-3">Custo unit.</th>
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
-            <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
+            <tr className="bg-card [&>th]:border-b [&>th]:border-border [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
               <th><FilterInput value={filters.month} onChange={(v) => setF("month", v)} placeholder="05/26" /></th>
               <th><FilterInput value={filters.name} onChange={(v) => setF("name", v)} placeholder="rótulo/produtor" /></th>
               <th><FilterInput value={filters.quantity} onChange={(v) => setF("quantity", v)} placeholder=">2" /></th>
@@ -267,6 +272,7 @@ function SalesPage() {
               <th />
             </tr>
           </thead>
+
 
           <tbody>
             {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}

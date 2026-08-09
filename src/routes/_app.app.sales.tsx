@@ -200,21 +200,42 @@ function SalesPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Vendas</h1>
           <p className="mt-1 text-sm text-muted-foreground">Histórico de saídas registradas.</p>
         </div>
-        {hasAnyFilter && (
-          <button
-            type="button"
-            onClick={() => setFilters(EMPTY_FILTERS)}
-            className="self-start rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-          >
-            Limpar filtros
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {hasAnyFilter && (
+            <button
+              type="button"
+              onClick={() => setFilters(EMPTY_FILTERS)}
+              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Limpar filtros
+            </button>
+          )}
+          {missingCost.length > 0 && (
+            <div className="flex items-center gap-1 rounded-full border border-border bg-card px-1 py-1">
+              <button
+                type="button"
+                onClick={() => fillCostsMut.mutate(filtered)}
+                disabled={fillCostsMut.isPending}
+                className="rounded-full px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+              >
+                {fillCostsMut.isPending ? "Aplicando..." : "Aplicar custo atual ao cadastro"}
+              </button>
+              <span
+                title={`${missingCost.length} lançamento(s) sem preço de custo — o CMV desse período fica subestimado. Ao aplicar, o custo atual cadastrado no rótulo é copiado para esses lançamentos.`}
+                className="flex h-5 w-5 items-center justify-center rounded-full border border-primary/50 text-[10px] font-bold text-primary"
+              >
+                i
+              </span>
+            </div>
+          )}
+        </div>
       </div>
+
 
 
 

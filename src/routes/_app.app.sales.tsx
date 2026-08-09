@@ -272,9 +272,9 @@ function SalesPage() {
               <th><FilterInput value={filters.revenue} onChange={(v) => setF("revenue", v)} placeholder=">500" /></th>
               <th><FilterInput value={filters.unit_price} onChange={(v) => setF("unit_price", v)} placeholder="100-300" /></th>
               <th>
-                <div className="flex flex-col gap-1.5">
-                  <FilterInput value={filters.unit_cost} onChange={(v) => setF("unit_cost", v)} placeholder="<50" />
-                  <label className="flex cursor-pointer items-center gap-1.5 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <FilterInput value={filters.unit_cost} onChange={(v) => setF("unit_cost", v)} placeholder="<50" className="flex-1" />
+                  <label className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-[10px] text-muted-foreground">
                     <input
                       type="checkbox"
                       checked={filters.missingCost}

@@ -45,9 +45,10 @@ type ColFilters = {
   revenue: string;
   unit_price: string;
   unit_cost: string;
+  missingCost: boolean;
 };
 const EMPTY_FILTERS: ColFilters = {
-  month: "", name: "", quantity: "", revenue: "", unit_price: "", unit_cost: "",
+  month: "", name: "", quantity: "", revenue: "", unit_price: "", unit_cost: "", missingCost: false,
 };
 
 function matchNum(filter: string, value: number | null | undefined): boolean {
@@ -84,7 +85,7 @@ function SalesPage() {
   const [editRevenue, setEditRevenue] = useState<string>("");
   const [editCost, setEditCost] = useState<string>("");
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
-  const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v }));
+  const setF = (k: keyof ColFilters, v: string | boolean) => setFilters((p) => ({ ...p, [k]: v }));
   const hasAnyFilter = Object.values(filters).some((v) => v !== "");
 
   const { data: sales = [], isLoading } = useQuery<SaleRow[]>({
@@ -167,12 +168,14 @@ function SalesPage() {
     const monthStr = `${formatMonth(s.occurred_at)} ${new Date(s.occurred_at).toISOString().slice(0, 7)}`;
     const label = [s.wines?.name, s.wines?.producer, s.wines?.vintage].filter(Boolean).join(" ");
     const revenue = s.quantity * Number(s.unit_price ?? 0);
+    const hasCost = s.unit_cost != null && Number(s.unit_cost) > 0;
     return (
       matchText(filters.month, monthStr) &&
       matchText(filters.name, label) &&
       matchNum(filters.quantity, s.quantity) &&
       matchNum(filters.revenue, revenue) &&
       matchNum(filters.unit_price, Number(s.unit_price ?? 0)) &&
+      (!filters.missingCost || !hasCost) &&
       matchNum(filters.unit_cost, Number(s.unit_cost ?? 0))
     );
   });
@@ -268,7 +271,20 @@ function SalesPage() {
               <th><FilterInput value={filters.quantity} onChange={(v) => setF("quantity", v)} placeholder=">2" /></th>
               <th><FilterInput value={filters.revenue} onChange={(v) => setF("revenue", v)} placeholder=">500" /></th>
               <th><FilterInput value={filters.unit_price} onChange={(v) => setF("unit_price", v)} placeholder="100-300" /></th>
-              <th><FilterInput value={filters.unit_cost} onChange={(v) => setF("unit_cost", v)} placeholder="<50" /></th>
+              <th>
+                <div className="flex flex-col gap-1.5">
+                  <FilterInput value={filters.unit_cost} onChange={(v) => setF("unit_cost", v)} placeholder="<50" />
+                  <label className="flex cursor-pointer items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={filters.missingCost}
+                      onChange={(e) => setF("missingCost", e.target.checked as any)}
+                      className="h-3 w-3 rounded border-border accent-primary"
+                    />
+                    apenas sem custo
+                  </label>
+                </div>
+              </th>
               <th />
             </tr>
           </thead>

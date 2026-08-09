@@ -168,12 +168,14 @@ function SalesPage() {
     const monthStr = `${formatMonth(s.occurred_at)} ${new Date(s.occurred_at).toISOString().slice(0, 7)}`;
     const label = [s.wines?.name, s.wines?.producer, s.wines?.vintage].filter(Boolean).join(" ");
     const revenue = s.quantity * Number(s.unit_price ?? 0);
+    const hasCost = s.unit_cost != null && Number(s.unit_cost) > 0;
     return (
       matchText(filters.month, monthStr) &&
       matchText(filters.name, label) &&
       matchNum(filters.quantity, s.quantity) &&
       matchNum(filters.revenue, revenue) &&
       matchNum(filters.unit_price, Number(s.unit_price ?? 0)) &&
+      (!filters.missingCost || !hasCost) &&
       matchNum(filters.unit_cost, Number(s.unit_cost ?? 0))
     );
   });

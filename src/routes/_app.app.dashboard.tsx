@@ -839,8 +839,8 @@ function FaturamentoPanel({
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(150px,165px)_1fr_minmax(220px,260px)]">
-        <div className="flex flex-col gap-2">
+      <div className="grid gap-4 lg:grid-cols-[190px_minmax(0,1fr)_minmax(220px,260px)]">
+        <div className="flex min-w-0 flex-col gap-3">
           {monthTarget > 0 && lastMonth.month >= 0 && (
             <TargetGauge
               label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}
@@ -1082,12 +1082,8 @@ function BarChart({
   const maxVal = niceMax(rawMax);
   const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => maxVal * f);
   const axisWidth = 0;
-  const fmtShort = (n: number) => {
-    const abs = Math.abs(n);
-    if (abs >= 1_000_000) return `${(n / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}mi`;
-    if (abs >= 1000) return `${(n / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k`;
-    return n.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
-  };
+  const fmtFull = (n: number) =>
+    n.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
 
   return (
     <div>
@@ -1124,7 +1120,7 @@ function BarChart({
             </div>
 
             {/* Bars */}
-            <div className="absolute inset-0 flex items-end justify-between gap-2">
+            <div className="absolute inset-0 flex items-end justify-between gap-2 pt-6">
               {MONTHS.map((mo, i) => {
                 const cPct = (curr[i] / maxVal) * 100;
                 const pPct = (prev[i] / maxVal) * 100;
@@ -1132,37 +1128,35 @@ function BarChart({
                 const tPct = tVal > 0 ? (tVal / maxVal) * 100 : 0;
                 const met = tVal > 0 && curr[i] >= tVal;
                 return (
-                  <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-0.5">
+                  <div key={mo} className="relative flex h-full min-w-0 flex-1 items-end justify-center gap-0.5">
                     <div
-                      className="relative flex w-2/5 justify-center rounded-full transition-all"
+                      className="relative flex w-2/5 justify-center rounded-t-sm transition-all"
                       style={{
                         height: `${pPct}%`,
-                        background: "linear-gradient(180deg, #e8b855, #b07d20)",
+                        background: "var(--gray)",
                       }}
                       title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
                     >
                       {prev[i] > 0 && (
-                        <span className="absolute -top-3.5 text-[9px] font-semibold tabular-nums text-muted-foreground">
-                          {fmtShort(prev[i])}
+                        <span className="absolute bottom-full mb-1 whitespace-nowrap text-[9px] font-semibold leading-none tabular-nums text-muted-foreground">
+                          {fmtFull(prev[i])}
                         </span>
                       )}
                     </div>
 
                     <div
-                      className="relative flex w-2/5 justify-center rounded-full transition-all"
+                      className="relative flex w-2/5 justify-center rounded-t-sm transition-all"
                       style={{
                         height: `${cPct}%`,
-                        background: met
-                          ? "linear-gradient(180deg, var(--gold), #6a4a08)"
-                          : "linear-gradient(180deg, #a3182f, var(--wine))",
+                        background: "var(--gold)",
                       }}
                       title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}${
                         tVal > 0 ? ` • Meta: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}` : ""
                       }`}
                     >
                       {curr[i] > 0 && (
-                        <span className="absolute -top-3.5 text-[9px] font-semibold tabular-nums text-primary">
-                          {fmtShort(curr[i])}
+                        <span className="absolute bottom-full mb-1 whitespace-nowrap text-[9px] font-semibold leading-none tabular-nums text-primary">
+                          {fmtFull(curr[i])}
                         </span>
                       )}
                     </div>
@@ -1202,14 +1196,14 @@ function BarChart({
         <div className="flex items-center gap-2">
           <span
             className="inline-block h-3 w-3 rounded-full"
-            style={{ background: "linear-gradient(180deg, #e8b855, #b07d20)" }}
+            style={{ background: "var(--gray)" }}
           />
           <span className="text-muted-foreground">{previousYear}</span>
         </div>
         <div className="flex items-center gap-2">
           <span
             className="inline-block h-3 w-3 rounded-full"
-            style={{ background: "linear-gradient(180deg, #a3182f, var(--wine))" }}
+            style={{ background: "var(--gold)" }}
           />
 
           <span className="text-muted-foreground">{currentYear}</span>
@@ -1251,41 +1245,23 @@ function TargetGauge({
 }) {
   if (target === null || !isFinite(target) || target <= 0) return null;
   const pct = target > 0 ? (achieved / target) * 100 : 0;
-  const clamped = Math.max(0, Math.min(150, pct));
+  const clamped = Math.max(0, Math.min(100, pct));
   const good = invert ? achieved <= target : achieved >= target;
-  // Color scale: red < 40, amber 40-80, gold 80-110, green >110 (or invert reversed)
-  const colorFor = (p: number) => {
-    const effective = invert ? 100 - Math.min(p, 100) + Math.max(0, 100 - p) : p;
-    const v = invert ? (achieved <= target ? 100 : Math.max(0, 200 - p)) : p;
-    if (invert) {
-      if (achieved <= target * 0.9) return "#22c55e";
-      if (achieved <= target) return "var(--gold)";
-      if (achieved <= target * 1.15) return "#f59e0b";
-      return "#ef4444";
-    }
-    if (v < 40) return "#ef4444";
-    if (v < 80) return "#f59e0b";
-    if (v <= 110) return "var(--gold)";
-    return "#22c55e";
-  };
-  const color = colorFor(pct);
-  const fmt = (n: number) => {
-    const abs = Math.abs(n);
-    if (!unit && abs >= 1_000_000)
-      return `${(n / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 2 })} mi`;
-    if (!unit && abs >= 10_000)
-      return `${(n / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k`;
-    return n.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-  };
+  const color = "var(--gold)";
+  const fmt = (n: number) =>
+    n.toLocaleString("pt-BR", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
 
 
-  const dims = size === "lg" ? { w: 160, h: 94 } : size === "md" ? { w: 140, h: 84 } : { w: 120, h: 72 };
+  const dims = size === "lg" ? { w: 176, h: 96 } : size === "md" ? { w: 156, h: 86 } : { w: 136, h: 76 };
   const w = dims.w;
   const h = dims.h;
   const cx = w / 2;
-  const cy = h - 6;
-  const r = w / 2 - 12;
-  const stroke = size === "lg" ? 12 : size === "md" ? 10 : 9;
+  const cy = h - 8;
+  const r = w / 2 - 10;
+  const stroke = size === "lg" ? 9 : size === "md" ? 8 : 7;
   // Semicircle from 180deg to 0deg (left → right)
   const arc = (fromPct: number, toPct: number) => {
     const a1 = Math.PI * (1 - Math.min(100, Math.max(0, fromPct)) / 100);
@@ -1300,8 +1276,8 @@ function TargetGauge({
   const bigVal = size === "lg" ? "text-xl" : size === "md" ? "text-lg" : "text-base";
 
   return (
-    <div className="flex w-full min-w-0 flex-col items-center overflow-hidden rounded-lg border border-border bg-[color:var(--surface-2)] p-2">
-      <div className="relative w-full" style={{ maxWidth: w, aspectRatio: `${w} / ${h}` }}>
+    <div className="flex w-full min-w-0 flex-col items-center rounded-lg border border-border bg-[color:var(--surface-2)] px-2 py-2.5">
+      <div className="relative w-full shrink-0" style={{ maxWidth: w, aspectRatio: `${w} / ${h}` }}>
         <svg
           viewBox={`0 0 ${w} ${h}`}
           preserveAspectRatio="xMidYMid meet"
@@ -1309,7 +1285,7 @@ function TargetGauge({
         >
           <path
             d={arc(0, 100)}
-            stroke="color-mix(in oklab, var(--muted-foreground) 40%, transparent)"
+            stroke="var(--wine)"
             strokeWidth={stroke}
             fill="none"
             strokeLinecap="round"
@@ -1322,22 +1298,25 @@ function TargetGauge({
             strokeLinecap="round"
           />
         </svg>
+        <div className={`absolute inset-x-0 bottom-0 text-center ${bigVal} font-bold leading-none tabular-nums`} style={{ color }}>
+          {pct.toFixed(0)}%
+        </div>
       </div>
-      <div className={`${bigVal} font-bold leading-none tabular-nums`} style={{ color }}>
-        {pct.toFixed(0)}%
-      </div>
-      <div className="mt-1 flex w-full min-w-0 flex-col items-center gap-0.5 text-center text-[10px] leading-tight text-muted-foreground">
-        <div className="w-full break-words">
+      <div className="mt-2 grid w-full min-w-0 grid-cols-2 gap-1 text-center text-[9px] leading-tight text-muted-foreground">
+        <div className="min-w-0 border-r border-border pr-1">
           Real:{" "}
-          <span className={good ? "text-primary font-semibold" : "text-[#f4a5b0] font-semibold"}>
+          <span className={`mt-0.5 block whitespace-nowrap font-semibold tabular-nums ${good ? "text-primary" : "text-foreground"}`}>
             {valuePrefix}{fmt(achieved)}{valueSuffix}{unit ? ` ${unit}` : ""}
           </span>
         </div>
-        <div className="w-full break-words">
-          Meta: {valuePrefix}{fmt(target)}{valueSuffix}{unit ? ` ${unit}` : ""}
+        <div className="min-w-0 pl-1">
+          Meta:
+          <span className="mt-0.5 block whitespace-nowrap font-semibold tabular-nums text-foreground">
+            {valuePrefix}{fmt(target)}{valueSuffix}{unit ? ` ${unit}` : ""}
+          </span>
         </div>
       </div>
-      <div className="mt-1 w-full truncate text-center text-[9px] font-semibold uppercase tracking-wider text-primary">
+      <div className="mt-2 w-full truncate border-t border-border pt-1.5 text-center text-[9px] font-semibold uppercase tracking-wider text-primary">
         {label}
       </div>
     </div>

@@ -274,9 +274,9 @@ function CatalogAdmin() {
           className="w-full rounded-md border border-input bg-background pl-10 pr-4 py-2 text-sm" />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+      <div className="overflow-auto rounded-xl border border-border bg-card max-h-[calc(100vh-220px)]">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-border bg-muted/50 text-xs font-semibold uppercase text-muted-foreground">
+          <thead className="sticky top-0 z-10 border-b border-border bg-muted/95 text-xs font-semibold uppercase text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-muted/80">
             <tr>
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Produtor</th>

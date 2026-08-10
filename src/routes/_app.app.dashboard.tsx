@@ -1201,16 +1201,17 @@ function BarChart({
       <div className="mt-3 flex items-center justify-center gap-6 text-[11px]">
         <div className="flex items-center gap-2">
           <span
-            className="inline-block h-3 w-3 rounded"
-            style={{ background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)" }}
+            className="inline-block h-3 w-3 rounded-full"
+            style={{ background: "linear-gradient(180deg, #e8b855, #b07d20)" }}
           />
           <span className="text-muted-foreground">{previousYear}</span>
         </div>
         <div className="flex items-center gap-2">
           <span
-            className="inline-block h-3 w-3 rounded"
-            style={{ background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
+            className="inline-block h-3 w-3 rounded-full"
+            style={{ background: "linear-gradient(180deg, #a3182f, var(--wine))" }}
           />
+
           <span className="text-muted-foreground">{currentYear}</span>
         </div>
         {hasTargets && (

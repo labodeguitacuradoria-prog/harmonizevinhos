@@ -1081,12 +1081,18 @@ function BarChart({
   const rawMax = Math.max(1, ...curr, ...prev, ...targetsForMax);
   const maxVal = niceMax(rawMax);
   const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => maxVal * f);
-  const axisWidth = 68;
+  const axisWidth = 0;
+  const fmtShort = (n: number) => {
+    const abs = Math.abs(n);
+    if (abs >= 1_000_000) return `${(n / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}mi`;
+    if (abs >= 1000) return `${(n / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k`;
+    return n.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+  };
 
   return (
     <div>
       <div className="relative w-full" style={{ height }}>
-        {/* Y-axis labels + horizontal gridlines */}
+        {/* Horizontal gridlines (Y axis labels suppressed) */}
         <div className="absolute inset-0" style={{ paddingLeft: axisWidth, paddingBottom: 22 }}>
           <div className="relative h-full w-full">
             {ticks.map((t, i) => (
@@ -1095,20 +1101,13 @@ function BarChart({
                 className="absolute left-0 right-0 flex items-center"
                 style={{ top: `${(i / (ticks.length - 1)) * 100}%`, transform: "translateY(-0.5px)" }}
               >
-                <span
-                  className="absolute right-full pr-2 text-[10px] text-muted-foreground whitespace-nowrap"
-                  style={{ transform: "translateY(-50%)" }}
-                >
-                  {valuePrefix}
-                  {fmtBRL(t)}
-                  {valueSuffix}
-                </span>
                 <div
                   className="h-px w-full"
                   style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
                 />
               </div>
             ))}
+
             {/* Vertical gridlines between months */}
             <div className="absolute inset-0 flex">
               {MONTHS.map((_, i) => (
@@ -1135,27 +1134,39 @@ function BarChart({
                 return (
                   <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-0.5">
                     <div
-                      className="w-2/5 rounded-t transition-all"
+                      className="relative flex w-2/5 justify-center rounded-full transition-all"
                       style={{
                         height: `${pPct}%`,
-                        background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)",
-                        boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
+                        background: "linear-gradient(180deg, #e8b855, #b07d20)",
                       }}
                       title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
-                    />
+                    >
+                      {prev[i] > 0 && (
+                        <span className="absolute -top-3.5 text-[9px] font-semibold tabular-nums text-muted-foreground">
+                          {fmtShort(prev[i])}
+                        </span>
+                      )}
+                    </div>
 
                     <div
-                      className="w-2/5 rounded-t transition-all"
+                      className="relative flex w-2/5 justify-center rounded-full transition-all"
                       style={{
                         height: `${cPct}%`,
                         background: met
                           ? "linear-gradient(180deg, var(--gold), #6a4a08)"
-                          : "linear-gradient(180deg, var(--gold), var(--wine))",
+                          : "linear-gradient(180deg, #a3182f, var(--wine))",
                       }}
                       title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}${
                         tVal > 0 ? ` • Meta: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}` : ""
                       }`}
-                    />
+                    >
+                      {curr[i] > 0 && (
+                        <span className="absolute -top-3.5 text-[9px] font-semibold tabular-nums text-primary">
+                          {fmtShort(curr[i])}
+                        </span>
+                      )}
+                    </div>
+
 
                     {/* Target dashed line per month */}
                     {tVal > 0 && (
@@ -1190,16 +1201,17 @@ function BarChart({
       <div className="mt-3 flex items-center justify-center gap-6 text-[11px]">
         <div className="flex items-center gap-2">
           <span
-            className="inline-block h-3 w-3 rounded"
-            style={{ background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)" }}
+            className="inline-block h-3 w-3 rounded-full"
+            style={{ background: "linear-gradient(180deg, #e8b855, #b07d20)" }}
           />
           <span className="text-muted-foreground">{previousYear}</span>
         </div>
         <div className="flex items-center gap-2">
           <span
-            className="inline-block h-3 w-3 rounded"
-            style={{ background: "linear-gradient(180deg, var(--gold), var(--wine))" }}
+            className="inline-block h-3 w-3 rounded-full"
+            style={{ background: "linear-gradient(180deg, #a3182f, var(--wine))" }}
           />
+
           <span className="text-muted-foreground">{currentYear}</span>
         </div>
         {hasTargets && (
@@ -1289,9 +1301,6 @@ function TargetGauge({
 
   return (
     <div className="flex w-full min-w-0 flex-col items-center overflow-hidden rounded-lg border border-border bg-[color:var(--surface-2)] p-2">
-      <div className="mb-1 w-full truncate text-center text-[9px] font-semibold uppercase tracking-wider text-primary">
-        {label}
-      </div>
       <div className="relative w-full" style={{ maxWidth: w, aspectRatio: `${w} / ${h}` }}>
         <svg
           viewBox={`0 0 ${w} ${h}`}
@@ -1300,7 +1309,7 @@ function TargetGauge({
         >
           <path
             d={arc(0, 100)}
-            stroke="var(--gray)"
+            stroke="color-mix(in oklab, var(--muted-foreground) 40%, transparent)"
             strokeWidth={stroke}
             fill="none"
             strokeLinecap="round"
@@ -1312,28 +1321,28 @@ function TargetGauge({
             fill="none"
             strokeLinecap="round"
           />
-          {/* Target tick at 100% */}
-          <circle cx={cx + r * Math.cos(0)} cy={cy} r={2} fill="var(--gold)" />
-          <circle cx={cx - r} cy={cy} r={2} fill="var(--gray)" />
         </svg>
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center">
-          <div className={`${bigVal} font-bold leading-none tabular-nums`} style={{ color }}>
-            {pct.toFixed(0)}%
-          </div>
-        </div>
+      </div>
+      <div className={`${bigVal} font-bold leading-none tabular-nums`} style={{ color }}>
+        {pct.toFixed(0)}%
       </div>
       <div className="mt-1 flex w-full min-w-0 flex-col items-center gap-0.5 text-center text-[10px] leading-tight text-muted-foreground">
         <div className="w-full break-words">
+          Real:{" "}
           <span className={good ? "text-primary font-semibold" : "text-[#f4a5b0] font-semibold"}>
             {valuePrefix}{fmt(achieved)}{valueSuffix}{unit ? ` ${unit}` : ""}
           </span>
         </div>
         <div className="w-full break-words">
-          meta: {valuePrefix}{fmt(target)}{valueSuffix}{unit ? ` ${unit}` : ""}
+          Meta: {valuePrefix}{fmt(target)}{valueSuffix}{unit ? ` ${unit}` : ""}
         </div>
+      </div>
+      <div className="mt-1 w-full truncate text-center text-[9px] font-semibold uppercase tracking-wider text-primary">
+        {label}
       </div>
     </div>
   );
+
 
 }
 

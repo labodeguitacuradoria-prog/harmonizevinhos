@@ -1134,27 +1134,39 @@ function BarChart({
                 return (
                   <div key={mo} className="relative flex h-full flex-1 items-end justify-center gap-0.5">
                     <div
-                      className="w-2/5 rounded-t transition-all"
+                      className="relative flex w-2/5 justify-center rounded-full transition-all"
                       style={{
                         height: `${pPct}%`,
-                        background: "linear-gradient(180deg, #b8b8b8, #6a6a6a)",
-                        boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
+                        background: "linear-gradient(180deg, #e8b855, #b07d20)",
                       }}
                       title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
-                    />
+                    >
+                      {prev[i] > 0 && (
+                        <span className="absolute -top-3.5 text-[9px] font-semibold tabular-nums text-muted-foreground">
+                          {fmtShort(prev[i])}
+                        </span>
+                      )}
+                    </div>
 
                     <div
-                      className="w-2/5 rounded-t transition-all"
+                      className="relative flex w-2/5 justify-center rounded-full transition-all"
                       style={{
                         height: `${cPct}%`,
                         background: met
                           ? "linear-gradient(180deg, var(--gold), #6a4a08)"
-                          : "linear-gradient(180deg, var(--gold), var(--wine))",
+                          : "linear-gradient(180deg, #a3182f, var(--wine))",
                       }}
                       title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}${
                         tVal > 0 ? ` • Meta: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}` : ""
                       }`}
-                    />
+                    >
+                      {curr[i] > 0 && (
+                        <span className="absolute -top-3.5 text-[9px] font-semibold tabular-nums text-primary">
+                          {fmtShort(curr[i])}
+                        </span>
+                      )}
+                    </div>
+
 
                     {/* Target dashed line per month */}
                     {tVal > 0 && (

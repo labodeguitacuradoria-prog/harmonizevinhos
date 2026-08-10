@@ -1081,12 +1081,18 @@ function BarChart({
   const rawMax = Math.max(1, ...curr, ...prev, ...targetsForMax);
   const maxVal = niceMax(rawMax);
   const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => maxVal * f);
-  const axisWidth = 68;
+  const axisWidth = 0;
+  const fmtShort = (n: number) => {
+    const abs = Math.abs(n);
+    if (abs >= 1_000_000) return `${(n / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}mi`;
+    if (abs >= 1000) return `${(n / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k`;
+    return n.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+  };
 
   return (
     <div>
       <div className="relative w-full" style={{ height }}>
-        {/* Y-axis labels + horizontal gridlines */}
+        {/* Horizontal gridlines (Y axis labels suppressed) */}
         <div className="absolute inset-0" style={{ paddingLeft: axisWidth, paddingBottom: 22 }}>
           <div className="relative h-full w-full">
             {ticks.map((t, i) => (
@@ -1095,20 +1101,13 @@ function BarChart({
                 className="absolute left-0 right-0 flex items-center"
                 style={{ top: `${(i / (ticks.length - 1)) * 100}%`, transform: "translateY(-0.5px)" }}
               >
-                <span
-                  className="absolute right-full pr-2 text-[10px] text-muted-foreground whitespace-nowrap"
-                  style={{ transform: "translateY(-50%)" }}
-                >
-                  {valuePrefix}
-                  {fmtBRL(t)}
-                  {valueSuffix}
-                </span>
                 <div
                   className="h-px w-full"
                   style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
                 />
               </div>
             ))}
+
             {/* Vertical gridlines between months */}
             <div className="absolute inset-0 flex">
               {MONTHS.map((_, i) => (

@@ -254,11 +254,30 @@ export default function DashboardTargetsEditor({
           ))}
         </div>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-[1fr_260px]">
+        <div className="mt-4 grid gap-4 md:grid-cols-[280px_1fr]">
+          <div className="rounded-lg border border-primary/50 bg-[color:var(--surface-2)] p-4">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
+              1. Meta anual ({current.unit})
+            </div>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={annual}
+              onChange={(e) => handleAnnualChange(e.target.value)}
+              placeholder="—"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-lg font-bold text-primary focus:border-primary focus:outline-none"
+            />
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Comece aqui: ao informar a meta anual, os 12 meses são preenchidos automaticamente
+              {isAverage ? " com o mesmo valor (indicador de média)." : " dividindo o valor por 12."}
+              {" "}Se depois você alterar algum mês, a meta anual se reajusta automaticamente
+              {isAverage ? " pela média dos meses." : " pela soma dos meses."}
+            </p>
+          </div>
           <div>
             <div className="mb-2 flex items-center justify-between">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
-                Metas mensais — {current.label} ({current.unit})
+                2. Metas mensais — {current.label} ({current.unit})
               </div>
               <div className="text-[10px] text-muted-foreground">
                 Soma mensal: {current.unit === "R$" ? "R$ " : ""}
@@ -276,10 +295,7 @@ export default function DashboardTargetsEditor({
                     type="text"
                     inputMode="decimal"
                     value={monthly[i]}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setMonthly((prev) => prev.map((p, idx) => (idx === i ? v : p)));
-                    }}
+                    onChange={(e) => handleMonthChange(i, e.target.value)}
                     placeholder="—"
                     className="rounded-md border border-border bg-[color:var(--surface-2)] px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
                   />
@@ -288,23 +304,8 @@ export default function DashboardTargetsEditor({
             </div>
             <p className="mt-2 text-[10px] text-muted-foreground">{current.hint}</p>
           </div>
-          <div className="rounded-lg border border-border bg-[color:var(--surface-2)] p-4">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
-              Meta anual ({current.unit})
-            </div>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={annual}
-              onChange={(e) => setAnnual(e.target.value)}
-              placeholder="—"
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-lg font-bold text-primary focus:border-primary focus:outline-none"
-            />
-            <p className="mt-2 text-[10px] text-muted-foreground">
-              Usada como referência acumulada no painel. Se não informar, o painel usará a soma das metas mensais.
-            </p>
-          </div>
         </div>
+
 
         <div className="mt-5 flex items-center justify-end gap-2 border-t border-border pt-4">
           <button

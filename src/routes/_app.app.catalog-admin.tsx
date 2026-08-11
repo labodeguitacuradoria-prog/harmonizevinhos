@@ -196,6 +196,33 @@ function CatalogAdmin() {
   const normKey = (s: string | null | undefined) =>
     (s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
 
+  function matchText(filter: string, value: string | null | undefined): boolean {
+    const s = filter.trim().toLowerCase();
+    if (!s) return true;
+    return (value ?? "").toLowerCase().includes(s);
+  }
+
+  function matchNum(filter: string, value: number | null | undefined): boolean {
+    const s = filter.trim();
+    if (!s) return true;
+    if (value == null || Number.isNaN(Number(value))) return false;
+    const n = Number(value);
+    const range = s.match(/^\s*(-?\d+(?:[.,]\d+)?)\s*-\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+    if (range) return n >= Number(range[1].replace(",", ".")) && n <= Number(range[2].replace(",", "."));
+    const op = s.match(/^\s*(>=|<=|>|<|=)\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+    if (op) {
+      const v = Number(op[2].replace(",", "."));
+      switch (op[1]) {
+        case ">=": return n >= v;
+        case "<=": return n <= v;
+        case ">": return n > v;
+        case "<": return n < v;
+        case "=": return n === v;
+      }
+    }
+    return String(n).includes(s.replace(",", "."));
+  }
+
   const duplicateIds = useMemo(() => {
     const groups = new Map<string, string[]>();
     for (const i of items) {
@@ -218,20 +245,29 @@ function CatalogAdmin() {
     duplicates: duplicateIds.size,
   }), [items, duplicateIds]);
 
-  const filtered = useMemo(() => items
-    .filter(i => statusTab === "duplicates" ? duplicateIds.has(i.id) : i.status === statusTab)
-    .filter(i =>
-      !search ||
-      i.name.toLowerCase().includes(search.toLowerCase()) ||
-      (i.producer ?? "").toLowerCase().includes(search.toLowerCase()) ||
-      (i.barcode ?? "").includes(search)
-    )
-    .sort((a, b) => {
-      if (statusTab !== "duplicates") return 0;
-      const ka = `${normKey(a.name)}|${a.vintage ?? ""}`;
-      const kb = `${normKey(b.name)}|${b.vintage ?? ""}`;
-      return ka.localeCompare(kb);
-    }), [items, statusTab, search, duplicateIds]);
+  const filtered = useMemo(() => {
+    return items
+      .filter(i => statusTab === "duplicates" ? duplicateIds.has(i.id) : i.status === statusTab)
+      .filter(i => {
+        if (!matchText(filters.name, i.name)) return false;
+        if (!matchText(filters.producer, i.producer)) return false;
+        if (!matchText(filters.typeStyle, i.wine_type) && !matchText(filters.typeStyle, i.style)) return false;
+        if (!matchNum(filters.vintage, i.vintage)) return false;
+        if (filters.completeness.trim()) {
+          const checks = auditWine(i);
+          const done = checks.filter(c => c.ok).length;
+          const pct = checks.length ? Math.round((done / checks.length) * 100) : 0;
+          if (!matchNum(filters.completeness, pct)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        if (statusTab !== "duplicates") return 0;
+        const ka = `${normKey(a.name)}|${a.vintage ?? ""}`;
+        const kb = `${normKey(b.name)}|${b.vintage ?? ""}`;
+        return ka.localeCompare(kb);
+      });
+  }, [items, statusTab, filters, duplicateIds]);
 
   function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" = "geral") {
     setInitialTab(tab);
@@ -274,23 +310,68 @@ function CatalogAdmin() {
 
       <>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input placeholder="Buscar por nome, produtor ou código de barras..."
-          value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full rounded-md border border-input bg-background pl-10 pr-4 py-2 text-sm" />
-      </div>
-
       <div className="overflow-auto rounded-xl border border-border bg-card max-h-[calc(100vh-220px)]">
         <table className="w-full text-left text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-muted/95 text-xs font-semibold uppercase text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-muted/80">
             <tr>
-              <th className="px-4 py-3">Rótulo</th>
-              <th className="px-4 py-3">Produtor</th>
-              <th className="px-4 py-3">Safra</th>
-              <th className="px-4 py-3">Tipo / Estilo</th>
+              <th className="px-4 py-3">
+                <div className="space-y-1">
+                  <span>Rótulo</span>
+                  <input
+                    value={filters.name}
+                    onChange={e => setF("name", e.target.value)}
+                    placeholder="Filtrar rótulo..."
+                    className="w-full rounded border border-input bg-background px-2 py-1 text-[11px] font-normal normal-case placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </th>
+              <th className="px-4 py-3">
+                <div className="space-y-1">
+                  <span>Produtor</span>
+                  <input
+                    value={filters.producer}
+                    onChange={e => setF("producer", e.target.value)}
+                    placeholder="Filtrar produtor..."
+                    className="w-full rounded border border-input bg-background px-2 py-1 text-[11px] font-normal normal-case placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </th>
+              <th className="px-4 py-3">
+                <div className="space-y-1">
+                  <span>Safra</span>
+                  <input
+                    value={filters.vintage}
+                    onChange={e => setF("vintage", e.target.value)}
+                    placeholder="Ex: 2020 ou >2018"
+                    className="w-full rounded border border-input bg-background px-2 py-1 text-[11px] font-normal normal-case placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </th>
+              <th className="px-4 py-3">
+                <div className="space-y-1">
+                  <span>Tipo / Estilo</span>
+                  <input
+                    value={filters.typeStyle}
+                    onChange={e => setF("typeStyle", e.target.value)}
+                    placeholder="Filtrar tipo..."
+                    className="w-full rounded border border-input bg-background px-2 py-1 text-[11px] font-normal normal-case placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </th>
               <th className="px-4 py-3">País</th>
-              {statusTab === "approved" && <th className="px-4 py-3 w-32">Completude</th>}
+              {statusTab === "approved" && (
+                <th className="px-4 py-3 w-40">
+                  <div className="space-y-1">
+                    <span>Completude</span>
+                    <input
+                      value={filters.completeness}
+                      onChange={e => setF("completeness", e.target.value)}
+                      placeholder="Ex: <80 ou 90-100"
+                      className="w-full rounded border border-input bg-background px-2 py-1 text-[11px] font-normal normal-case placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                </th>
+              )}
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>

@@ -1132,8 +1132,8 @@ function BarChart({
                     <div
                       className="relative flex w-2/5 justify-center rounded-t-sm transition-all"
                       style={{
-                        height: `${pPct}%`,
-                        background: "var(--gray)",
+                        height: prev[i] > 0 ? `max(2px, ${pPct}%)` : "0%",
+                        background: "#444444",
                       }}
                       title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
                     >
@@ -1143,6 +1143,7 @@ function BarChart({
                         </span>
                       )}
                     </div>
+
 
                     <div
                       className="relative flex w-2/5 justify-center rounded-t-sm transition-all"

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Database, Search, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { Database, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import {
   WineFieldsEditor,
   WineFormTabs,
@@ -78,11 +78,18 @@ function CatalogAdmin() {
   const isAdmin = role === "admin";
   const [items, setItems] = useState<WineCatalog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [statusTab, setStatusTab] = useState<CatalogStatus | "duplicates">("pending");
   const [editing, setEditing] = useState<Partial<WineCatalog> | null>(null);
   const [initialTab, setInitialTab] = useState<"geral" | "carac" | "midia">("geral");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [filters, setFilters] = useState({
+    name: "",
+    producer: "",
+    completeness: "",
+    vintage: "",
+    typeStyle: "",
+  });
+  const setF = (k: keyof typeof filters, v: string) => setFilters(p => ({ ...p, [k]: v }));
 
   useEffect(() => { fetchCatalog(); }, []);
 

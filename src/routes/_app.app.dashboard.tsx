@@ -1197,7 +1197,7 @@ function BarChart({
         <div className="flex items-center gap-2">
           <span
             className="inline-block h-3 w-3 rounded-full"
-            style={{ background: "var(--gray)" }}
+            style={{ background: "#444444" }}
           />
           <span className="text-muted-foreground">{previousYear}</span>
         </div>

@@ -88,6 +88,38 @@ export default function DashboardTargetsEditor({
   const [annual, setAnnual] = useState<string>("");
 
   const current = useMemo(() => INDICATORS.find((i) => i.key === indicator)!, [indicator]);
+  // Indicadores de média (não somam ao longo do ano)
+  const isAverage = indicator === "cmv" || indicator === "preco";
+
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const parse = (v: string) => {
+    const n = Number(v.replace(",", "."));
+    return v.trim() === "" || Number.isNaN(n) ? null : n;
+  };
+
+  // Ao digitar a meta anual: distribui automaticamente pelos 12 meses
+  const handleAnnualChange = (v: string) => {
+    setAnnual(v);
+    const n = parse(v);
+    if (n === null) return;
+    const each = isAverage ? round2(n) : round2(n / 12);
+    setMonthly(Array(12).fill(String(each)));
+  };
+
+  // Ao alterar um mês: recalcula a meta anual (soma ou média)
+  const handleMonthChange = (i: number, v: string) => {
+    setMonthly((prev) => {
+      const next = prev.map((p, idx) => (idx === i ? v : p));
+      const nums = next.map(parse).filter((n): n is number => n !== null);
+      if (nums.length === 0) {
+        setAnnual("");
+      } else {
+        const total = nums.reduce((s, n) => s + n, 0);
+        setAnnual(String(round2(isAverage ? total / nums.length : total)));
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const map: Record<string, Row> = {};

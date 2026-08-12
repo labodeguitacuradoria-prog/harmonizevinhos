@@ -437,6 +437,14 @@ function DashboardPage() {
   }, [movements, corkage, wineById, wines, stockMap, currentYear, previousYear, currentMonth, period]);
 
 
+  const yearView = period?.mode === "year" ? period.year : null;
+  const refLabel = (p: { year: number; month: number }) =>
+    yearView
+      ? yearView === currentYear
+        ? `Acum. ${yearView}`
+        : `Ano ${yearView}`
+      : monthLabel(p.year, p.month);
+
   const TABS: Array<{
     key: TabKey;
     label: string;
@@ -448,21 +456,21 @@ function DashboardPage() {
       key: "faturamento",
       label: "Faturamento",
       primary: `R$ ${fmtBRL(agg.revLast)}`,
-      sub: monthLabel(agg.lastRev.year, agg.lastRev.month),
+      sub: refLabel(agg.lastRev),
       info: "Receita total do último mês com dados (vendas de vinhos + taxas de rolha). Abaixo, o gráfico compara mês a mês o ano atual com o anterior.",
     },
     {
       key: "garrafas",
       label: "Garrafas Vendidas",
       primary: `${agg.bottlesLast}`,
-      sub: monthLabel(agg.lastBottles.year, agg.lastBottles.month),
+      sub: refLabel(agg.lastBottles),
       info: "Quantidade de garrafas vendidas no último mês com dados. O painel abre o comparativo mensal com o ano anterior.",
     },
     {
       key: "tacas",
       label: "Taças Vendidas",
       primary: `${agg.glassesLast}`,
-      sub: monthLabel(agg.lastGlasses.year, agg.lastGlasses.month),
+      sub: refLabel(agg.lastGlasses),
       info: "Quantidade de taças de vinho vendidas no último mês com dados, comparadas mês a mês com o ano anterior.",
     },
     {
@@ -476,21 +484,21 @@ function DashboardPage() {
       key: "preco",
       label: "Preço Médio",
       primary: `R$ ${fmtBRL(agg.avgLast)}`,
-      sub: monthLabel(agg.lastAvg.year, agg.lastAvg.month),
+      sub: refLabel(agg.lastAvg),
       info: "Preço médio praticado no último mês com dados (receita ÷ unidades vendidas, considerando garrafas e taças).",
     },
     {
       key: "cmv",
       label: "CMV",
       primary: `${agg.cmvLast.toFixed(1)}%`,
-      sub: monthLabel(agg.lastCmv.year, agg.lastCmv.month),
+      sub: refLabel(agg.lastCmv),
       info: "Custo da mercadoria vendida no último mês com dados: custo total ÷ receita das vendas de vinhos. Meta usual: ≤ 33%.",
     },
     {
       key: "rolha",
       label: "Taxa de Rolha",
       primary: `R$ ${fmtBRL(agg.corkageAmtLast)}`,
-      sub: monthLabel(agg.lastCorkage.year, agg.lastCorkage.month),
+      sub: refLabel(agg.lastCorkage),
       info: "Valor arrecadado com taxas de rolha no último mês lançado. Lance mensalmente em 'Taxa de rolha'; o valor entra no faturamento.",
     },
     {

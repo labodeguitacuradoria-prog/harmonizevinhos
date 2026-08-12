@@ -514,10 +514,10 @@ function DashboardPage() {
   const consolidatedUnitCount = isGroup ? memberships.filter((m) => m.groupId === activeGroupId).length : 0;
 
   return (
-    <div className="p-6 md:p-10 space-y-6">
+    <div className="p-3 md:p-10 space-y-3 md:space-y-6">
       {isGroup && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/40 bg-[color:var(--wine)]/20 px-4 py-3">
-          <div className="text-[12px] text-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/40 bg-[color:var(--wine)]/20 px-3 py-2 md:px-4 md:py-3">
+          <div className="text-[11px] md:text-[12px] text-foreground">
             <span className="font-semibold text-primary">
               Rede: {activeGroupName ?? "—"} — consolidado
             </span>
@@ -531,7 +531,53 @@ function DashboardPage() {
           </button>
         </div>
       )}
-      <header className="flex items-center justify-between border-b border-border pb-4">
+
+      {/* Mobile header — compact */}
+      <header className="md:hidden border-b border-border pb-3">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-[13px] font-bold uppercase tracking-[0.14em] text-primary">
+            Painel
+          </h1>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setDiagOpen(true)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-primary active:border-primary"
+              aria-label="Diagnóstico de vendas"
+            >
+              <FileText size={14} />
+            </button>
+            {!isGroup && (
+              <button
+                onClick={() => setMetasOpen(true)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-primary active:border-primary"
+                aria-label="Metas"
+              >
+                <Target size={14} />
+              </button>
+            )}
+            <button
+              onClick={() => setPeriodOpen((v) => !v)}
+              className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[10px] font-semibold uppercase tracking-wider ${
+                period
+                  ? "border-primary bg-[color:var(--wine)]/25 text-primary"
+                  : "border-border bg-card text-primary"
+              }`}
+            >
+              <CalendarRange size={13} />
+              {period
+                ? period.mode === "year"
+                  ? period.year === currentYear
+                    ? `Acum. ${String(period.year).slice(-2)}`
+                    : `Ano ${String(period.year).slice(-2)}`
+                  : monthLabel(period.year, period.month)
+                : "Mês"}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <header className="hidden md:flex items-center justify-between border-b border-border pb-4">
+
         <div>
           <h1 className="page-title">Painel de Controle</h1>
           <p className="mt-1 text-xs text-muted-foreground">

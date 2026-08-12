@@ -839,7 +839,7 @@ function FaturamentoPanel({
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[190px_minmax(0,1fr)_minmax(220px,260px)]">
+      <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)_minmax(220px,260px)]">
         <div className="flex min-w-0 flex-col gap-3">
           {monthTarget > 0 && lastMonth.month >= 0 && (
             <TargetGauge

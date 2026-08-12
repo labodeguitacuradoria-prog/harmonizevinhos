@@ -839,7 +839,7 @@ function FaturamentoPanel({
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[190px_minmax(0,1fr)_minmax(220px,260px)]">
+      <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)_minmax(220px,260px)]">
         <div className="flex min-w-0 flex-col gap-3">
           {monthTarget > 0 && lastMonth.month >= 0 && (
             <TargetGauge
@@ -1256,74 +1256,71 @@ function TargetGauge({
     });
 
 
-  const dims = size === "lg" ? { w: 176, h: 96 } : size === "md" ? { w: 156, h: 86 } : { w: 136, h: 76 };
-  const w = dims.w;
-  const h = dims.h;
-  const cx = w / 2;
-  const cy = h - 8;
-  const r = w / 2 - 10;
-  const stroke = size === "lg" ? 9 : size === "md" ? 8 : 7;
-  // Semicircle from 180deg to 0deg (left → right)
-  const arc = (fromPct: number, toPct: number) => {
-    const a1 = Math.PI * (1 - Math.min(100, Math.max(0, fromPct)) / 100);
-    const a2 = Math.PI * (1 - Math.min(100, Math.max(0, toPct)) / 100);
-    const x1 = cx + r * Math.cos(a1);
-    const y1 = cy - r * Math.sin(a1);
-    const x2 = cx + r * Math.cos(a2);
-    const y2 = cy - r * Math.sin(a2);
-    const large = Math.abs(toPct - fromPct) > 50 ? 1 : 0;
-    return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
-  };
-  const bigVal = size === "lg" ? "text-xl" : size === "md" ? "text-lg" : "text-base";
+  // Donut ring (same model as the "Participação no restaurante" chart)
+  const box = size === "lg" ? 160 : size === "md" ? 144 : 128;
+  const stroke = size === "lg" ? 18 : size === "md" ? 16 : 14;
+  const c = box / 2;
+  const r = c - stroke / 2 - 2;
+  const circ = 2 * Math.PI * r;
+  const bigVal = size === "lg" ? "text-2xl" : size === "md" ? "text-xl" : "text-lg";
 
   return (
-    <div className="flex w-full min-w-0 flex-col items-center rounded-lg border border-border bg-[color:var(--surface-2)] px-2 py-2.5">
-      <div className="relative w-full shrink-0" style={{ maxWidth: w, aspectRatio: `${w} / ${h}` }}>
-        <svg
-          viewBox={`0 0 ${w} ${h}`}
-          preserveAspectRatio="xMidYMid meet"
-          className="block h-full w-full"
-        >
-          <path
-            d={arc(0, 100)}
-            stroke="var(--wine)"
-            strokeWidth={stroke}
+    <div className="flex w-full min-w-0 flex-col rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
+      <div className="mb-2 truncate text-center text-[9px] font-semibold uppercase tracking-wider text-primary">
+        {label}
+      </div>
+      <div className="relative mx-auto w-full" style={{ maxWidth: box, aspectRatio: "1 / 1" }}>
+        <svg viewBox={`0 0 ${box} ${box}`} className="block h-full w-full -rotate-90">
+          <circle
+            cx={c}
+            cy={c}
+            r={r}
             fill="none"
-            strokeLinecap="round"
+            stroke="#3a3a3a"
+            strokeWidth={stroke}
           />
-          <path
-            d={arc(0, Math.min(100, clamped))}
-            stroke={color}
-            strokeWidth={stroke}
+          <circle
+            cx={c}
+            cy={c}
+            r={r}
             fill="none"
-            strokeLinecap="round"
+            stroke={good ? color : "var(--wine)"}
+            strokeWidth={stroke}
+            strokeLinecap="butt"
+            strokeDasharray={`${(clamped / 100) * circ} ${circ}`}
           />
         </svg>
-        <div className={`absolute inset-x-0 bottom-0 text-center ${bigVal} font-bold leading-none tabular-nums`} style={{ color }}>
-          {pct.toFixed(0)}%
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className={`${bigVal} font-bold leading-none tabular-nums`} style={{ color }}>
+            {pct.toFixed(1)}%
+          </span>
+          <span className="mt-1 text-[8px] uppercase tracking-wider text-muted-foreground">
+            da meta
+          </span>
         </div>
       </div>
-      <div className="mt-2 grid w-full min-w-0 grid-cols-2 gap-1 text-center text-[9px] leading-tight text-muted-foreground">
-        <div className="min-w-0 border-r border-border pr-1">
-          Real:{" "}
-          <span className={`mt-0.5 block whitespace-nowrap font-semibold tabular-nums ${good ? "text-primary" : "text-foreground"}`}>
+      <div className="mt-3 space-y-1 border-t border-border pt-2 text-[10px]">
+        <div className="flex items-center justify-between gap-2">
+          <span className="flex items-center gap-1.5 text-muted-foreground">
+            <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
+            Real
+          </span>
+          <span className={`whitespace-nowrap font-semibold tabular-nums ${good ? "text-primary" : "text-foreground"}`}>
             {valuePrefix}{fmt(achieved)}{valueSuffix}{unit ? ` ${unit}` : ""}
           </span>
         </div>
-        <div className="min-w-0 pl-1">
-          Meta:
-          <span className="mt-0.5 block whitespace-nowrap font-semibold tabular-nums text-foreground">
+        <div className="flex items-center justify-between gap-2">
+          <span className="flex items-center gap-1.5 text-muted-foreground">
+            <span className="inline-block h-2 w-2 rounded-full bg-[#3a3a3a]" />
+            Meta
+          </span>
+          <span className="whitespace-nowrap font-semibold tabular-nums text-foreground">
             {valuePrefix}{fmt(target)}{valueSuffix}{unit ? ` ${unit}` : ""}
           </span>
         </div>
       </div>
-      <div className="mt-2 w-full truncate border-t border-border pt-1.5 text-center text-[9px] font-semibold uppercase tracking-wider text-primary">
-        {label}
-      </div>
     </div>
   );
-
-
 }
 
 // Backwards-compatible alias — all previous usages render as a gauge now.

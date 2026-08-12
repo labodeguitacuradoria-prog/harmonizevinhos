@@ -563,10 +563,16 @@ function DashboardPage() {
               className={`flex items-center gap-2 rounded-md border px-3 py-2 text-[11px] font-semibold uppercase tracking-wider transition ${
                 period ? "border-primary bg-[color:var(--wine)]/20 text-primary" : "border-border bg-card text-primary hover:border-primary"
               }`}
-              title="Escolher o mês de referência do painel"
+              title="Escolher o mês ou o ano de referência do painel"
             >
               <CalendarRange size={14} />
-              {period ? monthLabel(period.year, period.month) : "Mês"}
+              {period
+                ? period.mode === "year"
+                  ? period.year === currentYear
+                    ? `Acum. ${period.year}`
+                    : `Ano ${period.year}`
+                  : monthLabel(period.year, period.month)
+                : "Mês"}
             </button>
             {periodOpen && (
               <>
@@ -583,6 +589,35 @@ function DashboardPage() {
                   >
                     Último mês com dados
                   </button>
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Visão ano
+                  </div>
+                  <div className="mb-3 grid grid-cols-2 gap-1">
+                    {[currentYear, previousYear].map((y) => {
+                      const active = period?.mode === "year" && period.year === y;
+                      return (
+                        <button
+                          key={`year-${y}`}
+                          onClick={() => {
+                            setPeriod({ year: y, month: -1, mode: "year" });
+                            setPeriodOpen(false);
+                          }}
+                          className={`rounded-md border px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition ${
+                            active
+                              ? "border-primary bg-[color:var(--wine)]/25 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"
+                          }`}
+                          title={
+                            y === currentYear
+                              ? "Acumulado do ano atual até o mês corrente"
+                              : "Ano anterior completo"
+                          }
+                        >
+                          {y === currentYear ? `Acum. ${y}` : `Ano ${y}`}
+                        </button>
+                      );
+                    })}
+                  </div>
                   {[currentYear, previousYear].map((y) => (
                     <div key={y} className="mb-2">
                       <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -591,7 +626,7 @@ function DashboardPage() {
                       <div className="grid grid-cols-4 gap-1">
                         {MONTHS.map((m, i) => {
                           const disabled = y === currentYear && i > currentMonth;
-                          const active = period?.year === y && period?.month === i;
+                          const active = !period?.mode && period?.year === y && period?.month === i;
                           return (
                             <button
                               key={m}
@@ -613,6 +648,7 @@ function DashboardPage() {
                       </div>
                     </div>
                   ))}
+
                 </div>
               </>
             )}

@@ -346,25 +346,48 @@ function DashboardPage() {
     const lastCorkage = pick(corkageAmtByYearMonth);
 
     const isPrev = (p: { year: number; month: number }) => p.year === previousYear;
-    const revLast = lastRev.month >= 0 ? revByYearMonth[lastRev.year][lastRev.month] : 0;
-    const bottlesLast = lastBottles.month >= 0 ? bottlesByYearMonth[lastBottles.year][lastBottles.month] : 0;
-    const glassesLast = lastGlasses.month >= 0 ? glassesByYearMonth[lastGlasses.year][lastGlasses.month] : 0;
-    const cmvLast =
+    let revLast = lastRev.month >= 0 ? revByYearMonth[lastRev.year][lastRev.month] : 0;
+    let bottlesLast = lastBottles.month >= 0 ? bottlesByYearMonth[lastBottles.year][lastBottles.month] : 0;
+    let glassesLast = lastGlasses.month >= 0 ? glassesByYearMonth[lastGlasses.year][lastGlasses.month] : 0;
+    let cmvLast =
       lastCmv.month >= 0 ? (isPrev(lastCmv) ? cmvByMonthPrev[lastCmv.month] : cmvByMonth[lastCmv.month]) : 0;
-    const avgLast =
+    let avgLast =
       lastAvg.month >= 0
         ? (isPrev(lastAvg) ? avgAllByMonthPrev[lastAvg.month] : avgAllByMonth[lastAvg.month])
         : 0;
-    const avgBottleLast =
+    let avgBottleLast =
       lastAvg.month >= 0
         ? (isPrev(lastAvg) ? avgBottleByMonthPrev[lastAvg.month] : avgBottleByMonth[lastAvg.month])
         : 0;
-    const avgGlassLast =
+    let avgGlassLast =
       lastAvg.month >= 0
         ? (isPrev(lastAvg) ? avgGlassByMonthPrev[lastAvg.month] : avgGlassByMonth[lastAvg.month])
         : 0;
-    const corkageAmtLast = lastCorkage.month >= 0 ? corkageAmtByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
-    const corkageQtyLast = lastCorkage.month >= 0 ? corkageQtyByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+    let corkageAmtLast = lastCorkage.month >= 0 ? corkageAmtByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+    let corkageQtyLast = lastCorkage.month >= 0 ? corkageQtyByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+
+    // Visão ano: acumula do mês 0 até o mês atual (ano corrente) ou até dezembro (ano anterior)
+    const yearView = period?.mode === "year" ? period.year : null;
+    if (yearView) {
+      const limit = yearView === currentYear ? currentMonth : 11;
+      const sum = (arr: number[]) => arr.slice(0, limit + 1).reduce((a, b) => a + b, 0);
+      revLast = sum(revByYearMonth[yearView]);
+      bottlesLast = sum(bottlesByYearMonth[yearView]);
+      glassesLast = sum(glassesByYearMonth[yearView]);
+      const revWine = sum(revWineByYearMonth[yearView]);
+      const costWine = sum(costWineByYearMonth[yearView]);
+      cmvLast = revWine > 0 ? (costWine / revWine) * 100 : 0;
+      const bq = bottlesLast;
+      const gq = glassesLast;
+      const rb = sum(revBottlesByYearMonth[yearView]);
+      const rg = sum(revGlassesByYearMonth[yearView]);
+      avgBottleLast = bq > 0 ? rb / bq : 0;
+      avgGlassLast = gq > 0 ? rg / gq : 0;
+      avgLast = bq + gq > 0 ? (rb + rg) / (bq + gq) : 0;
+      corkageAmtLast = sum(corkageAmtByYearMonth[yearView]);
+      corkageQtyLast = sum(corkageQtyByYearMonth[yearView]);
+    }
+
 
     const corkageAmtYear = corkageAmtByYearMonth[currentYear].reduce((a, b) => a + b, 0);
     const corkageQtyYear = corkageQtyByYearMonth[currentYear].reduce((a, b) => a + b, 0);

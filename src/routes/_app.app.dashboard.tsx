@@ -102,7 +102,7 @@ function DashboardPage() {
   const [metasOpen, setMetasOpen] = useState(false);
   const [diagOpen, setDiagOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
-  const [period, setPeriod] = useState<{ year: number; month: number } | null>(null);
+  const [period, setPeriod] = useState<{ year: number; month: number; mode?: "year" } | null>(null);
 
 
   const now = new Date();

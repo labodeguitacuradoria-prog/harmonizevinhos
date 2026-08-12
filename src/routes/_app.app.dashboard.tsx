@@ -102,7 +102,7 @@ function DashboardPage() {
   const [metasOpen, setMetasOpen] = useState(false);
   const [diagOpen, setDiagOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
-  const [period, setPeriod] = useState<{ year: number; month: number } | null>(null);
+  const [period, setPeriod] = useState<{ year: number; month: number; mode?: "year" } | null>(null);
 
 
   const now = new Date();
@@ -346,25 +346,48 @@ function DashboardPage() {
     const lastCorkage = pick(corkageAmtByYearMonth);
 
     const isPrev = (p: { year: number; month: number }) => p.year === previousYear;
-    const revLast = lastRev.month >= 0 ? revByYearMonth[lastRev.year][lastRev.month] : 0;
-    const bottlesLast = lastBottles.month >= 0 ? bottlesByYearMonth[lastBottles.year][lastBottles.month] : 0;
-    const glassesLast = lastGlasses.month >= 0 ? glassesByYearMonth[lastGlasses.year][lastGlasses.month] : 0;
-    const cmvLast =
+    let revLast = lastRev.month >= 0 ? revByYearMonth[lastRev.year][lastRev.month] : 0;
+    let bottlesLast = lastBottles.month >= 0 ? bottlesByYearMonth[lastBottles.year][lastBottles.month] : 0;
+    let glassesLast = lastGlasses.month >= 0 ? glassesByYearMonth[lastGlasses.year][lastGlasses.month] : 0;
+    let cmvLast =
       lastCmv.month >= 0 ? (isPrev(lastCmv) ? cmvByMonthPrev[lastCmv.month] : cmvByMonth[lastCmv.month]) : 0;
-    const avgLast =
+    let avgLast =
       lastAvg.month >= 0
         ? (isPrev(lastAvg) ? avgAllByMonthPrev[lastAvg.month] : avgAllByMonth[lastAvg.month])
         : 0;
-    const avgBottleLast =
+    let avgBottleLast =
       lastAvg.month >= 0
         ? (isPrev(lastAvg) ? avgBottleByMonthPrev[lastAvg.month] : avgBottleByMonth[lastAvg.month])
         : 0;
-    const avgGlassLast =
+    let avgGlassLast =
       lastAvg.month >= 0
         ? (isPrev(lastAvg) ? avgGlassByMonthPrev[lastAvg.month] : avgGlassByMonth[lastAvg.month])
         : 0;
-    const corkageAmtLast = lastCorkage.month >= 0 ? corkageAmtByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
-    const corkageQtyLast = lastCorkage.month >= 0 ? corkageQtyByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+    let corkageAmtLast = lastCorkage.month >= 0 ? corkageAmtByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+    let corkageQtyLast = lastCorkage.month >= 0 ? corkageQtyByYearMonth[lastCorkage.year][lastCorkage.month] : 0;
+
+    // Visão ano: acumula do mês 0 até o mês atual (ano corrente) ou até dezembro (ano anterior)
+    const yearView = period?.mode === "year" ? period.year : null;
+    if (yearView) {
+      const limit = yearView === currentYear ? currentMonth : 11;
+      const sum = (arr: number[]) => arr.slice(0, limit + 1).reduce((a, b) => a + b, 0);
+      revLast = sum(revByYearMonth[yearView]);
+      bottlesLast = sum(bottlesByYearMonth[yearView]);
+      glassesLast = sum(glassesByYearMonth[yearView]);
+      const revWine = sum(revWineByYearMonth[yearView]);
+      const costWine = sum(costWineByYearMonth[yearView]);
+      cmvLast = revWine > 0 ? (costWine / revWine) * 100 : 0;
+      const bq = bottlesLast;
+      const gq = glassesLast;
+      const rb = sum(revBottlesByYearMonth[yearView]);
+      const rg = sum(revGlassesByYearMonth[yearView]);
+      avgBottleLast = bq > 0 ? rb / bq : 0;
+      avgGlassLast = gq > 0 ? rg / gq : 0;
+      avgLast = bq + gq > 0 ? (rb + rg) / (bq + gq) : 0;
+      corkageAmtLast = sum(corkageAmtByYearMonth[yearView]);
+      corkageQtyLast = sum(corkageQtyByYearMonth[yearView]);
+    }
+
 
     const corkageAmtYear = corkageAmtByYearMonth[currentYear].reduce((a, b) => a + b, 0);
     const corkageQtyYear = corkageQtyByYearMonth[currentYear].reduce((a, b) => a + b, 0);
@@ -414,6 +437,14 @@ function DashboardPage() {
   }, [movements, corkage, wineById, wines, stockMap, currentYear, previousYear, currentMonth, period]);
 
 
+  const yearView = period?.mode === "year" ? period.year : null;
+  const refLabel = (p: { year: number; month: number }) =>
+    yearView
+      ? yearView === currentYear
+        ? `Acum. ${yearView}`
+        : `Ano ${yearView}`
+      : monthLabel(p.year, p.month);
+
   const TABS: Array<{
     key: TabKey;
     label: string;
@@ -425,21 +456,21 @@ function DashboardPage() {
       key: "faturamento",
       label: "Faturamento",
       primary: `R$ ${fmtBRL(agg.revLast)}`,
-      sub: monthLabel(agg.lastRev.year, agg.lastRev.month),
+      sub: refLabel(agg.lastRev),
       info: "Receita total do último mês com dados (vendas de vinhos + taxas de rolha). Abaixo, o gráfico compara mês a mês o ano atual com o anterior.",
     },
     {
       key: "garrafas",
       label: "Garrafas Vendidas",
       primary: `${agg.bottlesLast}`,
-      sub: monthLabel(agg.lastBottles.year, agg.lastBottles.month),
+      sub: refLabel(agg.lastBottles),
       info: "Quantidade de garrafas vendidas no último mês com dados. O painel abre o comparativo mensal com o ano anterior.",
     },
     {
       key: "tacas",
       label: "Taças Vendidas",
       primary: `${agg.glassesLast}`,
-      sub: monthLabel(agg.lastGlasses.year, agg.lastGlasses.month),
+      sub: refLabel(agg.lastGlasses),
       info: "Quantidade de taças de vinho vendidas no último mês com dados, comparadas mês a mês com o ano anterior.",
     },
     {
@@ -453,21 +484,21 @@ function DashboardPage() {
       key: "preco",
       label: "Preço Médio",
       primary: `R$ ${fmtBRL(agg.avgLast)}`,
-      sub: monthLabel(agg.lastAvg.year, agg.lastAvg.month),
+      sub: refLabel(agg.lastAvg),
       info: "Preço médio praticado no último mês com dados (receita ÷ unidades vendidas, considerando garrafas e taças).",
     },
     {
       key: "cmv",
       label: "CMV",
       primary: `${agg.cmvLast.toFixed(1)}%`,
-      sub: monthLabel(agg.lastCmv.year, agg.lastCmv.month),
+      sub: refLabel(agg.lastCmv),
       info: "Custo da mercadoria vendida no último mês com dados: custo total ÷ receita das vendas de vinhos. Meta usual: ≤ 33%.",
     },
     {
       key: "rolha",
       label: "Taxa de Rolha",
       primary: `R$ ${fmtBRL(agg.corkageAmtLast)}`,
-      sub: monthLabel(agg.lastCorkage.year, agg.lastCorkage.month),
+      sub: refLabel(agg.lastCorkage),
       info: "Valor arrecadado com taxas de rolha no último mês lançado. Lance mensalmente em 'Taxa de rolha'; o valor entra no faturamento.",
     },
     {
@@ -532,10 +563,16 @@ function DashboardPage() {
               className={`flex items-center gap-2 rounded-md border px-3 py-2 text-[11px] font-semibold uppercase tracking-wider transition ${
                 period ? "border-primary bg-[color:var(--wine)]/20 text-primary" : "border-border bg-card text-primary hover:border-primary"
               }`}
-              title="Escolher o mês de referência do painel"
+              title="Escolher o mês ou o ano de referência do painel"
             >
               <CalendarRange size={14} />
-              {period ? monthLabel(period.year, period.month) : "Mês"}
+              {period
+                ? period.mode === "year"
+                  ? period.year === currentYear
+                    ? `Acum. ${period.year}`
+                    : `Ano ${period.year}`
+                  : monthLabel(period.year, period.month)
+                : "Mês"}
             </button>
             {periodOpen && (
               <>
@@ -552,6 +589,35 @@ function DashboardPage() {
                   >
                     Último mês com dados
                   </button>
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Visão ano
+                  </div>
+                  <div className="mb-3 grid grid-cols-2 gap-1">
+                    {[currentYear, previousYear].map((y) => {
+                      const active = period?.mode === "year" && period.year === y;
+                      return (
+                        <button
+                          key={`year-${y}`}
+                          onClick={() => {
+                            setPeriod({ year: y, month: -1, mode: "year" });
+                            setPeriodOpen(false);
+                          }}
+                          className={`rounded-md border px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition ${
+                            active
+                              ? "border-primary bg-[color:var(--wine)]/25 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"
+                          }`}
+                          title={
+                            y === currentYear
+                              ? "Acumulado do ano atual até o mês corrente"
+                              : "Ano anterior completo"
+                          }
+                        >
+                          {y === currentYear ? `Acum. ${y}` : `Ano ${y}`}
+                        </button>
+                      );
+                    })}
+                  </div>
                   {[currentYear, previousYear].map((y) => (
                     <div key={y} className="mb-2">
                       <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -560,7 +626,7 @@ function DashboardPage() {
                       <div className="grid grid-cols-4 gap-1">
                         {MONTHS.map((m, i) => {
                           const disabled = y === currentYear && i > currentMonth;
-                          const active = period?.year === y && period?.month === i;
+                          const active = !period?.mode && period?.year === y && period?.month === i;
                           return (
                             <button
                               key={m}
@@ -582,6 +648,7 @@ function DashboardPage() {
                       </div>
                     </div>
                   ))}
+
                 </div>
               </>
             )}

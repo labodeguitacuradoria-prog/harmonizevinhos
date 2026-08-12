@@ -514,10 +514,10 @@ function DashboardPage() {
   const consolidatedUnitCount = isGroup ? memberships.filter((m) => m.groupId === activeGroupId).length : 0;
 
   return (
-    <div className="p-6 md:p-10 space-y-6">
+    <div className="p-3 md:p-10 space-y-3 md:space-y-6">
       {isGroup && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/40 bg-[color:var(--wine)]/20 px-4 py-3">
-          <div className="text-[12px] text-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/40 bg-[color:var(--wine)]/20 px-3 py-2 md:px-4 md:py-3">
+          <div className="text-[11px] md:text-[12px] text-foreground">
             <span className="font-semibold text-primary">
               Rede: {activeGroupName ?? "—"} — consolidado
             </span>
@@ -531,7 +531,53 @@ function DashboardPage() {
           </button>
         </div>
       )}
-      <header className="flex items-center justify-between border-b border-border pb-4">
+
+      {/* Mobile header — compact */}
+      <header className="md:hidden border-b border-border pb-3">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-[13px] font-bold uppercase tracking-[0.14em] text-primary">
+            Painel
+          </h1>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setDiagOpen(true)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-primary active:border-primary"
+              aria-label="Diagnóstico de vendas"
+            >
+              <FileText size={14} />
+            </button>
+            {!isGroup && (
+              <button
+                onClick={() => setMetasOpen(true)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-primary active:border-primary"
+                aria-label="Metas"
+              >
+                <Target size={14} />
+              </button>
+            )}
+            <button
+              onClick={() => setPeriodOpen((v) => !v)}
+              className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[10px] font-semibold uppercase tracking-wider ${
+                period
+                  ? "border-primary bg-[color:var(--wine)]/25 text-primary"
+                  : "border-border bg-card text-primary"
+              }`}
+            >
+              <CalendarRange size={13} />
+              {period
+                ? period.mode === "year"
+                  ? period.year === currentYear
+                    ? `Acum. ${String(period.year).slice(-2)}`
+                    : `Ano ${String(period.year).slice(-2)}`
+                  : monthLabel(period.year, period.month)
+                : "Mês"}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <header className="hidden md:flex items-center justify-between border-b border-border pb-4">
+
         <div>
           <h1 className="page-title">Painel de Controle</h1>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -657,8 +703,33 @@ function DashboardPage() {
 
       </header>
 
-      {/* KPI buttons row */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+      {/* Mobile KPI strip — compact horizontal scroll */}
+      <div className="md:hidden -mx-3 px-3 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 pb-0.5">
+          {TABS.filter((t) => t.key !== "outras").map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`min-w-[104px] shrink-0 rounded-lg border px-2.5 py-2 text-left transition ${
+                tab === t.key
+                  ? "border-primary bg-[color:var(--wine)]/25"
+                  : "border-border bg-card"
+              }`}
+            >
+              <div className="truncate text-[8px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                {t.label}
+              </div>
+              <div className="mt-0.5 truncate text-[15px] font-bold leading-tight text-primary">
+                {t.primary}
+              </div>
+              <div className="truncate text-[9px] text-muted-foreground">{t.sub}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* KPI buttons row (desktop) */}
+      <div className="hidden md:grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -690,8 +761,85 @@ function DashboardPage() {
         ))}
       </div>
 
+      {/* Mobile period sheet */}
+      {periodOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setPeriodOpen(false)}>
+          <div
+            className="max-h-[80vh] w-full overflow-y-auto rounded-t-2xl border-t border-border bg-card p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-primary">
+              Período de referência
+            </div>
+            <button
+              onClick={() => {
+                setPeriod(null);
+                setPeriodOpen(false);
+              }}
+              className={`mb-3 w-full rounded-md border px-2 py-2 text-[10px] font-semibold uppercase tracking-wider ${
+                !period ? "border-primary text-primary" : "border-border text-muted-foreground"
+              }`}
+            >
+              Último mês com dados
+            </button>
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Visão ano
+            </div>
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              {[currentYear, previousYear].map((y) => (
+                <button
+                  key={`m-year-${y}`}
+                  onClick={() => {
+                    setPeriod({ year: y, month: -1, mode: "year" });
+                    setPeriodOpen(false);
+                  }}
+                  className={`rounded-md border px-2 py-2 text-[10px] font-semibold uppercase tracking-wider ${
+                    period?.mode === "year" && period.year === y
+                      ? "border-primary bg-[color:var(--wine)]/25 text-primary"
+                      : "border-border text-muted-foreground"
+                  }`}
+                >
+                  {y === currentYear ? `Acum. ${y}` : `Ano ${y}`}
+                </button>
+              ))}
+            </div>
+            {[currentYear, previousYear].map((y) => (
+              <div key={`m-${y}`} className="mb-3">
+                <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {y}
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {MONTHS.map((m, i) => {
+                    const disabled = y === currentYear && i > currentMonth;
+                    const active = !period?.mode && period?.year === y && period?.month === i;
+                    return (
+                      <button
+                        key={`m-${y}-${m}`}
+                        disabled={disabled}
+                        onClick={() => {
+                          setPeriod({ year: y, month: i });
+                          setPeriodOpen(false);
+                        }}
+                        className={`rounded-md border px-1 py-2 text-[10px] font-semibold uppercase ${
+                          active
+                            ? "border-primary bg-[color:var(--wine)]/25 text-primary"
+                            : "border-border text-muted-foreground"
+                        } disabled:opacity-30`}
+                      >
+                        {m}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Detail panel */}
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="rounded-xl border border-border bg-card p-3 md:p-5">
+
         {tab === "faturamento" && (
           <FaturamentoPanel
             revByYearMonth={agg.revByYearMonth}

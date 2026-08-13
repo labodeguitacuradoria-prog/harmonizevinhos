@@ -702,30 +702,28 @@ function DashboardPage() {
 
       </header>
 
-      {/* Mobile KPI strip — compact horizontal scroll */}
-      <div className="md:hidden -mx-3 px-3 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2 pb-0.5">
-          {TABS.filter((t) => t.key !== "outras").map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`min-w-[104px] shrink-0 rounded-lg border px-2.5 py-2 text-left transition ${
-                tab === t.key
-                  ? "border-primary bg-[color:var(--wine)]/25"
-                  : "border-border bg-card"
-              }`}
-            >
-              <div className="truncate text-[8px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                {t.label}
-              </div>
-              <div className="mt-0.5 truncate text-[15px] font-bold leading-tight text-primary">
-                {t.primary}
-              </div>
-              <div className="truncate text-[9px] text-muted-foreground">{t.sub}</div>
-            </button>
-          ))}
-        </div>
+      {/* Mobile KPI grid — 3 columns, compact */}
+      <div className="md:hidden grid grid-cols-3 gap-1.5">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`rounded-lg border px-1.5 py-1.5 text-center transition ${
+              tab === t.key
+                ? "border-primary bg-[color:var(--wine)]/25"
+                : "border-border bg-card"
+            }`}
+          >
+            <div className="truncate text-[7.5px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              {t.label}
+            </div>
+            <div className="mt-0.5 truncate text-[13px] font-bold leading-tight text-primary">
+              {t.primary}
+            </div>
+          </button>
+        ))}
       </div>
+
 
       {/* KPI buttons row (desktop) */}
       <div className="hidden md:grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">

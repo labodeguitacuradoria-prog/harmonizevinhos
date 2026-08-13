@@ -1423,8 +1423,8 @@ function BarChart({
         {hasTargets && (
           <div className="flex items-center gap-2">
             <span
-              className="inline-block h-0.5 w-6"
-              style={{ borderTop: "2px dashed var(--gold)" }}
+              className="inline-block w-6"
+              style={{ borderTop: "1px solid #e5484d" }}
             />
             <span className="text-muted-foreground">Meta mensal</span>
           </div>

@@ -533,48 +533,47 @@ function DashboardPage() {
       )}
 
       {/* Mobile header — compact */}
-      <header className="md:hidden border-b border-border pb-3">
-        <div className="flex items-center justify-between gap-2">
-          <h1 className="text-[13px] font-bold uppercase tracking-[0.14em] text-primary">
-            Painel
-          </h1>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setDiagOpen(true)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-primary active:border-primary"
-              aria-label="Diagnóstico de vendas"
-            >
-              <FileText size={14} />
-            </button>
-            {!isGroup && (
-              <button
-                onClick={() => setMetasOpen(true)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-primary active:border-primary"
-                aria-label="Metas"
-              >
-                <Target size={14} />
-              </button>
-            )}
-            <button
-              onClick={() => setPeriodOpen((v) => !v)}
-              className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[10px] font-semibold uppercase tracking-wider ${
-                period
-                  ? "border-primary bg-[color:var(--wine)]/25 text-primary"
-                  : "border-border bg-card text-primary"
-              }`}
-            >
-              <CalendarRange size={13} />
+      <header className="md:hidden space-y-2.5 border-b border-border pb-3">
+        <h1 className="text-center text-[12px] font-bold uppercase tracking-[0.16em] text-primary">
+          Gestão de Vinhos <span className="text-muted-foreground">para Restaurantes</span>
+        </h1>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setDiagOpen(true)}
+            className="flex h-9 items-center justify-center gap-2 rounded-lg border border-primary bg-card text-[11px] font-semibold uppercase tracking-wider text-primary"
+          >
+            <FileText size={13} /> Diagnóstico
+          </button>
+          <button
+            onClick={() => setPeriodOpen((v) => !v)}
+            className={`flex h-9 items-center justify-between gap-2 rounded-lg border px-3 text-[11px] font-semibold uppercase tracking-wider ${
+              period
+                ? "border-primary bg-[color:var(--wine)]/25 text-primary"
+                : "border-border bg-card text-primary"
+            }`}
+          >
+            <span className="truncate">
               {period
                 ? period.mode === "year"
                   ? period.year === currentYear
                     ? `Acum. ${String(period.year).slice(-2)}`
                     : `Ano ${String(period.year).slice(-2)}`
                   : monthLabel(period.year, period.month)
-                : "Mês"}
-            </button>
-          </div>
+                : "Mês / Ano"}
+            </span>
+            <CalendarRange size={13} className="shrink-0" />
+          </button>
         </div>
+        {!isGroup && (
+          <button
+            onClick={() => setMetasOpen(true)}
+            className="flex h-8 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+          >
+            <Target size={12} /> Metas
+          </button>
+        )}
       </header>
+
 
       <header className="hidden md:flex items-center justify-between border-b border-border pb-4">
 

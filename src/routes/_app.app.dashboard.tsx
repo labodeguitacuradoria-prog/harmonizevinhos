@@ -1055,7 +1055,7 @@ function FaturamentoPanel({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)_minmax(220px,260px)]">
-        <div className="flex min-w-0 flex-col gap-3">
+        <div className="grid min-w-0 grid-cols-2 gap-2 lg:flex lg:flex-col lg:gap-3">
           {monthTarget > 0 && lastMonth.month >= 0 && (
             <TargetGauge
               label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}

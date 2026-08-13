@@ -1341,6 +1341,19 @@ function BarChart({
                 const met = tVal > 0 && curr[i] >= tVal;
                 return (
                   <div key={mo} className="relative flex h-full min-w-0 flex-1 items-end justify-center gap-0.5">
+                    {/* Target line: rendered first so bar values paint on top */}
+                    {tVal > 0 && (
+                      <div
+                        className="pointer-events-none absolute left-[10%] right-[10%] z-0"
+                        style={{
+                          bottom: `${tPct}%`,
+                          height: 0,
+                          borderTop: "1px solid #e5484d",
+                        }}
+                        title={`Meta ${mo}: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}`}
+                      />
+                    )}
+
                     <div
                       className="relative flex w-2/5 justify-center rounded-t-sm transition-all"
                       style={{
@@ -1350,7 +1363,7 @@ function BarChart({
                       title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
                     >
                       {prev[i] > 0 && (
-                        <span className="absolute bottom-full mb-1 whitespace-nowrap text-[9px] font-semibold leading-none tabular-nums text-muted-foreground">
+                        <span className="absolute bottom-full z-10 mb-1 whitespace-nowrap rounded bg-[color:var(--card)] px-1 text-[9px] font-semibold leading-none tabular-nums text-muted-foreground">
                           {fmtFull(prev[i])}
                         </span>
                       )}
@@ -1368,25 +1381,11 @@ function BarChart({
                       }`}
                     >
                       {curr[i] > 0 && (
-                        <span className="absolute bottom-full mb-1 whitespace-nowrap text-[9px] font-semibold leading-none tabular-nums text-primary">
+                        <span className="absolute bottom-full z-10 mb-1 whitespace-nowrap rounded bg-[color:var(--card)] px-1 text-[9px] font-semibold leading-none tabular-nums text-primary">
                           {fmtFull(curr[i])}
                         </span>
                       )}
                     </div>
-
-
-                    {/* Target dashed line per month */}
-                    {tVal > 0 && (
-                      <div
-                        className="pointer-events-none absolute left-[10%] right-[10%]"
-                        style={{
-                          bottom: `${tPct}%`,
-                          height: 0,
-                          borderTop: "2px dashed var(--gold)",
-                        }}
-                        title={`Meta ${mo}: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}`}
-                      />
-                    )}
                   </div>
                 );
               })}

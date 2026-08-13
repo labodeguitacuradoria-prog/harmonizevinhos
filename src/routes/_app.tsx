@@ -1,8 +1,8 @@
 import { createFileRoute, Outlet, useNavigate, Link, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, ClipboardCheck, Database, Building2, FolderCog, LayoutDashboard, Coins, Sparkles, Map, UtensilsCrossed, BookOpen } from "lucide-react";
+import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, ClipboardCheck, Database, Building2, FolderCog, LayoutDashboard, Coins, Sparkles, Map, UtensilsCrossed, BookOpen, Menu, X } from "lucide-react";
 import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
 
 export const Route = createFileRoute("/_app")({
@@ -13,6 +13,7 @@ function AppLayout() {
   const { user, loading, role } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -32,52 +33,103 @@ function AppLayout() {
     navigate({ to: "/" });
   }
 
+  const navItems = (
+    <>
+      {role === "restaurant" && (
+        <>
+          <NavLink to="/app" icon={<Home className="h-4 w-4" />}>Início</NavLink>
+          <NavLink to="/app/dashboard" icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
+          <NavLink to="/app/price-analysis" icon={<Sparkles className="h-4 w-4" />}>Análise de Preços</NavLink>
+          <NavLink to="/app/pairings" icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
+          <NavLink to="/app/cadastros" icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
+          <NavLink to="/app/wines" icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
+          <NavLink to="/app/suppliers" icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
+          <NavLink to="/app/stock-counts" icon={<ClipboardList className="h-4 w-4" />}>Contagem</NavLink>
+          <NavLink to="/app/stock-counts-admin" icon={<ClipboardCheck className="h-4 w-4" />}>Revisão de contagens</NavLink>
+          <NavLink to="/app/sales" icon={<BarChart3 className="h-4 w-4" />}>Vendas</NavLink>
+          <NavLink to="/app/sales-monthly" icon={<CalendarRange className="h-4 w-4" />}>Venda mensal</NavLink>
+          <NavLink to="/app/corkage-fees" icon={<Coins className="h-4 w-4" />}>Taxa de rolha</NavLink>
+          <NavLink to="/app/sharing" icon={<Share2 className="h-4 w-4" />}>Compartilhamento</NavLink>
+          <NavLink to="/app/catalog-admin" icon={<Database className="h-4 w-4" />}>Catálogo Global</NavLink>
+          <NavLink to="/app/restaurant-profile" icon={<Building2 className="h-4 w-4" />}>Perfil do Restaurante</NavLink>
+        </>
+      )}
+      {role === "supplier" && (
+        <NavLink to="/supplier" icon={<Home className="h-4 w-4" />}>Painel</NavLink>
+      )}
+      {role === "admin" && (
+        <>
+          <NavLink to="/admin" icon={<ShieldCheck className="h-4 w-4" />}>Admin</NavLink>
+          <NavLink to="/admin/access-map" icon={<Map className="h-4 w-4" />}>Mapa de acessos</NavLink>
+          <NavLink to="/admin/suppliers" icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
+          <NavLink to="/app/catalog-admin" icon={<Database className="h-4 w-4" />}>Catálogo Global</NavLink>
+          <NavLink to="/app/supplier-catalog-admin" icon={<Users className="h-4 w-4" />}>Catálogo de Fornecedores</NavLink>
+          <NavLink to="/app/pairings" icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
+          <NavLink to="/app/pairing-knowledge" icon={<BookOpen className="h-4 w-4" />}>Manual do Sommelier</NavLink>
+        </>
+      )}
+    </>
+  );
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground md:flex-row">
-      <aside className="border-b border-border bg-card md:w-60 md:border-b-0 md:border-r md:overflow-y-auto">
+      {/* Mobile top bar */}
+      <div className="flex items-center justify-between border-b border-border bg-card px-3 py-2 md:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <Wine className="h-5 w-5 shrink-0 text-primary" />
+          <span className="truncate text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
+            Gestão de Vinhos
+          </span>
+        </div>
+        <button
+          onClick={() => setMenuOpen(true)}
+          aria-label="Abrir menu"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border text-primary"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Mobile right drawer */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 md:hidden" onClick={() => setMenuOpen(false)}>
+          <div
+            className="flex h-full w-[78%] max-w-[300px] flex-col overflow-y-auto border-l border-border bg-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">Menu</span>
+              <button onClick={() => setMenuOpen(false)} aria-label="Fechar menu" className="text-muted-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {role === "restaurant" && <RestaurantContextSwitcher />}
+            <nav className="flex flex-col gap-1 p-3" onClick={() => setMenuOpen(false)}>
+              {navItems}
+            </nav>
+            <div className="mt-auto border-t border-border p-4">
+              <div className="mb-2 truncate text-xs text-muted-foreground">{user.email}</div>
+              <button
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent"
+              >
+                <LogOut className="h-4 w-4" /> Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <aside className="hidden bg-card md:block md:w-60 md:border-r md:border-border md:overflow-y-auto">
         <div className="flex items-center gap-2 border-b border-border px-5 py-5">
           <Wine className="h-6 w-6 text-primary" />
           <span className="page-title text-base leading-tight">Gestão de Vinhos<br/><span className="text-xs text-muted-foreground font-normal">para Restaurantes</span></span>
         </div>
         {role === "restaurant" && <RestaurantContextSwitcher />}
-        <nav className="flex flex-row gap-1 overflow-x-auto no-scrollbar px-3 pb-3 md:flex-col md:gap-1 md:overflow-visible md:pb-0 md:pt-3">
-          {role === "restaurant" && (
-            <>
-              <NavLink to="/app" icon={<Home className="h-4 w-4" />}>Início</NavLink>
-              <NavLink to="/app/dashboard" icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
-              <NavLink to="/app/price-analysis" icon={<Sparkles className="h-4 w-4" />}>Análise de Preços</NavLink>
-              <NavLink to="/app/pairings" icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
-              <NavLink to="/app/cadastros" icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
-              <NavLink to="/app/wines" icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
-              <NavLink to="/app/suppliers" icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
-              <NavLink to="/app/stock-counts" icon={<ClipboardList className="h-4 w-4" />}>Contagem</NavLink>
-              <NavLink to="/app/stock-counts-admin" icon={<ClipboardCheck className="h-4 w-4" />}>Revisão de contagens</NavLink>
-              <NavLink to="/app/sales" icon={<BarChart3 className="h-4 w-4" />}>Vendas</NavLink>
-              <NavLink to="/app/sales-monthly" icon={<CalendarRange className="h-4 w-4" />}>Venda mensal</NavLink>
-              <NavLink to="/app/corkage-fees" icon={<Coins className="h-4 w-4" />}>Taxa de rolha</NavLink>
-              <NavLink to="/app/sharing" icon={<Share2 className="h-4 w-4" />}>Compartilhamento</NavLink>
-              <NavLink to="/app/catalog-admin" icon={<Database className="h-4 w-4" />}>Catálogo Global</NavLink>
-              <NavLink to="/app/restaurant-profile" icon={<Building2 className="h-4 w-4" />}>Perfil do Restaurante</NavLink>
-            </>
-          )}
-          {role === "supplier" && (
-            <>
-              <NavLink to="/supplier" icon={<Home className="h-4 w-4" />}>Painel</NavLink>
-            </>
-          )}
-          {role === "admin" && (
-            <>
-              <NavLink to="/admin" icon={<ShieldCheck className="h-4 w-4" />}>Admin</NavLink>
-              <NavLink to="/admin/access-map" icon={<Map className="h-4 w-4" />}>Mapa de acessos</NavLink>
-              <NavLink to="/admin/suppliers" icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
-              <NavLink to="/app/catalog-admin" icon={<Database className="h-4 w-4" />}>Catálogo Global</NavLink>
-              <NavLink to="/app/supplier-catalog-admin" icon={<Users className="h-4 w-4" />}>Catálogo de Fornecedores</NavLink>
-              <NavLink to="/app/pairings" icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
-              <NavLink to="/app/pairing-knowledge" icon={<BookOpen className="h-4 w-4" />}>Manual do Sommelier</NavLink>
-            </>
-          )}
+        <nav className="flex flex-col gap-1 px-3 pt-3">
+          {navItems}
         </nav>
-        <div className="mt-auto hidden md:block">
+        <div className="mt-auto">
           <div className="border-t border-border p-4">
             <div className="mb-2 text-xs text-muted-foreground">{user.email}</div>
             <button

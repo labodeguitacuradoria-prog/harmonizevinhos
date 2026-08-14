@@ -1035,23 +1035,7 @@ function FaturamentoPanel({
         title="Faturamento — mensal e acumulado"
       />
 
-      <div className="mb-5 space-y-1 border-b border-border pb-4">
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <span>
-            {monthLabel(currentYear, 0)} - {monthLabel(currentYear, accMonth)}:
-          </span>
-          <span className="text-foreground">R$ {fmtBRL(currAcc)}</span>
-          <span className={diff >= 0 ? "text-primary" : "text-destructive"}>
-            {diff >= 0 ? "+" : ""}{diff.toFixed(1)}%
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <span>
-            {monthLabel(previousYear, 0)} - {monthLabel(previousYear, accMonth)}:
-          </span>
-          <span className="text-foreground">R$ {fmtBRL(prevAcc)}</span>
-        </div>
-      </div>
+      <div className="mb-5 border-b border-border pb-4" />
 
       <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)_minmax(220px,260px)]">
         <div className="grid min-w-0 grid-cols-2 gap-2 lg:flex lg:flex-col lg:gap-3">
@@ -1075,6 +1059,23 @@ function FaturamentoPanel({
           )}
         </div>
         <div>
+          <div className="mb-2 space-y-1">
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span>
+                {monthLabel(currentYear, 0)} - {monthLabel(currentYear, accMonth)}:
+              </span>
+              <span className="text-foreground">R$ {fmtBRL(currAcc)}</span>
+              <span className={diff >= 0 ? "text-primary" : "text-destructive"}>
+                {diff >= 0 ? "+" : ""}{diff.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span>
+                {monthLabel(previousYear, 0)} - {monthLabel(previousYear, accMonth)}:
+              </span>
+              <span className="text-foreground">R$ {fmtBRL(prevAcc)}</span>
+            </div>
+          </div>
           <BarChart
             curr={curr}
             prev={prev}
@@ -1085,6 +1086,7 @@ function FaturamentoPanel({
             targets={targets.monthly.length === 12 ? targets.monthly : undefined}
           />
         </div>
+
         <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">

@@ -1007,8 +1007,10 @@ function FaturamentoPanel({
   const prev = revByYearMonth[previousYear];
 
   const prevYearTotal = prev.reduce((a, b) => a + b, 0);
-  const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
-  const prevAcc = prev.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
+  // Acumulado comparativo: sempre até o mês anterior ao corrente
+  const accMonth = Math.max(currentMonth - 1, 0);
+  const currAcc = curr.slice(0, accMonth + 1).reduce((a, b) => a + b, 0);
+  const prevAcc = prev.slice(0, accMonth + 1).reduce((a, b) => a + b, 0);
   const diff = prevAcc > 0 ? ((currAcc - prevAcc) / prevAcc) * 100 : 0;
   const annualTarget = resolveAnnualTarget(targets);
   const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
@@ -1036,7 +1038,7 @@ function FaturamentoPanel({
       <div className="mb-5 space-y-1 border-b border-border pb-4">
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
           <span>
-            {monthLabel(currentYear, 0)} - {monthLabel(currentYear, currentMonth)}:
+            {monthLabel(currentYear, 0)} - {monthLabel(currentYear, accMonth)}:
           </span>
           <span className="text-foreground">R$ {fmtBRL(currAcc)}</span>
           <span className={diff >= 0 ? "text-primary" : "text-destructive"}>
@@ -1045,7 +1047,7 @@ function FaturamentoPanel({
         </div>
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
           <span>
-            {monthLabel(previousYear, 0)} - {monthLabel(previousYear, currentMonth)}:
+            {monthLabel(previousYear, 0)} - {monthLabel(previousYear, accMonth)}:
           </span>
           <span className="text-foreground">R$ {fmtBRL(prevAcc)}</span>
         </div>

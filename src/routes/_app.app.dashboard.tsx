@@ -1059,23 +1059,6 @@ function FaturamentoPanel({
           )}
         </div>
         <div>
-          <div className="mb-2 space-y-1">
-            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-              <span>
-                {monthLabel(currentYear, 0)} - {monthLabel(currentYear, accMonth)}:
-              </span>
-              <span className="text-foreground">R$ {fmtBRL(currAcc)}</span>
-              <span className={diff >= 0 ? "text-primary" : "text-destructive"}>
-                {diff >= 0 ? "+" : ""}{diff.toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-              <span>
-                {monthLabel(previousYear, 0)} - {monthLabel(previousYear, accMonth)}:
-              </span>
-              <span className="text-foreground">R$ {fmtBRL(prevAcc)}</span>
-            </div>
-          </div>
           <BarChart
             curr={curr}
             prev={prev}
@@ -1085,6 +1068,24 @@ function FaturamentoPanel({
             height={280}
             targets={targets.monthly.length === 12 ? targets.monthly : undefined}
           />
+          {/* Acumulado comparativo: abaixo das barras, dentro da área do gráfico */}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px]">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span>
+                {monthLabel(currentYear, 0)} - {monthLabel(currentYear, accMonth)}:
+              </span>
+              <span className="text-foreground">R$ {fmtBRL(currAcc)}</span>
+              <span className={diff >= 0 ? "text-primary" : "text-destructive"}>
+                {diff >= 0 ? "+" : ""}{diff.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span>
+                {monthLabel(previousYear, 0)} - {monthLabel(previousYear, accMonth)}:
+              </span>
+              <span className="text-foreground">R$ {fmtBRL(prevAcc)}</span>
+            </div>
+          </div>
         </div>
 
         <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
@@ -1341,23 +1342,8 @@ function BarChart({
                 const cPct = (curr[i] / maxVal) * 100;
                 const pPct = (prev[i] / maxVal) * 100;
                 const tVal = targets?.[i] ?? 0;
-                const tPct = tVal > 0 ? (tVal / maxVal) * 100 : 0;
-                const met = tVal > 0 && curr[i] >= tVal;
                 return (
                   <div key={mo} className="relative flex h-full min-w-0 flex-1 items-end justify-center gap-0.5">
-                    {/* Target line: rendered first so bar values paint on top */}
-                    {tVal > 0 && (
-                      <div
-                        className="pointer-events-none absolute left-[10%] right-[10%] z-0"
-                        style={{
-                          bottom: `${tPct}%`,
-                          height: 0,
-                          borderTop: "1px solid #e5484d",
-                        }}
-                        title={`Meta ${mo}: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}`}
-                      />
-                    )}
-
                     <div
                       className="relative flex w-2/5 justify-center rounded-t-sm transition-all"
                       style={{
@@ -1372,7 +1358,6 @@ function BarChart({
                         </span>
                       )}
                     </div>
-
 
                     <div
                       className="relative flex w-2/5 justify-center rounded-t-sm transition-all"
@@ -1394,6 +1379,28 @@ function BarChart({
                 );
               })}
             </div>
+
+            {/* Continuous target step-line: full width, no gaps between months.
+                Paints on top of bars (visible across them) but behind number labels (z-10). */}
+            {hasTargets && (
+              <div className="pointer-events-none absolute inset-0 flex pt-6" style={{ zIndex: 1 }}>
+                {MONTHS.map((mo, i) => {
+                  const tVal = targets?.[i] ?? 0;
+                  const tPct = tVal > 0 ? (tVal / maxVal) * 100 : 0;
+                  return (
+                    <div key={mo} className="relative h-full flex-1">
+                      {tVal > 0 && (
+                        <div
+                          className="absolute left-0 right-0"
+                          style={{ bottom: `${tPct}%`, borderTop: "1px solid #e5484d" }}
+                          title={`Meta ${mo}: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}`}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
         {/* Month labels */}

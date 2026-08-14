@@ -1007,8 +1007,10 @@ function FaturamentoPanel({
   const prev = revByYearMonth[previousYear];
 
   const prevYearTotal = prev.reduce((a, b) => a + b, 0);
-  const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
-  const prevAcc = prev.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
+  // Acumulado comparativo: sempre até o mês anterior ao corrente
+  const accMonth = Math.max(currentMonth - 1, 0);
+  const currAcc = curr.slice(0, accMonth + 1).reduce((a, b) => a + b, 0);
+  const prevAcc = prev.slice(0, accMonth + 1).reduce((a, b) => a + b, 0);
   const diff = prevAcc > 0 ? ((currAcc - prevAcc) / prevAcc) * 100 : 0;
   const annualTarget = resolveAnnualTarget(targets);
   const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;

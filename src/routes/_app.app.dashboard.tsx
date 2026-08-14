@@ -1038,7 +1038,7 @@ function FaturamentoPanel({
       <div className="mb-5 space-y-1 border-b border-border pb-4">
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
           <span>
-            {monthLabel(currentYear, 0)} - {monthLabel(currentYear, currentMonth)}:
+            {monthLabel(currentYear, 0)} - {monthLabel(currentYear, accMonth)}:
           </span>
           <span className="text-foreground">R$ {fmtBRL(currAcc)}</span>
           <span className={diff >= 0 ? "text-primary" : "text-destructive"}>
@@ -1047,7 +1047,7 @@ function FaturamentoPanel({
         </div>
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
           <span>
-            {monthLabel(previousYear, 0)} - {monthLabel(previousYear, currentMonth)}:
+            {monthLabel(previousYear, 0)} - {monthLabel(previousYear, accMonth)}:
           </span>
           <span className="text-foreground">R$ {fmtBRL(prevAcc)}</span>
         </div>

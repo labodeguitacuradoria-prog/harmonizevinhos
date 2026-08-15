@@ -495,28 +495,29 @@ function WinesSection() {
     queryKey: ["monthly-sales-avg-all", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
-      // Venda mensal = quantidade total vendida dividida pelo número de meses
-      // que tiver lançamento de venda (desde o primeiro mês lançado, sem limite de janela).
+      // Venda mensal = quantidade total vendida do rótulo dividida pelo número de meses
+      // lançados no restaurante (todos os meses com lançamento de venda, inclusive
+      // os meses em que este rótulo não vendeu nada).
       const { data } = await supabase
         .from("inventory_movements")
         .select("wine_id, quantity, occurred_at")
         .eq("restaurant_id", restaurantId!)
         .eq("movement_type", "sale");
-      const byWine: Record<string, Record<string, number>> = {};
+      const totalByWine: Record<string, number> = {};
+      const monthsLaunched = new Set<string>();
       for (const m of data ?? []) {
         const d = new Date(m.occurred_at as string);
-        const key = `${d.getFullYear()}-${d.getMonth()}`;
-        if (!byWine[m.wine_id]) byWine[m.wine_id] = {};
-        byWine[m.wine_id][key] = (byWine[m.wine_id][key] ?? 0) + m.quantity;
+        monthsLaunched.add(`${d.getFullYear()}-${d.getMonth()}`);
+        totalByWine[m.wine_id] = (totalByWine[m.wine_id] ?? 0) + m.quantity;
       }
+      const divisor = monthsLaunched.size;
       const map: Record<string, number> = {};
-      for (const wineId of Object.keys(byWine)) {
-        const months = Object.values(byWine[wineId]);
-        const total = months.reduce((a, b) => a + b, 0);
-        map[wineId] = months.length ? Math.round(total / months.length) : 0;
+      for (const wineId of Object.keys(totalByWine)) {
+        map[wineId] = divisor ? Math.round((totalByWine[wineId] / divisor) * 10) / 10 : 0;
       }
       return map;
     },
+
   });
 
   // Média das vendas dos últimos 4 meses (soma / 4) — usada para sugerir o estoque mínimo.

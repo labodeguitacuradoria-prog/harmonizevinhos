@@ -492,17 +492,16 @@ function WinesSection() {
   });
 
   const { data: monthlySalesMap = {} } = useQuery({
-    queryKey: ["monthly-sales-avg-12m", restaurantId],
+    queryKey: ["monthly-sales-avg-all", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
-      const now = new Date();
-      const start = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString();
+      // Venda mensal = quantidade total vendida dividida pelo número de meses
+      // que tiver lançamento de venda (desde o primeiro mês lançado, sem limite de janela).
       const { data } = await supabase
         .from("inventory_movements")
         .select("wine_id, quantity, occurred_at")
         .eq("restaurant_id", restaurantId!)
-        .eq("movement_type", "sale")
-        .gte("occurred_at", start);
+        .eq("movement_type", "sale");
       const byWine: Record<string, Record<string, number>> = {};
       for (const m of data ?? []) {
         const d = new Date(m.occurred_at as string);

@@ -667,7 +667,7 @@ function WinesSection() {
                     <div className="text-[9px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
                   )}
                   <div className="mt-1 text-[10px] text-muted-foreground">
-                    Mês: <span className="font-medium text-foreground">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</span>
+                    Mês: <span className="font-medium text-foreground">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
                   </div>
                   {!isGlassVol(w.volume) && (
                     <div className="mt-1" onClick={(e) => e.stopPropagation()}>
@@ -788,7 +788,7 @@ function WinesSection() {
                       <span className="text-muted-foreground">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0)}</td>
+                  <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
                   <td className="px-4 py-3">
                     {isGlassVol(w.volume) ? (
                       <span className="text-muted-foreground">—</span>

@@ -549,7 +549,7 @@ function WinesSection() {
     .filter((w) => {
       const markup = Number(w.cost_price) > 0 ? (Number(w.sale_price) / Number(w.cost_price) - 1) * 100 : null;
       const stock = isGlassVol(w.volume) ? null : (stockMap[w.id]?.qty ?? null);
-      const monthly = isGlassVol(w.volume) ? null : (monthlySalesMap[w.id] ?? 0);
+      const monthly = monthlySalesMap[w.id] ?? 0;
       const min = computeMinStock(w, avg4mMap[w.id] ?? 0);
       let alertStatus: "comprar" | "ok" | "sem" = "sem";
       if (!isGlassVol(w.volume)) {

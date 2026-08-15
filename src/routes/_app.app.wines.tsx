@@ -788,7 +788,7 @@ function WinesSection() {
                       <span className="text-muted-foreground">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3">{isGlassVol(w.volume) ? "—" : (monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                  <td className="px-4 py-3">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
                   <td className="px-4 py-3">
                     {isGlassVol(w.volume) ? (
                       <span className="text-muted-foreground">—</span>

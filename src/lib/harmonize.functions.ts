@@ -37,31 +37,17 @@ export const harmonizeDish = createServerFn({ method: "POST" })
     // Regras da base de conhecimento (curadas pelo Administrador Geral)
     let rules: { title: string; keywords: string[]; guidance: string }[] = [];
     try {
-      const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
-      const url = process.env["SUPABASE_URL"];
-      if (key && url) {
-        const sb = createClient(url, key, {
-          auth: { persistSession: false },
-          global: {
-            fetch: (input, init) => {
-              const h = new Headers(init?.headers);
-              if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`)
-                h.delete("Authorization");
-              h.set("apikey", key);
-              return fetch(input, { ...init, headers: h });
-            },
-          },
-        });
-        const { data: rows } = await sb
-          .from("pairing_knowledge")
-          .select("title, keywords, guidance")
-          .eq("active", true)
-          .order("sort_order");
-        rules = (rows ?? []) as typeof rules;
-      }
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: rows } = await supabaseAdmin
+        .from("pairing_knowledge")
+        .select("title, keywords, guidance")
+        .eq("active", true)
+        .order("sort_order");
+      rules = (rows ?? []) as typeof rules;
     } catch {
       /* base de conhecimento é opcional */
     }
+
 
     const dishLower = data.dish.toLowerCase();
     const matched = rules.filter(

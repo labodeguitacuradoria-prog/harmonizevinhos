@@ -850,6 +850,8 @@ function DashboardPage() {
             revYear={agg.revYear}
             corkageAmtYear={agg.corkageAmtYear}
             currentMonth={currentMonth}
+            movements={movements}
+            wineById={wineById}
             targets={targetsFor(targets, "faturamento")}
           />
         )}

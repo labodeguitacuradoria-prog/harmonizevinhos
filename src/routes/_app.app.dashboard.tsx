@@ -1129,7 +1129,200 @@ function FaturamentoPanel({
         </div>
       </div>
 
+      <TopWinesBlock
+        movements={movements}
+        wineById={wineById}
+        lastMonth={lastMonth}
+        currentYear={currentYear}
+        totalMonth={bottlesRev + glassesRev + corkageRev}
+        totalYear={
+          revBottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0) +
+          revGlassesByYearMonth[currentYear].reduce((a, b) => a + b, 0) +
+          corkageAmtYear
+        }
+      />
     </div>
+  );
+}
+
+const WINE_TYPE_LABEL: Record<string, string> = {
+  red: "Tinto",
+  white: "Branco",
+  rose: "Rosé",
+  sparkling: "Espumante",
+  dessert: "Sobremesa",
+  fortified: "Fortificado",
+};
+
+const TOP_COLORS = ["var(--gold)", "var(--wine)", "#f1e788", "#c9a8a8", "#4a0404"];
+
+function TopWinesBlock({
+  movements,
+  wineById,
+  lastMonth,
+  currentYear,
+  totalMonth,
+  totalYear,
+}: {
+  movements: Movement[];
+  wineById: Record<string, WineRow>;
+  lastMonth: { year: number; month: number };
+  currentYear: number;
+  totalMonth: number;
+  totalYear: number;
+}) {
+  const [mode, setMode] = useState<"mes" | "ano">("mes");
+  const useMonth = mode === "mes" && lastMonth.month >= 0;
+
+  const rows = useMemo(() => {
+    const acc = new Map<string, { qty: number; rev: number; cost: number }>();
+    for (const m of movements) {
+      const w = wineById[m.wine_id];
+      if (!w || isGlassVol(w.volume)) continue;
+      const dt = new Date(m.occurred_at);
+      if (useMonth) {
+        if (dt.getFullYear() !== lastMonth.year || dt.getMonth() !== lastMonth.month) continue;
+      } else if (dt.getFullYear() !== currentYear) continue;
+      const qty = Number(m.quantity) || 0;
+      const rev = qty * (Number(m.unit_price) || 0);
+      const unitCost = m.unit_cost != null ? Number(m.unit_cost) : Number(w.cost_price) || 0;
+      const cur = acc.get(m.wine_id) ?? { qty: 0, rev: 0, cost: 0 };
+      cur.qty += qty;
+      cur.rev += rev;
+      cur.cost += qty * unitCost;
+      acc.set(m.wine_id, cur);
+    }
+    return Array.from(acc.entries())
+      .map(([id, v]) => ({ id, wine: wineById[id], ...v }))
+      .sort((a, b) => b.rev - a.rev)
+      .slice(0, 5);
+  }, [movements, wineById, useMonth, lastMonth.year, lastMonth.month, currentYear]);
+
+  const base = useMonth ? totalMonth : totalYear;
+  const topSum = rows.reduce((a, r) => a + r.rev, 0);
+  const others = Math.max(base - topSum, 0);
+
+  const slices = [
+    ...rows.map((r, i) => ({
+      label: r.wine?.name ?? "—",
+      value: r.rev,
+      color: TOP_COLORS[i % TOP_COLORS.length],
+    })),
+    { label: "Outros", value: others, color: "#2a2a2a" },
+  ];
+
+  return (
+    <div className="mt-5 rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+          Top 5 Rótulos no Faturamento
+        </div>
+        <div className="flex overflow-hidden rounded-md border border-border text-[10px]">
+          <button
+            onClick={() => setMode("mes")}
+            className={`px-2 py-1 ${mode === "mes" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}
+          >
+            Mês
+          </button>
+          <button
+            onClick={() => setMode("ano")}
+            className={`px-2 py-1 ${mode === "ano" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}
+          >
+            Ano
+          </button>
+        </div>
+      </div>
+      <div className="mb-4 text-[10px] text-muted-foreground">
+        {useMonth ? `Referência: ${monthLabel(lastMonth.year, lastMonth.month)}` : `Acumulado ${currentYear}`}
+        {" · "}exclui vendas em taças
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-[200px_minmax(0,1fr)] md:items-center">
+        <div className="flex justify-center">
+          <PieSvg slices={slices} />
+        </div>
+
+        <div className="min-w-0 space-y-1.5">
+          {rows.length === 0 && (
+            <div className="text-[11px] text-muted-foreground">Sem vendas no período.</div>
+          )}
+          {rows.map((r, i) => {
+            const pct = base > 0 ? (r.rev / base) * 100 : 0;
+            const cmv = r.rev > 0 ? (r.cost / r.rev) * 100 : 0;
+            const type = r.wine?.wine_type ? WINE_TYPE_LABEL[r.wine.wine_type] ?? r.wine.wine_type : null;
+            return (
+              <div
+                key={r.id}
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-border/60 bg-card px-2.5 py-2"
+              >
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                  style={{ background: TOP_COLORS[i % TOP_COLORS.length] }}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[12px] font-medium">{r.wine?.name ?? "—"}</div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {[type, r.wine?.volume].filter(Boolean).join(" · ") || "—"}
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-3 text-[11px]">
+                  <span className="w-12 text-right font-semibold text-primary">{pct.toFixed(1)}%</span>
+                  <span className="w-14 text-right text-muted-foreground">{fmtBRL(r.qty)} gfa</span>
+                  <span className="w-20 text-right">R$ {fmtBRL(r.rev)}</span>
+                  <span className="w-20 text-right text-muted-foreground">CMV {cmv.toFixed(1)}%</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PieSvg({ slices }: { slices: { label: string; value: number; color: string }[] }) {
+  const total = slices.reduce((a, s) => a + (s.value || 0), 0);
+  const size = 180;
+  const r = 78;
+  const cx = size / 2;
+  const cy = size / 2;
+  let acc = 0;
+  const paths = total > 0
+    ? slices.filter((s) => s.value > 0).map((s) => {
+        const frac = s.value / total;
+        const startAngle = acc * 2 * Math.PI;
+        const endAngle = (acc + frac) * 2 * Math.PI;
+        acc += frac;
+        const large = frac > 0.5 ? 1 : 0;
+        const x1 = cx + r * Math.sin(startAngle);
+        const y1 = cy - r * Math.cos(startAngle);
+        const x2 = cx + r * Math.sin(endAngle);
+        const y2 = cy - r * Math.cos(endAngle);
+        const d =
+          frac >= 0.9999
+            ? `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.01} ${cy - r} Z`
+            : `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+        return { d, color: s.color };
+      })
+    : [];
+
+  if (total <= 0) {
+    return (
+      <div
+        className="flex items-center justify-center rounded-full border border-dashed border-border text-[10px] text-muted-foreground"
+        style={{ width: size, height: size }}
+      >
+        Sem dados
+      </div>
+    );
+  }
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      {paths.map((p, i) => (
+        <path key={i} d={p.d} fill={p.color} stroke="var(--card)" strokeWidth={1.5} />
+      ))}
+    </svg>
   );
 }
 

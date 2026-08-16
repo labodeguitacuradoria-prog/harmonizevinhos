@@ -990,6 +990,8 @@ function FaturamentoPanel({
   revYear,
   corkageAmtYear,
   currentMonth,
+  movements,
+  wineById,
   targets,
 }: {
   revByYearMonth: Record<number, number[]>;
@@ -1003,6 +1005,8 @@ function FaturamentoPanel({
   revYear: number;
   corkageAmtYear: number;
   currentMonth: number;
+  movements: Movement[];
+  wineById: Record<string, WineRow>;
   targets: TargetSet;
 }) {
   const curr = revByYearMonth[currentYear];

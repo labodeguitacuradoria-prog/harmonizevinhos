@@ -2165,19 +2165,130 @@ function CmvPanel({
           invert
         />
       )}
-      <div className="section-title mt-4">CMV mês a mês — {currentYear} vs {previousYear}</div>
-      <BarChart
-        curr={cmvByMonth}
-        prev={cmvByMonthPrev}
-        currentYear={currentYear}
-        previousYear={previousYear}
-        valueSuffix="%"
-        height={260}
-        targets={targets.monthly.length === 12 ? targets.monthly : undefined}
-      />
+      <div className="mt-4 grid gap-4 xl:grid-cols-2">
+        <div className="min-w-0">
+          <div className="section-title">CMV mês a mês — {currentYear} vs {previousYear}</div>
+          <BarChart
+            curr={cmvByMonth}
+            prev={cmvByMonthPrev}
+            currentYear={currentYear}
+            previousYear={previousYear}
+            valueSuffix="%"
+            height={260}
+            targets={targets.monthly.length === 12 ? targets.monthly : undefined}
+          />
+        </div>
+        <div className="min-w-0">
+          <CmvByTypeChart
+            movements={movements}
+            wineById={wineById}
+            lastMonth={lastMonth}
+            currentYear={currentYear}
+          />
+        </div>
+      </div>
     </div>
   );
 }
+
+const CMV_TYPE_GROUPS: { key: string; label: string; color: string }[] = [
+  { key: "sparkling", label: "Espumante", color: "#eeeeee" },
+  { key: "rose", label: "Rosé", color: "#ff8da1" },
+  { key: "red", label: "Tinto", color: "var(--wine)" },
+  { key: "white", label: "Branco", color: "#f1e788" },
+  { key: "glass", label: "Taças", color: "var(--gold)" },
+];
+
+function CmvByTypeChart({
+  movements,
+  wineById,
+  lastMonth,
+  currentYear,
+}: {
+  movements: Movement[];
+  wineById: Record<string, WineRow>;
+  lastMonth: { year: number; month: number };
+  currentYear: number;
+}) {
+  const [mode, setMode] = useState<"mes" | "ano">("mes");
+  const useMonth = mode === "mes" && lastMonth.month >= 0;
+
+  const data = useMemo(() => {
+    const acc: Record<string, { cost: number; rev: number }> = {};
+    for (const g of CMV_TYPE_GROUPS) acc[g.key] = { cost: 0, rev: 0 };
+    for (const m of movements) {
+      const d = new Date(m.occurred_at);
+      if (useMonth) {
+        if (d.getFullYear() !== lastMonth.year || d.getMonth() !== lastMonth.month) continue;
+      } else if (d.getFullYear() !== currentYear) continue;
+      const w = wineById[m.wine_id];
+      if (!w) continue;
+      const key = isGlassVol(w.volume) ? "glass" : (w.wine_type ?? "");
+      if (!acc[key]) continue;
+      const q = m.quantity ?? 0;
+      acc[key].cost += Number(m.unit_cost ?? w.cost_price ?? 0) * q;
+      acc[key].rev += Number(m.unit_price ?? w.sale_price ?? 0) * q;
+    }
+    return CMV_TYPE_GROUPS.map((g) => ({
+      ...g,
+      cmv: acc[g.key].rev > 0 ? (acc[g.key].cost / acc[g.key].rev) * 100 : 0,
+      rev: acc[g.key].rev,
+    }));
+  }, [movements, wineById, useMonth, lastMonth.year, lastMonth.month, currentYear]);
+
+  const max = niceMax(Math.max(...data.map((d) => d.cmv), 10));
+  const height = 260;
+  const plot = height - 46;
+
+  return (
+    <div>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="section-title mb-0 border-0 pb-0">CMV por tipo</div>
+        <div className="flex overflow-hidden rounded-md border border-border text-[10px]">
+          <button
+            onClick={() => setMode("mes")}
+            className={`px-2 py-1 ${mode === "mes" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}
+          >
+            Mês
+          </button>
+          <button
+            onClick={() => setMode("ano")}
+            className={`px-2 py-1 ${mode === "ano" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}
+          >
+            Ano
+          </button>
+        </div>
+      </div>
+      <div className="mb-3 text-[10px] text-muted-foreground">
+        {useMonth ? `Referência: ${monthLabel(lastMonth.year, lastMonth.month)}` : `Acumulado ${currentYear}`}
+      </div>
+      <div
+        className="flex items-end justify-around gap-2 rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-3"
+        style={{ height }}
+      >
+        {data.map((d) => {
+          const h = max > 0 ? Math.max((d.cmv / max) * plot, d.cmv > 0 ? 3 : 0) : 0;
+          return (
+            <div key={d.key} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
+              <span className="text-[10px] font-semibold text-foreground">
+                {d.cmv > 0 ? `${d.cmv.toFixed(1)}%` : "—"}
+              </span>
+              <div
+                className="w-full max-w-[38px] rounded-t-sm"
+                style={{ height: h, background: d.color }}
+                title={`${d.label}: CMV ${d.cmv.toFixed(1)}% · receita R$ ${fmtBRL(d.rev)}`}
+              />
+              <span className="truncate text-[9px] uppercase tracking-wide text-muted-foreground">
+                {d.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 
 function RolhaPanel({

@@ -5,7 +5,7 @@ import { ChevronDown, Building2, Layers } from "lucide-react";
 import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function RestaurantContextSwitcher() {
+export default function RestaurantContextSwitcher({ compact = false }: { compact?: boolean }) {
   const { memberships, groups, activeRole } = useAuth();
   const scope = useActiveScope();
   const router = useRouter();
@@ -52,6 +52,67 @@ export default function RestaurantContextSwitcher() {
     : active
       ? active.name
       : "Selecione";
+
+  if (compact) {
+    return (
+      <div ref={ref} className="relative border-b border-border px-2 py-2">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          title={label}
+          className="flex w-full flex-col items-center gap-1 rounded-lg border border-border bg-[color:var(--surface-2)] px-1 py-2 text-muted-foreground hover:border-primary"
+        >
+          {activeGroup ? (
+            <Layers className="h-4 w-4 text-primary" />
+          ) : (
+            <Building2 className="h-4 w-4 text-primary" />
+          )}
+          <span className="w-full truncate text-center text-[9px] font-medium uppercase tracking-wide text-foreground">
+            {label}
+          </span>
+        </button>
+        {open && (
+          <div className="absolute left-full top-2 z-50 ml-1 max-h-80 w-64 overflow-y-auto rounded-md border border-border bg-card shadow-lg">
+            <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Restaurantes
+            </div>
+            {memberships.map((m) => (
+              <button
+                key={m.restaurantId}
+                onClick={() => pickRestaurant(m.restaurantId)}
+                className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-accent ${
+                  m.restaurantId === scope.activeRestaurantId && !scope.activeGroupId
+                    ? "bg-accent text-primary"
+                    : ""
+                }`}
+              >
+                <span className="truncate">{m.name}</span>
+                {m.city && <span className="text-[10px] text-muted-foreground">{m.city}</span>}
+              </button>
+            ))}
+            {visibleGroups.length > 0 && (
+              <>
+                <div className="border-t border-border px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Redes (consolidado)
+                </div>
+                {visibleGroups.map((g) => (
+                  <button
+                    key={g.id}
+                    onClick={() => pickGroup(g.id)}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent ${
+                      g.id === scope.activeGroupId ? "bg-accent text-primary" : ""
+                    }`}
+                  >
+                    <Layers className="h-3.5 w-3.5 text-primary" />
+                    <span className="truncate">{g.name}</span>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div ref={ref} className="relative border-b border-border px-3 py-2">

@@ -122,25 +122,26 @@ function AppLayout() {
         </div>
       )}
 
-      <aside className="hidden bg-card md:block md:w-60 md:border-r md:border-border md:overflow-y-auto">
-        <div className="flex items-center gap-2 border-b border-border px-5 py-5">
+      <aside className="no-scrollbar hidden bg-card md:flex md:w-[92px] md:shrink-0 md:flex-col md:border-r md:border-border md:overflow-y-auto">
+        <div className="flex flex-col items-center gap-1 border-b border-border px-2 py-4">
           <Wine className="h-6 w-6 text-primary" />
-          <span className="page-title text-base leading-tight">Gestão de Vinhos<br/><span className="text-xs text-muted-foreground font-normal">para Restaurantes</span></span>
+          <span className="text-center text-[9px] font-semibold uppercase leading-tight tracking-[0.08em] text-primary">
+            Gestão de<br />Vinhos
+          </span>
         </div>
-        {role === "restaurant" && <RestaurantContextSwitcher />}
-        <nav className="flex flex-col gap-1 px-3 pt-3">
-          {navItems}
+        {role === "restaurant" && <RestaurantContextSwitcher compact />}
+        <nav className="flex flex-col gap-1 px-2 pt-2">
+          {renderNav(true)}
         </nav>
-        <div className="mt-auto">
-          <div className="border-t border-border p-4">
-            <div className="mb-2 text-xs text-muted-foreground">{user.email}</div>
-            <button
-              onClick={handleSignOut}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent"
-            >
-              <LogOut className="h-4 w-4" /> Sair
-            </button>
-          </div>
+        <div className="mt-auto border-t border-border px-2 py-3">
+          <button
+            onClick={handleSignOut}
+            title={user.email ?? "Sair"}
+            className="flex w-full flex-col items-center gap-1 rounded-md py-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="text-[9px] font-medium uppercase tracking-wide">Sair</span>
+          </button>
         </div>
       </aside>
       <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
@@ -154,15 +155,33 @@ function NavLink({
   to,
   icon,
   children,
+  rail,
 }: {
   to: string;
   icon: React.ReactNode;
   children: React.ReactNode;
+  rail?: boolean;
 }) {
+  const exact = to === "/app" || to === "/admin" || to === "/supplier";
+  if (rail) {
+    return (
+      <Link
+        to={to}
+        activeOptions={{ exact }}
+        className="flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        activeProps={{ className: "bg-accent text-primary" }}
+      >
+        {icon}
+        <span className="w-full text-center text-[9px] font-medium uppercase leading-tight tracking-wide">
+          {children}
+        </span>
+      </Link>
+    );
+  }
   return (
     <Link
       to={to}
-      activeOptions={{ exact: to === "/app" || to === "/admin" || to === "/supplier" }}
+      activeOptions={{ exact }}
       className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
       activeProps={{ className: "bg-accent text-foreground" }}
     >
@@ -171,3 +190,4 @@ function NavLink({
     </Link>
   );
 }
+

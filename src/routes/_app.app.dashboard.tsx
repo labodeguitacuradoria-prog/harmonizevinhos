@@ -1075,7 +1075,7 @@ function FaturamentoPanel({
             targets={targets.monthly.length === 12 ? targets.monthly : undefined}
           />
           {/* Acumulado comparativo: abaixo das barras, dentro da área do gráfico */}
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px]">
+          <div className="mt-8 flex flex-col items-center gap-1 text-[11px]">
             <div className="flex items-center gap-2 text-muted-foreground">
               <span>
                 {monthLabel(currentYear, 0)} - {monthLabel(currentYear, accMonth)}:
@@ -1092,6 +1092,7 @@ function FaturamentoPanel({
               <span className="text-foreground">R$ {fmtBRL(prevAcc)}</span>
             </div>
           </div>
+
         </div>
 
         <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">

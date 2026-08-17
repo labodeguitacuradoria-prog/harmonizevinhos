@@ -33,43 +33,44 @@ function AppLayout() {
     navigate({ to: "/" });
   }
 
-  const navItems = (
+  const renderNav = (rail: boolean) => (
     <>
       {role === "restaurant" && (
         <>
-          <NavLink to="/app" icon={<Home className="h-4 w-4" />}>Início</NavLink>
-          <NavLink to="/app/dashboard" icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
-          <NavLink to="/app/price-analysis" icon={<Sparkles className="h-4 w-4" />}>Análise de Preços</NavLink>
-          <NavLink to="/app/pairings" icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
-          <NavLink to="/app/cadastros" icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
-          <NavLink to="/app/wines" icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
-          <NavLink to="/app/suppliers" icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
-          <NavLink to="/app/stock-counts" icon={<ClipboardList className="h-4 w-4" />}>Contagem</NavLink>
-          <NavLink to="/app/stock-counts-admin" icon={<ClipboardCheck className="h-4 w-4" />}>Revisão de contagens</NavLink>
-          <NavLink to="/app/sales" icon={<BarChart3 className="h-4 w-4" />}>Vendas</NavLink>
-          <NavLink to="/app/sales-monthly" icon={<CalendarRange className="h-4 w-4" />}>Venda mensal</NavLink>
-          <NavLink to="/app/corkage-fees" icon={<Coins className="h-4 w-4" />}>Taxa de rolha</NavLink>
-          <NavLink to="/app/sharing" icon={<Share2 className="h-4 w-4" />}>Compartilhamento</NavLink>
-          <NavLink to="/app/catalog-admin" icon={<Database className="h-4 w-4" />}>Catálogo Global</NavLink>
-          <NavLink to="/app/restaurant-profile" icon={<Building2 className="h-4 w-4" />}>Perfil do Restaurante</NavLink>
+          <NavLink to="/app" rail={rail} icon={<Home className="h-4 w-4" />}>Início</NavLink>
+          <NavLink to="/app/dashboard" rail={rail} icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
+          <NavLink to="/app/price-analysis" rail={rail} icon={<Sparkles className="h-4 w-4" />}>Preços</NavLink>
+          <NavLink to="/app/pairings" rail={rail} icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
+          <NavLink to="/app/cadastros" rail={rail} icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
+          <NavLink to="/app/wines" rail={rail} icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
+          <NavLink to="/app/suppliers" rail={rail} icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
+          <NavLink to="/app/stock-counts" rail={rail} icon={<ClipboardList className="h-4 w-4" />}>Contagem</NavLink>
+          <NavLink to="/app/stock-counts-admin" rail={rail} icon={<ClipboardCheck className="h-4 w-4" />}>Revisão</NavLink>
+          <NavLink to="/app/sales" rail={rail} icon={<BarChart3 className="h-4 w-4" />}>Vendas</NavLink>
+          <NavLink to="/app/sales-monthly" rail={rail} icon={<CalendarRange className="h-4 w-4" />}>Venda mensal</NavLink>
+          <NavLink to="/app/corkage-fees" rail={rail} icon={<Coins className="h-4 w-4" />}>Rolha</NavLink>
+          <NavLink to="/app/sharing" rail={rail} icon={<Share2 className="h-4 w-4" />}>Compartilhar</NavLink>
+          <NavLink to="/app/catalog-admin" rail={rail} icon={<Database className="h-4 w-4" />}>Catálogo</NavLink>
+          <NavLink to="/app/restaurant-profile" rail={rail} icon={<Building2 className="h-4 w-4" />}>Restaurante</NavLink>
         </>
       )}
       {role === "supplier" && (
-        <NavLink to="/supplier" icon={<Home className="h-4 w-4" />}>Painel</NavLink>
+        <NavLink to="/supplier" rail={rail} icon={<Home className="h-4 w-4" />}>Painel</NavLink>
       )}
       {role === "admin" && (
         <>
-          <NavLink to="/admin" icon={<ShieldCheck className="h-4 w-4" />}>Admin</NavLink>
-          <NavLink to="/admin/access-map" icon={<Map className="h-4 w-4" />}>Mapa de acessos</NavLink>
-          <NavLink to="/admin/suppliers" icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
-          <NavLink to="/app/catalog-admin" icon={<Database className="h-4 w-4" />}>Catálogo Global</NavLink>
-          <NavLink to="/app/supplier-catalog-admin" icon={<Users className="h-4 w-4" />}>Catálogo de Fornecedores</NavLink>
-          <NavLink to="/app/pairings" icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
-          <NavLink to="/app/pairing-knowledge" icon={<BookOpen className="h-4 w-4" />}>Manual do Sommelier</NavLink>
+          <NavLink to="/admin" rail={rail} icon={<ShieldCheck className="h-4 w-4" />}>Admin</NavLink>
+          <NavLink to="/admin/access-map" rail={rail} icon={<Map className="h-4 w-4" />}>Acessos</NavLink>
+          <NavLink to="/admin/suppliers" rail={rail} icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
+          <NavLink to="/app/catalog-admin" rail={rail} icon={<Database className="h-4 w-4" />}>Catálogo</NavLink>
+          <NavLink to="/app/supplier-catalog-admin" rail={rail} icon={<Users className="h-4 w-4" />}>Cat. Fornec.</NavLink>
+          <NavLink to="/app/pairings" rail={rail} icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
+          <NavLink to="/app/pairing-knowledge" rail={rail} icon={<BookOpen className="h-4 w-4" />}>Sommelier</NavLink>
         </>
       )}
     </>
   );
+
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground md:flex-row">

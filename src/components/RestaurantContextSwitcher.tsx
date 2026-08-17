@@ -5,7 +5,7 @@ import { ChevronDown, Building2, Layers } from "lucide-react";
 import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function RestaurantContextSwitcher() {
+export default function RestaurantContextSwitcher({ compact = false }: { compact?: boolean }) {
   const { memberships, groups, activeRole } = useAuth();
   const scope = useActiveScope();
   const router = useRouter();

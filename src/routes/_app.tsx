@@ -106,7 +106,8 @@ function AppLayout() {
             </div>
             {role === "restaurant" && <RestaurantContextSwitcher />}
             <nav className="flex flex-col gap-1 p-3" onClick={() => setMenuOpen(false)}>
-              {navItems}
+              {renderNav(false)}
+
             </nav>
             <div className="mt-auto border-t border-border p-4">
               <div className="mb-2 truncate text-xs text-muted-foreground">{user.email}</div>

@@ -2192,12 +2192,33 @@ function CmvPanel({
 }
 
 const CMV_TYPE_GROUPS: { key: string; label: string; color: string }[] = [
-  { key: "sparkling", label: "Espumante", color: "#eeeeee" },
+  { key: "espumante", label: "Espumante", color: "#eeeeee" },
   { key: "rose", label: "Rosé", color: "#ff8da1" },
-  { key: "red", label: "Tinto", color: "var(--wine)" },
-  { key: "white", label: "Branco", color: "#f1e788" },
+  { key: "tinto", label: "Tinto", color: "var(--wine)" },
+  { key: "branco", label: "Branco", color: "#f1e788" },
+  { key: "laranja", label: "Laranja", color: "#d97706" },
+  { key: "licoroso", label: "Licoroso", color: "#7c2d12" },
+  { key: "fortificado", label: "Fortificado", color: "#92400e" },
+  { key: "sidra", label: "Sidra", color: "#a3e635" },
   { key: "glass", label: "Taças", color: "var(--gold)" },
+  { key: "outros", label: "Outros", color: "#666666" },
 ];
+
+/** Normaliza o tipo do vinho (que vem em PT-BR livre) para uma chave canônica. */
+function normalizeWineType(wt: string | null | undefined): string {
+  if (!wt) return "outros";
+  const s = wt.toLowerCase().trim();
+  if (!s || s === "qualquer") return "outros";
+  if (s.includes("tinto") || s === "red") return "tinto";
+  if (s.includes("branco") || s === "white") return "branco";
+  if (s.includes("espumante") || s.includes("sparkling")) return "espumante";
+  if (s.includes("ros")) return "rose";
+  if (s.includes("laranja") || s.includes("orange")) return "laranja";
+  if (s.includes("licor") || s.includes("liqueur") || s.includes("dessert") || s.includes("sobremesa")) return "licoroso";
+  if (s.includes("fortif")) return "fortificado";
+  if (s.includes("sidra") || s.includes("cider")) return "sidra";
+  return "outros";
+}
 
 function CmvByTypeChart({
   movements,
@@ -2223,17 +2244,20 @@ function CmvByTypeChart({
       } else if (d.getFullYear() !== currentYear) continue;
       const w = wineById[m.wine_id];
       if (!w) continue;
-      const key = isGlassVol(w.volume) ? "glass" : (w.wine_type ?? "");
-      if (!acc[key]) continue;
+      const key = isGlassVol(w.volume) ? "glass" : normalizeWineType(w.wine_type);
+      if (!acc[key]) acc[key] = { cost: 0, rev: 0 };
       const q = m.quantity ?? 0;
       acc[key].cost += Number(m.unit_cost ?? w.cost_price ?? 0) * q;
       acc[key].rev += Number(m.unit_price ?? w.sale_price ?? 0) * q;
     }
-    return CMV_TYPE_GROUPS.map((g) => ({
+    const mapped = CMV_TYPE_GROUPS.map((g) => ({
       ...g,
       cmv: acc[g.key].rev > 0 ? (acc[g.key].cost / acc[g.key].rev) * 100 : 0,
       rev: acc[g.key].rev,
-    }));
+    }))
+      .filter((d) => d.rev > 0)
+      .sort((a, b) => b.cmv - a.cmv); // maior à esquerda, menor à direita
+    return mapped;
   }, [movements, wineById, useMonth, lastMonth.year, lastMonth.month, currentYear]);
 
   const max = niceMax(Math.max(...data.map((d) => d.cmv), 10));
@@ -2262,29 +2286,35 @@ function CmvByTypeChart({
       <div className="mb-3 text-[10px] text-muted-foreground">
         {useMonth ? `Referência: ${monthLabel(lastMonth.year, lastMonth.month)}` : `Acumulado ${currentYear}`}
       </div>
-      <div
-        className="flex items-end justify-around gap-2 rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-3"
-        style={{ height }}
-      >
-        {data.map((d) => {
-          const h = max > 0 ? Math.max((d.cmv / max) * plot, d.cmv > 0 ? 3 : 0) : 0;
-          return (
-            <div key={d.key} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
-              <span className="text-[10px] font-semibold text-foreground">
-                {d.cmv > 0 ? `${d.cmv.toFixed(1)}%` : "—"}
-              </span>
-              <div
-                className="w-full max-w-[38px] rounded-t-sm"
-                style={{ height: h, background: d.color }}
-                title={`${d.label}: CMV ${d.cmv.toFixed(1)}% · receita R$ ${fmtBRL(d.rev)}`}
-              />
-              <span className="truncate text-[9px] uppercase tracking-wide text-muted-foreground">
-                {d.label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      {data.length === 0 ? (
+        <div className="flex items-center justify-center rounded-lg border border-dashed border-border bg-[color:var(--surface-2)]/40 text-[11px] text-muted-foreground" style={{ height }}>
+          Sem vendas no período
+        </div>
+      ) : (
+        <div
+          className="flex items-end justify-around gap-2 rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-3"
+          style={{ height }}
+        >
+          {data.map((d) => {
+            const h = max > 0 ? Math.max((d.cmv / max) * plot, d.cmv > 0 ? 3 : 0) : 0;
+            return (
+              <div key={d.key} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
+                <span className="text-[10px] font-semibold text-foreground">
+                  {d.cmv > 0 ? `${d.cmv.toFixed(1)}%` : "—"}
+                </span>
+                <div
+                  className="w-full max-w-[38px] rounded-t-sm"
+                  style={{ height: h, background: d.color }}
+                  title={`${d.label}: CMV ${d.cmv.toFixed(1)}% · receita R$ ${fmtBRL(d.rev)}`}
+                />
+                <span className="truncate text-[9px] uppercase tracking-wide text-muted-foreground">
+                  {d.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

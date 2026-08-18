@@ -378,8 +378,12 @@ export function WineListImportDialog({
         catalog_id: c?.id ?? null,
       };
       const { error } = await supabase.from("wines").insert(payload as never);
-      if (error) failed++;
-      else created++;
+      if (error) {
+        failed++;
+        lastError = error.message;
+        console.error("[winelist-import] insert falhou:", r.name, error);
+      } else created++;
+
       done++;
       setApplyProgress(Math.round((done / total) * 100));
     }

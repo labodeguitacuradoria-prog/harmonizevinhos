@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as HarmonizarRouteImport } from './routes/harmonizar'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as AppAdminAccessMapRouteImport } from './routes/_app.admin.access-map'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
@@ -59,6 +60,11 @@ const HarmonizarRoute = HarmonizarRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/harmonizar': typeof HarmonizarRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/harmonizar': typeof HarmonizarRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/harmonizar': typeof HarmonizarRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/_app/admin/access-map': typeof AppAdminAccessMapRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
   '/_app/app/cadastros': typeof AppAppCadastrosRoute
@@ -266,6 +275,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/harmonizar'
     | '/reset-password'
+    | '/signup'
     | '/admin/access-map'
     | '/admin/suppliers'
     | '/app/cadastros'
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/harmonizar'
     | '/reset-password'
+    | '/signup'
     | '/admin/access-map'
     | '/admin/suppliers'
     | '/app/cadastros'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/harmonizar'
     | '/reset-password'
+    | '/signup'
     | '/_app/admin/access-map'
     | '/_app/admin/suppliers'
     | '/_app/app/cadastros'
@@ -353,6 +365,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   HarmonizarRoute: typeof HarmonizarRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SignupRoute: typeof SignupRoute
   ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
 }
 
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/admin/': {
@@ -606,6 +626,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   HarmonizarRoute: HarmonizarRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SignupRoute: SignupRoute,
   ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,
 }
 export const routeTree = rootRouteImport

@@ -41,6 +41,9 @@ function MonthlySalesPage() {
   const { restaurantId } = useAuth();
   const [month, setMonth] = useState(todayMonth());
   const mode: Mode = month === todayMonth() ? "current" : "historic";
+  const selYear = Number(month.split("-")[0]);
+  const selMonth = Number(month.split("-")[1]);
+
   const [search, setSearch] = useState("");
   const [qty, setQty] = useState<Record<string, string>>({});
   const [revenue, setRevenue] = useState<Record<string, string>>({});

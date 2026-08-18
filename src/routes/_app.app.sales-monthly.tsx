@@ -31,6 +31,12 @@ function todayMonth() {
 
 type Mode = "current" | "historic";
 
+const MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+const CUR_YEAR = new Date().getFullYear();
+const CUR_MONTH = new Date().getMonth() + 1;
+const YEARS = [CUR_YEAR - 2, CUR_YEAR - 1, CUR_YEAR];
+
+
 function MonthlySalesPage() {
   const { restaurantId } = useAuth();
   const [month, setMonth] = useState(todayMonth());

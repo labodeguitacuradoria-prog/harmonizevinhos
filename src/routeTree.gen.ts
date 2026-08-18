@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as HarmonizarRouteImport } from './routes/harmonizar'
+import { Route as LandingRouteImport } from './routes/landing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
@@ -55,6 +56,11 @@ const AuthRoute = AuthRouteImport.update({
 const HarmonizarRoute = HarmonizarRouteImport.update({
   id: '/harmonizar',
   path: '/harmonizar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -183,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/harmonizar': typeof HarmonizarRoute
+  '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/harmonizar': typeof HarmonizarRoute
+  '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/harmonizar': typeof HarmonizarRoute
+  '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_app/admin/access-map': typeof AppAdminAccessMapRoute
@@ -274,6 +283,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/harmonizar'
+    | '/landing'
     | '/reset-password'
     | '/signup'
     | '/admin/access-map'
@@ -303,6 +313,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/harmonizar'
+    | '/landing'
     | '/reset-password'
     | '/signup'
     | '/admin/access-map'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/auth'
     | '/harmonizar'
+    | '/landing'
     | '/reset-password'
     | '/signup'
     | '/_app/admin/access-map'
@@ -364,6 +376,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   HarmonizarRoute: typeof HarmonizarRoute
+  LandingRoute: typeof LandingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
@@ -397,6 +410,13 @@ declare module '@tanstack/react-router' {
       path: '/harmonizar'
       fullPath: '/harmonizar'
       preLoaderRoute: typeof HarmonizarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -625,6 +645,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   HarmonizarRoute: HarmonizarRoute,
+  LandingRoute: LandingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,

@@ -136,15 +136,6 @@ function MonthlySalesPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-3">
-          <label className="block">
-            <span className="text-xs text-muted-foreground">Mês de referência</span>
-            <input
-              type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              className="mt-1 block rounded-md border border-input bg-background px-3 py-2 text-sm"
-            />
-          </label>
           <button
             onClick={() => setImportOpen(true)}
             title="Importar vendas de PDF, planilha ou foto usando IA"
@@ -163,6 +154,51 @@ function MonthlySalesPage() {
           </button>
         </div>
       </div>
+
+      <div className="mt-5 rounded-xl border border-border bg-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
+            Mês de referência
+          </span>
+          <div className="flex gap-1.5">
+            {YEARS.map((y) => (
+              <button
+                key={y}
+                onClick={() => setMonth(`${y}-${month.split("-")[1]}`)}
+                className={`rounded-md border px-3 py-1.5 text-xs font-bold transition ${
+                  selYear === y
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                }`}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-4 gap-1.5 sm:grid-cols-6 lg:grid-cols-12">
+          {MONTH_LABELS.map((label, i) => {
+            const mm = String(i + 1).padStart(2, "0");
+            const active = selMonth === i + 1;
+            const future = selYear > CUR_YEAR || (selYear === CUR_YEAR && i + 1 > CUR_MONTH);
+            return (
+              <button
+                key={label}
+                disabled={future}
+                onClick={() => setMonth(`${selYear}-${mm}`)}
+                className={`rounded-md border px-2 py-2 text-[11px] font-bold uppercase transition disabled:cursor-not-allowed disabled:opacity-30 ${
+                  active
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
 
       {importOpen && (
         <SalesImportDialog

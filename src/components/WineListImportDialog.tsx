@@ -318,6 +318,7 @@ export function WineListImportDialog({
     let created = 0;
     let updated = 0;
     let failed = 0;
+    let lastError: string | null = null;
 
     // Enriquecimento pelo Catálogo Global (aprovados)
     const enrich = new Map<string, any>();
@@ -378,8 +379,12 @@ export function WineListImportDialog({
         catalog_id: c?.id ?? null,
       };
       const { error } = await supabase.from("wines").insert(payload as never);
-      if (error) failed++;
-      else created++;
+      if (error) {
+        failed++;
+        lastError = error.message;
+        console.error("[winelist-import] insert falhou:", r.name, error);
+      } else created++;
+
       done++;
       setApplyProgress(Math.round((done / total) * 100));
     }
@@ -390,8 +395,11 @@ export function WineListImportDialog({
       if (r.vintage) upd.vintage = Number(r.vintage);
       if (r.internal_code) upd.internal_code = r.internal_code;
       const { error } = await supabase.from("wines").update(upd as never).eq("id", r.match!.id);
-      if (error) failed++;
-      else updated++;
+      if (error) {
+        failed++;
+        lastError = error.message;
+        console.error("[winelist-import] update falhou:", r.name, error);
+      } else updated++;
       done++;
       setApplyProgress(Math.round((done / total) * 100));
     }
@@ -407,7 +415,9 @@ export function WineListImportDialog({
     }
 
     setApplying(false);
-    if (failed) toast.error(`${failed} item(ns) não puderam ser gravados.`);
+    if (failed) {
+      toast.error(`${failed} item(ns) não puderam ser gravados.${lastError ? ` Motivo: ${lastError}` : ""}`);
+    }
     toast.success(
       `${created} novo(s), ${updated} atualizado(s), ${toDeactivate.length} retirado(s) da carta.`,
     );

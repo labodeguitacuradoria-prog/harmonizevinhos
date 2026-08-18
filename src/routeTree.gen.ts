@@ -13,7 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as HarmonizarRouteImport } from './routes/harmonizar'
+import { Route as LandingRouteImport } from './routes/landing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as AppAdminAccessMapRouteImport } from './routes/_app.admin.access-map'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
@@ -56,9 +58,19 @@ const HarmonizarRoute = HarmonizarRouteImport.update({
   path: '/harmonizar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
@@ -177,7 +189,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/harmonizar': typeof HarmonizarRoute
+  '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
@@ -205,7 +219,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/harmonizar': typeof HarmonizarRoute
+  '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
@@ -235,7 +251,9 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/harmonizar': typeof HarmonizarRoute
+  '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/_app/admin/access-map': typeof AppAdminAccessMapRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
   '/_app/app/cadastros': typeof AppAppCadastrosRoute
@@ -265,7 +283,9 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/harmonizar'
+    | '/landing'
     | '/reset-password'
+    | '/signup'
     | '/admin/access-map'
     | '/admin/suppliers'
     | '/app/cadastros'
@@ -293,7 +313,9 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/harmonizar'
+    | '/landing'
     | '/reset-password'
+    | '/signup'
     | '/admin/access-map'
     | '/admin/suppliers'
     | '/app/cadastros'
@@ -322,7 +344,9 @@ export interface FileRouteTypes {
     | '/_app'
     | '/auth'
     | '/harmonizar'
+    | '/landing'
     | '/reset-password'
+    | '/signup'
     | '/_app/admin/access-map'
     | '/_app/admin/suppliers'
     | '/_app/app/cadastros'
@@ -352,7 +376,9 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
   HarmonizarRoute: typeof HarmonizarRoute
+  LandingRoute: typeof LandingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SignupRoute: typeof SignupRoute
   ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
 }
 
@@ -386,11 +412,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HarmonizarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/admin/': {
@@ -605,7 +645,9 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
   HarmonizarRoute: HarmonizarRoute,
+  LandingRoute: LandingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SignupRoute: SignupRoute,
   ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,
 }
 export const routeTree = rootRouteImport

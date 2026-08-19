@@ -43,6 +43,7 @@ function AppLayout() {
           <NavLink to="/app/pairings" rail={rail} icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
           <NavLink to="/app/cadastros" rail={rail} icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
           <NavLink to="/app/wines" rail={rail} icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
+          <NavLink to="/app/wine-menu" rail={rail} icon={<ScrollText className="h-4 w-4" />}>Carta</NavLink>
           <NavLink to="/app/suppliers" rail={rail} icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
           <NavLink to="/app/stock-counts" rail={rail} icon={<ClipboardList className="h-4 w-4" />}>Contagem</NavLink>
           <NavLink to="/app/stock-counts-admin" rail={rail} icon={<ClipboardCheck className="h-4 w-4" />}>Revisão</NavLink>

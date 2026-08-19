@@ -210,8 +210,8 @@ function WineMenuPage() {
       header_title: title,
       header_subtitle: subtitle,
       footer_text: footer,
-      visible_fields: fields as unknown as Record<string, boolean>,
-      sections: sections as unknown as Record<string, unknown>[],
+      visible_fields: JSON.parse(JSON.stringify(fields)),
+      sections: JSON.parse(JSON.stringify(sections)),
     };
     let error;
     if (currentId && !asNew) {

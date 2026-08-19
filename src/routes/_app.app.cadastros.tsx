@@ -13,6 +13,12 @@ const items = [
     icon: Package,
   },
   {
+    to: "/app/wine-menu",
+    title: "Carta impressa",
+    desc: "Monte a carta de vinhos em modelos prontos e imprima sempre com os preços atualizados.",
+    icon: ScrollText,
+  },
+  {
     to: "/app/suppliers",
     title: "Fornecedores",
     desc: "Dados institucionais dos fornecedores e materiais (listas de preço, apresentações).",

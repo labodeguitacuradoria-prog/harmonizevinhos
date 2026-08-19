@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Package, Users, Building2, ChevronRight } from "lucide-react";
+import { Package, Users, Building2, ScrollText, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/cadastros")({
   component: CadastrosHub,

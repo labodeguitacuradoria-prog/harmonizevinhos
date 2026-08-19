@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate, Link, useRouter } from "@tanstack
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, ClipboardCheck, Database, Building2, FolderCog, LayoutDashboard, Coins, Sparkles, Map, UtensilsCrossed, BookOpen, Menu, X } from "lucide-react";
+import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, ClipboardCheck, Database, Building2, FolderCog, LayoutDashboard, Coins, Sparkles, Map, UtensilsCrossed, BookOpen, ScrollText, Menu, X } from "lucide-react";
 import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
 
 export const Route = createFileRoute("/_app")({

@@ -206,3 +206,50 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* ===== Impressão da Carta de Vinhos =====
+   Somente a área #print-area vai para o papel. Tudo o mais (menu lateral,
+   painéis de montagem, botões) é suprimido. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  #print-area,
+  #print-area * {
+    visibility: visible !important;
+  }
+  #print-area {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .printed-page {
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  .printed-menu section {
+    break-inside: avoid;
+  }
+}
+
+/* Aparência de folha A4 na pré-visualização */
+.printed-page {
+  min-height: 297mm;
+  box-shadow: 0 2px 14px rgb(0 0 0 / 0.25);
+}

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Package, Users, Building2, ChevronRight } from "lucide-react";
+import { Package, Users, Building2, ScrollText, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/cadastros")({
   component: CadastrosHub,
@@ -11,6 +11,12 @@ const items = [
     title: "Produtos",
     desc: "Cadastro e gestão dos rótulos do restaurante (vinhos, taças e demais itens).",
     icon: Package,
+  },
+  {
+    to: "/app/wine-menu",
+    title: "Carta impressa",
+    desc: "Monte a carta de vinhos em modelos prontos e imprima sempre com os preços atualizados.",
+    icon: ScrollText,
   },
   {
     to: "/app/suppliers",

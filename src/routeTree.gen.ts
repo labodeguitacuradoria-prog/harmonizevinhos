@@ -35,6 +35,7 @@ import { Route as AppAppStockCountsRouteImport } from './routes/_app.app.stock-c
 import { Route as AppAppStockCountsAdminRouteImport } from './routes/_app.app.stock-counts-admin'
 import { Route as AppAppSupplierCatalogAdminRouteImport } from './routes/_app.app.supplier-catalog-admin'
 import { Route as AppAppSuppliersRouteImport } from './routes/_app.app.suppliers'
+import { Route as AppAppWineMenuRouteImport } from './routes/_app.app.wine-menu'
 import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
 import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.index'
 import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
@@ -169,6 +170,11 @@ const AppAppSuppliersRoute = AppAppSuppliersRouteImport.update({
   path: '/app/suppliers',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAppWineMenuRoute = AppAppWineMenuRouteImport.update({
+  id: '/app/wine-menu',
+  path: '/app/wine-menu',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAppWinesRoute = AppAppWinesRouteImport.update({
   id: '/app/wines',
   path: '/app/wines',
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
   '/app/supplier-catalog-admin': typeof AppAppSupplierCatalogAdminRoute
   '/app/suppliers': typeof AppAppSuppliersRoute
+  '/app/wine-menu': typeof AppAppWineMenuRoute
   '/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/admin/': typeof AppAdminIndexRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
   '/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
   '/app/supplier-catalog-admin': typeof AppAppSupplierCatalogAdminRoute
   '/app/suppliers': typeof AppAppSuppliersRoute
+  '/app/wine-menu': typeof AppAppWineMenuRoute
   '/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/admin': typeof AppAdminIndexRoute
@@ -271,6 +279,7 @@ export interface FileRoutesById {
   '/_app/app/stock-counts-admin': typeof AppAppStockCountsAdminRoute
   '/_app/app/supplier-catalog-admin': typeof AppAppSupplierCatalogAdminRoute
   '/_app/app/suppliers': typeof AppAppSuppliersRoute
+  '/_app/app/wine-menu': typeof AppAppWineMenuRoute
   '/_app/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/_app/admin/': typeof AppAdminIndexRoute
@@ -303,6 +312,7 @@ export interface FileRouteTypes {
     | '/app/stock-counts-admin'
     | '/app/supplier-catalog-admin'
     | '/app/suppliers'
+    | '/app/wine-menu'
     | '/app/wines'
     | '/api/public/catalog-file'
     | '/admin/'
@@ -333,6 +343,7 @@ export interface FileRouteTypes {
     | '/app/stock-counts-admin'
     | '/app/supplier-catalog-admin'
     | '/app/suppliers'
+    | '/app/wine-menu'
     | '/app/wines'
     | '/api/public/catalog-file'
     | '/admin'
@@ -364,6 +375,7 @@ export interface FileRouteTypes {
     | '/_app/app/stock-counts-admin'
     | '/_app/app/supplier-catalog-admin'
     | '/_app/app/suppliers'
+    | '/_app/app/wine-menu'
     | '/_app/app/wines'
     | '/api/public/catalog-file'
     | '/_app/admin/'
@@ -566,6 +578,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppSuppliersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/wine-menu': {
+      id: '/_app/app/wine-menu'
+      path: '/app/wine-menu'
+      fullPath: '/app/wine-menu'
+      preLoaderRoute: typeof AppAppWineMenuRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/wines': {
       id: '/_app/app/wines'
       path: '/app/wines'
@@ -608,6 +627,7 @@ interface AppRouteChildren {
   AppAppStockCountsAdminRoute: typeof AppAppStockCountsAdminRoute
   AppAppSupplierCatalogAdminRoute: typeof AppAppSupplierCatalogAdminRoute
   AppAppSuppliersRoute: typeof AppAppSuppliersRoute
+  AppAppWineMenuRoute: typeof AppAppWineMenuRoute
   AppAppWinesRoute: typeof AppAppWinesRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppAppIndexRoute: typeof AppAppIndexRoute
@@ -632,6 +652,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppStockCountsAdminRoute: AppAppStockCountsAdminRoute,
   AppAppSupplierCatalogAdminRoute: AppAppSupplierCatalogAdminRoute,
   AppAppSuppliersRoute: AppAppSuppliersRoute,
+  AppAppWineMenuRoute: AppAppWineMenuRoute,
   AppAppWinesRoute: AppAppWinesRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
   AppAppIndexRoute: AppAppIndexRoute,

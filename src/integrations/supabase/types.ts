@@ -264,6 +264,59 @@ export type Database = {
         }
         Relationships: []
       }
+      printed_wine_lists: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          footer_text: string | null
+          header_subtitle: string | null
+          header_title: string | null
+          id: string
+          name: string
+          restaurant_id: string
+          sections: Json
+          template: string
+          updated_at: string
+          visible_fields: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          footer_text?: string | null
+          header_subtitle?: string | null
+          header_title?: string | null
+          id?: string
+          name?: string
+          restaurant_id: string
+          sections?: Json
+          template?: string
+          updated_at?: string
+          visible_fields?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          footer_text?: string | null
+          header_subtitle?: string | null
+          header_title?: string | null
+          id?: string
+          name?: string
+          restaurant_id?: string
+          sections?: Json
+          template?: string
+          updated_at?: string
+          visible_fields?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "printed_wine_lists_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           active: boolean

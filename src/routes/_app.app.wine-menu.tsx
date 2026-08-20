@@ -251,6 +251,10 @@ function WineMenuPage() {
     setSubtitle(l.header_subtitle ?? "");
     setFooter(l.footer_text ?? "");
     setFields({ ...DEFAULT_VISIBLE_FIELDS, ...(l.visible_fields ?? {}) });
+    setAddressPosition(l.visible_fields?.addressPosition === "footer" ? "footer" : "header");
+    setLogoUrl(l.logo_url ?? "");
+    setAddress(l.address_text ?? "");
+    setPaper((l.paper_size as PaperKey) ?? "a4");
     setSections(Array.isArray(l.sections) ? l.sections : []);
     setInitialized(true);
     toast.success(`Carta "${l.name}" carregada.`);

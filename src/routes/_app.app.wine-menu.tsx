@@ -19,12 +19,14 @@ import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
 import {
   DEFAULT_VISIBLE_FIELDS,
+  PAPER_LIST,
   TEMPLATE_LIST,
   autoSections,
   isGlassVol,
   typeLabel,
   type MenuSection,
   type MenuWine,
+  type PaperKey,
   type TemplateKey,
   type VisibleFields,
 } from "@/components/printed-menu/templates";

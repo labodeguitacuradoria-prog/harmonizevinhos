@@ -219,8 +219,11 @@ function WineMenuPage() {
       header_title: title,
       header_subtitle: subtitle,
       footer_text: footer,
-      visible_fields: JSON.parse(JSON.stringify(fields)),
+      visible_fields: JSON.parse(JSON.stringify({ ...fields, addressPosition })),
       sections: JSON.parse(JSON.stringify(sections)),
+      logo_url: logoUrl || null,
+      address_text: address || null,
+      paper_size: paper,
     };
     let error;
     if (currentId && !asNew) {

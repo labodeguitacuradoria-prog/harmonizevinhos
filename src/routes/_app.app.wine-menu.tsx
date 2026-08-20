@@ -125,6 +125,10 @@ function WineMenuPage() {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [footer, setFooter] = useState("");
+  const [paper, setPaper] = useState<PaperKey>("a4");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [address, setAddress] = useState("");
+  const [addressPosition, setAddressPosition] = useState<"header" | "footer">("header");
   const [fields, setFields] = useState<VisibleFields>(DEFAULT_VISIBLE_FIELDS);
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [initialized, setInitialized] = useState(false);

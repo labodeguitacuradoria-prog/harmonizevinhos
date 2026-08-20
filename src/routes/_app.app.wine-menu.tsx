@@ -543,6 +543,10 @@ function WineMenuPage() {
           <div className="overflow-x-auto rounded-xl border border-border bg-neutral-200 p-4 print:border-0 print:bg-white print:p-0">
             <MenuPreview
               template={template}
+              paper={paper}
+              logoUrl={logoUrl}
+              address={address}
+              addressPosition={addressPosition}
               title={title}
               subtitle={subtitle}
               footer={footer}

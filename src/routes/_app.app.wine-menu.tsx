@@ -327,6 +327,25 @@ function WineMenuPage() {
             </button>
           ))}
         </div>
+
+        {/* Tamanho do papel */}
+        <div className="mt-4">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Tamanho do papel</div>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {PAPER_LIST.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setPaper(p.key)}
+                className={`rounded-xl border p-3 text-left transition ${
+                  paper === p.key ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/60"
+                }`}
+              >
+                <div className="text-xs font-bold uppercase tracking-wider text-primary">{p.code}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{p.dims}</div>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">

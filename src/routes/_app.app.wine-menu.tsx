@@ -363,6 +363,39 @@ function WineMenuPage() {
                 onChange={setFooter}
                 placeholder="Preços em reais · Atualizada em ..."
               />
+              <Field
+                label="Logo (link da imagem)"
+                value={logoUrl}
+                onChange={setLogoUrl}
+                placeholder="https://.../logo.png"
+              />
+              <div className="grid gap-1.5">
+                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Endereço / contato
+                </label>
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  rows={3}
+                  placeholder={"Rua Exemplo, 123 - Jardins, São Paulo\n(11) 99999-0000 · @restaurante"}
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+                <div className="mt-1 flex gap-2">
+                  {(["header", "footer"] as const).map((pos) => (
+                    <button
+                      key={pos}
+                      onClick={() => setAddressPosition(pos)}
+                      className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-wide ${
+                        addressPosition === pos
+                          ? "border-primary text-primary"
+                          : "border-border text-muted-foreground"
+                      }`}
+                    >
+                      {pos === "header" ? "No cabeçalho" : "No rodapé"}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 

@@ -571,7 +571,7 @@ function WineMenuPage() {
         {/* Pré-visualização */}
         <div className="print-root">
           <div className="no-print mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Pré-visualização A4
+            Pré-visualização · {PAPER_LIST.find((p) => p.key === paper)?.code} ({PAPER_LIST.find((p) => p.key === paper)?.dims})
           </div>
           <div className="overflow-x-auto rounded-xl border border-border bg-neutral-200 p-4 print:border-0 print:bg-white print:p-0">
             <MenuPreview

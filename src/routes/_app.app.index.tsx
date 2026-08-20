@@ -52,25 +52,24 @@ function HomePage() {
   const visibleGroups = groups.filter((g) => eligibleGroupIds.has(g.id));
 
   return (
-    <div className="p-6 md:p-10">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="page-title text-xl">Meus restaurantes</h1>
-          <p className="mt-1 text-[12px] text-muted-foreground">
-            Selecione um restaurante para gerenciar ou crie um novo. Você pode participar de
-            vários restaurantes e visualizar redes de forma consolidada.
+    <div className="p-4 md:p-8">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="page-title truncate text-lg sm:text-xl">Meus restaurantes</h1>
+          <p className="mt-0.5 truncate text-[11px] text-muted-foreground sm:mt-1 sm:text-[12px]">
+            Selecione um restaurante para gerenciar ou crie um novo.
           </p>
         </div>
         <button
           onClick={() => setNewOpen(true)}
-          className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          className="flex shrink-0 items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:px-4"
         >
-          <Plus size={16} /> Novo restaurante
+          <Plus size={16} /> <span className="hidden sm:inline">Novo restaurante</span><span className="sm:hidden">Novo</span>
         </button>
       </div>
 
       {memberships.length === 0 ? (
-        <div className="mt-8 rounded-lg border border-dashed border-border bg-card p-8 text-center">
+        <div className="mt-6 rounded-lg border border-dashed border-border bg-card p-6 text-center">
           <Building2 className="mx-auto h-8 w-8 text-primary" />
           <div className="mt-3 text-sm text-muted-foreground">
             Você ainda não tem restaurantes cadastrados.
@@ -83,51 +82,42 @@ function HomePage() {
           </button>
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {memberships.map((m) => {
+        <div className="mt-4 overflow-hidden rounded-lg border border-border bg-card sm:mt-6">
+          {memberships.map((m, i) => {
             const canManage = m.role === "rest_admin" || m.role === "rest_owner";
             const groupName = groups.find((g) => g.id === m.groupId)?.name;
+            const meta = [m.city, groupName].filter(Boolean).join(" · ") || "—";
             return (
               <div
                 key={m.restaurantId}
-                className="flex flex-col rounded-xl border border-border bg-card p-5 transition hover:border-primary"
+                className={`group flex items-center gap-2 px-3 py-2.5 transition-colors hover:bg-[color:var(--wine)]/10 ${i > 0 ? "border-t border-border" : ""}`}
               >
-                <div className="flex items-start gap-3">
-                  <div className="rounded-md border border-primary/40 bg-[color:var(--wine)]/20 p-2">
-                    <Building2 className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-base font-semibold text-foreground">
-                      {m.name}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {[m.city, groupName ? `Rede: ${groupName}` : null]
-                        .filter(Boolean)
-                        .join(" · ") || "—"}
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <span className="rounded-md border border-primary/50 bg-[color:var(--wine)]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                <button
+                  onClick={() => openUnit(m.restaurantId)}
+                  className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+                  title="Entrar no restaurante"
+                >
+                  <Building2 className="h-4 w-4 shrink-0 text-primary/70" />
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+                    {m.name}
+                  </span>
+                  <span className="hidden shrink-0 truncate text-[10px] text-muted-foreground sm:inline md:max-w-[180px]">
+                    {meta}
+                  </span>
+                  <span className="shrink-0 rounded border border-primary/40 bg-[color:var(--wine)]/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
                     {ROLE_LABEL[m.role] ?? m.role}
                   </span>
-                </div>
-                <div className="mt-4 flex items-center justify-between gap-2 border-t border-border pt-3">
+                  <ArrowRight className="h-4 w-4 shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100" />
+                </button>
+                {canManage && (
                   <button
-                    onClick={() => openUnit(m.restaurantId)}
-                    className="flex items-center gap-1 text-sm font-semibold text-primary hover:opacity-90"
+                    onClick={() => setAccessFor({ id: m.restaurantId, name: m.name })}
+                    className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-muted-foreground hover:text-primary sm:px-2"
+                    title="Gerenciar acessos"
                   >
-                    Entrar <ArrowRight size={14} />
+                    <Users size={14} />
                   </button>
-                  {canManage && (
-                    <button
-                      onClick={() => setAccessFor({ id: m.restaurantId, name: m.name })}
-                      className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-primary"
-                    >
-                      <Users size={13} /> Acessos
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
             );
           })}
@@ -136,31 +126,28 @@ function HomePage() {
 
       {visibleGroups.length > 0 && (
         <>
-          <h2 className="page-title mt-10 text-base">Minhas redes</h2>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            Visualização consolidada disponível apenas para administradores e chef/owner.
-          </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleGroups.map((g) => {
+          <h2 className="page-title mt-6 text-sm sm:text-base">Minhas redes</h2>
+          <div className="mt-3 overflow-hidden rounded-lg border border-border bg-card">
+            {visibleGroups.map((g, i) => {
               const units = memberships.filter((m) => m.groupId === g.id);
               return (
-                <div key={g.id} className="rounded-xl border border-border bg-card p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-md border border-primary/40 bg-[color:var(--wine)]/20 p-2">
-                      <Layers className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <div className="text-base font-semibold text-foreground">{g.name}</div>
-                      <div className="text-[11px] text-muted-foreground">
-                        {units.length} unidade(s)
-                      </div>
-                    </div>
-                  </div>
+                <div
+                  key={g.id}
+                  className={`group flex items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-[color:var(--wine)]/10 ${i > 0 ? "border-t border-border" : ""}`}
+                >
                   <button
                     onClick={() => openGroup(g.id)}
-                    className="mt-4 flex items-center gap-2 rounded-md border border-primary/50 px-3 py-2 text-sm font-semibold text-primary hover:bg-[color:var(--wine)]/20"
+                    className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+                    title="Ver consolidado"
                   >
-                    Ver consolidado <ArrowRight size={14} />
+                    <Layers className="h-4 w-4 shrink-0 text-primary/70" />
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+                      {g.name}
+                    </span>
+                    <span className="shrink-0 text-[10px] text-muted-foreground">
+                      {units.length} unid.
+                    </span>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100" />
                   </button>
                 </div>
               );

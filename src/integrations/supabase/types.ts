@@ -266,13 +266,16 @@ export type Database = {
       }
       printed_wine_lists: {
         Row: {
+          address_text: string | null
           created_at: string
           created_by: string | null
           footer_text: string | null
           header_subtitle: string | null
           header_title: string | null
           id: string
+          logo_url: string | null
           name: string
+          paper_size: string
           restaurant_id: string
           sections: Json
           template: string
@@ -280,13 +283,16 @@ export type Database = {
           visible_fields: Json
         }
         Insert: {
+          address_text?: string | null
           created_at?: string
           created_by?: string | null
           footer_text?: string | null
           header_subtitle?: string | null
           header_title?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
+          paper_size?: string
           restaurant_id: string
           sections?: Json
           template?: string
@@ -294,13 +300,16 @@ export type Database = {
           visible_fields?: Json
         }
         Update: {
+          address_text?: string | null
           created_at?: string
           created_by?: string | null
           footer_text?: string | null
           header_subtitle?: string | null
           header_title?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
+          paper_size?: string
           restaurant_id?: string
           sections?: Json
           template?: string

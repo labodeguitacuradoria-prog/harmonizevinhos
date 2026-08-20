@@ -19,12 +19,14 @@ import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
 import {
   DEFAULT_VISIBLE_FIELDS,
+  PAPER_LIST,
   TEMPLATE_LIST,
   autoSections,
   isGlassVol,
   typeLabel,
   type MenuSection,
   type MenuWine,
+  type PaperKey,
   type TemplateKey,
   type VisibleFields,
 } from "@/components/printed-menu/templates";
@@ -57,8 +59,11 @@ type SavedList = {
   header_title: string | null;
   header_subtitle: string | null;
   footer_text: string | null;
-  visible_fields: VisibleFields;
+  visible_fields: VisibleFields & { addressPosition?: "header" | "footer" };
   sections: MenuSection[];
+  logo_url: string | null;
+  address_text: string | null;
+  paper_size: string | null;
   updated_at: string;
 };
 
@@ -120,6 +125,10 @@ function WineMenuPage() {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [footer, setFooter] = useState("");
+  const [paper, setPaper] = useState<PaperKey>("a4");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [address, setAddress] = useState("");
+  const [addressPosition, setAddressPosition] = useState<"header" | "footer">("header");
   const [fields, setFields] = useState<VisibleFields>(DEFAULT_VISIBLE_FIELDS);
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [initialized, setInitialized] = useState(false);
@@ -210,8 +219,11 @@ function WineMenuPage() {
       header_title: title,
       header_subtitle: subtitle,
       footer_text: footer,
-      visible_fields: JSON.parse(JSON.stringify(fields)),
+      visible_fields: JSON.parse(JSON.stringify({ ...fields, addressPosition })),
       sections: JSON.parse(JSON.stringify(sections)),
+      logo_url: logoUrl || null,
+      address_text: address || null,
+      paper_size: paper,
     };
     let error;
     if (currentId && !asNew) {
@@ -239,6 +251,10 @@ function WineMenuPage() {
     setSubtitle(l.header_subtitle ?? "");
     setFooter(l.footer_text ?? "");
     setFields({ ...DEFAULT_VISIBLE_FIELDS, ...(l.visible_fields ?? {}) });
+    setAddressPosition(l.visible_fields?.addressPosition === "footer" ? "footer" : "header");
+    setLogoUrl(l.logo_url ?? "");
+    setAddress(l.address_text ?? "");
+    setPaper((l.paper_size as PaperKey) ?? "a4");
     setSections(Array.isArray(l.sections) ? l.sections : []);
     setInitialized(true);
     toast.success(`Carta "${l.name}" carregada.`);
@@ -311,6 +327,25 @@ function WineMenuPage() {
             </button>
           ))}
         </div>
+
+        {/* Tamanho do papel */}
+        <div className="mt-4">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Tamanho do papel</div>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {PAPER_LIST.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setPaper(p.key)}
+                className={`rounded-xl border p-3 text-left transition ${
+                  paper === p.key ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/60"
+                }`}
+              >
+                <div className="text-xs font-bold uppercase tracking-wider text-primary">{p.code}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{p.dims}</div>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
@@ -328,6 +363,39 @@ function WineMenuPage() {
                 onChange={setFooter}
                 placeholder="Preços em reais · Atualizada em ..."
               />
+              <Field
+                label="Logo (link da imagem)"
+                value={logoUrl}
+                onChange={setLogoUrl}
+                placeholder="https://.../logo.png"
+              />
+              <div className="grid gap-1.5">
+                <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Endereço / contato
+                </label>
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  rows={3}
+                  placeholder={"Rua Exemplo, 123 - Jardins, São Paulo\n(11) 99999-0000 · @restaurante"}
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+                <div className="mt-1 flex gap-2">
+                  {(["header", "footer"] as const).map((pos) => (
+                    <button
+                      key={pos}
+                      onClick={() => setAddressPosition(pos)}
+                      className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-wide ${
+                        addressPosition === pos
+                          ? "border-primary text-primary"
+                          : "border-border text-muted-foreground"
+                      }`}
+                    >
+                      {pos === "header" ? "No cabeçalho" : "No rodapé"}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -503,11 +571,15 @@ function WineMenuPage() {
         {/* Pré-visualização */}
         <div className="print-root">
           <div className="no-print mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Pré-visualização A4
+            Pré-visualização · {PAPER_LIST.find((p) => p.key === paper)?.code} ({PAPER_LIST.find((p) => p.key === paper)?.dims})
           </div>
           <div className="overflow-x-auto rounded-xl border border-border bg-neutral-200 p-4 print:border-0 print:bg-white print:p-0">
             <MenuPreview
               template={template}
+              paper={paper}
+              logoUrl={logoUrl}
+              address={address}
+              addressPosition={addressPosition}
               title={title}
               subtitle={subtitle}
               footer={footer}

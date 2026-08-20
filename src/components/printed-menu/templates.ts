@@ -67,6 +67,47 @@ export const TEMPLATES: Record<TemplateKey, TemplateDef> = {
 
 export const TEMPLATE_LIST = [TEMPLATES.classic, TEMPLATES.twocol, TEMPLATES.minimal];
 
+/* ===== Tamanhos de papel ===== */
+export type PaperKey = "a4" | "a5" | "letter" | "dl";
+
+export type PaperDef = {
+  key: PaperKey;
+  code: string;
+  dims: string;
+  widthMm: number;
+  heightMm: number;
+  /** margem interna da folha */
+  padMm: number;
+  cssSize: string;
+};
+
+export const PAPERS: Record<PaperKey, PaperDef> = {
+  a4: { key: "a4", code: "A4", dims: "21,0 × 29,7 cm", widthMm: 210, heightMm: 297, padMm: 14, cssSize: "210mm 297mm" },
+  a5: { key: "a5", code: "A5", dims: "14,8 × 21,0 cm", widthMm: 148, heightMm: 210, padMm: 10, cssSize: "148mm 210mm" },
+  letter: {
+    key: "letter",
+    code: "Carta / Letter",
+    dims: "21,6 × 27,9 cm",
+    widthMm: 216,
+    heightMm: 279,
+    padMm: 14,
+    cssSize: "216mm 279mm",
+  },
+  dl: {
+    key: "dl",
+    code: "DL / Slim",
+    dims: "9,9 × 21,0 cm",
+    widthMm: 99,
+    heightMm: 210,
+    padMm: 8,
+    cssSize: "99mm 210mm",
+  },
+};
+
+export const PAPER_LIST = [PAPERS.a4, PAPERS.a5, PAPERS.letter, PAPERS.dl];
+
+export const paperOf = (k: string | null | undefined): PaperDef => PAPERS[(k as PaperKey) ?? "a4"] ?? PAPERS.a4;
+
 export type VisibleFields = {
   producer: boolean;
   vintage: boolean;

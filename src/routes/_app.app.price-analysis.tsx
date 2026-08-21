@@ -90,6 +90,55 @@ function PriceAnalysisPage() {
     },
   });
 
+  const queryClient = useQueryClient();
+  const hydratedFor = useRef<string | null>(null);
+
+  const { data: savedSetting } = useQuery({
+    queryKey: ["price-analysis-setting", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("price_analysis_settings")
+        .select("entree_price,used_at")
+        .eq("restaurant_id", restaurantId!)
+        .maybeSingle();
+      return data as { entree_price: number; used_at: string } | null;
+    },
+  });
+
+  useEffect(() => {
+    if (!restaurantId || hydratedFor.current === restaurantId) return;
+    if (savedSetting === undefined) return;
+    hydratedFor.current = restaurantId;
+    if (savedSetting?.entree_price) setEntreePrice(Number(savedSetting.entree_price));
+  }, [restaurantId, savedSetting]);
+
+  const saveEntree = useMutation({
+    mutationFn: async (value: number) => {
+      if (!restaurantId) throw new Error("Selecione um restaurante");
+      const { error } = await supabase
+        .from("price_analysis_settings")
+        .upsert(
+          { restaurant_id: restaurantId, entree_price: value, used_at: new Date().toISOString() },
+          { onConflict: "restaurant_id" },
+        );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Preço do prato principal salvo");
+      queryClient.invalidateQueries({ queryKey: ["price-analysis-setting", restaurantId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const savedDateLabel = savedSetting?.used_at
+    ? new Date(savedSetting.used_at).toLocaleString("pt-BR", {
+        day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+      })
+    : null;
+  const isDirty = !!savedSetting && Number(savedSetting.entree_price) !== entreePrice;
+
+
   // Only bottled active wines participate in price analysis
   const activeWines = useMemo(
     () => wines.filter((w) => w.active_on_menu !== false && !isGlassVol(w.volume) && (w.sale_price ?? 0) > 0),

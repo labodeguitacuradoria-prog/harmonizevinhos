@@ -344,20 +344,53 @@ function SessionDetail({
     onDeleted();
   }
 
+  async function syncWines() {
+    setBusy(true);
+    try {
+      const added = await syncMissingWines(session);
+      toast.success(
+        added > 0
+          ? `${added} rótulo(s) novo(s) adicionado(s) à contagem`
+          : "Nenhum rótulo novo para adicionar",
+      );
+      qc.invalidateQueries({ queryKey: ["admin-session-items", session.id] });
+      qc.invalidateQueries({ queryKey: ["admin-session-counts"] });
+      qc.invalidateQueries({ queryKey: ["stock-count-session"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao sincronizar rótulos");
+    }
+    setBusy(false);
+  }
+
   async function reopen() {
-    if (!confirm("Reabrir esta contagem? Os ajustes de estoque gerados serão removidos. Você poderá editar e fechar novamente.")) return;
+    if (!confirm("Reabrir esta contagem? Os ajustes de estoque gerados serão removidos. Rótulos cadastrados depois do início serão adicionados para contagem.")) return;
     setBusy(true);
     await supabase.from("inventory_movements").delete().eq("source_session_id", session.id);
     const { error } = await supabase
       .from("stock_count_sessions")
       .update({ status: "draft", closed_at: null, closed_by: null })
       .eq("id", session.id);
+    if (error) {
+      setBusy(false);
+      return toast.error(error.message);
+    }
+    let added = 0;
+    try {
+      added = await syncMissingWines(session);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao adicionar rótulos novos");
+    }
     setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Sessão reaberta para edição");
+    toast.success(
+      added > 0
+        ? `Sessão reaberta · ${added} rótulo(s) novo(s) adicionado(s)`
+        : "Sessão reaberta para edição",
+    );
     qc.invalidateQueries({ queryKey: ["admin-sessions"] });
+    qc.invalidateQueries({ queryKey: ["admin-session-items", session.id] });
     qc.invalidateQueries({ queryKey: ["stock-count-session"] });
   }
+
 
   async function closeAgain() {
     setBusy(true);

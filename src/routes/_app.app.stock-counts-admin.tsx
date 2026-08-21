@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   Check,
   X,
+  PlusCircle,
+
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/stock-counts-admin")({
@@ -58,6 +60,50 @@ type IssueRow = {
 function fmtDate(d: string) {
   return new Date(d + (d.length === 10 ? "T00:00:00" : "")).toLocaleDateString("pt-BR");
 }
+
+function isGlassVolume(v: string | null | undefined) {
+  if (!v) return false;
+  const s = v.toLowerCase();
+  return s.includes("taça") || s.includes("taca");
+}
+
+/** Adiciona à sessão os rótulos cadastrados depois do início da contagem. */
+async function syncMissingWines(session: SessionRow): Promise<number> {
+  const [{ data: wines, error: errWines }, { data: existing, error: errItems }] = await Promise.all([
+    supabase
+      .from("wines")
+      .select("id, volume, count_in_stock")
+      .eq("restaurant_id", session.restaurant_id),
+    supabase.from("stock_count_items").select("wine_id").eq("session_id", session.id),
+  ]);
+  if (errWines) throw errWines;
+  if (errItems) throw errItems;
+
+  const present = new Set((existing ?? []).map((i) => i.wine_id as string));
+  const missing = (wines ?? []).filter(
+    (w) => !present.has(w.id) && !isGlassVolume(w.volume) && w.count_in_stock !== false,
+  );
+  if (missing.length === 0) return 0;
+
+  const { data: lastStock } = await supabase.rpc("get_last_closed_stock", {
+    p_restaurant_id: session.restaurant_id,
+  });
+  const stock: Record<string, number> = {};
+  (lastStock ?? []).forEach((row: any) => {
+    stock[row.wine_id] = row.last_qty;
+  });
+
+  const { error } = await supabase.from("stock_count_items").insert(
+    missing.map((w) => ({
+      session_id: session.id,
+      wine_id: w.id,
+      previous_qty: stock[w.id] ?? 0,
+    })),
+  );
+  if (error) throw error;
+  return missing.length;
+}
+
 
 function StockCountAdminPage() {
   const { restaurantId } = useAuth();
@@ -300,20 +346,53 @@ function SessionDetail({
     onDeleted();
   }
 
+  async function syncWines() {
+    setBusy(true);
+    try {
+      const added = await syncMissingWines(session);
+      toast.success(
+        added > 0
+          ? `${added} rótulo(s) novo(s) adicionado(s) à contagem`
+          : "Nenhum rótulo novo para adicionar",
+      );
+      qc.invalidateQueries({ queryKey: ["admin-session-items", session.id] });
+      qc.invalidateQueries({ queryKey: ["admin-session-counts"] });
+      qc.invalidateQueries({ queryKey: ["stock-count-session"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao sincronizar rótulos");
+    }
+    setBusy(false);
+  }
+
   async function reopen() {
-    if (!confirm("Reabrir esta contagem? Os ajustes de estoque gerados serão removidos. Você poderá editar e fechar novamente.")) return;
+    if (!confirm("Reabrir esta contagem? Os ajustes de estoque gerados serão removidos. Rótulos cadastrados depois do início serão adicionados para contagem.")) return;
     setBusy(true);
     await supabase.from("inventory_movements").delete().eq("source_session_id", session.id);
     const { error } = await supabase
       .from("stock_count_sessions")
       .update({ status: "draft", closed_at: null, closed_by: null })
       .eq("id", session.id);
+    if (error) {
+      setBusy(false);
+      return toast.error(error.message);
+    }
+    let added = 0;
+    try {
+      added = await syncMissingWines(session);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao adicionar rótulos novos");
+    }
     setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Sessão reaberta para edição");
+    toast.success(
+      added > 0
+        ? `Sessão reaberta · ${added} rótulo(s) novo(s) adicionado(s)`
+        : "Sessão reaberta para edição",
+    );
     qc.invalidateQueries({ queryKey: ["admin-sessions"] });
+    qc.invalidateQueries({ queryKey: ["admin-session-items", session.id] });
     qc.invalidateQueries({ queryKey: ["stock-count-session"] });
   }
+
 
   async function closeAgain() {
     setBusy(true);
@@ -371,10 +450,16 @@ function SessionDetail({
               <RefreshCw className="h-4 w-4" /> Reabrir
             </button>
           ) : (
-            <button onClick={closeAgain} disabled={busy} className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
-              <Lock className="h-4 w-4" /> Fechar contagem
-            </button>
+            <>
+              <button onClick={syncWines} disabled={busy} className="flex items-center gap-2 rounded-md border border-input px-3 py-2 text-sm hover:bg-accent disabled:opacity-50">
+                <PlusCircle className="h-4 w-4" /> Adicionar rótulos novos
+              </button>
+              <button onClick={closeAgain} disabled={busy} className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+                <Lock className="h-4 w-4" /> Fechar contagem
+              </button>
+            </>
           )}
+
           <button onClick={deleteSession} disabled={busy} className="flex items-center gap-2 rounded-md border border-destructive/40 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 disabled:opacity-50">
             <Trash2 className="h-4 w-4" /> Excluir sessão
           </button>

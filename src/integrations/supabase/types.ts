@@ -264,6 +264,41 @@ export type Database = {
         }
         Relationships: []
       }
+      price_analysis_settings: {
+        Row: {
+          created_at: string
+          entree_price: number
+          id: string
+          restaurant_id: string
+          updated_at: string
+          used_at: string
+        }
+        Insert: {
+          created_at?: string
+          entree_price: number
+          id?: string
+          restaurant_id: string
+          updated_at?: string
+          used_at?: string
+        }
+        Update: {
+          created_at?: string
+          entree_price?: number
+          id?: string
+          restaurant_id?: string
+          updated_at?: string
+          used_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_analysis_settings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       printed_wine_lists: {
         Row: {
           address_text: string | null

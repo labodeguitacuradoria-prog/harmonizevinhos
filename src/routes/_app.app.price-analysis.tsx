@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Sparkles, Store, Building2, Info, HelpCircle, Layers, SlidersHorizontal, ArrowUpRight, ArrowDownRight, CheckCircle2 } from "lucide-react";
+import { Sparkles, Store, Building2, Info, HelpCircle, Layers, SlidersHorizontal, ArrowUpRight, ArrowDownRight, CheckCircle2, Save, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/price-analysis")({
   component: PriceAnalysisPage,
@@ -88,6 +89,55 @@ function PriceAnalysisPage() {
       return (data ?? []) as WineRow[];
     },
   });
+
+  const queryClient = useQueryClient();
+  const hydratedFor = useRef<string | null>(null);
+
+  const { data: savedSetting } = useQuery({
+    queryKey: ["price-analysis-setting", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("price_analysis_settings")
+        .select("entree_price,used_at")
+        .eq("restaurant_id", restaurantId!)
+        .maybeSingle();
+      return data as { entree_price: number; used_at: string } | null;
+    },
+  });
+
+  useEffect(() => {
+    if (!restaurantId || hydratedFor.current === restaurantId) return;
+    if (savedSetting === undefined) return;
+    hydratedFor.current = restaurantId;
+    if (savedSetting?.entree_price) setEntreePrice(Number(savedSetting.entree_price));
+  }, [restaurantId, savedSetting]);
+
+  const saveEntree = useMutation({
+    mutationFn: async (value: number) => {
+      if (!restaurantId) throw new Error("Selecione um restaurante");
+      const { error } = await supabase
+        .from("price_analysis_settings")
+        .upsert(
+          { restaurant_id: restaurantId, entree_price: value, used_at: new Date().toISOString() },
+          { onConflict: "restaurant_id" },
+        );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Preço do prato principal salvo");
+      queryClient.invalidateQueries({ queryKey: ["price-analysis-setting", restaurantId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const savedDateLabel = savedSetting?.used_at
+    ? new Date(savedSetting.used_at).toLocaleString("pt-BR", {
+        day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+      })
+    : null;
+  const isDirty = !!savedSetting && Number(savedSetting.entree_price) !== entreePrice;
+
 
   // Only bottled active wines participate in price analysis
   const activeWines = useMemo(
@@ -216,7 +266,27 @@ function PriceAnalysisPage() {
               onBlur={() => { if (entreePrice < 1) setEntreePrice(1); }}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-lg font-semibold text-foreground focus:border-primary focus:outline-none"
             />
+            <button
+              onClick={() => saveEntree.mutate(Math.max(1, entreePrice))}
+              disabled={saveEntree.isPending || !restaurantId}
+              title="Salvar valor usado na simulação"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+            >
+              <Save className="h-3.5 w-3.5" /> Salvar
+            </button>
           </div>
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Clock className="h-3 w-3 shrink-0" />
+            {savedDateLabel ? (
+              <span>
+                Último valor salvo: <span className="font-semibold text-foreground">{fmtBRL(Number(savedSetting!.entree_price))}</span> em {savedDateLabel}
+                {isDirty && <span className="ml-1 text-primary">(não salvo)</span>}
+              </span>
+            ) : (
+              <span>Nenhum valor salvo ainda para este restaurante.</span>
+            )}
+          </div>
+
         </ControlCard>
 
         <ControlCard

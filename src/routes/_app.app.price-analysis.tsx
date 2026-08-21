@@ -77,6 +77,9 @@ function PriceAnalysisPage() {
   const [concept, setConcept] = useState<ConceptKey>("Geral");
   const [customRatios, setCustomRatios] = useState<Ratios>({ white: 30, red: 45, sparkling: 15, rose: 10 });
   const [showExplanation, setShowExplanation] = useState<boolean>(true);
+  const [simPrices, setSimPrices] = useState<Record<string, number>>({});
+  const [simSearch, setSimSearch] = useState("");
+
 
   const { data: wines = [] } = useQuery({
     queryKey: ["price-analysis-wines", restaurantId],

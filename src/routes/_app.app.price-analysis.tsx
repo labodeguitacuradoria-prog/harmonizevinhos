@@ -187,6 +187,50 @@ function PriceAnalysisPage() {
 
   const totalActual = activeWines.length;
 
+  // ---- Price simulator (study only, never writes to the catalog) ----
+  const bracketOf = (price: number) => brackets.find((b) => (b.max === Infinity ? price >= b.min : price >= b.min && price < b.max));
+
+  const simulation = useMemo(() => {
+    const priceFor = (w: WineRow) => simPrices[w.id] ?? (w.sale_price ?? 0);
+
+    const rows = brackets.map((b) => {
+      const simulated = activeWines.filter((w) => {
+        const p = priceFor(w);
+        return b.max === Infinity ? p >= b.min : p >= b.min && p < b.max;
+      }).length;
+      const simulatedPct = totalActual > 0 ? (simulated / totalActual) * 100 : 0;
+      return { ...b, simulated, simulatedPct, simGap: b.target - simulated };
+    });
+
+    const sum = (fn: (w: WineRow) => number) => activeWines.reduce((a, w) => a + fn(w), 0);
+    const avgCurrent = totalActual > 0 ? sum((w) => w.sale_price ?? 0) / totalActual : 0;
+    const avgSimulated = totalActual > 0 ? sum(priceFor) / totalActual : 0;
+
+    const term = simSearch.trim().toLowerCase();
+    const wineRows = activeWines
+      .filter((w) => (term ? w.name.toLowerCase().includes(term) : true))
+      .sort((a, b) => (b.sale_price ?? 0) - (a.sale_price ?? 0))
+      .map((w) => {
+        const currentPrice = w.sale_price ?? 0;
+        const simPrice = priceFor(w);
+        const changed = simPrices[w.id] != null && simPrice !== currentPrice;
+        return {
+          ...w,
+          currentPrice,
+          simPrice,
+          changed,
+          diff: simPrice - currentPrice,
+          diffPct: currentPrice > 0 ? ((simPrice - currentPrice) / currentPrice) * 100 : 0,
+          currentBracket: bracketOf(currentPrice)?.name ?? "Fora das faixas",
+          simBracket: bracketOf(simPrice)?.name ?? "Fora das faixas",
+        };
+      });
+
+    return { rows, wineRows, avgCurrent, avgSimulated };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brackets, activeWines, totalActual, simPrices, simSearch]);
+
+
   return (
     <div className="mx-auto max-w-[1400px] p-6 md:p-8">
       {/* Header */}

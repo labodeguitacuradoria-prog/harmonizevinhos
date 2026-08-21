@@ -59,6 +59,50 @@ function fmtDate(d: string) {
   return new Date(d + (d.length === 10 ? "T00:00:00" : "")).toLocaleDateString("pt-BR");
 }
 
+function isGlassVolume(v: string | null | undefined) {
+  if (!v) return false;
+  const s = v.toLowerCase();
+  return s.includes("taça") || s.includes("taca");
+}
+
+/** Adiciona à sessão os rótulos cadastrados depois do início da contagem. */
+async function syncMissingWines(session: SessionRow): Promise<number> {
+  const [{ data: wines, error: errWines }, { data: existing, error: errItems }] = await Promise.all([
+    supabase
+      .from("wines")
+      .select("id, volume, count_in_stock")
+      .eq("restaurant_id", session.restaurant_id),
+    supabase.from("stock_count_items").select("wine_id").eq("session_id", session.id),
+  ]);
+  if (errWines) throw errWines;
+  if (errItems) throw errItems;
+
+  const present = new Set((existing ?? []).map((i) => i.wine_id as string));
+  const missing = (wines ?? []).filter(
+    (w) => !present.has(w.id) && !isGlassVolume(w.volume) && w.count_in_stock !== false,
+  );
+  if (missing.length === 0) return 0;
+
+  const { data: lastStock } = await supabase.rpc("get_last_closed_stock", {
+    p_restaurant_id: session.restaurant_id,
+  });
+  const stock: Record<string, number> = {};
+  (lastStock ?? []).forEach((row: any) => {
+    stock[row.wine_id] = row.last_qty;
+  });
+
+  const { error } = await supabase.from("stock_count_items").insert(
+    missing.map((w) => ({
+      session_id: session.id,
+      wine_id: w.id,
+      previous_qty: stock[w.id] ?? 0,
+    })),
+  );
+  if (error) throw error;
+  return missing.length;
+}
+
+
 function StockCountAdminPage() {
   const { restaurantId } = useAuth();
   const qc = useQueryClient();

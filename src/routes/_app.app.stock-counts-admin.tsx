@@ -448,10 +448,16 @@ function SessionDetail({
               <RefreshCw className="h-4 w-4" /> Reabrir
             </button>
           ) : (
-            <button onClick={closeAgain} disabled={busy} className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
-              <Lock className="h-4 w-4" /> Fechar contagem
-            </button>
+            <>
+              <button onClick={syncWines} disabled={busy} className="flex items-center gap-2 rounded-md border border-input px-3 py-2 text-sm hover:bg-accent disabled:opacity-50">
+                <PlusCircle className="h-4 w-4" /> Adicionar rótulos novos
+              </button>
+              <button onClick={closeAgain} disabled={busy} className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+                <Lock className="h-4 w-4" /> Fechar contagem
+              </button>
+            </>
           )}
+
           <button onClick={deleteSession} disabled={busy} className="flex items-center gap-2 rounded-md border border-destructive/40 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 disabled:opacity-50">
             <Trash2 className="h-4 w-4" /> Excluir sessão
           </button>

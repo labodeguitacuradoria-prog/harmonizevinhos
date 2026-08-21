@@ -266,7 +266,27 @@ function PriceAnalysisPage() {
               onBlur={() => { if (entreePrice < 1) setEntreePrice(1); }}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-lg font-semibold text-foreground focus:border-primary focus:outline-none"
             />
+            <button
+              onClick={() => saveEntree.mutate(Math.max(1, entreePrice))}
+              disabled={saveEntree.isPending || !restaurantId}
+              title="Salvar valor usado na simulação"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+            >
+              <Save className="h-3.5 w-3.5" /> Salvar
+            </button>
           </div>
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Clock className="h-3 w-3 shrink-0" />
+            {savedDateLabel ? (
+              <span>
+                Último valor salvo: <span className="font-semibold text-foreground">{fmtBRL(Number(savedSetting!.entree_price))}</span> em {savedDateLabel}
+                {isDirty && <span className="ml-1 text-primary">(não salvo)</span>}
+              </span>
+            ) : (
+              <span>Nenhum valor salvo ainda para este restaurante.</span>
+            )}
+          </div>
+
         </ControlCard>
 
         <ControlCard

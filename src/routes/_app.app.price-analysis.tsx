@@ -499,9 +499,181 @@ function PriceAnalysisPage() {
           </div>
         </section>
       )}
+
+      {/* Current-mode: price simulator */}
+      {mode === "current" && totalActual > 0 && (
+        <section className="mb-8">
+          <SectionTitle
+            icon={<SlidersHorizontal className="h-4 w-4" />}
+            title="Simulador de preços"
+            subtitle="Ajuste os preços e veja o impacto na distribuição Ideal vs Atual"
+          />
+
+          {/* Comparative summary */}
+          <div className="mb-4 overflow-x-auto rounded-2xl border border-border bg-card">
+            <table className="w-full min-w-[720px] text-sm">
+              <thead className="bg-background/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 text-left">Faixa</th>
+                  <th className="px-3 py-3 text-left">Intervalo</th>
+                  <th className="px-3 py-3 text-center">Ideal</th>
+                  <th className="px-3 py-3 text-center">Atual</th>
+                  <th className="px-3 py-3 text-center">Simulado</th>
+                  <th className="px-3 py-3 text-center">Gap vs ideal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {simulation.rows.map((r) => (
+                  <tr key={r.id} className={`border-t border-border ${r.sweet ? "bg-primary/5" : ""}`}>
+                    <td className="px-4 py-3">
+                      <div className={`text-xs font-semibold ${r.sweet ? "text-primary" : "text-foreground"}`}>{r.name}</div>
+                      <div className="text-[10px] text-muted-foreground">{r.mult}</div>
+                    </td>
+                    <td className="px-3 py-3 text-xs text-muted-foreground">
+                      {fmtBRL(r.min)} {r.max === Infinity ? "+" : `– ${fmtBRL(r.max)}`}
+                    </td>
+                    <td className="px-3 py-3 text-center text-xs">
+                      <span className="font-semibold text-foreground">{r.target}</span>
+                      <span className="text-muted-foreground"> · {r.pct}%</span>
+                    </td>
+                    <td className="px-3 py-3 text-center text-xs text-muted-foreground">
+                      {r.actual} · {r.actualPct.toFixed(0)}%
+                    </td>
+                    <td className="px-3 py-3 text-center text-xs">
+                      <span className="font-semibold text-primary">{r.simulated}</span>
+                      <span className="text-muted-foreground"> · {r.simulatedPct.toFixed(0)}%</span>
+                      {r.simulated !== r.actual && (
+                        <span className={`ml-1 font-semibold ${r.simulated > r.actual ? "text-emerald-400" : "text-rose-400"}`}>
+                          ({r.simulated > r.actual ? "+" : ""}{r.simulated - r.actual})
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-center text-xs">
+                      {r.simGap === 0 ? (
+                        <span className="font-semibold text-emerald-400">no alvo</span>
+                      ) : (
+                        <span className={`font-semibold ${r.simGap > 0 ? "text-primary" : "text-rose-400"}`}>
+                          {r.simGap > 0 ? `faltam ${r.simGap}` : `excesso ${Math.abs(r.simGap)}`}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="border-t border-border bg-background/40 text-xs">
+                  <td className="px-4 py-3 font-semibold uppercase tracking-wide text-muted-foreground" colSpan={2}>
+                    Ticket médio da carta
+                  </td>
+                  <td className="px-3 py-3 text-center text-muted-foreground">—</td>
+                  <td className="px-3 py-3 text-center text-muted-foreground">{fmtBRL(simulation.avgCurrent)}</td>
+                  <td className="px-3 py-3 text-center font-semibold text-primary">{fmtBRL(simulation.avgSimulated)}</td>
+                  <td className="px-3 py-3 text-center">
+                    <span className={`font-semibold ${simulation.avgSimulated >= simulation.avgCurrent ? "text-emerald-400" : "text-rose-400"}`}>
+                      {simulation.avgSimulated >= simulation.avgCurrent ? "+" : "−"}
+                      {fmtBRL(Math.abs(simulation.avgSimulated - simulation.avgCurrent))}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Per-wine simulation */}
+          <div className="rounded-2xl border border-border bg-card">
+            <div className="flex flex-col gap-2 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
+              <input
+                value={simSearch}
+                onChange={(e) => setSimSearch(e.target.value)}
+                placeholder="Pesquisar rótulo..."
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none md:max-w-xs"
+              />
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-muted-foreground">
+                  {Object.keys(simPrices).length} rótulo(s) simulado(s)
+                </span>
+                <button
+                  onClick={() => setSimPrices({})}
+                  disabled={Object.keys(simPrices).length === 0}
+                  className="rounded-lg border border-border px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-primary/40 hover:text-foreground disabled:opacity-40"
+                >
+                  Limpar simulação
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-[540px] overflow-auto">
+              <table className="w-full min-w-[760px] text-sm">
+                <thead className="sticky top-0 z-10 bg-card text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <tr className="border-b border-border">
+                    <th className="px-4 py-3 text-left">Rótulo</th>
+                    <th className="px-3 py-3 text-left">Faixa atual</th>
+                    <th className="px-3 py-3 text-right">Preço atual</th>
+                    <th className="px-3 py-3 text-center">Novo preço (simulação)</th>
+                    <th className="px-3 py-3 text-left">Faixa simulada</th>
+                    <th className="px-3 py-3 text-right">Variação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {simulation.wineRows.map((w) => (
+                    <tr key={w.id} className="border-b border-border/60">
+                      <td className="px-4 py-2.5">
+                        <div className="text-xs font-semibold text-foreground">{w.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{normType(w.wine_type)}</div>
+                      </td>
+                      <td className="px-3 py-2.5 text-[11px] text-muted-foreground">{w.currentBracket}</td>
+                      <td className="px-3 py-2.5 text-right text-xs text-muted-foreground">{fmtBRL(w.currentPrice)}</td>
+                      <td className="px-3 py-2.5">
+                        <div className="mx-auto flex w-[150px] items-center gap-1.5 rounded-lg border border-border bg-background px-2 py-1.5 focus-within:border-primary">
+                          <span className="text-[11px] text-primary">R$</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={simPrices[w.id] != null ? String(simPrices[w.id]) : ""}
+                            placeholder={String(Math.round(w.currentPrice))}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/[^\d]/g, "");
+                              setSimPrices((prev) => {
+                                const next = { ...prev };
+                                if (raw === "") delete next[w.id];
+                                else next[w.id] = Number(raw);
+                                return next;
+                              });
+                            }}
+                            className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 text-[11px]">
+                        <span className={w.changed ? "font-semibold text-primary" : "text-muted-foreground"}>
+                          {w.simBracket}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-xs">
+                        {w.changed ? (
+                          <span className={`font-semibold ${w.diff >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                            {w.diff >= 0 ? "+" : "−"}{fmtBRL(Math.abs(w.diff))}{" "}
+                            <span className="text-[10px] text-muted-foreground">
+                              ({w.diff >= 0 ? "+" : "−"}{Math.abs(w.diffPct).toFixed(0)}%)
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="border-t border-border px-4 py-3 text-[10px] text-muted-foreground">
+              A simulação é apenas um estudo — nenhum preço do cadastro é alterado.
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
+
 
 function ControlCard({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (

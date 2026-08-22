@@ -20,7 +20,7 @@ type WineRow = {
   active_on_menu: boolean | null;
   suggested_retail_price: number | null;
   catalog_id: string | null;
-  wine_catalog?: { suggested_retail_price: number | null } | null;
+  wine_catalog?: { suggested_retail_price: number | null; status: string | null } | null;
 };
 
 type SimulationRecord = {
@@ -104,7 +104,7 @@ function PriceAnalysisPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("wines")
-        .select("id,name,wine_type,volume,sale_price,active_on_menu,suggested_retail_price,catalog_id,wine_catalog(suggested_retail_price)")
+        .select("id,name,wine_type,volume,sale_price,active_on_menu,suggested_retail_price,catalog_id,wine_catalog(suggested_retail_price,status)")
         .eq("restaurant_id", restaurantId!);
       return (data ?? []) as unknown as WineRow[];
     },
@@ -226,6 +226,7 @@ function PriceAnalysisPage() {
     setSimId(null);
     setSimName("");
     setSimPrices({});
+    setSimChangedOnly(false);
   }
 
   // ---- Market price (preço de mercado) ----
@@ -327,14 +328,16 @@ function PriceAnalysisPage() {
         const currentPrice = w.sale_price ?? 0;
         const simPrice = priceFor(w);
         const changed = simPrices[w.id] != null && simPrice !== currentPrice;
-        const marketPrice = w.suggested_retail_price ?? w.wine_catalog?.suggested_retail_price ?? null;
+        const catalogMarket =
+          w.wine_catalog?.status === "approved" ? (w.wine_catalog?.suggested_retail_price ?? null) : null;
+        const marketPrice = w.suggested_retail_price ?? catalogMarket;
         return {
           ...w,
           currentPrice,
           simPrice,
           changed,
           marketPrice,
-          marketFromCatalog: w.suggested_retail_price == null && (w.wine_catalog?.suggested_retail_price ?? null) != null,
+          marketFromCatalog: w.suggested_retail_price == null && catalogMarket != null,
           diff: simPrice - currentPrice,
           diffPct: currentPrice > 0 ? ((simPrice - currentPrice) / currentPrice) * 100 : 0,
           currentBracket: bracketOf(currentPrice)?.name ?? "Fora das faixas",

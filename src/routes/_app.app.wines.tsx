@@ -467,6 +467,17 @@ function WinesSection() {
     },
   });
 
+  useEffect(() => {
+    if (pendingWineId && !autoOpened && wines.length) {
+      const found = wines.find((w) => w.id === pendingWineId);
+      if (found) {
+        setViewWine(found);
+        setAutoOpened(true);
+        navigate({ to: "/app/wines", search: {}, replace: true });
+      }
+    }
+  }, [pendingWineId, autoOpened, wines, navigate]);
+
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],
     queryFn: async () => {

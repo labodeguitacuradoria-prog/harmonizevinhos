@@ -829,8 +829,8 @@ function PriceAnalysisPage() {
                     <th className="px-4 py-3 text-left">Rótulo</th>
                     <th className="px-3 py-3 text-left">Faixa atual</th>
                     <th className="px-3 py-3 text-right">Preço atual</th>
-                    <th className="px-3 py-3 text-center">Preço de mercado</th>
-                    <th className="px-3 py-3 text-center">Novo preço (simulação)</th>
+                    <th className="px-3 py-3 text-center">Nova simulação (R$)</th>
+                    <th className="px-3 py-3 text-center">Preço de mercado sugerido</th>
                     <th className="px-3 py-3 text-left">Faixa simulada</th>
                     <th className="px-3 py-3 text-right">Variação</th>
                   </tr>

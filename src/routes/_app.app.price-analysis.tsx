@@ -152,6 +152,95 @@ function PriceAnalysisPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // ---- Saved simulations ----
+  const { data: savedSims = [] } = useQuery({
+    queryKey: ["price-simulations", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("price_simulations")
+        .select("id,name,entree_price,prices,updated_at")
+        .eq("restaurant_id", restaurantId!)
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as SimulationRecord[];
+    },
+  });
+
+  const saveSimulation = useMutation({
+    mutationFn: async () => {
+      if (!restaurantId) throw new Error("Selecione um restaurante");
+      const name = simName.trim() || `Simulação ${new Date().toLocaleDateString("pt-BR")}`;
+      const payload = {
+        restaurant_id: restaurantId,
+        name,
+        entree_price: Math.max(1, entreePrice),
+        prices: simPrices,
+      };
+      if (simId) {
+        const { error } = await supabase.from("price_simulations").update(payload).eq("id", simId);
+        if (error) throw error;
+        return simId;
+      }
+      const { data, error } = await supabase
+        .from("price_simulations")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error) throw error;
+      return data.id as string;
+    },
+    onSuccess: (id) => {
+      setSimId(id);
+      toast.success("Simulação salva");
+      queryClient.invalidateQueries({ queryKey: ["price-simulations", restaurantId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteSimulation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("price_simulations").delete().eq("id", id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: (id) => {
+      if (simId === id) { setSimId(null); setSimName(""); setSimPrices({}); }
+      toast.success("Simulação excluída");
+      queryClient.invalidateQueries({ queryKey: ["price-simulations", restaurantId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function openSimulation(id: string) {
+    const s = savedSims.find((x) => x.id === id);
+    if (!s) return;
+    setSimId(s.id);
+    setSimName(s.name);
+    setSimPrices((s.prices ?? {}) as Record<string, number>);
+    if (s.entree_price) setEntreePrice(Number(s.entree_price));
+    toast.success(`Simulação "${s.name}" carregada`);
+  }
+
+  function newSimulation() {
+    setSimId(null);
+    setSimName("");
+    setSimPrices({});
+  }
+
+  // ---- Market price (preço de mercado) ----
+  const saveMarketPrice = useMutation({
+    mutationFn: async ({ wineId, value }: { wineId: string; value: number | null }) => {
+      const { error } = await supabase.from("wines").update({ suggested_retail_price: value }).eq("id", wineId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["price-analysis-wines", restaurantId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   const savedDateLabel = savedSetting?.used_at
     ? new Date(savedSetting.used_at).toLocaleString("pt-BR", {
         day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",

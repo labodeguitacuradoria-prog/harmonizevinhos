@@ -95,8 +95,8 @@ function PriceAnalysisPage() {
   const [simBracketFilter, setSimBracketFilter] = useState<string>("all");
   const [simTypeFilter, setSimTypeFilter] = useState<string>("all");
   const [simChangedOnly, setSimChangedOnly] = useState(false);
-
-
+  const [simId, setSimId] = useState<string | null>(null);
+  const [simName, setSimName] = useState<string>("");
 
   const { data: wines = [] } = useQuery({
     queryKey: ["price-analysis-wines", restaurantId],
@@ -104,11 +104,12 @@ function PriceAnalysisPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("wines")
-        .select("id,name,wine_type,volume,sale_price,active_on_menu")
+        .select("id,name,wine_type,volume,sale_price,active_on_menu,suggested_retail_price,catalog_id,wine_catalog(suggested_retail_price)")
         .eq("restaurant_id", restaurantId!);
-      return (data ?? []) as WineRow[];
+      return (data ?? []) as unknown as WineRow[];
     },
   });
+
 
   const queryClient = useQueryClient();
   const hydratedFor = useRef<string | null>(null);

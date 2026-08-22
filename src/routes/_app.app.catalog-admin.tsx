@@ -385,11 +385,22 @@ function CatalogAdmin() {
               const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
               const missing = checks.filter(c => !c.ok);
               const isExpanded = expandedId === item.id;
-              const colCount = statusTab === "approved" ? 8 : 7;
+              const colCount = (statusTab === "approved" ? 8 : 7) + (showSelect ? 1 : 0);
               return (
               <React.Fragment key={item.id}>
               <tr className="hover:bg-accent/50">
+                {showSelect && (
+                  <td className="px-3 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(item.id)}
+                      onChange={() => toggleOne(item.id)}
+                      className="h-4 w-4 accent-[#D4AF37]"
+                    />
+                  </td>
+                )}
                 <td className="px-4 py-3 font-medium">{item.name}</td>
+
                 <td className="px-4 py-3">{item.producer ?? "—"}</td>
                 <td className="px-4 py-3">{item.vintage ?? "—"}</td>
                 <td className="px-4 py-3"><span className="block">{item.wine_type ?? "—"}</span><span className="block text-xs text-muted-foreground">{item.style ?? ""}</span></td>

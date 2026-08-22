@@ -270,10 +270,58 @@ function CatalogAdmin() {
       });
   }, [items, statusTab, filters, duplicateIds]);
 
+  const showSelect = isAdmin && statusTab === "pending";
+  const allSelected = filtered.length > 0 && filtered.every(i => selectedIds.has(i.id));
+
+  useEffect(() => { setSelectedIds(new Set()); }, [statusTab]);
+
+  function toggleOne(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setSelectedIds(allSelected ? new Set() : new Set(filtered.map(i => i.id)));
+  }
+
+  async function bulkStatus(status: CatalogStatus) {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    let reason: string | undefined;
+    if (status === "rejected") {
+      if (!confirm(`Rejeitar ${ids.length} rótulo(s)?`)) return;
+      reason = prompt("Motivo da rejeição (opcional)") ?? undefined;
+    } else if (!confirm(`Aprovar ${ids.length} rótulo(s) no catálogo global?`)) return;
+    setBulkBusy(true);
+    const patch: any = { status, rejection_reason: reason ?? null };
+    if (status === "approved") patch.approved_at = new Date().toISOString();
+    const { error } = await supabase.from("wine_catalog").update(patch).in("id", ids);
+    setBulkBusy(false);
+    if (error) return alert(error.message);
+    setSelectedIds(new Set());
+    fetchCatalog();
+  }
+
+  async function bulkDelete() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Excluir definitivamente ${ids.length} rótulo(s)?`)) return;
+    setBulkBusy(true);
+    const { error } = await supabase.from("wine_catalog").delete().in("id", ids);
+    setBulkBusy(false);
+    if (error) return alert(error.message);
+    setSelectedIds(new Set());
+    fetchCatalog();
+  }
+
   function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" = "geral") {
     setInitialTab(tab);
     setEditing(item);
   }
+
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8">

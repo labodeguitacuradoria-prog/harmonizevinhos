@@ -820,12 +820,13 @@ function PriceAnalysisPage() {
           {/* Per-wine simulation */}
           <div className="rounded-2xl border border-border bg-card">
             <div className="overflow-auto">
-              <table className="w-full min-w-[820px] text-sm">
+              <table className="w-full min-w-[980px] text-sm">
                 <thead className="bg-card text-[10px] uppercase tracking-wider text-muted-foreground">
                   <tr className="border-b border-border">
                     <th className="px-4 py-3 text-left">Rótulo</th>
                     <th className="px-3 py-3 text-left">Faixa atual</th>
                     <th className="px-3 py-3 text-right">Preço atual</th>
+                    <th className="px-3 py-3 text-center">Preço de mercado</th>
                     <th className="px-3 py-3 text-center">Novo preço (simulação)</th>
                     <th className="px-3 py-3 text-left">Faixa simulada</th>
                     <th className="px-3 py-3 text-right">Variação</th>

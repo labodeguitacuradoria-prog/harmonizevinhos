@@ -311,7 +311,50 @@ function CatalogAdmin() {
 
       <>
 
+      {showSelect && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#2a2a2a] bg-[#141414] px-4 py-3">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Ação em lote
+          </span>
+          <span className="text-sm text-[#D4AF37]">
+            {selectedIds.size} selecionado{selectedIds.size === 1 ? "" : "s"}
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              disabled={selectedIds.size === 0 || bulkBusy}
+              onClick={() => bulkStatus("approved")}
+              className="flex items-center gap-1.5 rounded-md border border-emerald-500/40 px-3 py-1.5 text-xs font-bold uppercase text-emerald-500 hover:bg-emerald-500/10 disabled:opacity-40"
+            >
+              <Check className="h-3.5 w-3.5" /> Aprovar
+            </button>
+            <button
+              disabled={selectedIds.size === 0 || bulkBusy}
+              onClick={() => bulkStatus("rejected")}
+              className="flex items-center gap-1.5 rounded-md border border-rose-500/40 px-3 py-1.5 text-xs font-bold uppercase text-rose-500 hover:bg-rose-500/10 disabled:opacity-40"
+            >
+              <XIcon className="h-3.5 w-3.5" /> Rejeitar
+            </button>
+            <button
+              disabled={selectedIds.size === 0 || bulkBusy}
+              onClick={bulkDelete}
+              className="flex items-center gap-1.5 rounded-md border border-destructive/40 px-3 py-1.5 text-xs font-bold uppercase text-destructive hover:bg-destructive/10 disabled:opacity-40"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Excluir
+            </button>
+            {selectedIds.size > 0 && (
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Limpar seleção
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="overflow-auto rounded-xl border border-border bg-card max-h-[calc(100vh-220px)]">
+
         <table className="w-full text-left text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-muted/95 text-xs font-semibold uppercase text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-muted/80">
             <tr>

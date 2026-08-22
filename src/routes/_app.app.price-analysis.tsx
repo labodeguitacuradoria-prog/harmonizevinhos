@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -724,7 +725,14 @@ function PriceAnalysisPage() {
                   {simulation.wineRows.map((w) => (
                     <tr key={w.id} className="border-b border-border/60">
                       <td className="px-4 py-2.5">
-                        <div className="text-xs font-semibold text-foreground">{w.name}</div>
+                        <Link
+                          to="/app/wines"
+                          search={{ wine: w.id }}
+                          className="text-xs font-semibold text-foreground underline-offset-2 hover:text-primary hover:underline"
+                          title="Abrir cadastro do rótulo"
+                        >
+                          {w.name}
+                        </Link>
                         <div className="text-[10px] text-muted-foreground">{normType(w.wine_type)}</div>
                       </td>
                       <td className="px-3 py-2.5 text-[11px] text-muted-foreground">{w.currentBracket}</td>

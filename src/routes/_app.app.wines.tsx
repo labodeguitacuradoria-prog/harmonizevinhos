@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -235,6 +235,9 @@ function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
 
 export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    wine: typeof search.wine === "string" ? search.wine : undefined,
+  }),
 });
 
 type Video = { title: string; url: string };
@@ -441,7 +444,17 @@ function WinesSection() {
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
   const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v as never }));
   const hasAnyFilter = Object.values(filters).some((v) => v !== "");
-
+  const navigate = useNavigate();
+  const routerState = useRouterState();
+  const pendingWineId = (() => {
+    try {
+      const qs = routerState.location.searchStr ?? "";
+      return new URLSearchParams(qs).get("wine") ?? undefined;
+    } catch {
+      return undefined;
+    }
+  })();
+  const [autoOpened, setAutoOpened] = useState(false);
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wines", restaurantId],
@@ -456,6 +469,17 @@ function WinesSection() {
       return data as Wine[];
     },
   });
+
+  useEffect(() => {
+    if (pendingWineId && !autoOpened && wines.length) {
+      const found = wines.find((w) => w.id === pendingWineId);
+      if (found) {
+        setViewWine(found);
+        setAutoOpened(true);
+        navigate({ to: "/app/wines", search: { wine: undefined }, replace: true });
+      }
+    }
+  }, [pendingWineId, autoOpened, wines, navigate]);
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],

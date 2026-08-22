@@ -1093,7 +1093,7 @@ function MarketPriceCell({
           onBlur={commit}
           onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
           className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
-          title="Preço de mercado (catálogo global ou informado por você)"
+          title="Preço de mercado sugerido (catálogo global aprovado ou informado por você)"
         />
       </div>
       <div className="mt-0.5 text-center text-[9px] text-muted-foreground">

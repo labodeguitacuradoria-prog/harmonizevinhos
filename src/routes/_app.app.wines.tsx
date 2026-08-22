@@ -235,9 +235,6 @@ function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
 
 export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,
-  validateSearch: (search: Record<string, unknown>) => ({
-    wine: typeof search.wine === "string" ? search.wine : undefined,
-  }),
 });
 
 type Video = { title: string; url: string };

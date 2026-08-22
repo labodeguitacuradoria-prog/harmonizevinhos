@@ -18,7 +18,19 @@ type WineRow = {
   volume: string | null;
   sale_price: number | null;
   active_on_menu: boolean | null;
+  suggested_retail_price: number | null;
+  catalog_id: string | null;
+  wine_catalog?: { suggested_retail_price: number | null } | null;
 };
+
+type SimulationRecord = {
+  id: string;
+  name: string;
+  entree_price: number;
+  prices: Record<string, number>;
+  updated_at: string;
+};
+
 
 const LEGACY_TYPE_MAP: Record<string, string> = {
   red: "Tinto", white: "Branco", rose: "Rosé",

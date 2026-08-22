@@ -758,6 +758,63 @@ function PriceAnalysisPage() {
                 </button>
               </div>
             </div>
+
+            {/* Save / open simulations */}
+            <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-border pt-3">
+              <div className="grid gap-1">
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {simId ? "Editando simulação salva" : "Nova simulação"}
+                </span>
+                <input
+                  value={simName}
+                  onChange={(e) => setSimName(e.target.value)}
+                  placeholder="Nome da simulação (ex.: Reajuste out/2026)"
+                  className="w-[260px] rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
+                />
+              </div>
+              <button
+                onClick={() => saveSimulation.mutate()}
+                disabled={saveSimulation.isPending || !restaurantId || Object.keys(simPrices).length === 0}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40"
+              >
+                <Save className="h-3.5 w-3.5" /> {simId ? "Salvar alterações" : "Salvar simulação"}
+              </button>
+              <button
+                onClick={newSimulation}
+                className="rounded-lg border border-border px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              >
+                Nova simulação
+              </button>
+
+              {savedSims.length > 0 && (
+                <div className="ml-auto grid gap-1">
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Simulações salvas</span>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={simId ?? ""}
+                      onChange={(e) => (e.target.value ? openSimulation(e.target.value) : newSimulation())}
+                      className="w-[280px] rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
+                    >
+                      <option value="">Abrir simulação salva…</option>
+                      {savedSims.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} · {new Date(s.updated_at).toLocaleDateString("pt-BR")}
+                        </option>
+                      ))}
+                    </select>
+                    {simId && (
+                      <button
+                        onClick={() => { if (confirm("Excluir esta simulação salva?")) deleteSimulation.mutate(simId); }}
+                        className="rounded-lg border border-rose-500/40 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-rose-400 transition hover:bg-rose-500/10"
+                      >
+                        Excluir
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* Per-wine simulation */}

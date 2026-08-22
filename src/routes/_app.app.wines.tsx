@@ -441,7 +441,7 @@ function WinesSection() {
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
   const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v as never }));
   const hasAnyFilter = Object.values(filters).some((v) => v !== "");
-  const navigate = useNavigate({ from: "/_app/app/wines" });
+  const navigate = useNavigate();
   const routerState = useRouterState();
   const pendingWineId = (() => {
     try {

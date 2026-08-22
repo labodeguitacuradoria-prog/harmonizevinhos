@@ -71,6 +71,7 @@ type WineCatalog = {
     estagioBarrica: number | null;
     intensidadeAromatica: number | null;
   } | null;
+  suggested_retail_price: number | null;
 };
 
 function CatalogAdmin() {

@@ -71,6 +71,7 @@ type WineCatalog = {
     estagioBarrica: number | null;
     intensidadeAromatica: number | null;
   } | null;
+  suggested_retail_price: number | null;
 };
 
 function CatalogAdmin() {
@@ -359,6 +360,7 @@ function CatalogAdmin() {
                 </div>
               </th>
               <th className="px-4 py-3">País</th>
+              <th className="px-4 py-3 whitespace-nowrap">Preço de mercado</th>
               {statusTab === "approved" && (
                 <th className="px-4 py-3 w-40">
                   <div className="space-y-1">
@@ -383,7 +385,7 @@ function CatalogAdmin() {
               const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
               const missing = checks.filter(c => !c.ok);
               const isExpanded = expandedId === item.id;
-              const colCount = statusTab === "approved" ? 7 : 6;
+              const colCount = statusTab === "approved" ? 8 : 7;
               return (
               <React.Fragment key={item.id}>
               <tr className="hover:bg-accent/50">
@@ -392,6 +394,11 @@ function CatalogAdmin() {
                 <td className="px-4 py-3">{item.vintage ?? "—"}</td>
                 <td className="px-4 py-3"><span className="block">{item.wine_type ?? "—"}</span><span className="block text-xs text-muted-foreground">{item.style ?? ""}</span></td>
                 <td className="px-4 py-3">{item.country ?? "—"}</td>
+                <td className="px-4 py-3 whitespace-nowrap font-medium text-[#D4AF37]">
+                  {item.suggested_retail_price != null
+                    ? item.suggested_retail_price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                    : "—"}
+                </td>
                 {statusTab === "approved" && (
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">

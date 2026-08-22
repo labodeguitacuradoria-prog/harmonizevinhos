@@ -299,6 +299,50 @@ export type Database = {
           },
         ]
       }
+      price_simulations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entree_price: number
+          id: string
+          name: string
+          notes: string | null
+          prices: Json
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entree_price?: number
+          id?: string
+          name: string
+          notes?: string | null
+          prices?: Json
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entree_price?: number
+          id?: string
+          name?: string
+          notes?: string | null
+          prices?: Json
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_simulations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       printed_wine_lists: {
         Row: {
           address_text: string | null

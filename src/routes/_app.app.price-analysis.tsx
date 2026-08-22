@@ -18,7 +18,19 @@ type WineRow = {
   volume: string | null;
   sale_price: number | null;
   active_on_menu: boolean | null;
+  suggested_retail_price: number | null;
+  catalog_id: string | null;
+  wine_catalog?: { suggested_retail_price: number | null } | null;
 };
+
+type SimulationRecord = {
+  id: string;
+  name: string;
+  entree_price: number;
+  prices: Record<string, number>;
+  updated_at: string;
+};
+
 
 const LEGACY_TYPE_MAP: Record<string, string> = {
   red: "Tinto", white: "Branco", rose: "Rosé",
@@ -83,8 +95,8 @@ function PriceAnalysisPage() {
   const [simBracketFilter, setSimBracketFilter] = useState<string>("all");
   const [simTypeFilter, setSimTypeFilter] = useState<string>("all");
   const [simChangedOnly, setSimChangedOnly] = useState(false);
-
-
+  const [simId, setSimId] = useState<string | null>(null);
+  const [simName, setSimName] = useState<string>("");
 
   const { data: wines = [] } = useQuery({
     queryKey: ["price-analysis-wines", restaurantId],
@@ -92,11 +104,12 @@ function PriceAnalysisPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("wines")
-        .select("id,name,wine_type,volume,sale_price,active_on_menu")
+        .select("id,name,wine_type,volume,sale_price,active_on_menu,suggested_retail_price,catalog_id,wine_catalog(suggested_retail_price)")
         .eq("restaurant_id", restaurantId!);
-      return (data ?? []) as WineRow[];
+      return (data ?? []) as unknown as WineRow[];
     },
   });
+
 
   const queryClient = useQueryClient();
   const hydratedFor = useRef<string | null>(null);
@@ -138,6 +151,95 @@ function PriceAnalysisPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // ---- Saved simulations ----
+  const { data: savedSims = [] } = useQuery({
+    queryKey: ["price-simulations", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("price_simulations")
+        .select("id,name,entree_price,prices,updated_at")
+        .eq("restaurant_id", restaurantId!)
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as SimulationRecord[];
+    },
+  });
+
+  const saveSimulation = useMutation({
+    mutationFn: async () => {
+      if (!restaurantId) throw new Error("Selecione um restaurante");
+      const name = simName.trim() || `Simulação ${new Date().toLocaleDateString("pt-BR")}`;
+      const payload = {
+        restaurant_id: restaurantId,
+        name,
+        entree_price: Math.max(1, entreePrice),
+        prices: simPrices,
+      };
+      if (simId) {
+        const { error } = await supabase.from("price_simulations").update(payload).eq("id", simId);
+        if (error) throw error;
+        return simId;
+      }
+      const { data, error } = await supabase
+        .from("price_simulations")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error) throw error;
+      return data.id as string;
+    },
+    onSuccess: (id) => {
+      setSimId(id);
+      toast.success("Simulação salva");
+      queryClient.invalidateQueries({ queryKey: ["price-simulations", restaurantId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteSimulation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("price_simulations").delete().eq("id", id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: (id) => {
+      if (simId === id) { setSimId(null); setSimName(""); setSimPrices({}); }
+      toast.success("Simulação excluída");
+      queryClient.invalidateQueries({ queryKey: ["price-simulations", restaurantId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function openSimulation(id: string) {
+    const s = savedSims.find((x) => x.id === id);
+    if (!s) return;
+    setSimId(s.id);
+    setSimName(s.name);
+    setSimPrices((s.prices ?? {}) as Record<string, number>);
+    if (s.entree_price) setEntreePrice(Number(s.entree_price));
+    toast.success(`Simulação "${s.name}" carregada`);
+  }
+
+  function newSimulation() {
+    setSimId(null);
+    setSimName("");
+    setSimPrices({});
+  }
+
+  // ---- Market price (preço de mercado) ----
+  const saveMarketPrice = useMutation({
+    mutationFn: async ({ wineId, value }: { wineId: string; value: number | null }) => {
+      const { error } = await supabase.from("wines").update({ suggested_retail_price: value }).eq("id", wineId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["price-analysis-wines", restaurantId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   const savedDateLabel = savedSetting?.used_at
     ? new Date(savedSetting.used_at).toLocaleString("pt-BR", {
@@ -225,11 +327,14 @@ function PriceAnalysisPage() {
         const currentPrice = w.sale_price ?? 0;
         const simPrice = priceFor(w);
         const changed = simPrices[w.id] != null && simPrice !== currentPrice;
+        const marketPrice = w.suggested_retail_price ?? w.wine_catalog?.suggested_retail_price ?? null;
         return {
           ...w,
           currentPrice,
           simPrice,
           changed,
+          marketPrice,
+          marketFromCatalog: w.suggested_retail_price == null && (w.wine_catalog?.suggested_retail_price ?? null) != null,
           diff: simPrice - currentPrice,
           diffPct: currentPrice > 0 ? ((simPrice - currentPrice) / currentPrice) * 100 : 0,
           currentBracket: bracketOf(currentPrice)?.name ?? "Fora das faixas",
@@ -653,17 +758,75 @@ function PriceAnalysisPage() {
                 </button>
               </div>
             </div>
+
+            {/* Save / open simulations */}
+            <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-border pt-3">
+              <div className="grid gap-1">
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {simId ? "Editando simulação salva" : "Nova simulação"}
+                </span>
+                <input
+                  value={simName}
+                  onChange={(e) => setSimName(e.target.value)}
+                  placeholder="Nome da simulação (ex.: Reajuste out/2026)"
+                  className="w-[260px] rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
+                />
+              </div>
+              <button
+                onClick={() => saveSimulation.mutate()}
+                disabled={saveSimulation.isPending || !restaurantId || Object.keys(simPrices).length === 0}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40"
+              >
+                <Save className="h-3.5 w-3.5" /> {simId ? "Salvar alterações" : "Salvar simulação"}
+              </button>
+              <button
+                onClick={newSimulation}
+                className="rounded-lg border border-border px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+              >
+                Nova simulação
+              </button>
+
+              {savedSims.length > 0 && (
+                <div className="ml-auto grid gap-1">
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Simulações salvas</span>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={simId ?? ""}
+                      onChange={(e) => (e.target.value ? openSimulation(e.target.value) : newSimulation())}
+                      className="w-[280px] rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
+                    >
+                      <option value="">Abrir simulação salva…</option>
+                      {savedSims.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} · {new Date(s.updated_at).toLocaleDateString("pt-BR")}
+                        </option>
+                      ))}
+                    </select>
+                    {simId && (
+                      <button
+                        onClick={() => { if (confirm("Excluir esta simulação salva?")) deleteSimulation.mutate(simId); }}
+                        className="rounded-lg border border-rose-500/40 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-rose-400 transition hover:bg-rose-500/10"
+                      >
+                        Excluir
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* Per-wine simulation */}
           <div className="rounded-2xl border border-border bg-card">
             <div className="overflow-auto">
-              <table className="w-full min-w-[820px] text-sm">
+              <table className="w-full min-w-[980px] text-sm">
                 <thead className="bg-card text-[10px] uppercase tracking-wider text-muted-foreground">
                   <tr className="border-b border-border">
                     <th className="px-4 py-3 text-left">Rótulo</th>
                     <th className="px-3 py-3 text-left">Faixa atual</th>
                     <th className="px-3 py-3 text-right">Preço atual</th>
+                    <th className="px-3 py-3 text-center">Preço de mercado</th>
                     <th className="px-3 py-3 text-center">Novo preço (simulação)</th>
                     <th className="px-3 py-3 text-left">Faixa simulada</th>
                     <th className="px-3 py-3 text-right">Variação</th>
@@ -701,6 +864,7 @@ function PriceAnalysisPage() {
                         ))}
                       </select>
                     </th>
+                    <th className="px-3 py-2" />
                     <th className="px-3 py-2 text-center">
                       <button
                         onClick={() => setSimChangedOnly((v) => !v)}
@@ -737,6 +901,14 @@ function PriceAnalysisPage() {
                       </td>
                       <td className="px-3 py-2.5 text-[11px] text-muted-foreground">{w.currentBracket}</td>
                       <td className="px-3 py-2.5 text-right text-xs text-muted-foreground">{fmtBRL(w.currentPrice)}</td>
+                      <td className="px-3 py-2.5">
+                        <MarketPriceCell
+                          key={`${w.id}-${w.marketPrice ?? "none"}`}
+                          value={w.marketPrice}
+                          fromCatalog={w.marketFromCatalog}
+                          onSave={(v) => saveMarketPrice.mutate({ wineId: w.id, value: v })}
+                        />
+                      </td>
                       <td className="px-3 py-2.5">
                         <div className="mx-auto flex w-[150px] items-center gap-1.5 rounded-lg border border-border bg-background px-2 py-1.5 focus-within:border-primary">
                           <span className="text-[11px] text-primary">R$</span>
@@ -886,6 +1058,44 @@ function BracketCard({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function MarketPriceCell({
+  value, fromCatalog, onSave,
+}: {
+  value: number | null;
+  fromCatalog: boolean;
+  onSave: (v: number | null) => void;
+}) {
+  const [text, setText] = useState(value != null ? String(Math.round(value)) : "");
+
+  const commit = () => {
+    const raw = text.replace(/[^\d]/g, "");
+    const next = raw === "" ? null : Number(raw);
+    if (next !== (value != null ? Math.round(value) : null)) onSave(next);
+  };
+
+  return (
+    <div className="mx-auto w-[150px]">
+      <div className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-2 py-1.5 focus-within:border-primary">
+        <span className="text-[11px] text-muted-foreground">R$</span>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={text}
+          placeholder="—"
+          onChange={(e) => setText(e.target.value.replace(/[^\d]/g, ""))}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+          className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
+          title="Preço de mercado (catálogo global ou informado por você)"
+        />
+      </div>
+      <div className="mt-0.5 text-center text-[9px] text-muted-foreground">
+        {value == null ? "informe" : fromCatalog ? "catálogo global" : "informado"}
+      </div>
     </div>
   );
 }

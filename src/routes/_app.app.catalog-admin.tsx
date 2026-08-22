@@ -360,6 +360,7 @@ function CatalogAdmin() {
                 </div>
               </th>
               <th className="px-4 py-3">País</th>
+              <th className="px-4 py-3 whitespace-nowrap">Preço de mercado</th>
               {statusTab === "approved" && (
                 <th className="px-4 py-3 w-40">
                   <div className="space-y-1">

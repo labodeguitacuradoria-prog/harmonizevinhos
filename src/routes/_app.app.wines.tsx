@@ -441,9 +441,17 @@ function WinesSection() {
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
   const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v as never }));
   const hasAnyFilter = Object.values(filters).some((v) => v !== "");
-  const search = useSearch({ from: "/app/wines" });
-  const navigate = useNavigate({ from: "/app/wines" });
-  const pendingWineId = search.wine;
+  const navigate = useNavigate({ from: "/_app/app/wines" });
+  const routerState = useRouterState();
+  const pendingWineId = (() => {
+    try {
+      const qs = routerState.location.searchStr ?? "";
+      return new URLSearchParams(qs).get("wine") ?? undefined;
+    } catch {
+      return undefined;
+    }
+  })();
+  const [autoOpened, setAutoOpened] = useState(false);
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wines", restaurantId],

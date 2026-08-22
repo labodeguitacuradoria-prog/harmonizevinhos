@@ -476,7 +476,7 @@ function WinesSection() {
       if (found) {
         setViewWine(found);
         setAutoOpened(true);
-        navigate({ to: "/app/wines", search: {}, replace: true });
+        navigate({ to: "/app/wines", search: { wine: undefined }, replace: true });
       }
     }
   }, [pendingWineId, autoOpened, wines, navigate]);

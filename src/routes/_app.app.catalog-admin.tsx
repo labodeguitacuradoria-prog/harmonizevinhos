@@ -315,7 +315,19 @@ function CatalogAdmin() {
         <table className="w-full text-left text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-muted/95 text-xs font-semibold uppercase text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-muted/80">
             <tr>
+              {showSelect && (
+                <th className="px-3 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                    title="Selecionar todos"
+                    className="h-4 w-4 accent-[#D4AF37]"
+                  />
+                </th>
+              )}
               <th className="px-4 py-3">
+
                 <div className="space-y-1">
                   <span>Rótulo</span>
                   <input

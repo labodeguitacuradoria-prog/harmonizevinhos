@@ -83,6 +83,9 @@ function CatalogAdmin() {
   const [editing, setEditing] = useState<Partial<WineCatalog> | null>(null);
   const [initialTab, setInitialTab] = useState<"geral" | "carac" | "midia">("geral");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+
   const [filters, setFilters] = useState({
     name: "",
     producer: "",

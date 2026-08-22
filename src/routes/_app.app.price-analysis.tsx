@@ -79,6 +79,10 @@ function PriceAnalysisPage() {
   const [showExplanation, setShowExplanation] = useState<boolean>(true);
   const [simPrices, setSimPrices] = useState<Record<string, number>>({});
   const [simSearch, setSimSearch] = useState("");
+  const [simBracketFilter, setSimBracketFilter] = useState<string>("all");
+  const [simTypeFilter, setSimTypeFilter] = useState<string>("all");
+  const [simChangedOnly, setSimChangedOnly] = useState(false);
+
 
 
   const { data: wines = [] } = useQuery({

@@ -20,7 +20,7 @@ type WineRow = {
   active_on_menu: boolean | null;
   suggested_retail_price: number | null;
   catalog_id: string | null;
-  wine_catalog?: { suggested_retail_price: number | null } | null;
+  wine_catalog?: { suggested_retail_price: number | null; status: string | null } | null;
 };
 
 type SimulationRecord = {
@@ -104,7 +104,7 @@ function PriceAnalysisPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("wines")
-        .select("id,name,wine_type,volume,sale_price,active_on_menu,suggested_retail_price,catalog_id,wine_catalog(suggested_retail_price)")
+        .select("id,name,wine_type,volume,sale_price,active_on_menu,suggested_retail_price,catalog_id,wine_catalog(suggested_retail_price,status)")
         .eq("restaurant_id", restaurantId!);
       return (data ?? []) as unknown as WineRow[];
     },
@@ -226,6 +226,7 @@ function PriceAnalysisPage() {
     setSimId(null);
     setSimName("");
     setSimPrices({});
+    setSimChangedOnly(false);
   }
 
   // ---- Market price (preço de mercado) ----
@@ -327,14 +328,16 @@ function PriceAnalysisPage() {
         const currentPrice = w.sale_price ?? 0;
         const simPrice = priceFor(w);
         const changed = simPrices[w.id] != null && simPrice !== currentPrice;
-        const marketPrice = w.suggested_retail_price ?? w.wine_catalog?.suggested_retail_price ?? null;
+        const catalogMarket =
+          w.wine_catalog?.status === "approved" ? (w.wine_catalog?.suggested_retail_price ?? null) : null;
+        const marketPrice = w.suggested_retail_price ?? catalogMarket;
         return {
           ...w,
           currentPrice,
           simPrice,
           changed,
           marketPrice,
-          marketFromCatalog: w.suggested_retail_price == null && (w.wine_catalog?.suggested_retail_price ?? null) != null,
+          marketFromCatalog: w.suggested_retail_price == null && catalogMarket != null,
           diff: simPrice - currentPrice,
           diffPct: currentPrice > 0 ? ((simPrice - currentPrice) / currentPrice) * 100 : 0,
           currentBracket: bracketOf(currentPrice)?.name ?? "Fora das faixas",
@@ -826,8 +829,8 @@ function PriceAnalysisPage() {
                     <th className="px-4 py-3 text-left">Rótulo</th>
                     <th className="px-3 py-3 text-left">Faixa atual</th>
                     <th className="px-3 py-3 text-right">Preço atual</th>
-                    <th className="px-3 py-3 text-center">Preço de mercado</th>
-                    <th className="px-3 py-3 text-center">Novo preço (simulação)</th>
+                    <th className="px-3 py-3 text-center">Nova simulação (R$)</th>
+                    <th className="px-3 py-3 text-center">Preço de mercado sugerido</th>
                     <th className="px-3 py-3 text-left">Faixa simulada</th>
                     <th className="px-3 py-3 text-right">Variação</th>
                   </tr>
@@ -864,7 +867,6 @@ function PriceAnalysisPage() {
                         ))}
                       </select>
                     </th>
-                    <th className="px-3 py-2" />
                     <th className="px-3 py-2 text-center">
                       <button
                         onClick={() => setSimChangedOnly((v) => !v)}
@@ -873,6 +875,7 @@ function PriceAnalysisPage() {
                         Só simulados
                       </button>
                     </th>
+                    <th className="px-3 py-2" />
                     <th className="px-3 py-2" />
                     <th className="px-3 py-2 text-right">
                       <button
@@ -902,21 +905,13 @@ function PriceAnalysisPage() {
                       <td className="px-3 py-2.5 text-[11px] text-muted-foreground">{w.currentBracket}</td>
                       <td className="px-3 py-2.5 text-right text-xs text-muted-foreground">{fmtBRL(w.currentPrice)}</td>
                       <td className="px-3 py-2.5">
-                        <MarketPriceCell
-                          key={`${w.id}-${w.marketPrice ?? "none"}`}
-                          value={w.marketPrice}
-                          fromCatalog={w.marketFromCatalog}
-                          onSave={(v) => saveMarketPrice.mutate({ wineId: w.id, value: v })}
-                        />
-                      </td>
-                      <td className="px-3 py-2.5">
                         <div className="mx-auto flex w-[150px] items-center gap-1.5 rounded-lg border border-border bg-background px-2 py-1.5 focus-within:border-primary">
                           <span className="text-[11px] text-primary">R$</span>
                           <input
                             type="text"
                             inputMode="numeric"
                             value={simPrices[w.id] != null ? String(simPrices[w.id]) : ""}
-                            placeholder={String(Math.round(w.currentPrice))}
+                            placeholder="—"
                             onChange={(e) => {
                               const raw = e.target.value.replace(/[^\d]/g, "");
                               setSimPrices((prev) => {
@@ -929,6 +924,14 @@ function PriceAnalysisPage() {
                             className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
                           />
                         </div>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <MarketPriceCell
+                          key={`${w.id}-${w.marketPrice ?? "none"}`}
+                          value={w.marketPrice}
+                          fromCatalog={w.marketFromCatalog}
+                          onSave={(v) => saveMarketPrice.mutate({ wineId: w.id, value: v })}
+                        />
                       </td>
                       <td className="px-3 py-2.5 text-[11px]">
                         <span className={w.changed ? "font-semibold text-primary" : "text-muted-foreground"}>
@@ -1090,7 +1093,7 @@ function MarketPriceCell({
           onBlur={commit}
           onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
           className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
-          title="Preço de mercado (catálogo global ou informado por você)"
+          title="Preço de mercado sugerido (catálogo global aprovado ou informado por você)"
         />
       </div>
       <div className="mt-0.5 text-center text-[9px] text-muted-foreground">

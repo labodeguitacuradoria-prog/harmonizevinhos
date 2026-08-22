@@ -216,6 +216,9 @@ function PriceAnalysisPage() {
     const term = simSearch.trim().toLowerCase();
     const wineRows = activeWines
       .filter((w) => (term ? w.name.toLowerCase().includes(term) : true))
+      .filter((w) => (simTypeFilter === "all" ? true : normType(w.wine_type) === simTypeFilter))
+      .filter((w) => (simBracketFilter === "all" ? true : bracketOf(w.sale_price ?? 0)?.id === simBracketFilter))
+      .filter((w) => (simChangedOnly ? simPrices[w.id] != null && simPrices[w.id] !== (w.sale_price ?? 0) : true))
       .sort((a, b) => (b.sale_price ?? 0) - (a.sale_price ?? 0))
       .map((w) => {
         const currentPrice = w.sale_price ?? 0;
@@ -229,13 +232,16 @@ function PriceAnalysisPage() {
           diff: simPrice - currentPrice,
           diffPct: currentPrice > 0 ? ((simPrice - currentPrice) / currentPrice) * 100 : 0,
           currentBracket: bracketOf(currentPrice)?.name ?? "Fora das faixas",
+          currentBracketId: bracketOf(currentPrice)?.id ?? null,
           simBracket: bracketOf(simPrice)?.name ?? "Fora das faixas",
+          simBracketId: bracketOf(simPrice)?.id ?? null,
         };
       });
 
     return { rows, wineRows, avgCurrent, avgSimulated };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brackets, activeWines, totalActual, simPrices, simSearch]);
+  }, [brackets, activeWines, totalActual, simPrices, simSearch, simTypeFilter, simBracketFilter, simChangedOnly]);
+
 
 
   return (

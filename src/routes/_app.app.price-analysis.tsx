@@ -327,11 +327,14 @@ function PriceAnalysisPage() {
         const currentPrice = w.sale_price ?? 0;
         const simPrice = priceFor(w);
         const changed = simPrices[w.id] != null && simPrice !== currentPrice;
+        const marketPrice = w.suggested_retail_price ?? w.wine_catalog?.suggested_retail_price ?? null;
         return {
           ...w,
           currentPrice,
           simPrice,
           changed,
+          marketPrice,
+          marketFromCatalog: w.suggested_retail_price == null && (w.wine_catalog?.suggested_retail_price ?? null) != null,
           diff: simPrice - currentPrice,
           diffPct: currentPrice > 0 ? ((simPrice - currentPrice) / currentPrice) * 100 : 0,
           currentBracket: bracketOf(currentPrice)?.name ?? "Fora das faixas",

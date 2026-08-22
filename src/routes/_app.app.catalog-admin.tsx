@@ -385,7 +385,7 @@ function CatalogAdmin() {
               const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
               const missing = checks.filter(c => !c.ok);
               const isExpanded = expandedId === item.id;
-              const colCount = statusTab === "approved" ? 7 : 6;
+              const colCount = statusTab === "approved" ? 8 : 7;
               return (
               <React.Fragment key={item.id}>
               <tr className="hover:bg-accent/50">

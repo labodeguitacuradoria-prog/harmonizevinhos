@@ -901,6 +901,14 @@ function PriceAnalysisPage() {
                       <td className="px-3 py-2.5 text-[11px] text-muted-foreground">{w.currentBracket}</td>
                       <td className="px-3 py-2.5 text-right text-xs text-muted-foreground">{fmtBRL(w.currentPrice)}</td>
                       <td className="px-3 py-2.5">
+                        <MarketPriceCell
+                          key={`${w.id}-${w.marketPrice ?? "none"}`}
+                          value={w.marketPrice}
+                          fromCatalog={w.marketFromCatalog}
+                          onSave={(v) => saveMarketPrice.mutate({ wineId: w.id, value: v })}
+                        />
+                      </td>
+                      <td className="px-3 py-2.5">
                         <div className="mx-auto flex w-[150px] items-center gap-1.5 rounded-lg border border-border bg-background px-2 py-1.5 focus-within:border-primary">
                           <span className="text-[11px] text-primary">R$</span>
                           <input

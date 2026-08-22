@@ -83,6 +83,9 @@ function CatalogAdmin() {
   const [editing, setEditing] = useState<Partial<WineCatalog> | null>(null);
   const [initialTab, setInitialTab] = useState<"geral" | "carac" | "midia">("geral");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+
   const [filters, setFilters] = useState({
     name: "",
     producer: "",
@@ -270,10 +273,58 @@ function CatalogAdmin() {
       });
   }, [items, statusTab, filters, duplicateIds]);
 
+  const showSelect = isAdmin && statusTab === "pending";
+  const allSelected = filtered.length > 0 && filtered.every(i => selectedIds.has(i.id));
+
+  useEffect(() => { setSelectedIds(new Set()); }, [statusTab]);
+
+  function toggleOne(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setSelectedIds(allSelected ? new Set() : new Set(filtered.map(i => i.id)));
+  }
+
+  async function bulkStatus(status: CatalogStatus) {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    let reason: string | undefined;
+    if (status === "rejected") {
+      if (!confirm(`Rejeitar ${ids.length} rótulo(s)?`)) return;
+      reason = prompt("Motivo da rejeição (opcional)") ?? undefined;
+    } else if (!confirm(`Aprovar ${ids.length} rótulo(s) no catálogo global?`)) return;
+    setBulkBusy(true);
+    const patch: any = { status, rejection_reason: reason ?? null };
+    if (status === "approved") patch.approved_at = new Date().toISOString();
+    const { error } = await supabase.from("wine_catalog").update(patch).in("id", ids);
+    setBulkBusy(false);
+    if (error) return alert(error.message);
+    setSelectedIds(new Set());
+    fetchCatalog();
+  }
+
+  async function bulkDelete() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Excluir definitivamente ${ids.length} rótulo(s)?`)) return;
+    setBulkBusy(true);
+    const { error } = await supabase.from("wine_catalog").delete().in("id", ids);
+    setBulkBusy(false);
+    if (error) return alert(error.message);
+    setSelectedIds(new Set());
+    fetchCatalog();
+  }
+
   function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" = "geral") {
     setInitialTab(tab);
     setEditing(item);
   }
+
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8">
@@ -311,11 +362,66 @@ function CatalogAdmin() {
 
       <>
 
+      {showSelect && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#2a2a2a] bg-[#141414] px-4 py-3">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Ação em lote
+          </span>
+          <span className="text-sm text-[#D4AF37]">
+            {selectedIds.size} selecionado{selectedIds.size === 1 ? "" : "s"}
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              disabled={selectedIds.size === 0 || bulkBusy}
+              onClick={() => bulkStatus("approved")}
+              className="flex items-center gap-1.5 rounded-md border border-emerald-500/40 px-3 py-1.5 text-xs font-bold uppercase text-emerald-500 hover:bg-emerald-500/10 disabled:opacity-40"
+            >
+              <Check className="h-3.5 w-3.5" /> Aprovar
+            </button>
+            <button
+              disabled={selectedIds.size === 0 || bulkBusy}
+              onClick={() => bulkStatus("rejected")}
+              className="flex items-center gap-1.5 rounded-md border border-rose-500/40 px-3 py-1.5 text-xs font-bold uppercase text-rose-500 hover:bg-rose-500/10 disabled:opacity-40"
+            >
+              <XIcon className="h-3.5 w-3.5" /> Rejeitar
+            </button>
+            <button
+              disabled={selectedIds.size === 0 || bulkBusy}
+              onClick={bulkDelete}
+              className="flex items-center gap-1.5 rounded-md border border-destructive/40 px-3 py-1.5 text-xs font-bold uppercase text-destructive hover:bg-destructive/10 disabled:opacity-40"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Excluir
+            </button>
+            {selectedIds.size > 0 && (
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Limpar seleção
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="overflow-auto rounded-xl border border-border bg-card max-h-[calc(100vh-220px)]">
+
         <table className="w-full text-left text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-muted/95 text-xs font-semibold uppercase text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-muted/80">
             <tr>
+              {showSelect && (
+                <th className="px-3 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                    title="Selecionar todos"
+                    className="h-4 w-4 accent-[#D4AF37]"
+                  />
+                </th>
+              )}
               <th className="px-4 py-3">
+
                 <div className="space-y-1">
                   <span>Rótulo</span>
                   <input
@@ -385,11 +491,22 @@ function CatalogAdmin() {
               const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
               const missing = checks.filter(c => !c.ok);
               const isExpanded = expandedId === item.id;
-              const colCount = statusTab === "approved" ? 8 : 7;
+              const colCount = (statusTab === "approved" ? 8 : 7) + (showSelect ? 1 : 0);
               return (
               <React.Fragment key={item.id}>
               <tr className="hover:bg-accent/50">
+                {showSelect && (
+                  <td className="px-3 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(item.id)}
+                      onChange={() => toggleOne(item.id)}
+                      className="h-4 w-4 accent-[#D4AF37]"
+                    />
+                  </td>
+                )}
                 <td className="px-4 py-3 font-medium">{item.name}</td>
+
                 <td className="px-4 py-3">{item.producer ?? "—"}</td>
                 <td className="px-4 py-3">{item.vintage ?? "—"}</td>
                 <td className="px-4 py-3"><span className="block">{item.wine_type ?? "—"}</span><span className="block text-xs text-muted-foreground">{item.style ?? ""}</span></td>

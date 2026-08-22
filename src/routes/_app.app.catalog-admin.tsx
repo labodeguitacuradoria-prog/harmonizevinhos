@@ -394,6 +394,11 @@ function CatalogAdmin() {
                 <td className="px-4 py-3">{item.vintage ?? "—"}</td>
                 <td className="px-4 py-3"><span className="block">{item.wine_type ?? "—"}</span><span className="block text-xs text-muted-foreground">{item.style ?? ""}</span></td>
                 <td className="px-4 py-3">{item.country ?? "—"}</td>
+                <td className="px-4 py-3 whitespace-nowrap font-medium text-[#D4AF37]">
+                  {item.suggested_retail_price != null
+                    ? item.suggested_retail_price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                    : "—"}
+                </td>
                 {statusTab === "approved" && (
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">

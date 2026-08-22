@@ -602,7 +602,9 @@ function PriceAnalysisPage() {
                       />
                     </div>
                     <div className="mt-2 truncate text-[10px] font-semibold text-foreground">{r.name}</div>
-                    <div className="text-[9px] text-muted-foreground">{r.mult}</div>
+                    <div className="text-[9px] text-muted-foreground">
+                      {fmtBRL(r.min)} {r.max === Infinity ? "+" : `– ${fmtBRL(r.max)}`}
+                    </div>
                     <div className="mt-1 flex items-baseline gap-1 text-[10px]">
                       <span className="font-bold text-primary">{r.simulated}</span>
                       <span className="text-muted-foreground">/ ideal {r.target}</span>

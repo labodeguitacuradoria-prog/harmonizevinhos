@@ -1061,3 +1061,41 @@ function BracketCard({
     </div>
   );
 }
+
+function MarketPriceCell({
+  value, fromCatalog, onSave,
+}: {
+  value: number | null;
+  fromCatalog: boolean;
+  onSave: (v: number | null) => void;
+}) {
+  const [text, setText] = useState(value != null ? String(Math.round(value)) : "");
+
+  const commit = () => {
+    const raw = text.replace(/[^\d]/g, "");
+    const next = raw === "" ? null : Number(raw);
+    if (next !== (value != null ? Math.round(value) : null)) onSave(next);
+  };
+
+  return (
+    <div className="mx-auto w-[150px]">
+      <div className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-2 py-1.5 focus-within:border-primary">
+        <span className="text-[11px] text-muted-foreground">R$</span>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={text}
+          placeholder="—"
+          onChange={(e) => setText(e.target.value.replace(/[^\d]/g, ""))}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+          className="w-full bg-transparent text-sm font-semibold text-foreground focus:outline-none"
+          title="Preço de mercado (catálogo global ou informado por você)"
+        />
+      </div>
+      <div className="mt-0.5 text-center text-[9px] text-muted-foreground">
+        {value == null ? "informe" : fromCatalog ? "catálogo global" : "informado"}
+      </div>
+    </div>
+  );
+}

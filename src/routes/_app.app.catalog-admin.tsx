@@ -276,7 +276,7 @@ function CatalogAdmin() {
       });
   }, [items, statusTab, filters, duplicateIds]);
 
-  const showSelect = isAdmin && statusTab === "pending";
+  const showSelect = isAdmin;
   const allSelected = filtered.length > 0 && filtered.every(i => selectedIds.has(i.id));
 
   useEffect(() => { setSelectedIds(new Set()); }, [statusTab]);

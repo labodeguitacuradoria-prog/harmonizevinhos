@@ -564,6 +564,7 @@ function CatalogAdmin() {
               </th>
               <th className="px-4 py-3">País</th>
               <th className="px-4 py-3 whitespace-nowrap">Preço de mercado</th>
+              <th className="px-4 py-3 text-center" title="Indica se o rótulo possui imagem cadastrada">Img</th>
               {statusTab === "approved" && (
                 <th className="px-4 py-3 w-40">
                   <div className="space-y-1">

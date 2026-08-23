@@ -88,6 +88,10 @@ function CatalogAdmin() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [enrichBusy, setEnrichBusy] = useState(false);
+  const [enrichProgress, setEnrichProgress] = useState<{ done: number; total: number; name: string } | null>(null);
+  const enrich = useServerFn(enrichWineFromWeb);
+
 
   const [filters, setFilters] = useState({
     name: "",

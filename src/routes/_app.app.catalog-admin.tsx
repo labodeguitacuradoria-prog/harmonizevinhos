@@ -451,26 +451,44 @@ function CatalogAdmin() {
           </span>
           <div className="flex flex-wrap items-center gap-2">
             <button
-              disabled={selectedIds.size === 0 || bulkBusy}
-              onClick={() => bulkStatus("approved")}
-              className="flex items-center gap-1.5 rounded-md border border-emerald-500/40 px-3 py-1.5 text-xs font-bold uppercase text-emerald-500 hover:bg-emerald-500/10 disabled:opacity-40"
+              disabled={selectedIds.size === 0 || enrichBusy || bulkBusy}
+              onClick={bulkEnrich}
+              className="flex items-center gap-1.5 rounded-md border border-[#D4AF37] bg-[#D4AF37]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#D4AF37] hover:bg-[#D4AF37]/20 disabled:opacity-40"
             >
-              <Check className="h-3.5 w-3.5" /> Aprovar
+              {enrichBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+              Enriquecer os dados com IA
             </button>
+            {statusTab === "pending" && (
+              <>
+                <button
+                  disabled={selectedIds.size === 0 || bulkBusy || enrichBusy}
+                  onClick={() => bulkStatus("approved")}
+                  className="flex items-center gap-1.5 rounded-md border border-emerald-500/40 px-3 py-1.5 text-xs font-bold uppercase text-emerald-500 hover:bg-emerald-500/10 disabled:opacity-40"
+                >
+                  <Check className="h-3.5 w-3.5" /> Aprovar
+                </button>
+                <button
+                  disabled={selectedIds.size === 0 || bulkBusy || enrichBusy}
+                  onClick={() => bulkStatus("rejected")}
+                  className="flex items-center gap-1.5 rounded-md border border-rose-500/40 px-3 py-1.5 text-xs font-bold uppercase text-rose-500 hover:bg-rose-500/10 disabled:opacity-40"
+                >
+                  <XIcon className="h-3.5 w-3.5" /> Rejeitar
+                </button>
+              </>
+            )}
             <button
-              disabled={selectedIds.size === 0 || bulkBusy}
-              onClick={() => bulkStatus("rejected")}
-              className="flex items-center gap-1.5 rounded-md border border-rose-500/40 px-3 py-1.5 text-xs font-bold uppercase text-rose-500 hover:bg-rose-500/10 disabled:opacity-40"
-            >
-              <XIcon className="h-3.5 w-3.5" /> Rejeitar
-            </button>
-            <button
-              disabled={selectedIds.size === 0 || bulkBusy}
+              disabled={selectedIds.size === 0 || bulkBusy || enrichBusy}
               onClick={bulkDelete}
               className="flex items-center gap-1.5 rounded-md border border-destructive/40 px-3 py-1.5 text-xs font-bold uppercase text-destructive hover:bg-destructive/10 disabled:opacity-40"
             >
               <Trash2 className="h-3.5 w-3.5" /> Excluir
             </button>
+            {enrichProgress && (
+              <span className="text-xs text-muted-foreground">
+                {enrichProgress.done + 1}/{enrichProgress.total} — {enrichProgress.name}
+              </span>
+            )}
+
             {selectedIds.size > 0 && (
               <button
                 onClick={() => setSelectedIds(new Set())}

@@ -614,6 +614,17 @@ function CatalogAdmin() {
                     ? item.suggested_retail_price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
                     : "—"}
                 </td>
+                <td className="px-4 py-3 text-center">
+                  {item.image_url ? (
+                    <span title="Possui imagem cadastrada" className="inline-flex items-center justify-center text-emerald-500">
+                      <ImageIcon className="h-4 w-4" />
+                    </span>
+                  ) : (
+                    <span title="Sem imagem cadastrada" className="inline-flex items-center justify-center text-rose-500/80">
+                      <ImageOff className="h-4 w-4" />
+                    </span>
+                  )}
+                </td>
                 {statusTab === "approved" && (
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">

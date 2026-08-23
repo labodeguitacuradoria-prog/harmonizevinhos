@@ -323,6 +323,78 @@ function CatalogAdmin() {
     fetchCatalog();
   }
 
+  const ENRICH_FIELDS = [
+    "producer", "region", "appellation", "country", "grape", "wine_type", "style",
+    "alcohol_pct", "sugar_level", "sugar_g_l", "acidity", "acidity_g_l", "acidity_ph",
+    "body", "tannin", "oak_months", "production_method", "elaboration", "aging",
+    "serving_temp_min", "serving_temp_max", "tasting_notes", "pairing_notes",
+    "awards", "sommelier_weights", "suggested_retail_price",
+  ] as const;
+
+  function isEmptyValue(v: unknown) {
+    if (v === null || v === undefined) return true;
+    if (typeof v === "string") return v.trim() === "";
+    if (Array.isArray(v)) return v.length === 0;
+    return false;
+  }
+
+  async function bulkEnrich() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Enriquecer ${ids.length} rótulo(s) com IA? Apenas campos vazios serão preenchidos.`)) return;
+    setEnrichBusy(true);
+    let ok = 0;
+    let fail = 0;
+    for (const [idx, id] of ids.entries()) {
+      const item = items.find(i => i.id === id);
+      if (!item) continue;
+      setEnrichProgress({ done: idx, total: ids.length, name: item.name });
+      try {
+        const missingFields = ENRICH_FIELDS.filter(f => isEmptyValue((item as any)[f]));
+        const res = await enrich({
+          data: {
+            name: item.name,
+            producer: item.producer,
+            vintage: item.vintage,
+            country: item.country,
+            region: item.region,
+            wine_type: item.wine_type,
+            style: item.style,
+            missingFields: [...missingFields],
+          },
+        });
+        const patch: Record<string, unknown> = {};
+        for (const f of ENRICH_FIELDS) {
+          const incoming = (res as any)[f];
+          if (isEmptyValue((item as any)[f]) && !isEmptyValue(incoming)) patch[f] = incoming;
+        }
+        const note = [res.notes, res.price_rationale ? `Preço estimado: ${res.price_rationale}` : null]
+          .filter(Boolean)
+          .join(" | ");
+        if (note) {
+          patch['extraction_notes'] = [item.extraction_notes, `[IA ${new Date().toLocaleDateString("pt-BR")}] ${note}`]
+            .filter(Boolean)
+            .join("\n");
+        }
+        if (Object.keys(patch).length > 0) {
+          patch['extracted_by_ai'] = true;
+          const { error } = await supabase.from("wine_catalog").update(patch as any).eq("id", id);
+          if (error) throw error;
+        }
+        ok++;
+      } catch (e: any) {
+        console.error("[enrich]", item.name, e);
+        fail++;
+      }
+    }
+    setEnrichProgress(null);
+    setEnrichBusy(false);
+    setSelectedIds(new Set());
+    await fetchCatalog();
+    alert(`Enriquecimento concluído: ${ok} atualizado(s)${fail ? `, ${fail} com falha` : ""}.`);
+  }
+
+
   function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" = "geral") {
     setInitialTab(tab);
     setEditing(item);

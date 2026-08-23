@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { enrichWineFromWeb } from "@/lib/wine-enrich.functions";
-import { Database, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink, ChevronDown, ChevronUp, Wand2, Loader2 } from "lucide-react";
+import { Database, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink, ChevronDown, ChevronUp, Wand2, Loader2, ImageOff, ImageIcon } from "lucide-react";
 
 import {
   WineFieldsEditor,
@@ -564,6 +564,7 @@ function CatalogAdmin() {
               </th>
               <th className="px-4 py-3">País</th>
               <th className="px-4 py-3 whitespace-nowrap">Preço de mercado</th>
+              <th className="px-4 py-3 text-center" title="Indica se o rótulo possui imagem cadastrada">Img</th>
               {statusTab === "approved" && (
                 <th className="px-4 py-3 w-40">
                   <div className="space-y-1">
@@ -588,7 +589,7 @@ function CatalogAdmin() {
               const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
               const missing = checks.filter(c => !c.ok);
               const isExpanded = expandedId === item.id;
-              const colCount = (statusTab === "approved" ? 8 : 7) + (showSelect ? 1 : 0);
+              const colCount = (statusTab === "approved" ? 9 : 8) + (showSelect ? 1 : 0);
               return (
               <React.Fragment key={item.id}>
               <tr className="hover:bg-accent/50">
@@ -612,6 +613,17 @@ function CatalogAdmin() {
                   {item.suggested_retail_price != null
                     ? item.suggested_retail_price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
                     : "—"}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  {item.image_url ? (
+                    <span title="Possui imagem cadastrada" className="inline-flex items-center justify-center text-emerald-500">
+                      <ImageIcon className="h-4 w-4" />
+                    </span>
+                  ) : (
+                    <span title="Sem imagem cadastrada" className="inline-flex items-center justify-center text-rose-500/80">
+                      <ImageOff className="h-4 w-4" />
+                    </span>
+                  )}
                 </td>
                 {statusTab === "approved" && (
                   <td className="px-4 py-3">

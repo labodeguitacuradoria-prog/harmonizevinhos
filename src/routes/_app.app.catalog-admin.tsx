@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import React, { useState, useEffect, useMemo } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Database, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { enrichWineFromWeb } from "@/lib/wine-enrich.functions";
+import { Database, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink, ChevronDown, ChevronUp, Wand2, Loader2 } from "lucide-react";
+
 import {
   WineFieldsEditor,
   WineFormTabs,
@@ -85,6 +88,10 @@ function CatalogAdmin() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [enrichBusy, setEnrichBusy] = useState(false);
+  const [enrichProgress, setEnrichProgress] = useState<{ done: number; total: number; name: string } | null>(null);
+  const enrich = useServerFn(enrichWineFromWeb);
+
 
   const [filters, setFilters] = useState({
     name: "",
@@ -273,7 +280,7 @@ function CatalogAdmin() {
       });
   }, [items, statusTab, filters, duplicateIds]);
 
-  const showSelect = isAdmin && statusTab === "pending";
+  const showSelect = isAdmin;
   const allSelected = filtered.length > 0 && filtered.every(i => selectedIds.has(i.id));
 
   useEffect(() => { setSelectedIds(new Set()); }, [statusTab]);
@@ -319,6 +326,78 @@ function CatalogAdmin() {
     setSelectedIds(new Set());
     fetchCatalog();
   }
+
+  const ENRICH_FIELDS = [
+    "producer", "region", "appellation", "country", "grape", "wine_type", "style",
+    "alcohol_pct", "sugar_level", "sugar_g_l", "acidity", "acidity_g_l", "acidity_ph",
+    "body", "tannin", "oak_months", "production_method", "elaboration", "aging",
+    "serving_temp_min", "serving_temp_max", "tasting_notes", "pairing_notes",
+    "awards", "sommelier_weights", "suggested_retail_price",
+  ] as const;
+
+  function isEmptyValue(v: unknown) {
+    if (v === null || v === undefined) return true;
+    if (typeof v === "string") return v.trim() === "";
+    if (Array.isArray(v)) return v.length === 0;
+    return false;
+  }
+
+  async function bulkEnrich() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Enriquecer ${ids.length} rótulo(s) com IA? Apenas campos vazios serão preenchidos.`)) return;
+    setEnrichBusy(true);
+    let ok = 0;
+    let fail = 0;
+    for (const [idx, id] of ids.entries()) {
+      const item = items.find(i => i.id === id);
+      if (!item) continue;
+      setEnrichProgress({ done: idx, total: ids.length, name: item.name });
+      try {
+        const missingFields = ENRICH_FIELDS.filter(f => isEmptyValue((item as any)[f]));
+        const res = await enrich({
+          data: {
+            name: item.name,
+            producer: item.producer,
+            vintage: item.vintage,
+            country: item.country,
+            region: item.region,
+            wine_type: item.wine_type,
+            style: item.style,
+            missingFields: [...missingFields],
+          },
+        });
+        const patch: Record<string, unknown> = {};
+        for (const f of ENRICH_FIELDS) {
+          const incoming = (res as any)[f];
+          if (isEmptyValue((item as any)[f]) && !isEmptyValue(incoming)) patch[f] = incoming;
+        }
+        const note = [res.notes, res.price_rationale ? `Preço estimado: ${res.price_rationale}` : null]
+          .filter(Boolean)
+          .join(" | ");
+        if (note) {
+          patch['extraction_notes'] = [item.extraction_notes, `[IA ${new Date().toLocaleDateString("pt-BR")}] ${note}`]
+            .filter(Boolean)
+            .join("\n");
+        }
+        if (Object.keys(patch).length > 0) {
+          patch['extracted_by_ai'] = true;
+          const { error } = await supabase.from("wine_catalog").update(patch as any).eq("id", id);
+          if (error) throw error;
+        }
+        ok++;
+      } catch (e: any) {
+        console.error("[enrich]", item.name, e);
+        fail++;
+      }
+    }
+    setEnrichProgress(null);
+    setEnrichBusy(false);
+    setSelectedIds(new Set());
+    await fetchCatalog();
+    alert(`Enriquecimento concluído: ${ok} atualizado(s)${fail ? `, ${fail} com falha` : ""}.`);
+  }
+
 
   function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" = "geral") {
     setInitialTab(tab);
@@ -372,26 +451,44 @@ function CatalogAdmin() {
           </span>
           <div className="flex flex-wrap items-center gap-2">
             <button
-              disabled={selectedIds.size === 0 || bulkBusy}
-              onClick={() => bulkStatus("approved")}
-              className="flex items-center gap-1.5 rounded-md border border-emerald-500/40 px-3 py-1.5 text-xs font-bold uppercase text-emerald-500 hover:bg-emerald-500/10 disabled:opacity-40"
+              disabled={selectedIds.size === 0 || enrichBusy || bulkBusy}
+              onClick={bulkEnrich}
+              className="flex items-center gap-1.5 rounded-md border border-[#D4AF37] bg-[#D4AF37]/10 px-3 py-1.5 text-xs font-bold uppercase text-[#D4AF37] hover:bg-[#D4AF37]/20 disabled:opacity-40"
             >
-              <Check className="h-3.5 w-3.5" /> Aprovar
+              {enrichBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+              Enriquecer os dados com IA
             </button>
+            {statusTab === "pending" && (
+              <>
+                <button
+                  disabled={selectedIds.size === 0 || bulkBusy || enrichBusy}
+                  onClick={() => bulkStatus("approved")}
+                  className="flex items-center gap-1.5 rounded-md border border-emerald-500/40 px-3 py-1.5 text-xs font-bold uppercase text-emerald-500 hover:bg-emerald-500/10 disabled:opacity-40"
+                >
+                  <Check className="h-3.5 w-3.5" /> Aprovar
+                </button>
+                <button
+                  disabled={selectedIds.size === 0 || bulkBusy || enrichBusy}
+                  onClick={() => bulkStatus("rejected")}
+                  className="flex items-center gap-1.5 rounded-md border border-rose-500/40 px-3 py-1.5 text-xs font-bold uppercase text-rose-500 hover:bg-rose-500/10 disabled:opacity-40"
+                >
+                  <XIcon className="h-3.5 w-3.5" /> Rejeitar
+                </button>
+              </>
+            )}
             <button
-              disabled={selectedIds.size === 0 || bulkBusy}
-              onClick={() => bulkStatus("rejected")}
-              className="flex items-center gap-1.5 rounded-md border border-rose-500/40 px-3 py-1.5 text-xs font-bold uppercase text-rose-500 hover:bg-rose-500/10 disabled:opacity-40"
-            >
-              <XIcon className="h-3.5 w-3.5" /> Rejeitar
-            </button>
-            <button
-              disabled={selectedIds.size === 0 || bulkBusy}
+              disabled={selectedIds.size === 0 || bulkBusy || enrichBusy}
               onClick={bulkDelete}
               className="flex items-center gap-1.5 rounded-md border border-destructive/40 px-3 py-1.5 text-xs font-bold uppercase text-destructive hover:bg-destructive/10 disabled:opacity-40"
             >
               <Trash2 className="h-3.5 w-3.5" /> Excluir
             </button>
+            {enrichProgress && (
+              <span className="text-xs text-muted-foreground">
+                {enrichProgress.done + 1}/{enrichProgress.total} — {enrichProgress.name}
+              </span>
+            )}
+
             {selectedIds.size > 0 && (
               <button
                 onClick={() => setSelectedIds(new Set())}

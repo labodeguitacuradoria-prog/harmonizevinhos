@@ -38,7 +38,25 @@ function SupplierPortal() {
         .select("*")
         .eq("supplier_id", supplierId!)
         .order("created_at", { ascending: false });
-      return { wines: wines ?? [], movs: movs ?? [], materials: materials ?? [] };
+      const { data: orders } = await supabase
+        .from("purchase_orders")
+        .select("id, restaurant_id, created_at, status, expected_date, restaurants(name)")
+        .eq("supplier_id", supplierId!)
+        .order("created_at", { ascending: false });
+      const orderIds = (orders ?? []).map((o) => o.id);
+      const { data: orderItems } = orderIds.length
+        ? await supabase
+            .from("purchase_order_items")
+            .select("id, order_id, wine_id, qty_bottles, qty_received, status")
+            .in("order_id", orderIds)
+        : { data: [] };
+      return {
+        wines: wines ?? [],
+        movs: movs ?? [],
+        materials: materials ?? [],
+        orders: orders ?? [],
+        orderItems: orderItems ?? [],
+      };
     },
   });
 

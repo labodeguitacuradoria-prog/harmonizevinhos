@@ -24,6 +24,7 @@ import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros
 import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
 import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage-fees'
 import { Route as AppAppDashboardRouteImport } from './routes/_app.app.dashboard'
+import { Route as AppAppOrdersRouteImport } from './routes/_app.app.orders'
 import { Route as AppAppPairingKnowledgeRouteImport } from './routes/_app.app.pairing-knowledge'
 import { Route as AppAppPairingsRouteImport } from './routes/_app.app.pairings'
 import { Route as AppAppPriceAnalysisRouteImport } from './routes/_app.app.price-analysis'
@@ -112,6 +113,11 @@ const AppAppCorkageFeesRoute = AppAppCorkageFeesRouteImport.update({
 const AppAppDashboardRoute = AppAppDashboardRouteImport.update({
   id: '/app/dashboard',
   path: '/app/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppOrdersRoute = AppAppOrdersRouteImport.update({
+  id: '/app/orders',
+  path: '/app/orders',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppPairingKnowledgeRoute = AppAppPairingKnowledgeRouteImport.update({
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
+  '/app/orders': typeof AppAppOrdersRoute
   '/app/pairing-knowledge': typeof AppAppPairingKnowledgeRoute
   '/app/pairings': typeof AppAppPairingsRoute
   '/app/price-analysis': typeof AppAppPriceAnalysisRoute
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
+  '/app/orders': typeof AppAppOrdersRoute
   '/app/pairing-knowledge': typeof AppAppPairingKnowledgeRoute
   '/app/pairings': typeof AppAppPairingsRoute
   '/app/price-analysis': typeof AppAppPriceAnalysisRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/_app/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/_app/app/dashboard': typeof AppAppDashboardRoute
+  '/_app/app/orders': typeof AppAppOrdersRoute
   '/_app/app/pairing-knowledge': typeof AppAppPairingKnowledgeRoute
   '/_app/app/pairings': typeof AppAppPairingsRoute
   '/_app/app/price-analysis': typeof AppAppPriceAnalysisRoute
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/app/catalog-admin'
     | '/app/corkage-fees'
     | '/app/dashboard'
+    | '/app/orders'
     | '/app/pairing-knowledge'
     | '/app/pairings'
     | '/app/price-analysis'
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/app/catalog-admin'
     | '/app/corkage-fees'
     | '/app/dashboard'
+    | '/app/orders'
     | '/app/pairing-knowledge'
     | '/app/pairings'
     | '/app/price-analysis'
@@ -364,6 +375,7 @@ export interface FileRouteTypes {
     | '/_app/app/catalog-admin'
     | '/_app/app/corkage-fees'
     | '/_app/app/dashboard'
+    | '/_app/app/orders'
     | '/_app/app/pairing-knowledge'
     | '/_app/app/pairings'
     | '/_app/app/price-analysis'
@@ -501,6 +513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/orders': {
+      id: '/_app/app/orders'
+      path: '/app/orders'
+      fullPath: '/app/orders'
+      preLoaderRoute: typeof AppAppOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/pairing-knowledge': {
       id: '/_app/app/pairing-knowledge'
       path: '/app/pairing-knowledge'
@@ -616,6 +635,7 @@ interface AppRouteChildren {
   AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
   AppAppCorkageFeesRoute: typeof AppAppCorkageFeesRoute
   AppAppDashboardRoute: typeof AppAppDashboardRoute
+  AppAppOrdersRoute: typeof AppAppOrdersRoute
   AppAppPairingKnowledgeRoute: typeof AppAppPairingKnowledgeRoute
   AppAppPairingsRoute: typeof AppAppPairingsRoute
   AppAppPriceAnalysisRoute: typeof AppAppPriceAnalysisRoute
@@ -641,6 +661,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,
   AppAppCorkageFeesRoute: AppAppCorkageFeesRoute,
   AppAppDashboardRoute: AppAppDashboardRoute,
+  AppAppOrdersRoute: AppAppOrdersRoute,
   AppAppPairingKnowledgeRoute: AppAppPairingKnowledgeRoute,
   AppAppPairingsRoute: AppAppPairingsRoute,
   AppAppPriceAnalysisRoute: AppAppPriceAnalysisRoute,

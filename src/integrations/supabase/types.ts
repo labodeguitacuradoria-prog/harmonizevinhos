@@ -456,6 +456,126 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_notes: string | null
+          order_id: string
+          qty_bottles: number
+          qty_received: number
+          received_at: string | null
+          status: string
+          unit_cost: number | null
+          updated_at: string
+          wine_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_notes?: string | null
+          order_id: string
+          qty_bottles?: number
+          qty_received?: number
+          received_at?: string | null
+          status?: string
+          unit_cost?: number | null
+          updated_at?: string
+          wine_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_notes?: string | null
+          order_id?: string
+          qty_bottles?: number
+          qty_received?: number
+          received_at?: string | null
+          status?: string
+          unit_cost?: number | null
+          updated_at?: string
+          wine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_wine_id_fkey"
+            columns: ["wine_id"]
+            isOneToOne: false
+            referencedRelation: "wines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expected_date: string | null
+          id: string
+          notes: string | null
+          restaurant_id: string
+          sent_at: string | null
+          sent_channel:
+            | Database["public"]["Enums"]["purchase_send_channel"]
+            | null
+          status: Database["public"]["Enums"]["purchase_order_status"]
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expected_date?: string | null
+          id?: string
+          notes?: string | null
+          restaurant_id: string
+          sent_at?: string | null
+          sent_channel?:
+            | Database["public"]["Enums"]["purchase_send_channel"]
+            | null
+          status?: Database["public"]["Enums"]["purchase_order_status"]
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expected_date?: string | null
+          id?: string
+          notes?: string | null
+          restaurant_id?: string
+          sent_at?: string | null
+          sent_channel?:
+            | Database["public"]["Enums"]["purchase_send_channel"]
+            | null
+          status?: Database["public"]["Enums"]["purchase_order_status"]
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_contacts: {
         Row: {
           created_at: string
@@ -1574,6 +1694,13 @@ export type Database = {
         | "rest_owner"
       catalog_status: "pending" | "approved" | "rejected"
       movement_type: "entry" | "sale" | "adjustment"
+      purchase_order_status:
+        | "draft"
+        | "sent"
+        | "partial"
+        | "received"
+        | "cancelled"
+      purchase_send_channel: "email" | "whatsapp" | "manual"
       wine_type:
         | "red"
         | "white"
@@ -1719,6 +1846,14 @@ export const Constants = {
       ],
       catalog_status: ["pending", "approved", "rejected"],
       movement_type: ["entry", "sale", "adjustment"],
+      purchase_order_status: [
+        "draft",
+        "sent",
+        "partial",
+        "received",
+        "cancelled",
+      ],
+      purchase_send_channel: ["email", "whatsapp", "manual"],
       wine_type: ["red", "white", "rose", "sparkling", "dessert", "fortified"],
     },
   },

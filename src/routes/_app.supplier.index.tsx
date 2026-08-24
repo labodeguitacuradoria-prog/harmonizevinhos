@@ -147,6 +147,13 @@ function SupplierPortal() {
         </div>
       )}
 
+      <SupplierOrders
+        orders={(data?.orders ?? []) as SupplierOrder[]}
+        items={(data?.orderItems ?? []) as SupplierOrderItem[]}
+        wines={wines.map((w) => ({ id: w.id, name: w.name }))}
+      />
+
+
       {supplierId && (
         <section className="mt-10">
           <h2 className="mb-3 text-lg font-semibold">Meus materiais</h2>

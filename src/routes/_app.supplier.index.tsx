@@ -173,6 +173,114 @@ function SupplierPortal() {
   );
 }
 
+type SupplierOrder = {
+  id: string;
+  restaurant_id: string;
+  created_at: string;
+  status: string;
+  expected_date: string | null;
+  restaurants: { name?: string } | null;
+};
+
+type SupplierOrderItem = {
+  id: string;
+  order_id: string;
+  wine_id: string;
+  qty_bottles: number;
+  qty_received: number;
+  status: string;
+};
+
+const ITEM_STATUS: Record<string, string> = {
+  pending: "Pendente",
+  partial: "Parcial",
+  received: "Recebido",
+  cancelled: "Cancelado",
+};
+
+function SupplierOrders({
+  orders,
+  items,
+  wines,
+}: {
+  orders: SupplierOrder[];
+  items: SupplierOrderItem[];
+  wines: { id: string; name: string }[];
+}) {
+  const [fRest, setFRest] = useState("");
+  const [fWine, setFWine] = useState("");
+  const [fStatus, setFStatus] = useState("");
+
+  const orderById: Record<string, SupplierOrder> = {};
+  orders.forEach((o) => (orderById[o.id] = o));
+  const wineName: Record<string, string> = {};
+  wines.forEach((w) => (wineName[w.id] = w.name));
+
+  const rows = items
+    .map((it) => ({ it, o: orderById[it.order_id] }))
+    .filter((r) => r.o)
+    .filter((r) => (fRest ? r.o!.restaurant_id === fRest : true))
+    .filter((r) => (fWine ? (wineName[r.it.wine_id] ?? "").toLowerCase().includes(fWine.toLowerCase()) : true))
+    .filter((r) => (fStatus ? r.it.status === fStatus : true))
+    .sort((a, b) => (a.o!.created_at < b.o!.created_at ? 1 : -1));
+
+  const restaurants = Array.from(
+    new Map(orders.map((o) => [o.restaurant_id, o.restaurants?.name ?? "Restaurante"])).entries(),
+  );
+
+  const sel = "rounded border border-border bg-background px-2 py-1 text-xs";
+
+  return (
+    <section className="mt-10">
+      <h2 className="mb-3 text-lg font-semibold">Pedidos recebidos</h2>
+      <p className="mb-3 text-sm text-muted-foreground">
+        Pedidos feitos pelos restaurantes para os seus rótulos.
+      </p>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <select value={fRest} onChange={(e) => setFRest(e.target.value)} className={sel}>
+          <option value="">Todos os restaurantes</option>
+          {restaurants.map(([id, name]) => (
+            <option key={id} value={id}>{name}</option>
+          ))}
+        </select>
+        <input
+          value={fWine}
+          onChange={(e) => setFWine(e.target.value)}
+          placeholder="Filtrar rótulo"
+          className={sel}
+        />
+        <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} className={sel}>
+          <option value="">Todos os status</option>
+          <option value="pending">Pendente</option>
+          <option value="partial">Parcial</option>
+          <option value="received">Recebido</option>
+          <option value="cancelled">Cancelado</option>
+        </select>
+      </div>
+      <Table headers={["Data", "Restaurante", "Rótulo", "Solicitado", "Recebido", "Status"]}>
+        {rows.length === 0 && (
+          <tr>
+            <td colSpan={6} className="px-4 py-6 text-sm text-muted-foreground">
+              Nenhum pedido registrado até o momento.
+            </td>
+          </tr>
+        )}
+        {rows.map(({ it, o }) => (
+          <tr key={it.id} className="border-b border-border last:border-0">
+            <td className="px-4 py-3">{new Date(o!.created_at).toLocaleDateString("pt-BR")}</td>
+            <td className="px-4 py-3">{o!.restaurants?.name ?? "-"}</td>
+            <td className="px-4 py-3">{wineName[it.wine_id] ?? "Rótulo"}</td>
+            <td className="px-4 py-3">{it.qty_bottles}</td>
+            <td className="px-4 py-3">{it.qty_received}</td>
+            <td className="px-4 py-3">{ITEM_STATUS[it.status] ?? it.status}</td>
+          </tr>
+        ))}
+      </Table>
+    </section>
+  );
+}
+
+
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-border bg-card p-5">

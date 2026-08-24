@@ -320,7 +320,7 @@ function OrdersPage() {
       .update({
         sent_channel: channel,
         sent_at: new Date().toISOString(),
-        status: o.status === "draft" ? "sent" : o.status,
+        status: (o.status === "draft" ? "sent" : o.status) as "draft" | "sent" | "partial" | "received" | "cancelled",
       })
       .eq("id", orderId);
     qc.invalidateQueries({ queryKey: ["orders"] });

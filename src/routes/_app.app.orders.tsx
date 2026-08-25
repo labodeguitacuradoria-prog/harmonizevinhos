@@ -812,7 +812,7 @@ function NewOrderDialog({
     if (chosen.length === 0) return toast.error("Informe a quantidade de pelo menos um rótulo");
     setSaving(true);
     try {
-      const isDraft = channel === "draft" || channel === "email";
+      const isDraft = channel === "draft";
       const body = text();
       const { data: order, error } = await supabase
         .from("purchase_orders")
@@ -840,24 +840,24 @@ function NewOrderDialog({
       if (itemErr) throw new Error(itemErr.message);
 
       if (channel === "email") {
-        const to = supplier?.commercial_email || supplier?.contact_email;
-        if (!to) toast.error("Fornecedor sem e-mail — pedido salvo, use o WhatsApp ou copie o texto");
-        else {
-          try {
-            const result = await onSendEmail(order!.id);
-            toast.success(`Pedido enviado por ${result.sentFromEmail}`);
-          } catch (e) {
-            toast.error(e instanceof Error ? `${e.message}. Pedido salvo como rascunho.` : "Pedido salvo como rascunho.");
-          }
-        }
+        onOpenManualEmail(supplier?.commercial_email || supplier?.contact_email || "", body);
       }
       if (channel === "whatsapp") {
         const phone = supplier?.whatsapp || supplier?.phone;
-        if (!phone) toast.error("Fornecedor sem WhatsApp — pedido salvo, use o e-mail ou copie o texto");
+        if (!phone) toast.error("Fornecedor sem WhatsApp — pedido salvo, copie o texto para enviar");
         else window.open(whatsappLink(phone, body), "_blank");
+      }
+      if (channel === "manual") {
+        await navigator.clipboard.writeText(body).catch(() => undefined);
       }
       toast.success(isDraft ? "Rascunho salvo" : "Pedido registrado");
       onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao salvar pedido");
+    } finally {
+      setSaving(false);
+    }
+
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar pedido");
     } finally {

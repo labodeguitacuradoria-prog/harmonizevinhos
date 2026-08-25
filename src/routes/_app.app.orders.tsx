@@ -19,8 +19,6 @@ import {
 } from "lucide-react";
 import {
   buildOrderText,
-  buildOrderSubject,
-  mailtoLink,
   whatsappLink,
 } from "@/lib/order-message";
 import { waitForAppUserOAuthCompletion } from "@/lib/app-user-connector-client";
@@ -778,7 +776,18 @@ function NewOrderDialog({
       expectedDate: expected || null,
       notes: notes || null,
       items: chosen.map(([wineId, v]) => {
-        const w = wines.find((x) => x.id === wineId)!;
+        const w = wines.find((x) => x.id === wineId);
+        if (!w) {
+          return {
+            name: "Rótulo",
+            producer: null,
+            vintage: null,
+            volume: null,
+            internal_code: null,
+            qty: parseInt(v.qty || "0", 10),
+            notes: v.notes || null,
+          };
+        }
         return {
           name: w.name,
           producer: w.producer,

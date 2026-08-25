@@ -991,28 +991,23 @@ function NewOrderDialog({
           </button>
           <button
             disabled={saving}
-            onClick={() => save("email")}
-            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-          >
-            <Mail className="h-4 w-4" /> Salvar e abrir e-mail
-          </button>
-          <button
-            disabled={saving}
-            onClick={() => save("whatsapp")}
-            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-          >
-            <MessageCircle className="h-4 w-4" /> Salvar e abrir WhatsApp
-          </button>
-          <button
-            disabled={saving}
-            onClick={() => save("manual")}
+            onClick={generateDraft}
             className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
           >
-            <Copy className="h-4 w-4" /> Salvar e copiar texto
+            <Copy className="h-4 w-4" /> Gerar rascunho do pedido
           </button>
         </div>
-
       </div>
+
+      {showDraft && (
+        <DraftEmailBlock
+          toName={supplier?.name ?? ""}
+          toEmail={supplier?.commercial_email || supplier?.contact_email || ""}
+          fromEmail={senderEmail}
+          subject={buildOrderSubject({ restaurantName, restaurantCnpj })}
+          body={text()}
+        />
+      )}
     </Modal>
   );
 }

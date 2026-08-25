@@ -1012,6 +1012,81 @@ function NewOrderDialog({
   );
 }
 
+function DraftField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(value);
+            toast.success(`${label} copiado`);
+          }}
+          className="text-[10px] text-primary hover:underline"
+        >
+          copiar
+        </button>
+      </div>
+      <div className="rounded border border-border bg-card px-2 py-1 text-xs">{value || "—"}</div>
+    </div>
+  );
+}
+
+function DraftEmailBlock({
+  toName,
+  toEmail,
+  fromEmail,
+  subject,
+  body,
+}: {
+  toName: string;
+  toEmail: string;
+  fromEmail: string;
+  subject: string;
+  body: string;
+}) {
+  return (
+    <div className="mt-4 rounded-lg border border-primary/40 bg-background p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-xs font-bold uppercase tracking-wide text-primary">Rascunho do e-mail</h3>
+        <button
+          onClick={() => {
+            const full = `Para: ${toName} <${toEmail}>\nDe: ${fromEmail}\nAssunto: ${subject}\n\n${body}`;
+            navigator.clipboard.writeText(full);
+            toast.success("Rascunho completo copiado");
+          }}
+          className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs"
+        >
+          <Copy className="h-3 w-3" /> Copiar tudo
+        </button>
+      </div>
+      <div className="space-y-2 text-sm">
+        <DraftField label="Para (fornecedor)" value={toEmail ? `${toName} <${toEmail}>` : toName} />
+        <DraftField label="De (remetente)" value={fromEmail} />
+        <DraftField label="Assunto" value={subject} />
+        <div>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Texto</span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(body);
+                toast.success("Texto copiado");
+              }}
+              className="text-[10px] text-primary hover:underline"
+            >
+              copiar
+            </button>
+          </div>
+          <pre className="mt-1 max-h-60 overflow-y-auto whitespace-pre-wrap rounded border border-border bg-card p-3 text-xs">{body}</pre>
+        </div>
+      </div>
+      <p className="mt-3 text-[11px] text-muted-foreground">
+        Copie os campos acima e cole no seu e-mail ou WhatsApp. Use "Salvar rascunho" para guardar o pedido ou "Registrar como enviado" após enviar.
+      </p>
+    </div>
+  );
+}
+
 function Modal({
   title,
   children,

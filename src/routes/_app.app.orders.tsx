@@ -900,17 +900,11 @@ function NewOrderDialog({
       </div>
 
       {supplierId && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background p-3">
-          <div className="text-xs text-muted-foreground">
-            E-mail será enviado por: <span className="text-foreground">{emailStatus?.connectedEmail ?? "Gmail não conectado"}</span>
-          </div>
-          {!emailStatus?.connected && (
-            <button onClick={onConnectEmail} className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-primary">
-              <PlugZap className="h-3.5 w-3.5" /> Conectar Gmail
-            </button>
-          )}
+        <div className="mt-4 rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
+          Ao salvar, copie o texto do pedido e cole no e-mail ou no WhatsApp do fornecedor.
         </div>
       )}
+
 
       {supplierId && (
         <>

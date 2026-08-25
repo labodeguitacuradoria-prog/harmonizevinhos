@@ -620,7 +620,7 @@ function OrdersPage() {
           restaurantId={restaurantId}
           restaurantName={restaurantName}
           restaurantCnpj={restaurantCnpj}
-          onOpenManualEmail={(to, body) => window.open(mailtoLink(to, buildOrderSubject({ restaurantName, restaurantCnpj }), body), "_blank")}
+          senderEmail={user?.email ?? ""}
           suppliers={suppliers}
           wines={wines}
           onClose={() => setShowNew(false)}

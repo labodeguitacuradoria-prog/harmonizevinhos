@@ -142,11 +142,6 @@ function OrdersPage() {
   const restaurantCnpj = restaurantInfo?.cnpj ?? null;
 
 
-  const { data: emailStatus } = useQuery({
-    queryKey: ["order-email-connection", user?.id],
-    enabled: !!user,
-    queryFn: () => emailStatusFn(),
-  });
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["orders-suppliers"],

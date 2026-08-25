@@ -110,7 +110,7 @@ export default function AccessMapDialog({
         },
       }),
     onSuccess: (data: InviteResponse) => {
-      setDraft(createInviteDraft(data, restaurantName, role, user?.email ?? ""));
+      setDraft(createInviteDraft(data, restaurantName, restaurantInfo ?? null, role, user?.email ?? ""));
       setEmail("");
       setSupplierId("");
       setErr(null);

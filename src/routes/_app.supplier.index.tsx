@@ -50,7 +50,7 @@ type Mov = {
 type TabKey = "faturamento" | "garrafas" | "estoque" | "preco" | "cmv";
 
 function SupplierPortal() {
-  const { role, supplierId, loading, user } = useAuth();
+  const { role, supplierId, loading } = useAuth();
   const navigate = useNavigate();
   const { restaurantId, setRestaurantId } = useSupplierScope();
   const [tab, setTab] = useState<TabKey>("faturamento");
@@ -506,7 +506,7 @@ function SupplierPortal() {
         <section className="mt-6">
           <h2 className="mb-3 text-lg font-semibold">Meus materiais</h2>
           <p className="mb-4 text-sm text-muted-foreground">
-            Publique listas de preços, apresentações e fichas técnicas. {user?.email}
+            Publique listas de preços, apresentações e fichas técnicas.
           </p>
           <MaterialsManager
             supplierId={supplierId}

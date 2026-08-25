@@ -33,7 +33,7 @@ function todayBR() {
 export function buildOrderText(input: OrderMessageInput): string {
   const lines: string[] = [];
   // Saudação de abertura do pedido
-  lines.push(`Olá! solicito o envio dos seguintes rótulos ao restaurante: ${input.restaurantName}`);
+  lines.push(`Olá ! solicito o envio dos seguintes rótulos ao restaurante: ${input.restaurantName}`);
   if (input.restaurantCnpj) lines.push(`CNPJ: ${input.restaurantCnpj}`);
   lines.push(`Fornecedor: ${input.supplierName}`);
   lines.push(`Data do pedido: ${todayBR()}`);

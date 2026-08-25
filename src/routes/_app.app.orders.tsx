@@ -73,17 +73,11 @@ type OrderRow = {
   status: string;
   sent_at: string | null;
   sent_channel: string | null;
-  sent_from_email: string | null;
   expected_date: string | null;
   notes: string | null;
   created_at: string;
 };
 
-type EmailStatus = {
-  configured: boolean;
-  connected: boolean;
-  connectedEmail: string | null;
-};
 
 type ItemRow = {
   id: string;

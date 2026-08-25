@@ -173,7 +173,7 @@ function OrdersPage() {
     queryFn: async () => {
       const { data: orders } = await supabase
         .from("purchase_orders")
-        .select("id, restaurant_id, supplier_id, status, sent_at, sent_channel, sent_from_email, expected_date, notes, created_at")
+        .select("id, restaurant_id, supplier_id, status, sent_at, sent_channel, expected_date, notes, created_at")
         .eq("restaurant_id", restaurantId!)
         .order("created_at", { ascending: false });
       const list = (orders ?? []) as OrderRow[];
@@ -188,6 +188,23 @@ function OrdersPage() {
 
   const orders = data?.orders ?? [];
   const items = data?.items ?? [];
+
+  const { data: docCount = {} } = useQuery({
+    queryKey: ["order-documents-count", restaurantId, orders.length],
+    enabled: orders.length > 0,
+    queryFn: async () => {
+      const { data: docs } = await supabase
+        .from("purchase_order_documents")
+        .select("order_id")
+        .in("order_id", orders.map((o) => o.id));
+      const m: Record<string, number> = {};
+      (docs ?? []).forEach((d) => {
+        m[d.order_id] = (m[d.order_id] ?? 0) + 1;
+      });
+      return m;
+    },
+  });
+
 
   const supplierById = useMemo(() => {
     const m: Record<string, Supplier> = {};

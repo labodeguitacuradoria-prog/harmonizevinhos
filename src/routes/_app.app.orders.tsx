@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +14,7 @@ import {
   X,
   Trash2,
   Send,
-  PlugZap,
+  FileText,
 } from "lucide-react";
 import {
   buildOrderText,
@@ -23,13 +22,8 @@ import {
   mailtoLink,
   whatsappLink,
 } from "@/lib/order-message";
-import { waitForAppUserOAuthCompletion } from "@/lib/app-user-connector-client";
-import {
-  completeGoogleMailOrderEmailConnection,
-  getGoogleMailOrderEmailStatus,
-  sendPurchaseOrderEmail,
-  startGoogleMailOrderEmailConnection,
-} from "@/lib/order-email.functions";
+import { OrderDocumentsDialog } from "@/components/OrderDocumentsDialog";
+
 
 export const Route = createFileRoute("/_app/app/orders")({
   head: () => ({
@@ -79,17 +73,11 @@ type OrderRow = {
   status: string;
   sent_at: string | null;
   sent_channel: string | null;
-  sent_from_email: string | null;
   expected_date: string | null;
   notes: string | null;
   created_at: string;
 };
 
-type EmailStatus = {
-  configured: boolean;
-  connected: boolean;
-  connectedEmail: string | null;
-};
 
 type ItemRow = {
   id: string;
@@ -128,15 +116,12 @@ function money(v: number) {
 }
 
 function OrdersPage() {
-  const { restaurantId, memberships, canManageActive, user } = useAuth();
+  const { restaurantId, memberships, canManageActive } = useAuth();
   const qc = useQueryClient();
   const [showNew, setShowNew] = useState(false);
   const [receiving, setReceiving] = useState<ItemRow | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const startEmailConnection = useServerFn(startGoogleMailOrderEmailConnection);
-  const completeEmailConnection = useServerFn(completeGoogleMailOrderEmailConnection);
-  const emailStatusFn = useServerFn(getGoogleMailOrderEmailStatus);
-  const sendEmailFn = useServerFn(sendPurchaseOrderEmail);
+  const [docsOrderId, setDocsOrderId] = useState<string | null>(null);
 
   const restaurantName =
     memberships.find((m) => m.restaurantId === restaurantId)?.name ?? "Restaurante";
@@ -156,11 +141,7 @@ function OrdersPage() {
 
   const restaurantCnpj = restaurantInfo?.cnpj ?? null;
 
-  const { data: emailStatus } = useQuery({
-    queryKey: ["order-email-connection", user?.id],
-    enabled: !!user,
-    queryFn: () => emailStatusFn(),
-  });
+
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["orders-suppliers"],
@@ -192,7 +173,7 @@ function OrdersPage() {
     queryFn: async () => {
       const { data: orders } = await supabase
         .from("purchase_orders")
-        .select("id, restaurant_id, supplier_id, status, sent_at, sent_channel, sent_from_email, expected_date, notes, created_at")
+        .select("id, restaurant_id, supplier_id, status, sent_at, sent_channel, expected_date, notes, created_at")
         .eq("restaurant_id", restaurantId!)
         .order("created_at", { ascending: false });
       const list = (orders ?? []) as OrderRow[];
@@ -207,6 +188,23 @@ function OrdersPage() {
 
   const orders = data?.orders ?? [];
   const items = data?.items ?? [];
+
+  const { data: docCount = {} } = useQuery({
+    queryKey: ["order-documents-count", restaurantId, orders.length],
+    enabled: orders.length > 0,
+    queryFn: async () => {
+      const { data: docs } = await supabase
+        .from("purchase_order_documents")
+        .select("order_id")
+        .in("order_id", orders.map((o) => o.id));
+      const m: Record<string, number> = {};
+      (docs ?? []).forEach((d) => {
+        m[d.order_id] = (m[d.order_id] ?? 0) + 1;
+      });
+      return m;
+    },
+  });
+
 
   const supplierById = useMemo(() => {
     const m: Record<string, Supplier> = {};
@@ -318,45 +316,45 @@ function OrdersPage() {
     qc.invalidateQueries({ queryKey: ["orders"] });
   }
 
-  async function connectEmail() {
-    const popup = window.open("", "harmonize-gmail", "width=620,height=760");
-    if (!popup) return toast.error("Permita pop-ups para conectar o Gmail.");
-    try {
-      const start = await startEmailConnection();
-      if (!start.configured || !start.authorizationUrl) {
-        popup.close();
-        toast.error(start.message ?? "Gmail ainda não configurado para envio direto.");
-        return;
-      }
-      const completion = waitForAppUserOAuthCompletion(popup, "google_mail");
-      popup.location.href = start.authorizationUrl;
-      const code = await completion;
-      if (code) {
-        const result = await completeEmailConnection({ data: { code } });
-        toast.success(`Gmail conectado: ${result.connectedEmail}`);
-      }
-      qc.invalidateQueries({ queryKey: ["order-email-connection"] });
-    } catch (e) {
-      popup.close();
-      toast.error(e instanceof Error ? e.message : "Não foi possível conectar o Gmail");
-    }
+  async function markSent(orderId: string, channel: "email" | "whatsapp" | "manual") {
+    const o = orderById[orderId];
+    if (!o) return;
+    await supabase
+      .from("purchase_orders")
+      .update({
+        sent_channel: channel,
+        sent_at: new Date().toISOString(),
+        status: (o.status === "draft" ? "sent" : o.status) as
+          | "draft"
+          | "sent"
+          | "partial"
+          | "received"
+          | "cancelled",
+      })
+      .eq("id", orderId);
+    qc.invalidateQueries({ queryKey: ["orders"] });
   }
 
-  async function sendOrderEmail(orderId: string) {
-    return sendEmailFn({ data: { orderId } });
+  async function copyOrderText(orderId: string) {
+    const text = orderTextFor(orderId);
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+    toast.success("Texto do pedido copiado — cole no e-mail ou WhatsApp");
+    await markSent(orderId, "manual");
   }
 
-  function openManualEmail(orderId: string) {
+  async function openManualEmail(orderId: string) {
     const order = orderById[orderId];
     if (!order) return;
     const supplier = supplierById[order.supplier_id];
-    const to = supplier?.commercial_email || supplier?.contact_email;
-    if (!to) return toast.error("Fornecedor sem e-mail cadastrado");
+    const to = supplier?.commercial_email || supplier?.contact_email || "";
     window.open(
       mailtoLink(to, buildOrderSubject({ restaurantName, restaurantCnpj }), orderTextFor(orderId)),
       "_blank",
     );
+    await markSent(orderId, "email");
   }
+
 
   function orderTextFor(orderId: string) {
     const o = orderById[orderId];
@@ -383,36 +381,16 @@ function OrdersPage() {
     });
   }
 
-  async function resend(orderId: string, channel: "email" | "whatsapp") {
+  async function sendWhatsapp(orderId: string) {
     const o = orderById[orderId];
     if (!o) return;
     const s = supplierById[o.supplier_id];
-    const text = orderTextFor(orderId);
-    if (channel === "email") {
-      if (!s?.commercial_email && !s?.contact_email) return toast.error("Fornecedor sem e-mail cadastrado");
-      try {
-        const result = await sendOrderEmail(orderId);
-        toast.success(`Pedido enviado por ${result.sentFromEmail}`);
-        qc.invalidateQueries({ queryKey: ["orders"] });
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Não foi possível enviar o e-mail");
-      }
-      return;
-    } else {
-      const phone = s?.whatsapp || s?.phone;
-      if (!phone) return toast.error("Fornecedor sem WhatsApp cadastrado");
-      window.open(whatsappLink(phone, text), "_blank");
-    }
-    await supabase
-      .from("purchase_orders")
-      .update({
-        sent_channel: channel,
-        sent_at: new Date().toISOString(),
-        status: (o.status === "draft" ? "sent" : o.status) as "draft" | "sent" | "partial" | "received" | "cancelled",
-      })
-      .eq("id", orderId);
-    qc.invalidateQueries({ queryKey: ["orders"] });
+    const phone = s?.whatsapp || s?.phone;
+    if (!phone) return toast.error("Fornecedor sem WhatsApp cadastrado");
+    window.open(whatsappLink(phone, orderTextFor(orderId)), "_blank");
+    await markSent(orderId, "whatsapp");
   }
+
 
   return (
     <div className="p-4 md:p-8">
@@ -441,25 +419,12 @@ function OrdersPage() {
       </div>
 
       {canManageActive && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-3">
-          <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Remetente dos pedidos por e-mail</div>
-            <div className="mt-1 text-sm text-foreground">
-              {emailStatus?.connected
-                ? emailStatus.connectedEmail
-                : emailStatus?.configured === false
-                  ? "Conector Gmail pendente de configuração"
-                  : "Nenhum Gmail conectado"}
-            </div>
-          </div>
-          <button
-            onClick={connectEmail}
-            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm text-primary hover:bg-accent"
-          >
-            <PlugZap className="h-4 w-4" /> {emailStatus?.connected ? "Trocar Gmail" : "Conectar Gmail"}
-          </button>
+        <div className="mt-4 rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground">
+          O pedido é registrado no sistema e o texto pode ser copiado para enviar por e-mail ou WhatsApp.
+          Use o ícone de documentos em cada linha para guardar a Nota Fiscal, boletos e comprovantes do pedido.
         </div>
       )}
+
 
       {selectedIds.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-primary/50 bg-card p-3">
@@ -590,7 +555,6 @@ function OrdersPage() {
                   </td>
                   <td className="px-3 py-2 text-xs">
                     {o!.sent_channel === "email" ? "E-mail" : o!.sent_channel === "whatsapp" ? "WhatsApp" : o!.sent_channel ? "Manual" : "-"}
-                    {o!.sent_from_email && <div className="text-[10px] text-muted-foreground">{o!.sent_from_email}</div>}
                   </td>
                   <td className="px-3 py-2">
                     <StatusBadge status={it.status} />
@@ -606,15 +570,29 @@ function OrdersPage() {
                           <PackageCheck className="h-4 w-4" />
                         </button>
                       )}
+                      <button
+                        onClick={() => setDocsOrderId(o!.id)}
+                        title="Documentos do pedido (NF, boletos, comprovantes)"
+                        className="relative"
+                      >
+                        <FileText
+                          className={`h-4 w-4 ${docCount[o!.id] ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                        />
+                        {!!docCount[o!.id] && (
+                          <span className="absolute -right-2 -top-2 rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                            {docCount[o!.id]}
+                          </span>
+                        )}
+                      </button>
                       {canManageActive && (
                         <>
-                          <button onClick={() => resend(o!.id, "email")} title="Reenviar por e-mail">
-                            <Mail className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                          </button>
-                          <button onClick={() => openManualEmail(o!.id)} title="Abrir cliente de e-mail manual">
+                          <button onClick={() => copyOrderText(o!.id)} title="Copiar texto do pedido">
                             <Copy className="h-4 w-4 text-muted-foreground hover:text-primary" />
                           </button>
-                          <button onClick={() => resend(o!.id, "whatsapp")} title="Reenviar por WhatsApp">
+                          <button onClick={() => openManualEmail(o!.id)} title="Abrir e-mail com o pedido">
+                            <Mail className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                          </button>
+                          <button onClick={() => sendWhatsapp(o!.id)} title="Abrir WhatsApp com o pedido">
                             <MessageCircle className="h-4 w-4 text-muted-foreground hover:text-primary" />
                           </button>
                           {it.status !== "cancelled" && it.status !== "received" && (
@@ -629,6 +607,7 @@ function OrdersPage() {
                       )}
                     </div>
                   </td>
+
                 </tr>
               );
             })}
@@ -641,9 +620,6 @@ function OrdersPage() {
           restaurantId={restaurantId}
           restaurantName={restaurantName}
           restaurantCnpj={restaurantCnpj}
-          emailStatus={emailStatus ?? null}
-          onConnectEmail={connectEmail}
-          onSendEmail={sendOrderEmail}
           onOpenManualEmail={(to, body) => window.open(mailtoLink(to, buildOrderSubject({ restaurantName, restaurantCnpj }), body), "_blank")}
           suppliers={suppliers}
           wines={wines}
@@ -654,6 +630,16 @@ function OrdersPage() {
           }}
         />
       )}
+
+      {docsOrderId && restaurantId && (
+        <OrderDocumentsDialog
+          orderId={docsOrderId}
+          restaurantId={restaurantId}
+          canManage={!!canManageActive}
+          onClose={() => setDocsOrderId(null)}
+        />
+      )}
+
 
       {receiving && (
         <ReceiveDialog
@@ -745,9 +731,6 @@ function NewOrderDialog({
   restaurantId,
   restaurantName,
   restaurantCnpj,
-  emailStatus,
-  onConnectEmail,
-  onSendEmail,
   onOpenManualEmail,
   suppliers,
   wines,
@@ -757,10 +740,8 @@ function NewOrderDialog({
   restaurantId: string;
   restaurantName: string;
   restaurantCnpj: string | null;
-  emailStatus: EmailStatus | null;
-  onConnectEmail: () => void;
-  onSendEmail: (orderId: string) => Promise<{ sentFromEmail: string; providerMessageId: string | null }>;
   onOpenManualEmail: (to: string, body: string) => void;
+
   suppliers: Supplier[];
   wines: WineRow[];
   onClose: () => void;
@@ -831,7 +812,7 @@ function NewOrderDialog({
     if (chosen.length === 0) return toast.error("Informe a quantidade de pelo menos um rótulo");
     setSaving(true);
     try {
-      const isDraft = channel === "draft" || channel === "email";
+      const isDraft = channel === "draft";
       const body = text();
       const { data: order, error } = await supabase
         .from("purchase_orders")
@@ -859,21 +840,15 @@ function NewOrderDialog({
       if (itemErr) throw new Error(itemErr.message);
 
       if (channel === "email") {
-        const to = supplier?.commercial_email || supplier?.contact_email;
-        if (!to) toast.error("Fornecedor sem e-mail — pedido salvo, use o WhatsApp ou copie o texto");
-        else {
-          try {
-            const result = await onSendEmail(order!.id);
-            toast.success(`Pedido enviado por ${result.sentFromEmail}`);
-          } catch (e) {
-            toast.error(e instanceof Error ? `${e.message}. Pedido salvo como rascunho.` : "Pedido salvo como rascunho.");
-          }
-        }
+        onOpenManualEmail(supplier?.commercial_email || supplier?.contact_email || "", body);
       }
       if (channel === "whatsapp") {
         const phone = supplier?.whatsapp || supplier?.phone;
-        if (!phone) toast.error("Fornecedor sem WhatsApp — pedido salvo, use o e-mail ou copie o texto");
+        if (!phone) toast.error("Fornecedor sem WhatsApp — pedido salvo, copie o texto para enviar");
         else window.open(whatsappLink(phone, body), "_blank");
+      }
+      if (channel === "manual") {
+        await navigator.clipboard.writeText(body).catch(() => undefined);
       }
       toast.success(isDraft ? "Rascunho salvo" : "Pedido registrado");
       onSaved();
@@ -883,6 +858,8 @@ function NewOrderDialog({
       setSaving(false);
     }
   }
+
+
 
   return (
     <Modal title="Novo pedido" onClose={onClose} wide>
@@ -914,17 +891,11 @@ function NewOrderDialog({
       </div>
 
       {supplierId && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background p-3">
-          <div className="text-xs text-muted-foreground">
-            E-mail será enviado por: <span className="text-foreground">{emailStatus?.connectedEmail ?? "Gmail não conectado"}</span>
-          </div>
-          {!emailStatus?.connected && (
-            <button onClick={onConnectEmail} className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-primary">
-              <PlugZap className="h-3.5 w-3.5" /> Conectar Gmail
-            </button>
-          )}
+        <div className="mt-4 rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
+          Ao salvar, copie o texto do pedido e cole no e-mail ou no WhatsApp do fornecedor.
         </div>
       )}
+
 
       {supplierId && (
         <>
@@ -1011,15 +982,6 @@ function NewOrderDialog({
         </div>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(text());
-              toast.success("Texto do pedido copiado");
-            }}
-            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-          >
-            <Copy className="h-4 w-4" /> Copiar texto
-          </button>
-          <button
             disabled={saving}
             onClick={() => save("draft")}
             className="rounded-md border border-border px-3 py-2 text-sm"
@@ -1034,31 +996,28 @@ function NewOrderDialog({
             <Send className="h-4 w-4" /> Registrar como enviado
           </button>
           <button
-            disabled={saving || !supplierId}
-            onClick={() => {
-              const to = supplier?.commercial_email || supplier?.contact_email;
-              if (!to) return toast.error("Fornecedor sem e-mail cadastrado");
-              onOpenManualEmail(to, text());
-            }}
-            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-          >
-            <Copy className="h-4 w-4" /> E-mail manual
-          </button>
-          <button
             disabled={saving}
             onClick={() => save("email")}
-            className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
           >
-            <Mail className="h-4 w-4" /> Enviar por e-mail
+            <Mail className="h-4 w-4" /> Salvar e abrir e-mail
           </button>
           <button
             disabled={saving}
             onClick={() => save("whatsapp")}
+            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
+          >
+            <MessageCircle className="h-4 w-4" /> Salvar e abrir WhatsApp
+          </button>
+          <button
+            disabled={saving}
+            onClick={() => save("manual")}
             className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
           >
-            <MessageCircle className="h-4 w-4" /> Enviar por WhatsApp
+            <Copy className="h-4 w-4" /> Salvar e copiar texto
           </button>
         </div>
+
       </div>
     </Modal>
   );

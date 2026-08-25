@@ -14,36 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      app_user_connections: {
-        Row: {
-          connected_email: string | null
-          connection_key_ciphertext: string
-          connector_id: string
-          created_at: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          connected_email?: string | null
-          connection_key_ciphertext: string
-          connector_id: string
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          connected_email?: string | null
-          connection_key_ciphertext?: string
-          connector_id?: string
-          created_at?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       corkage_fees: {
         Row: {
           created_at: string
@@ -486,6 +456,65 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_order_documents: {
+        Row: {
+          amount: number | null
+          created_at: string
+          doc_number: string | null
+          doc_type: Database["public"]["Enums"]["purchase_doc_type"]
+          due_date: string | null
+          file_name: string
+          id: string
+          mime_type: string | null
+          notes: string | null
+          order_id: string
+          size_bytes: number | null
+          storage_path: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          doc_number?: string | null
+          doc_type?: Database["public"]["Enums"]["purchase_doc_type"]
+          due_date?: string | null
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          order_id: string
+          size_bytes?: number | null
+          storage_path: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          doc_number?: string | null
+          doc_type?: Database["public"]["Enums"]["purchase_doc_type"]
+          due_date?: string | null
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          order_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_documents_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_order_items: {
         Row: {
           created_at: string
@@ -555,8 +584,6 @@ export type Database = {
           sent_channel:
             | Database["public"]["Enums"]["purchase_send_channel"]
             | null
-          sent_from_email: string | null
-          sent_provider_message_id: string | null
           status: Database["public"]["Enums"]["purchase_order_status"]
           supplier_id: string
           updated_at: string
@@ -572,8 +599,6 @@ export type Database = {
           sent_channel?:
             | Database["public"]["Enums"]["purchase_send_channel"]
             | null
-          sent_from_email?: string | null
-          sent_provider_message_id?: string | null
           status?: Database["public"]["Enums"]["purchase_order_status"]
           supplier_id: string
           updated_at?: string
@@ -589,8 +614,6 @@ export type Database = {
           sent_channel?:
             | Database["public"]["Enums"]["purchase_send_channel"]
             | null
-          sent_from_email?: string | null
-          sent_provider_message_id?: string | null
           status?: Database["public"]["Enums"]["purchase_order_status"]
           supplier_id?: string
           updated_at?: string
@@ -1666,6 +1689,7 @@ export type Database = {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
       }
+      can_access_order_documents: { Args: { _path: string }; Returns: boolean }
       can_access_product_media: { Args: { _path: string }; Returns: boolean }
       can_manage_restaurant: {
         Args: { _restaurant_id: string; _user_id: string }
@@ -1730,6 +1754,12 @@ export type Database = {
         | "rest_owner"
       catalog_status: "pending" | "approved" | "rejected"
       movement_type: "entry" | "sale" | "adjustment"
+      purchase_doc_type:
+        | "invoice"
+        | "boleto"
+        | "payment_proof"
+        | "supplier_confirmation"
+        | "other"
       purchase_order_status:
         | "draft"
         | "sent"
@@ -1882,6 +1912,13 @@ export const Constants = {
       ],
       catalog_status: ["pending", "approved", "rejected"],
       movement_type: ["entry", "sale", "adjustment"],
+      purchase_doc_type: [
+        "invoice",
+        "boleto",
+        "payment_proof",
+        "supplier_confirmation",
+        "other",
+      ],
       purchase_order_status: [
         "draft",
         "sent",

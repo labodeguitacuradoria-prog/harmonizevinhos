@@ -40,7 +40,6 @@ import { Route as AppAppWineMenuRouteImport } from './routes/_app.app.wine-menu'
 import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
 import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.index'
 import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
-import { Route as OauthGoogleMailReturnRouteImport } from './routes/oauth.google-mail.return'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -197,11 +196,6 @@ const ApiPublicCatalogFileRoute = ApiPublicCatalogFileRouteImport.update({
   path: '/api/public/catalog-file',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OauthGoogleMailReturnRoute = OauthGoogleMailReturnRouteImport.update({
-  id: '/oauth/google-mail/return',
-  path: '/oauth/google-mail/return',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -231,7 +225,6 @@ export interface FileRoutesByFullPath {
   '/app/wine-menu': typeof AppAppWineMenuRoute
   '/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
-  '/oauth/google-mail/return': typeof OauthGoogleMailReturnRoute
   '/admin/': typeof AppAdminIndexRoute
   '/app/': typeof AppAppIndexRoute
   '/supplier/': typeof AppSupplierIndexRoute
@@ -264,7 +257,6 @@ export interface FileRoutesByTo {
   '/app/wine-menu': typeof AppAppWineMenuRoute
   '/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
-  '/oauth/google-mail/return': typeof OauthGoogleMailReturnRoute
   '/admin': typeof AppAdminIndexRoute
   '/app': typeof AppAppIndexRoute
   '/supplier': typeof AppSupplierIndexRoute
@@ -299,7 +291,6 @@ export interface FileRoutesById {
   '/_app/app/wine-menu': typeof AppAppWineMenuRoute
   '/_app/app/wines': typeof AppAppWinesRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
-  '/oauth/google-mail/return': typeof OauthGoogleMailReturnRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/app/': typeof AppAppIndexRoute
   '/_app/supplier/': typeof AppSupplierIndexRoute
@@ -334,7 +325,6 @@ export interface FileRouteTypes {
     | '/app/wine-menu'
     | '/app/wines'
     | '/api/public/catalog-file'
-    | '/oauth/google-mail/return'
     | '/admin/'
     | '/app/'
     | '/supplier/'
@@ -367,7 +357,6 @@ export interface FileRouteTypes {
     | '/app/wine-menu'
     | '/app/wines'
     | '/api/public/catalog-file'
-    | '/oauth/google-mail/return'
     | '/admin'
     | '/app'
     | '/supplier'
@@ -401,7 +390,6 @@ export interface FileRouteTypes {
     | '/_app/app/wine-menu'
     | '/_app/app/wines'
     | '/api/public/catalog-file'
-    | '/oauth/google-mail/return'
     | '/_app/admin/'
     | '/_app/app/'
     | '/_app/supplier/'
@@ -416,7 +404,6 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
-  OauthGoogleMailReturnRoute: typeof OauthGoogleMailReturnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -638,13 +625,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCatalogFileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/oauth/google-mail/return': {
-      id: '/oauth/google-mail/return'
-      path: '/oauth/google-mail/return'
-      fullPath: '/oauth/google-mail/return'
-      preLoaderRoute: typeof OauthGoogleMailReturnRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -711,7 +691,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,
-  OauthGoogleMailReturnRoute: OauthGoogleMailReturnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

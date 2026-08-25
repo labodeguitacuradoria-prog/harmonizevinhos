@@ -117,17 +117,19 @@ export const inviteRestaurantUser = createServerFn({ method: "POST" })
       user_id: invite.user_id,
       role: data.role,
       restaurant_id: data.restaurant_id,
-      supplier_id: data.role === "supplier" ? data.supplier_id : null,
+      supplier_id: data.role === "supplier" ? data.supplier_id ?? null : null,
     });
     if (roleErr && !roleErr.message.toLowerCase().includes("duplicate")) {
       throw new Error(roleErr.message);
     }
 
     if (data.role === "supplier") {
+      const selectedSupplierId = data.supplier_id;
+      if (!selectedSupplierId) throw new Error("Selecione o fornecedor");
       await supabaseAdmin.from("restaurant_supplier_access").upsert(
         {
           restaurant_id: data.restaurant_id,
-          supplier_id: data.supplier_id,
+          supplier_id: selectedSupplierId,
           enabled: true,
         },
         { onConflict: "restaurant_id,supplier_id" },

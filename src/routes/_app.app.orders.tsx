@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import {
   buildOrderText,
+  buildOrderSubject,
+  mailtoLink,
   whatsappLink,
 } from "@/lib/order-message";
 import { waitForAppUserOAuthCompletion } from "@/lib/app-user-connector-client";
@@ -339,6 +341,18 @@ function OrdersPage() {
     return sendEmailFn({ data: { orderId } });
   }
 
+  function openManualEmail(orderId: string) {
+    const order = orderById[orderId];
+    if (!order) return;
+    const supplier = supplierById[order.supplier_id];
+    const to = supplier?.commercial_email || supplier?.contact_email;
+    if (!to) return toast.error("Fornecedor sem e-mail cadastrado");
+    window.open(
+      mailtoLink(to, buildOrderSubject({ restaurantName, restaurantCnpj }), orderTextFor(orderId)),
+      "_blank",
+    );
+  }
+
   function orderTextFor(orderId: string) {
     const o = orderById[orderId];
     if (!o) return "";
@@ -592,6 +606,9 @@ function OrdersPage() {
                           <button onClick={() => resend(o!.id, "email")} title="Reenviar por e-mail">
                             <Mail className="h-4 w-4 text-muted-foreground hover:text-primary" />
                           </button>
+                          <button onClick={() => openManualEmail(o!.id)} title="Abrir cliente de e-mail manual">
+                            <Copy className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                          </button>
                           <button onClick={() => resend(o!.id, "whatsapp")} title="Reenviar por WhatsApp">
                             <MessageCircle className="h-4 w-4 text-muted-foreground hover:text-primary" />
                           </button>
@@ -622,6 +639,7 @@ function OrdersPage() {
           emailStatus={emailStatus ?? null}
           onConnectEmail={connectEmail}
           onSendEmail={sendOrderEmail}
+          onOpenManualEmail={(to, body) => window.open(mailtoLink(to, buildOrderSubject({ restaurantName, restaurantCnpj }), body), "_blank")}
           suppliers={suppliers}
           wines={wines}
           onClose={() => setShowNew(false)}
@@ -725,6 +743,7 @@ function NewOrderDialog({
   emailStatus,
   onConnectEmail,
   onSendEmail,
+  onOpenManualEmail,
   suppliers,
   wines,
   onClose,
@@ -736,6 +755,7 @@ function NewOrderDialog({
   emailStatus: EmailStatus | null;
   onConnectEmail: () => void;
   onSendEmail: (orderId: string) => Promise<{ sentFromEmail: string; providerMessageId: string | null }>;
+  onOpenManualEmail: (to: string, body: string) => void;
   suppliers: Supplier[];
   wines: WineRow[];
   onClose: () => void;
@@ -1007,6 +1027,17 @@ function NewOrderDialog({
             className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
           >
             <Send className="h-4 w-4" /> Registrar como enviado
+          </button>
+          <button
+            disabled={saving || !supplierId}
+            onClick={() => {
+              const to = supplier?.commercial_email || supplier?.contact_email;
+              if (!to) return toast.error("Fornecedor sem e-mail cadastrado");
+              onOpenManualEmail(to, text());
+            }}
+            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
+          >
+            <Copy className="h-4 w-4" /> E-mail manual
           </button>
           <button
             disabled={saving}

@@ -982,15 +982,6 @@ function NewOrderDialog({
         </div>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(text());
-              toast.success("Texto do pedido copiado");
-            }}
-            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-          >
-            <Copy className="h-4 w-4" /> Copiar texto
-          </button>
-          <button
             disabled={saving}
             onClick={() => save("draft")}
             className="rounded-md border border-border px-3 py-2 text-sm"
@@ -1005,31 +996,28 @@ function NewOrderDialog({
             <Send className="h-4 w-4" /> Registrar como enviado
           </button>
           <button
-            disabled={saving || !supplierId}
-            onClick={() => {
-              const to = supplier?.commercial_email || supplier?.contact_email;
-              if (!to) return toast.error("Fornecedor sem e-mail cadastrado");
-              onOpenManualEmail(to, text());
-            }}
-            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-          >
-            <Copy className="h-4 w-4" /> E-mail manual
-          </button>
-          <button
             disabled={saving}
             onClick={() => save("email")}
-            className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
           >
-            <Mail className="h-4 w-4" /> Enviar por e-mail
+            <Mail className="h-4 w-4" /> Salvar e abrir e-mail
           </button>
           <button
             disabled={saving}
             onClick={() => save("whatsapp")}
+            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
+          >
+            <MessageCircle className="h-4 w-4" /> Salvar e abrir WhatsApp
+          </button>
+          <button
+            disabled={saving}
+            onClick={() => save("manual")}
             className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
           >
-            <MessageCircle className="h-4 w-4" /> Enviar por WhatsApp
+            <Copy className="h-4 w-4" /> Salvar e copiar texto
           </button>
         </div>
+
       </div>
     </Modal>
   );

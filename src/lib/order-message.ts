@@ -12,6 +12,7 @@ export type OrderMessageItem = {
 
 export type OrderMessageInput = {
   restaurantName: string;
+  restaurantCnpj?: string | null;
   supplierName: string;
   expectedDate?: string | null;
   notes?: string | null;
@@ -25,11 +26,19 @@ function fmtDate(d?: string | null) {
   return `${day}/${m}/${y}`;
 }
 
+function todayBR() {
+  return new Date().toLocaleDateString("pt-BR");
+}
+
 export function buildOrderText(input: OrderMessageInput): string {
   const lines: string[] = [];
+  // Saudação de abertura do pedido
+  lines.push("Olá!");
+  lines.push("");
   lines.push(`Pedido de vinhos - ${input.restaurantName}`);
+  if (input.restaurantCnpj) lines.push(`CNPJ: ${input.restaurantCnpj}`);
   lines.push(`Fornecedor: ${input.supplierName}`);
-  lines.push(`Data do pedido: ${new Date().toLocaleDateString("pt-BR")}`);
+  lines.push(`Data do pedido: ${todayBR()}`);
   const exp = fmtDate(input.expectedDate);
   if (exp) lines.push(`Previsão de entrega desejada: ${exp}`);
   lines.push("");
@@ -56,8 +65,13 @@ export function buildOrderText(input: OrderMessageInput): string {
   return lines.join("\n");
 }
 
-export function buildOrderSubject(input: Pick<OrderMessageInput, "restaurantName">): string {
-  return `Pedido de vinhos - ${input.restaurantName} - ${new Date().toLocaleDateString("pt-BR")}`;
+export function buildOrderSubject(
+  input: Pick<OrderMessageInput, "restaurantName" | "restaurantCnpj">,
+): string {
+  const parts = ["Pedido de Vinhos", input.restaurantName];
+  if (input.restaurantCnpj) parts.push(input.restaurantCnpj);
+  parts.push(todayBR());
+  return parts.join(" - ");
 }
 
 export function mailtoLink(to: string, subject: string, body: string): string {

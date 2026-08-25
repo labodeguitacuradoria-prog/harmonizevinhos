@@ -551,7 +551,6 @@ function OrdersPage() {
                   </td>
                   <td className="px-3 py-2 text-xs">
                     {o!.sent_channel === "email" ? "E-mail" : o!.sent_channel === "whatsapp" ? "WhatsApp" : o!.sent_channel ? "Manual" : "-"}
-                    {o!.sent_from_email && <div className="text-[10px] text-muted-foreground">{o!.sent_from_email}</div>}
                   </td>
                   <td className="px-3 py-2">
                     <StatusBadge status={it.status} />
@@ -567,15 +566,29 @@ function OrdersPage() {
                           <PackageCheck className="h-4 w-4" />
                         </button>
                       )}
+                      <button
+                        onClick={() => setDocsOrderId(o!.id)}
+                        title="Documentos do pedido (NF, boletos, comprovantes)"
+                        className="relative"
+                      >
+                        <FileText
+                          className={`h-4 w-4 ${docCount[o!.id] ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                        />
+                        {!!docCount[o!.id] && (
+                          <span className="absolute -right-2 -top-2 rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                            {docCount[o!.id]}
+                          </span>
+                        )}
+                      </button>
                       {canManageActive && (
                         <>
-                          <button onClick={() => resend(o!.id, "email")} title="Reenviar por e-mail">
-                            <Mail className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                          </button>
-                          <button onClick={() => openManualEmail(o!.id)} title="Abrir cliente de e-mail manual">
+                          <button onClick={() => copyOrderText(o!.id)} title="Copiar texto do pedido">
                             <Copy className="h-4 w-4 text-muted-foreground hover:text-primary" />
                           </button>
-                          <button onClick={() => resend(o!.id, "whatsapp")} title="Reenviar por WhatsApp">
+                          <button onClick={() => openManualEmail(o!.id)} title="Abrir e-mail com o pedido">
+                            <Mail className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                          </button>
+                          <button onClick={() => sendWhatsapp(o!.id)} title="Abrir WhatsApp com o pedido">
                             <MessageCircle className="h-4 w-4 text-muted-foreground hover:text-primary" />
                           </button>
                           {it.status !== "cancelled" && it.status !== "received" && (
@@ -590,6 +603,7 @@ function OrdersPage() {
                       )}
                     </div>
                   </td>
+
                 </tr>
               );
             })}

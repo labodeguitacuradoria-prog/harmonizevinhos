@@ -217,7 +217,7 @@ function AdminInviteDialog({
   senderEmail,
   onDone,
 }: {
-  restaurants: { id: string; name: string }[];
+  restaurants: { id: string; name: string; cnpj: string | null }[];
   onClose: () => void;
   inviteFn: any;
   senderEmail: string;
@@ -228,7 +228,9 @@ function AdminInviteDialog({
   const [role, setRole] = useState<string>("staff");
   const [err, setErr] = useState<string | null>(null);
   const [draft, setDraft] = useState<InviteDraft | null>(null);
-  const selectedRestaurantName = restaurants.find((r) => r.id === restaurantId)?.name ?? "restaurante";
+  const selectedRestaurant = restaurants.find((r) => r.id === restaurantId);
+  const selectedRestaurantName = selectedRestaurant?.name ?? "restaurante";
+  const selectedRestaurantCnpj = selectedRestaurant?.cnpj ?? null;
   const mut = useMutation({
     mutationFn: async () =>
       inviteFn({
@@ -241,7 +243,7 @@ function AdminInviteDialog({
       }),
     onSuccess: (data: InviteResponse) => {
       setErr(null);
-      setDraft(createInviteDraft(data, selectedRestaurantName, role, senderEmail));
+      setDraft(createInviteDraft(data, selectedRestaurantName, selectedRestaurantCnpj, role, senderEmail));
       onDone();
     },
     onError: (e: any) => setErr(e?.message ?? "Falha"),

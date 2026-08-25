@@ -1281,7 +1281,7 @@ function TopWinesBlock({
   );
 }
 
-function PieSvg({ slices }: { slices: { label: string; value: number; color: string }[] }) {
+export function PieSvg({ slices }: { slices: { label: string; value: number; color: string }[] }) {
   const total = slices.reduce((a, s) => a + (s.value || 0), 0);
   const size = 180;
   const r = 78;
@@ -1474,7 +1474,7 @@ function niceMax(v: number) {
   return m * pow;
 }
 
-function BarChart({
+export function BarChart({
   curr,
   prev,
   currentYear,

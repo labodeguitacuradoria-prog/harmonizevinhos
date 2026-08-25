@@ -602,9 +602,6 @@ function OrdersPage() {
           restaurantId={restaurantId}
           restaurantName={restaurantName}
           restaurantCnpj={restaurantCnpj}
-          emailStatus={emailStatus ?? null}
-          onConnectEmail={connectEmail}
-          onSendEmail={sendOrderEmail}
           onOpenManualEmail={(to, body) => window.open(mailtoLink(to, buildOrderSubject({ restaurantName, restaurantCnpj }), body), "_blank")}
           suppliers={suppliers}
           wines={wines}
@@ -615,6 +612,16 @@ function OrdersPage() {
           }}
         />
       )}
+
+      {docsOrderId && restaurantId && (
+        <OrderDocumentsDialog
+          orderId={docsOrderId}
+          restaurantId={restaurantId}
+          canManage={!!canManageActive}
+          onClose={() => setDocsOrderId(null)}
+        />
+      )}
+
 
       {receiving && (
         <ReceiveDialog

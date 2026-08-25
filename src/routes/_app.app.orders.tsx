@@ -402,25 +402,12 @@ function OrdersPage() {
       </div>
 
       {canManageActive && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-3">
-          <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Remetente dos pedidos por e-mail</div>
-            <div className="mt-1 text-sm text-foreground">
-              {emailStatus?.connected
-                ? emailStatus.connectedEmail
-                : emailStatus?.configured === false
-                  ? "Conector Gmail pendente de configuração"
-                  : "Nenhum Gmail conectado"}
-            </div>
-          </div>
-          <button
-            onClick={connectEmail}
-            className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm text-primary hover:bg-accent"
-          >
-            <PlugZap className="h-4 w-4" /> {emailStatus?.connected ? "Trocar Gmail" : "Conectar Gmail"}
-          </button>
+        <div className="mt-4 rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground">
+          O pedido é registrado no sistema e o texto pode ser copiado para enviar por e-mail ou WhatsApp.
+          Use o ícone de documentos em cada linha para guardar a Nota Fiscal, boletos e comprovantes do pedido.
         </div>
       )}
+
 
       {selectedIds.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-primary/50 bg-card p-3">

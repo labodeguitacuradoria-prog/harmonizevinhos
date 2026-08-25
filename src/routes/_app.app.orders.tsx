@@ -299,45 +299,45 @@ function OrdersPage() {
     qc.invalidateQueries({ queryKey: ["orders"] });
   }
 
-  async function connectEmail() {
-    const popup = window.open("", "harmonize-gmail", "width=620,height=760");
-    if (!popup) return toast.error("Permita pop-ups para conectar o Gmail.");
-    try {
-      const start = await startEmailConnection();
-      if (!start.configured || !start.authorizationUrl) {
-        popup.close();
-        toast.error(start.message ?? "Gmail ainda não configurado para envio direto.");
-        return;
-      }
-      const completion = waitForAppUserOAuthCompletion(popup, "google_mail");
-      popup.location.href = start.authorizationUrl;
-      const code = await completion;
-      if (code) {
-        const result = await completeEmailConnection({ data: { code } });
-        toast.success(`Gmail conectado: ${result.connectedEmail}`);
-      }
-      qc.invalidateQueries({ queryKey: ["order-email-connection"] });
-    } catch (e) {
-      popup.close();
-      toast.error(e instanceof Error ? e.message : "Não foi possível conectar o Gmail");
-    }
+  async function markSent(orderId: string, channel: "email" | "whatsapp" | "manual") {
+    const o = orderById[orderId];
+    if (!o) return;
+    await supabase
+      .from("purchase_orders")
+      .update({
+        sent_channel: channel,
+        sent_at: new Date().toISOString(),
+        status: (o.status === "draft" ? "sent" : o.status) as
+          | "draft"
+          | "sent"
+          | "partial"
+          | "received"
+          | "cancelled",
+      })
+      .eq("id", orderId);
+    qc.invalidateQueries({ queryKey: ["orders"] });
   }
 
-  async function sendOrderEmail(orderId: string) {
-    return sendEmailFn({ data: { orderId } });
+  async function copyOrderText(orderId: string) {
+    const text = orderTextFor(orderId);
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+    toast.success("Texto do pedido copiado — cole no e-mail ou WhatsApp");
+    await markSent(orderId, "manual");
   }
 
-  function openManualEmail(orderId: string) {
+  async function openManualEmail(orderId: string) {
     const order = orderById[orderId];
     if (!order) return;
     const supplier = supplierById[order.supplier_id];
-    const to = supplier?.commercial_email || supplier?.contact_email;
-    if (!to) return toast.error("Fornecedor sem e-mail cadastrado");
+    const to = supplier?.commercial_email || supplier?.contact_email || "";
     window.open(
       mailtoLink(to, buildOrderSubject({ restaurantName, restaurantCnpj }), orderTextFor(orderId)),
       "_blank",
     );
+    await markSent(orderId, "email");
   }
+
 
   function orderTextFor(orderId: string) {
     const o = orderById[orderId];

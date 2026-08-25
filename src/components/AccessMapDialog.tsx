@@ -46,6 +46,19 @@ export default function AccessMapDialog({
   const [manage, setManage] = useState<ManageTarget | null>(null);
   const [draft, setDraft] = useState<InviteDraft | null>(null);
 
+  const { data: restaurantInfo } = useQuery({
+    queryKey: ["restaurant-cnpj", restaurantId],
+    enabled: open,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("restaurants")
+        .select("cnpj")
+        .eq("id", restaurantId)
+        .maybeSingle();
+      return (data?.cnpj as string | null) ?? null;
+    },
+  });
+
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["access-map", restaurantId],
     enabled: open,

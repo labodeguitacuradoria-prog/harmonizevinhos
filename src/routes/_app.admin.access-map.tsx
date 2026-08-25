@@ -8,7 +8,7 @@ import {
   adminRemoveAccess,
   listAllAccessMap,
 } from "@/lib/access.functions";
-import { ShieldCheck, UserPlus, Trash2, Settings2 } from "lucide-react";
+import { Copy, ShieldCheck, UserPlus, Trash2, Settings2 } from "lucide-react";
 import AccessManageDialog, { type ManageTarget } from "@/components/AccessManageDialog";
 
 export const Route = createFileRoute("/_app/admin/access-map")({
@@ -26,7 +26,7 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 function AccessMapAdmin() {
-  const { role, loading } = useAuth();
+  const { role, loading, user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const listFn = useServerFn(listAllAccessMap);
@@ -190,8 +190,8 @@ function AccessMapAdmin() {
           restaurants={restaurants}
           onClose={() => setInviteOpen(false)}
           inviteFn={inviteFn}
+          senderEmail={user?.email ?? ""}
           onDone={() => {
-            setInviteOpen(false);
             qc.invalidateQueries({ queryKey: ["admin-access-map"] });
           }}
         />
@@ -213,26 +213,41 @@ function AdminInviteDialog({
   restaurants,
   onClose,
   inviteFn,
+  senderEmail,
   onDone,
 }: {
   restaurants: { id: string; name: string }[];
   onClose: () => void;
   inviteFn: any;
+  senderEmail: string;
   onDone: () => void;
 }) {
   const [email, setEmail] = useState("");
   const [restaurantId, setRestaurantId] = useState<string>(restaurants[0]?.id ?? "");
   const [role, setRole] = useState<string>("staff");
   const [err, setErr] = useState<string | null>(null);
+  const [draft, setDraft] = useState<InviteDraft | null>(null);
+  const selectedRestaurantName = restaurants.find((r) => r.id === restaurantId)?.name ?? "restaurante";
   const mut = useMutation({
     mutationFn: async () =>
-      inviteFn({ data: { restaurant_id: restaurantId, email, role } }),
-    onSuccess: onDone,
+      inviteFn({
+        data: {
+          restaurant_id: restaurantId,
+          email,
+          role,
+          redirect_origin: window.location.origin,
+        },
+      }),
+    onSuccess: (data: InviteResponse) => {
+      setErr(null);
+      setDraft(createInviteDraft(data, selectedRestaurantName, role, senderEmail));
+      onDone();
+    },
     onError: (e: any) => setErr(e?.message ?? "Falha"),
   });
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
+      <div className="w-full max-w-2xl rounded-xl border border-border bg-card p-6">
         <h2 className="page-title text-base">Convidar usuário</h2>
         <div className="mt-4 space-y-3">
           <input
@@ -279,10 +294,96 @@ function AdminInviteDialog({
             disabled={mut.isPending}
             className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
           >
-            {mut.isPending ? "Enviando..." : "Convidar"}
+            {mut.isPending ? "Gerando..." : "Gerar convite"}
           </button>
         </div>
+        {draft && <InviteDraftBlock draft={draft} />}
       </div>
+    </div>
+  );
+}
+
+type InviteResponse = {
+  email: string;
+  invite_url: string | null;
+  login_url: string;
+  is_existing_user: boolean;
+};
+
+type InviteDraft = {
+  to: string;
+  from: string;
+  subject: string;
+  body: string;
+};
+
+function createInviteDraft(
+  invite: InviteResponse,
+  restaurantName: string,
+  role: string,
+  senderEmail: string,
+): InviteDraft {
+  const accessLink = invite.invite_url ?? invite.login_url;
+  const roleLabel = ROLE_LABEL[role] ?? role;
+  const body = invite.is_existing_user
+    ? `Olá!\n\nVocê recebeu acesso ao Harmonize Vinhos para o restaurante ${restaurantName}.\n\nComo este e-mail já possui uma conta, entre pelo link abaixo usando o mesmo e-mail:\n${accessLink}\n\nPerfil de acesso: ${roleLabel}\n\nSaudações`
+    : `Olá!\n\nVocê recebeu um convite para acessar o Harmonize Vinhos e participar da gestão da carta de vinhos do restaurante ${restaurantName}.\n\nUse o link abaixo para entrar e definir sua senha:\n${accessLink}\n\nE-mail de acesso: ${invite.email}\nPerfil de acesso: ${roleLabel}\n\nSaudações`;
+
+  return {
+    to: invite.email,
+    from: senderEmail || "E-mail do usuário logado",
+    subject: `Convite de acesso - Harmonize Vinhos - ${restaurantName}`,
+    body,
+  };
+}
+
+function InviteDraftBlock({ draft }: { draft: InviteDraft }) {
+  const copy = (text: string) => navigator.clipboard?.writeText(text);
+  const fullDraft = `Para: ${draft.to}\nDe: ${draft.from}\nAssunto: ${draft.subject}\n\n${draft.body}`;
+
+  return (
+    <div className="mt-5 rounded-lg border border-primary/40 bg-[color:var(--surface-2)] p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+          Rascunho do convite
+        </div>
+        <button
+          onClick={() => copy(fullDraft)}
+          className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-primary hover:bg-card"
+        >
+          <Copy size={13} /> Copiar tudo
+        </button>
+      </div>
+      <DraftField label="Para" value={draft.to} onCopy={copy} />
+      <DraftField label="De" value={draft.from} onCopy={copy} />
+      <DraftField label="Assunto" value={draft.subject} onCopy={copy} />
+      <DraftField label="Texto" value={draft.body} onCopy={copy} multiline />
+    </div>
+  );
+}
+
+function DraftField({
+  label,
+  value,
+  multiline,
+  onCopy,
+}: {
+  label: string;
+  value: string;
+  multiline?: boolean;
+  onCopy: (value: string) => void;
+}) {
+  return (
+    <div className="mt-2 rounded-md border border-border bg-card p-3">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </span>
+        <button onClick={() => onCopy(value)} className="text-[10px] font-semibold text-primary">
+          copiar
+        </button>
+      </div>
+      <div className={`text-sm ${multiline ? "whitespace-pre-wrap" : "break-all"}`}>{value}</div>
     </div>
   );
 }

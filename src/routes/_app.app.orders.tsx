@@ -116,15 +116,12 @@ function money(v: number) {
 }
 
 function OrdersPage() {
-  const { restaurantId, memberships, canManageActive, user } = useAuth();
+  const { restaurantId, memberships, canManageActive } = useAuth();
   const qc = useQueryClient();
   const [showNew, setShowNew] = useState(false);
   const [receiving, setReceiving] = useState<ItemRow | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const startEmailConnection = useServerFn(startGoogleMailOrderEmailConnection);
-  const completeEmailConnection = useServerFn(completeGoogleMailOrderEmailConnection);
-  const emailStatusFn = useServerFn(getGoogleMailOrderEmailStatus);
-  const sendEmailFn = useServerFn(sendPurchaseOrderEmail);
+  const [docsOrderId, setDocsOrderId] = useState<string | null>(null);
 
   const restaurantName =
     memberships.find((m) => m.restaurantId === restaurantId)?.name ?? "Restaurante";
@@ -143,6 +140,7 @@ function OrdersPage() {
   });
 
   const restaurantCnpj = restaurantInfo?.cnpj ?? null;
+
 
   const { data: emailStatus } = useQuery({
     queryKey: ["order-email-connection", user?.id],

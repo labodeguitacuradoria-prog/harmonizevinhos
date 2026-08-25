@@ -857,12 +857,8 @@ function NewOrderDialog({
     } finally {
       setSaving(false);
     }
+  }
 
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao salvar pedido");
-    } finally {
-      setSaving(false);
-    }
   }
 
   return (

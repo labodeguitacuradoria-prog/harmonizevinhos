@@ -238,7 +238,7 @@ export const listAllAccessMap = createServerFn({ method: "GET" })
       restIds.length
         ? supabaseAdmin
             .from("restaurants")
-            .select("id, name, city, group_id")
+            .select("id, name, city, group_id, cnpj")
             .in("id", restIds)
         : Promise.resolve({ data: [] as any[] }),
     ]);
@@ -254,6 +254,7 @@ export const listAllAccessMap = createServerFn({ method: "GET" })
       role: r.role,
       restaurant_id: r.restaurant_id,
       restaurant_name: r.restaurant_id ? restaurants[r.restaurant_id]?.name ?? null : null,
+      restaurant_cnpj: r.restaurant_id ? restaurants[r.restaurant_id]?.cnpj ?? null : null,
       supplier_id: r.supplier_id,
       created_at: r.created_at,
     }));

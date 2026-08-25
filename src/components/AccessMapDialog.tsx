@@ -46,6 +46,19 @@ export default function AccessMapDialog({
   const [manage, setManage] = useState<ManageTarget | null>(null);
   const [draft, setDraft] = useState<InviteDraft | null>(null);
 
+  const { data: restaurantInfo } = useQuery({
+    queryKey: ["restaurant-cnpj", restaurantId],
+    enabled: open,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("restaurants")
+        .select("cnpj")
+        .eq("id", restaurantId)
+        .maybeSingle();
+      return (data?.cnpj as string | null) ?? null;
+    },
+  });
+
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["access-map", restaurantId],
     enabled: open,
@@ -97,7 +110,7 @@ export default function AccessMapDialog({
         },
       }),
     onSuccess: (data: InviteResponse) => {
-      setDraft(createInviteDraft(data, restaurantName, role, user?.email ?? ""));
+      setDraft(createInviteDraft(data, restaurantName, restaurantInfo ?? null, role, user?.email ?? ""));
       setEmail("");
       setSupplierId("");
       setErr(null);
@@ -309,19 +322,22 @@ type InviteDraft = {
 function createInviteDraft(
   invite: InviteResponse,
   restaurantName: string,
+  restaurantCnpj: string | null,
   role: string,
   senderEmail: string,
 ): InviteDraft {
   const accessLink = invite.invite_url ?? invite.login_url;
   const roleLabel = ROLE_LABELS[role] ?? role;
+  const cnpjPart = restaurantCnpj ? ` - ${restaurantCnpj}` : "";
+  const subject = `Convite de acesso - Gestão de Vinhos - ${restaurantName}${cnpjPart}`;
   const body = invite.is_existing_user
-    ? `Olá!\n\nVocê recebeu acesso ao Harmonize Vinhos para o restaurante ${restaurantName}.\n\nComo este e-mail já possui uma conta, entre pelo link abaixo usando o mesmo e-mail:\n${accessLink}\n\nPerfil de acesso: ${roleLabel}\n\nSaudações`
-    : `Olá!\n\nVocê recebeu um convite para acessar o Harmonize Vinhos e participar da gestão da carta de vinhos do restaurante ${restaurantName}.\n\nUse o link abaixo para entrar e definir sua senha:\n${accessLink}\n\nE-mail de acesso: ${invite.email}\nPerfil de acesso: ${roleLabel}\n\nSaudações`;
+    ? `Olá!\n\nVocê recebeu o acesso para o restaurante ${restaurantName} no aplicativo Gestão de Vinhos do La Bodeguita.\n\nComo este e-mail já possui uma conta, entre pelo link abaixo usando o mesmo e-mail:\n${accessLink}\n\nPerfil de acesso: ${roleLabel}\n\nSaudações`
+    : `Olá!\n\nVocê recebeu o acesso para o restaurante ${restaurantName} no aplicativo Gestão de Vinhos do La Bodeguita.\n\nComo este e-mail ainda não possui uma conta no sistema, use o link abaixo para criar seu acesso e definir sua senha. Caso o fornecedor não tenha um e-mail cadastrado, ele deverá criar uma conta usando um e-mail válido e, após o primeiro acesso, solicitar ao administrador do restaurante o vínculo do fornecedor:\n${accessLink}\n\nE-mail de acesso: ${invite.email}\nPerfil de acesso: ${roleLabel}\n\nSaudações`;
 
   return {
     to: invite.email,
     from: senderEmail || "E-mail do usuário logado",
-    subject: `Convite de acesso - Harmonize Vinhos - ${restaurantName}`,
+    subject,
     body,
   };
 }

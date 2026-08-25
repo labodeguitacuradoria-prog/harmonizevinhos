@@ -51,9 +51,10 @@ function AccessMapAdmin() {
   });
 
   const restaurants = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const r of rows) if (r.restaurant_id) map.set(r.restaurant_id, r.restaurant_name ?? "—");
-    return Array.from(map, ([id, name]) => ({ id, name }));
+    const map = new Map<string, { id: string; name: string; cnpj: string | null }>();
+    for (const r of rows)
+      if (r.restaurant_id) map.set(r.restaurant_id, { id: r.restaurant_id, name: r.restaurant_name ?? "—", cnpj: r.restaurant_cnpj ?? null });
+    return Array.from(map.values());
   }, [rows]);
 
   const filtered = rows.filter((r) => {
@@ -216,7 +217,7 @@ function AdminInviteDialog({
   senderEmail,
   onDone,
 }: {
-  restaurants: { id: string; name: string }[];
+  restaurants: { id: string; name: string; cnpj: string | null }[];
   onClose: () => void;
   inviteFn: any;
   senderEmail: string;
@@ -227,7 +228,9 @@ function AdminInviteDialog({
   const [role, setRole] = useState<string>("staff");
   const [err, setErr] = useState<string | null>(null);
   const [draft, setDraft] = useState<InviteDraft | null>(null);
-  const selectedRestaurantName = restaurants.find((r) => r.id === restaurantId)?.name ?? "restaurante";
+  const selectedRestaurant = restaurants.find((r) => r.id === restaurantId);
+  const selectedRestaurantName = selectedRestaurant?.name ?? "restaurante";
+  const selectedRestaurantCnpj = selectedRestaurant?.cnpj ?? null;
   const mut = useMutation({
     mutationFn: async () =>
       inviteFn({
@@ -240,7 +243,7 @@ function AdminInviteDialog({
       }),
     onSuccess: (data: InviteResponse) => {
       setErr(null);
-      setDraft(createInviteDraft(data, selectedRestaurantName, role, senderEmail));
+      setDraft(createInviteDraft(data, selectedRestaurantName, selectedRestaurantCnpj, role, senderEmail));
       onDone();
     },
     onError: (e: any) => setErr(e?.message ?? "Falha"),
@@ -320,19 +323,22 @@ type InviteDraft = {
 function createInviteDraft(
   invite: InviteResponse,
   restaurantName: string,
+  restaurantCnpj: string | null,
   role: string,
   senderEmail: string,
 ): InviteDraft {
   const accessLink = invite.invite_url ?? invite.login_url;
   const roleLabel = ROLE_LABEL[role] ?? role;
+  const cnpjPart = restaurantCnpj ? ` - ${restaurantCnpj}` : "";
+  const subject = `Convite de acesso - Gestão de Vinhos - ${restaurantName}${cnpjPart}`;
   const body = invite.is_existing_user
-    ? `Olá!\n\nVocê recebeu acesso ao Harmonize Vinhos para o restaurante ${restaurantName}.\n\nComo este e-mail já possui uma conta, entre pelo link abaixo usando o mesmo e-mail:\n${accessLink}\n\nPerfil de acesso: ${roleLabel}\n\nSaudações`
-    : `Olá!\n\nVocê recebeu um convite para acessar o Harmonize Vinhos e participar da gestão da carta de vinhos do restaurante ${restaurantName}.\n\nUse o link abaixo para entrar e definir sua senha:\n${accessLink}\n\nE-mail de acesso: ${invite.email}\nPerfil de acesso: ${roleLabel}\n\nSaudações`;
+    ? `Olá!\n\nVocê recebeu o acesso para o restaurante ${restaurantName} no aplicativo Gestão de Vinhos do La Bodeguita.\n\nComo este e-mail já possui uma conta, entre pelo link abaixo usando o mesmo e-mail:\n${accessLink}\n\nPerfil de acesso: ${roleLabel}\n\nSaudações`
+    : `Olá!\n\nVocê recebeu o acesso para o restaurante ${restaurantName} no aplicativo Gestão de Vinhos do La Bodeguita.\n\nComo este e-mail ainda não possui uma conta no sistema, use o link abaixo para criar seu acesso e definir sua senha. Caso o fornecedor não tenha um e-mail cadastrado, ele deverá criar uma conta usando um e-mail válido e, após o primeiro acesso, solicitar ao administrador do restaurante o vínculo do fornecedor:\n${accessLink}\n\nE-mail de acesso: ${invite.email}\nPerfil de acesso: ${roleLabel}\n\nSaudações`;
 
   return {
     to: invite.email,
     from: senderEmail || "E-mail do usuário logado",
-    subject: `Convite de acesso - Harmonize Vinhos - ${restaurantName}`,
+    subject,
     body,
   };
 }

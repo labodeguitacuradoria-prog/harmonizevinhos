@@ -116,7 +116,7 @@ function money(v: number) {
 }
 
 function OrdersPage() {
-  const { restaurantId, memberships, canManageActive } = useAuth();
+  const { restaurantId, memberships, canManageActive, user } = useAuth();
   const qc = useQueryClient();
   const [showNew, setShowNew] = useState(false);
   const [receiving, setReceiving] = useState<ItemRow | null>(null);

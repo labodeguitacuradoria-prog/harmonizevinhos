@@ -52,7 +52,6 @@ function AppLayout() {
           <NavLink to="/app/sales-monthly" rail={rail} icon={<CalendarRange className="h-4 w-4" />}>Venda mensal</NavLink>
           <NavLink to="/app/corkage-fees" rail={rail} icon={<Coins className="h-4 w-4" />}>Rolha</NavLink>
           <NavLink to="/app/sharing" rail={rail} icon={<Share2 className="h-4 w-4" />}>Compartilhar</NavLink>
-          <NavLink to="/app/catalog-admin" rail={rail} icon={<Database className="h-4 w-4" />}>Catálogo</NavLink>
           <NavLink to="/app/restaurant-profile" rail={rail} icon={<Building2 className="h-4 w-4" />}>Restaurante</NavLink>
         </>
       )}

@@ -731,9 +731,6 @@ function NewOrderDialog({
   restaurantId,
   restaurantName,
   restaurantCnpj,
-  emailStatus,
-  onConnectEmail,
-  onSendEmail,
   onOpenManualEmail,
   suppliers,
   wines,
@@ -743,10 +740,8 @@ function NewOrderDialog({
   restaurantId: string;
   restaurantName: string;
   restaurantCnpj: string | null;
-  emailStatus: EmailStatus | null;
-  onConnectEmail: () => void;
-  onSendEmail: (orderId: string) => Promise<{ sentFromEmail: string; providerMessageId: string | null }>;
   onOpenManualEmail: (to: string, body: string) => void;
+
   suppliers: Supplier[];
   wines: WineRow[];
   onClose: () => void;

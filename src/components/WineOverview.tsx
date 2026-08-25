@@ -68,7 +68,8 @@ export function WineOverview({
   wine: OverviewWine;
   restaurantId: string;
   onClose: () => void;
-  onEdit: () => void;
+  onEdit?: () => void;
+
   metric: Metric;
   onMetricChange: (m: Metric) => void;
 }) {

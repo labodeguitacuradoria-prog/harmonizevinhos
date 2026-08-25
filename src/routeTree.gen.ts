@@ -39,6 +39,7 @@ import { Route as AppAppSuppliersRouteImport } from './routes/_app.app.suppliers
 import { Route as AppAppWineMenuRouteImport } from './routes/_app.app.wine-menu'
 import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
 import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.index'
+import { Route as AppSupplierProductsRouteImport } from './routes/_app.supplier.products'
 import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
 
 const IndexRoute = IndexRouteImport.update({
@@ -191,6 +192,11 @@ const AppSupplierIndexRoute = AppSupplierIndexRouteImport.update({
   path: '/supplier/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSupplierProductsRoute = AppSupplierProductsRouteImport.update({
+  id: '/supplier/products',
+  path: '/supplier/products',
+  getParentRoute: () => AppRoute,
+} as any)
 const ApiPublicCatalogFileRoute = ApiPublicCatalogFileRouteImport.update({
   id: '/api/public/catalog-file',
   path: '/api/public/catalog-file',
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/app/suppliers': typeof AppAppSuppliersRoute
   '/app/wine-menu': typeof AppAppWineMenuRoute
   '/app/wines': typeof AppAppWinesRoute
+  '/supplier/products': typeof AppSupplierProductsRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/admin/': typeof AppAdminIndexRoute
   '/app/': typeof AppAppIndexRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/app/suppliers': typeof AppAppSuppliersRoute
   '/app/wine-menu': typeof AppAppWineMenuRoute
   '/app/wines': typeof AppAppWinesRoute
+  '/supplier/products': typeof AppSupplierProductsRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/admin': typeof AppAdminIndexRoute
   '/app': typeof AppAppIndexRoute
@@ -290,6 +298,7 @@ export interface FileRoutesById {
   '/_app/app/suppliers': typeof AppAppSuppliersRoute
   '/_app/app/wine-menu': typeof AppAppWineMenuRoute
   '/_app/app/wines': typeof AppAppWinesRoute
+  '/_app/supplier/products': typeof AppSupplierProductsRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/app/': typeof AppAppIndexRoute
@@ -324,6 +333,7 @@ export interface FileRouteTypes {
     | '/app/suppliers'
     | '/app/wine-menu'
     | '/app/wines'
+    | '/supplier/products'
     | '/api/public/catalog-file'
     | '/admin/'
     | '/app/'
@@ -356,6 +366,7 @@ export interface FileRouteTypes {
     | '/app/suppliers'
     | '/app/wine-menu'
     | '/app/wines'
+    | '/supplier/products'
     | '/api/public/catalog-file'
     | '/admin'
     | '/app'
@@ -389,6 +400,7 @@ export interface FileRouteTypes {
     | '/_app/app/suppliers'
     | '/_app/app/wine-menu'
     | '/_app/app/wines'
+    | '/_app/supplier/products'
     | '/api/public/catalog-file'
     | '/_app/admin/'
     | '/_app/app/'
@@ -618,6 +630,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSupplierIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/supplier/products': {
+      id: '/_app/supplier/products'
+      path: '/supplier/products'
+      fullPath: '/supplier/products'
+      preLoaderRoute: typeof AppSupplierProductsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/public/catalog-file': {
       id: '/api/public/catalog-file'
       path: '/api/public/catalog-file'
@@ -649,6 +668,7 @@ interface AppRouteChildren {
   AppAppSuppliersRoute: typeof AppAppSuppliersRoute
   AppAppWineMenuRoute: typeof AppAppWineMenuRoute
   AppAppWinesRoute: typeof AppAppWinesRoute
+  AppSupplierProductsRoute: typeof AppSupplierProductsRoute
   AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppAppIndexRoute: typeof AppAppIndexRoute
   AppSupplierIndexRoute: typeof AppSupplierIndexRoute
@@ -675,6 +695,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppSuppliersRoute: AppAppSuppliersRoute,
   AppAppWineMenuRoute: AppAppWineMenuRoute,
   AppAppWinesRoute: AppAppWinesRoute,
+  AppSupplierProductsRoute: AppSupplierProductsRoute,
   AppAdminIndexRoute: AppAdminIndexRoute,
   AppAppIndexRoute: AppAppIndexRoute,
   AppSupplierIndexRoute: AppSupplierIndexRoute,

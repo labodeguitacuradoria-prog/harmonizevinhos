@@ -56,8 +56,12 @@ function AppLayout() {
         </>
       )}
       {role === "supplier" && (
-        <NavLink to="/supplier" rail={rail} icon={<Home className="h-4 w-4" />}>Painel</NavLink>
+        <>
+          <NavLink to="/supplier" rail={rail} icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
+          <NavLink to="/supplier/products" rail={rail} icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
+        </>
       )}
+
       {role === "admin" && (
         <>
           <NavLink to="/admin" rail={rail} icon={<ShieldCheck className="h-4 w-4" />}>Admin</NavLink>

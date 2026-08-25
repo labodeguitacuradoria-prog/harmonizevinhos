@@ -731,7 +731,7 @@ function NewOrderDialog({
   restaurantId,
   restaurantName,
   restaurantCnpj,
-  onOpenManualEmail,
+  senderEmail,
   suppliers,
   wines,
   onClose,
@@ -740,8 +740,7 @@ function NewOrderDialog({
   restaurantId: string;
   restaurantName: string;
   restaurantCnpj: string | null;
-  onOpenManualEmail: (to: string, body: string) => void;
-
+  senderEmail: string;
   suppliers: Supplier[];
   wines: WineRow[];
   onClose: () => void;
@@ -753,6 +752,7 @@ function NewOrderDialog({
   const [search, setSearch] = useState("");
   const [lines, setLines] = useState<Record<string, { qty: string; cost: string; notes: string }>>({});
   const [saving, setSaving] = useState(false);
+  const [showDraft, setShowDraft] = useState(false);
 
   const supplier = suppliers.find((s) => s.id === supplierId);
   const list = useMemo(() => {

@@ -364,36 +364,16 @@ function OrdersPage() {
     });
   }
 
-  async function resend(orderId: string, channel: "email" | "whatsapp") {
+  async function sendWhatsapp(orderId: string) {
     const o = orderById[orderId];
     if (!o) return;
     const s = supplierById[o.supplier_id];
-    const text = orderTextFor(orderId);
-    if (channel === "email") {
-      if (!s?.commercial_email && !s?.contact_email) return toast.error("Fornecedor sem e-mail cadastrado");
-      try {
-        const result = await sendOrderEmail(orderId);
-        toast.success(`Pedido enviado por ${result.sentFromEmail}`);
-        qc.invalidateQueries({ queryKey: ["orders"] });
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Não foi possível enviar o e-mail");
-      }
-      return;
-    } else {
-      const phone = s?.whatsapp || s?.phone;
-      if (!phone) return toast.error("Fornecedor sem WhatsApp cadastrado");
-      window.open(whatsappLink(phone, text), "_blank");
-    }
-    await supabase
-      .from("purchase_orders")
-      .update({
-        sent_channel: channel,
-        sent_at: new Date().toISOString(),
-        status: (o.status === "draft" ? "sent" : o.status) as "draft" | "sent" | "partial" | "received" | "cancelled",
-      })
-      .eq("id", orderId);
-    qc.invalidateQueries({ queryKey: ["orders"] });
+    const phone = s?.whatsapp || s?.phone;
+    if (!phone) return toast.error("Fornecedor sem WhatsApp cadastrado");
+    window.open(whatsappLink(phone, orderTextFor(orderId)), "_blank");
+    await markSent(orderId, "whatsapp");
   }
+
 
   return (
     <div className="p-4 md:p-8">

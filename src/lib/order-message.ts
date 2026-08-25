@@ -33,9 +33,7 @@ function todayBR() {
 export function buildOrderText(input: OrderMessageInput): string {
   const lines: string[] = [];
   // Saudação de abertura do pedido
-  lines.push("Olá!");
-  lines.push("");
-  lines.push(`Pedido de vinhos - ${input.restaurantName}`);
+  lines.push(`Olá! solicito o envio dos seguintes rótulos ao restaurante: ${input.restaurantName}`);
   if (input.restaurantCnpj) lines.push(`CNPJ: ${input.restaurantCnpj}`);
   lines.push(`Fornecedor: ${input.supplierName}`);
   lines.push(`Data do pedido: ${todayBR()}`);
@@ -62,6 +60,8 @@ export function buildOrderText(input: OrderMessageInput): string {
   }
   lines.push("");
   lines.push("Favor confirmar recebimento deste pedido e prazo de entrega.");
+  lines.push("");
+  lines.push("Saudações");
   return lines.join("\n");
 }
 

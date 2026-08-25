@@ -807,13 +807,12 @@ function NewOrderDialog({
     });
   }
 
-  async function save(channel: "draft" | "email" | "whatsapp" | "manual") {
+  async function save(channel: "draft" | "manual") {
     if (!supplierId) return toast.error("Escolha o fornecedor");
     if (chosen.length === 0) return toast.error("Informe a quantidade de pelo menos um rótulo");
     setSaving(true);
     try {
       const isDraft = channel === "draft";
-      const body = text();
       const { data: order, error } = await supabase
         .from("purchase_orders")
         .insert({
@@ -821,7 +820,7 @@ function NewOrderDialog({
           supplier_id: supplierId,
           status: isDraft ? "draft" : "sent",
           sent_at: isDraft ? null : new Date().toISOString(),
-          sent_channel: isDraft ? null : channel,
+          sent_channel: isDraft ? null : "manual",
           expected_date: expected || null,
           notes: notes || null,
         })
@@ -839,24 +838,19 @@ function NewOrderDialog({
       const { error: itemErr } = await supabase.from("purchase_order_items").insert(payload);
       if (itemErr) throw new Error(itemErr.message);
 
-      if (channel === "email") {
-        onOpenManualEmail(supplier?.commercial_email || supplier?.contact_email || "", body);
-      }
-      if (channel === "whatsapp") {
-        const phone = supplier?.whatsapp || supplier?.phone;
-        if (!phone) toast.error("Fornecedor sem WhatsApp — pedido salvo, copie o texto para enviar");
-        else window.open(whatsappLink(phone, body), "_blank");
-      }
-      if (channel === "manual") {
-        await navigator.clipboard.writeText(body).catch(() => undefined);
-      }
-      toast.success(isDraft ? "Rascunho salvo" : "Pedido registrado");
+      toast.success(isDraft ? "Rascunho salvo" : "Pedido registrado como enviado");
       onSaved();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao salvar pedido");
     } finally {
       setSaving(false);
     }
+  }
+
+  function generateDraft() {
+    if (!supplierId) return toast.error("Escolha o fornecedor");
+    if (chosen.length === 0) return toast.error("Informe a quantidade de pelo menos um rótulo");
+    setShowDraft(true);
   }
 
 

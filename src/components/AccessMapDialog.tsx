@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { X, UserPlus, Trash2, Settings2 } from "lucide-react";
+import { Copy, X, UserPlus, Trash2, Settings2 } from "lucide-react";
 import AccessManageDialog, { type ManageTarget } from "@/components/AccessManageDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import {
   listRestaurantAccess,
   inviteRestaurantUser,
@@ -32,6 +33,7 @@ export default function AccessMapDialog({
   restaurantId: string;
   restaurantName: string;
 }) {
+  const { user } = useAuth();
   const qc = useQueryClient();
   const listFn = useServerFn(listRestaurantAccess);
   const inviteFn = useServerFn(inviteRestaurantUser);
@@ -42,6 +44,7 @@ export default function AccessMapDialog({
   const [supplierId, setSupplierId] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
   const [manage, setManage] = useState<ManageTarget | null>(null);
+  const [draft, setDraft] = useState<InviteDraft | null>(null);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["access-map", restaurantId],
@@ -90,9 +93,11 @@ export default function AccessMapDialog({
           email,
           role,
           supplier_id: role === "supplier" ? supplierId : null,
+          redirect_origin: window.location.origin,
         },
       }),
-    onSuccess: () => {
+    onSuccess: (data: InviteResponse) => {
+      setDraft(createInviteDraft(data, restaurantName, role, user?.email ?? ""));
       setEmail("");
       setSupplierId("");
       setErr(null);
@@ -203,7 +208,10 @@ export default function AccessMapDialog({
               type="email"
               placeholder="email@exemplo.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setDraft(null);
+              }}
               className="rounded-md border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
             />
             <select
@@ -211,6 +219,7 @@ export default function AccessMapDialog({
               onChange={(e) => {
                 setRole(e.target.value as RoleOption);
                 setSupplierId("");
+                setDraft(null);
               }}
               className="rounded-md border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
             >
@@ -230,7 +239,7 @@ export default function AccessMapDialog({
               disabled={inviteMut.isPending}
               className="flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
             >
-              <UserPlus size={14} /> {inviteMut.isPending ? "Enviando..." : "Convidar"}
+              <UserPlus size={14} /> {inviteMut.isPending ? "Gerando..." : "Gerar convite"}
             </button>
           </div>
 
@@ -245,7 +254,10 @@ export default function AccessMapDialog({
               ) : (
                 <select
                   value={supplierId}
-                  onChange={(e) => setSupplierId(e.target.value)}
+                  onChange={(e) => {
+                    setSupplierId(e.target.value);
+                    setDraft(null);
+                  }}
                   className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 >
                   <option value="">Selecione o fornecedor…</option>
@@ -261,9 +273,10 @@ export default function AccessMapDialog({
 
           {err && <div className="mt-2 text-xs text-red-400">{err}</div>}
           <p className="mt-2 text-[10px] text-muted-foreground">
-            O convidado receberá um e-mail para definir a senha. Após o cadastro, o acesso já estará
-            vinculado a este restaurante.
+            O acesso será criado e um rascunho de convite aparecerá abaixo para copiar e enviar por
+            e-mail ou WhatsApp.
           </p>
+          {draft && <InviteDraftBlock draft={draft} />}
         </div>
       </div>
       {manage && (
@@ -275,6 +288,91 @@ export default function AccessMapDialog({
           onChanged={() => qc.invalidateQueries({ queryKey: ["access-map", restaurantId] })}
         />
       )}
+    </div>
+  );
+}
+
+type InviteResponse = {
+  email: string;
+  invite_url: string | null;
+  login_url: string;
+  is_existing_user: boolean;
+};
+
+type InviteDraft = {
+  to: string;
+  from: string;
+  subject: string;
+  body: string;
+};
+
+function createInviteDraft(
+  invite: InviteResponse,
+  restaurantName: string,
+  role: string,
+  senderEmail: string,
+): InviteDraft {
+  const accessLink = invite.invite_url ?? invite.login_url;
+  const roleLabel = ROLE_LABELS[role] ?? role;
+  const body = invite.is_existing_user
+    ? `Olá!\n\nVocê recebeu acesso ao Harmonize Vinhos para o restaurante ${restaurantName}.\n\nComo este e-mail já possui uma conta, entre pelo link abaixo usando o mesmo e-mail:\n${accessLink}\n\nPerfil de acesso: ${roleLabel}\n\nSaudações`
+    : `Olá!\n\nVocê recebeu um convite para acessar o Harmonize Vinhos e participar da gestão da carta de vinhos do restaurante ${restaurantName}.\n\nUse o link abaixo para entrar e definir sua senha:\n${accessLink}\n\nE-mail de acesso: ${invite.email}\nPerfil de acesso: ${roleLabel}\n\nSaudações`;
+
+  return {
+    to: invite.email,
+    from: senderEmail || "E-mail do usuário logado",
+    subject: `Convite de acesso - Harmonize Vinhos - ${restaurantName}`,
+    body,
+  };
+}
+
+function InviteDraftBlock({ draft }: { draft: InviteDraft }) {
+  const copy = (text: string) => navigator.clipboard?.writeText(text);
+  const fullDraft = `Para: ${draft.to}\nDe: ${draft.from}\nAssunto: ${draft.subject}\n\n${draft.body}`;
+
+  return (
+    <div className="mt-4 rounded-lg border border-primary/40 bg-card p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+          Rascunho do convite
+        </div>
+        <button
+          onClick={() => copy(fullDraft)}
+          className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-primary hover:bg-[color:var(--surface-2)]"
+        >
+          <Copy size={13} /> Copiar tudo
+        </button>
+      </div>
+      <DraftField label="Para" value={draft.to} onCopy={copy} />
+      <DraftField label="De" value={draft.from} onCopy={copy} />
+      <DraftField label="Assunto" value={draft.subject} onCopy={copy} />
+      <DraftField label="Texto" value={draft.body} onCopy={copy} multiline />
+    </div>
+  );
+}
+
+function DraftField({
+  label,
+  value,
+  multiline,
+  onCopy,
+}: {
+  label: string;
+  value: string;
+  multiline?: boolean;
+  onCopy: (value: string) => void;
+}) {
+  return (
+    <div className="mt-2 rounded-md border border-border bg-[color:var(--surface-2)] p-3">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </span>
+        <button onClick={() => onCopy(value)} className="text-[10px] font-semibold text-primary">
+          copiar
+        </button>
+      </div>
+      <div className={`text-sm ${multiline ? "whitespace-pre-wrap" : "break-all"}`}>{value}</div>
     </div>
   );
 }

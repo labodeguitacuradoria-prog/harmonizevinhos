@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createManualAccessInvite } from "@/lib/access-invite.server";
 
 const roleValues = ["rest_owner", "staff", "supplier"] as const;
 const adminRoleValues = ["rest_admin", "rest_owner", "staff", "supplier"] as const;
@@ -65,6 +66,7 @@ const InviteSchema = z
     email: z.string().trim().email(),
     role: z.enum(roleValues),
     supplier_id: z.string().uuid().optional().nullable(),
+    redirect_origin: z.string().url().optional().nullable(),
   })
   .refine((d) => d.role !== "supplier" || !!d.supplier_id, {
     message: "Selecione o fornecedor",
@@ -81,18 +83,20 @@ export const inviteRestaurantUser = createServerFn({ method: "POST" })
     // Se for fornecedor, valida que o supplier está ligado a este restaurante
     // (via restaurant_supplier_access ou via wines.supplier_id).
     if (data.role === "supplier") {
+      const selectedSupplierId = data.supplier_id;
+      if (!selectedSupplierId) throw new Error("Selecione o fornecedor");
       const [{ data: acc }, { data: wineSup }] = await Promise.all([
         supabaseAdmin
           .from("restaurant_supplier_access")
           .select("supplier_id")
           .eq("restaurant_id", data.restaurant_id)
-          .eq("supplier_id", data.supplier_id!)
+          .eq("supplier_id", selectedSupplierId)
           .maybeSingle(),
         supabaseAdmin
           .from("wines")
           .select("supplier_id")
           .eq("restaurant_id", data.restaurant_id)
-          .eq("supplier_id", data.supplier_id!)
+          .eq("supplier_id", selectedSupplierId)
           .limit(1)
           .maybeSingle(),
       ]);
@@ -101,42 +105,37 @@ export const inviteRestaurantUser = createServerFn({ method: "POST" })
       }
     }
 
-    let userId: string | undefined;
-    const { data: invited, error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+    const invite = await createManualAccessInvite(
+      supabaseAdmin,
       data.email,
+      data.redirect_origin,
     );
-    if (invited?.user) userId = invited.user.id;
-    else if (invErr) {
-      const { data: list } = await supabaseAdmin.auth.admin.listUsers();
-      const found = list?.users.find((u) => u.email?.toLowerCase() === data.email.toLowerCase());
-      if (!found) throw new Error(invErr.message);
-      userId = found.id;
-    }
-    if (!userId) throw new Error("Não foi possível criar/localizar o usuário");
 
-    await supabaseAdmin.from("profiles").upsert({ id: userId, email: data.email });
+    await supabaseAdmin.from("profiles").upsert({ id: invite.user_id, email: invite.email });
 
     const { error: roleErr } = await supabaseAdmin.from("user_roles").insert({
-      user_id: userId,
+      user_id: invite.user_id,
       role: data.role,
       restaurant_id: data.restaurant_id,
-      supplier_id: data.role === "supplier" ? data.supplier_id : null,
+      supplier_id: data.role === "supplier" ? data.supplier_id ?? null : null,
     });
     if (roleErr && !roleErr.message.toLowerCase().includes("duplicate")) {
       throw new Error(roleErr.message);
     }
 
     if (data.role === "supplier") {
+      const selectedSupplierId = data.supplier_id;
+      if (!selectedSupplierId) throw new Error("Selecione o fornecedor");
       await supabaseAdmin.from("restaurant_supplier_access").upsert(
         {
           restaurant_id: data.restaurant_id,
-          supplier_id: data.supplier_id!,
+          supplier_id: selectedSupplierId,
           enabled: true,
         },
         { onConflict: "restaurant_id,supplier_id" },
       );
     }
-    return { ok: true, user_id: userId };
+    return invite;
   });
 
 const RemoveSchema = z.object({ user_role_id: z.string().uuid() });
@@ -264,6 +263,7 @@ const AdminInviteSchema = z.object({
   restaurant_id: z.string().uuid(),
   email: z.string().trim().email(),
   role: z.enum(adminRoleValues),
+  redirect_origin: z.string().url().optional().nullable(),
 });
 
 export const adminInviteAccess = createServerFn({ method: "POST" })
@@ -272,28 +272,21 @@ export const adminInviteAccess = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let userId: string | undefined;
-    const { data: invited, error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+    const invite = await createManualAccessInvite(
+      supabaseAdmin,
       data.email,
+      data.redirect_origin,
     );
-    if (invited?.user) userId = invited.user.id;
-    else if (invErr) {
-      const { data: list } = await supabaseAdmin.auth.admin.listUsers();
-      const found = list?.users.find((u) => u.email?.toLowerCase() === data.email.toLowerCase());
-      if (!found) throw new Error(invErr.message);
-      userId = found.id;
-    }
-    if (!userId) throw new Error("Não foi possível criar/localizar o usuário");
-    await supabaseAdmin.from("profiles").upsert({ id: userId, email: data.email });
+    await supabaseAdmin.from("profiles").upsert({ id: invite.user_id, email: invite.email });
     const { error: roleErr } = await supabaseAdmin.from("user_roles").insert({
-      user_id: userId,
+      user_id: invite.user_id,
       role: data.role,
       restaurant_id: data.restaurant_id,
     });
     if (roleErr && !roleErr.message.toLowerCase().includes("duplicate")) {
       throw new Error(roleErr.message);
     }
-    return { ok: true, user_id: userId };
+    return invite;
   });
 
 export const adminRemoveAccess = createServerFn({ method: "POST" })

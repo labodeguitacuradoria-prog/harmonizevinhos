@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_user_connections: {
+        Row: {
+          connected_email: string | null
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connected_email?: string | null
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connected_email?: string | null
+          connection_key_ciphertext?: string
+          connector_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       corkage_fees: {
         Row: {
           created_at: string
@@ -525,6 +555,8 @@ export type Database = {
           sent_channel:
             | Database["public"]["Enums"]["purchase_send_channel"]
             | null
+          sent_from_email: string | null
+          sent_provider_message_id: string | null
           status: Database["public"]["Enums"]["purchase_order_status"]
           supplier_id: string
           updated_at: string
@@ -540,6 +572,8 @@ export type Database = {
           sent_channel?:
             | Database["public"]["Enums"]["purchase_send_channel"]
             | null
+          sent_from_email?: string | null
+          sent_provider_message_id?: string | null
           status?: Database["public"]["Enums"]["purchase_order_status"]
           supplier_id: string
           updated_at?: string
@@ -555,6 +589,8 @@ export type Database = {
           sent_channel?:
             | Database["public"]["Enums"]["purchase_send_channel"]
             | null
+          sent_from_email?: string | null
+          sent_provider_message_id?: string | null
           status?: Database["public"]["Enums"]["purchase_order_status"]
           supplier_id?: string
           updated_at?: string

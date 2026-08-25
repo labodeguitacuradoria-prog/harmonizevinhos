@@ -51,9 +51,10 @@ function AccessMapAdmin() {
   });
 
   const restaurants = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const r of rows) if (r.restaurant_id) map.set(r.restaurant_id, r.restaurant_name ?? "—");
-    return Array.from(map, ([id, name]) => ({ id, name }));
+    const map = new Map<string, { id: string; name: string; cnpj: string | null }>();
+    for (const r of rows)
+      if (r.restaurant_id) map.set(r.restaurant_id, { id: r.restaurant_id, name: r.restaurant_name ?? "—", cnpj: r.restaurant_cnpj ?? null });
+    return Array.from(map.values());
   }, [rows]);
 
   const filtered = rows.filter((r) => {

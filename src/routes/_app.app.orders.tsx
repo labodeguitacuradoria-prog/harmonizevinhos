@@ -859,7 +859,7 @@ function NewOrderDialog({
     }
   }
 
-  }
+
 
   return (
     <Modal title="Novo pedido" onClose={onClose} wide>

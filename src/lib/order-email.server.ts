@@ -13,10 +13,14 @@ const GOOGLE_SCOPES = [
 
 type AuthContext = { userId: string; supabase: any };
 
+function missingGmailConfigurationMessage() {
+  return 'A conexão Gmail ainda não foi configurada no workspace. Configure o conector Gmail para permitir envio direto pelo usuário.';
+}
+
 function clientApiKey() {
   const key = process.env['GOOGLE_MAIL_APP_USER_CONNECTOR_CLIENT_API_KEY'];
   if (!key) {
-    throw new Error('A conexão Gmail ainda não foi configurada no workspace. Configure o conector Gmail para permitir envio direto pelo usuário.');
+    throw new Error(missingGmailConfigurationMessage());
   }
   return key;
 }
@@ -119,6 +123,12 @@ async function loadOrderMessage(orderId: string) {
 }
 
 export async function startOrderEmailConnection(context: AuthContext) {
+  if (!process.env['GOOGLE_MAIL_APP_USER_CONNECTOR_CLIENT_API_KEY']) {
+    return {
+      configured: false,
+      message: missingGmailConfigurationMessage(),
+    };
+  }
   const existingKey = await getConnectionKeyForUser(context.userId, CONNECTOR_ID);
   const returnUrl = new URL('/oauth/google-mail/return', originFromRequest()).toString();
   const { authorizationUrl } = await authorizeAppUserOAuth({
@@ -130,7 +140,7 @@ export async function startOrderEmailConnection(context: AuthContext) {
     connectionAPIKey: existingKey ?? undefined,
     credentialsConfiguration: { scopes: GOOGLE_SCOPES },
   });
-  return { authorizationUrl };
+  return { configured: true, authorizationUrl };
 }
 
 export async function completeOrderEmailConnection(context: AuthContext, code: string) {

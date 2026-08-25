@@ -322,9 +322,14 @@ function OrdersPage() {
     const popup = window.open("", "harmonize-gmail", "width=620,height=760");
     if (!popup) return toast.error("Permita pop-ups para conectar o Gmail.");
     try {
+      const start = await startEmailConnection();
+      if (!start.configured || !start.authorizationUrl) {
+        popup.close();
+        toast.error(start.message ?? "Gmail ainda não configurado para envio direto.");
+        return;
+      }
       const completion = waitForAppUserOAuthCompletion(popup, "google_mail");
-      const { authorizationUrl } = await startEmailConnection();
-      popup.location.href = authorizationUrl;
+      popup.location.href = start.authorizationUrl;
       const code = await completion;
       if (code) {
         const result = await completeEmailConnection({ data: { code } });

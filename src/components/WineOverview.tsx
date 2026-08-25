@@ -162,13 +162,16 @@ export function WineOverview({
             <FileText className="h-3.5 w-3.5" /> Características
           </button>
 
-          <button
-            type="button"
-            onClick={onEdit}
-            className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-primary/20"
-          >
-            <Pencil className="h-3.5 w-3.5" /> Editar
-          </button>
+          {onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-primary/20"
+            >
+              <Pencil className="h-3.5 w-3.5" /> Editar
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onClose}

@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +14,7 @@ import {
   X,
   Trash2,
   Send,
-  PlugZap,
+  FileText,
 } from "lucide-react";
 import {
   buildOrderText,
@@ -23,13 +22,8 @@ import {
   mailtoLink,
   whatsappLink,
 } from "@/lib/order-message";
-import { waitForAppUserOAuthCompletion } from "@/lib/app-user-connector-client";
-import {
-  completeGoogleMailOrderEmailConnection,
-  getGoogleMailOrderEmailStatus,
-  sendPurchaseOrderEmail,
-  startGoogleMailOrderEmailConnection,
-} from "@/lib/order-email.functions";
+import { OrderDocumentsDialog } from "@/components/OrderDocumentsDialog";
+
 
 export const Route = createFileRoute("/_app/app/orders")({
   head: () => ({

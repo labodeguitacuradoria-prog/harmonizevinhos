@@ -10,10 +10,12 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { user, loading, role } = useAuth();
+  const { user, loading, role, restaurantId } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const adminScopedRestaurant = role === "admin" ? restaurantId : null;
+
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -33,28 +35,30 @@ function AppLayout() {
     navigate({ to: "/" });
   }
 
+  const restaurantNav = (rail: boolean) => (
+    <>
+      <NavLink to="/app" rail={rail} icon={<Home className="h-4 w-4" />}>Início</NavLink>
+      <NavLink to="/app/dashboard" rail={rail} icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
+      <NavLink to="/app/price-analysis" rail={rail} icon={<Sparkles className="h-4 w-4" />}>Preços</NavLink>
+      <NavLink to="/app/pairings" rail={rail} icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
+      <NavLink to="/app/cadastros" rail={rail} icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
+      <NavLink to="/app/wines" rail={rail} icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
+      <NavLink to="/app/wine-menu" rail={rail} icon={<ScrollText className="h-4 w-4" />}>Carta</NavLink>
+      <NavLink to="/app/suppliers" rail={rail} icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
+      <NavLink to="/app/orders" rail={rail} icon={<ShoppingCart className="h-4 w-4" />}>Pedidos</NavLink>
+      <NavLink to="/app/stock-counts" rail={rail} icon={<ClipboardList className="h-4 w-4" />}>Contagem</NavLink>
+      <NavLink to="/app/stock-counts-admin" rail={rail} icon={<ClipboardCheck className="h-4 w-4" />}>Revisão</NavLink>
+      <NavLink to="/app/sales" rail={rail} icon={<BarChart3 className="h-4 w-4" />}>Vendas</NavLink>
+      <NavLink to="/app/sales-monthly" rail={rail} icon={<CalendarRange className="h-4 w-4" />}>Venda mensal</NavLink>
+      <NavLink to="/app/corkage-fees" rail={rail} icon={<Coins className="h-4 w-4" />}>Rolha</NavLink>
+      <NavLink to="/app/sharing" rail={rail} icon={<Share2 className="h-4 w-4" />}>Compartilhar</NavLink>
+      <NavLink to="/app/restaurant-profile" rail={rail} icon={<Building2 className="h-4 w-4" />}>Restaurante</NavLink>
+    </>
+  );
+
   const renderNav = (rail: boolean) => (
     <>
-      {role === "restaurant" && (
-        <>
-          <NavLink to="/app" rail={rail} icon={<Home className="h-4 w-4" />}>Início</NavLink>
-          <NavLink to="/app/dashboard" rail={rail} icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
-          <NavLink to="/app/price-analysis" rail={rail} icon={<Sparkles className="h-4 w-4" />}>Preços</NavLink>
-          <NavLink to="/app/pairings" rail={rail} icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
-          <NavLink to="/app/cadastros" rail={rail} icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
-          <NavLink to="/app/wines" rail={rail} icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
-          <NavLink to="/app/wine-menu" rail={rail} icon={<ScrollText className="h-4 w-4" />}>Carta</NavLink>
-          <NavLink to="/app/suppliers" rail={rail} icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
-          <NavLink to="/app/orders" rail={rail} icon={<ShoppingCart className="h-4 w-4" />}>Pedidos</NavLink>
-          <NavLink to="/app/stock-counts" rail={rail} icon={<ClipboardList className="h-4 w-4" />}>Contagem</NavLink>
-          <NavLink to="/app/stock-counts-admin" rail={rail} icon={<ClipboardCheck className="h-4 w-4" />}>Revisão</NavLink>
-          <NavLink to="/app/sales" rail={rail} icon={<BarChart3 className="h-4 w-4" />}>Vendas</NavLink>
-          <NavLink to="/app/sales-monthly" rail={rail} icon={<CalendarRange className="h-4 w-4" />}>Venda mensal</NavLink>
-          <NavLink to="/app/corkage-fees" rail={rail} icon={<Coins className="h-4 w-4" />}>Rolha</NavLink>
-          <NavLink to="/app/sharing" rail={rail} icon={<Share2 className="h-4 w-4" />}>Compartilhar</NavLink>
-          <NavLink to="/app/restaurant-profile" rail={rail} icon={<Building2 className="h-4 w-4" />}>Restaurante</NavLink>
-        </>
-      )}
+      {role === "restaurant" && restaurantNav(rail)}
       {role === "supplier" && (
         <>
           <NavLink to="/supplier" rail={rail} icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
@@ -65,16 +69,24 @@ function AppLayout() {
       {role === "admin" && (
         <>
           <NavLink to="/admin" rail={rail} icon={<ShieldCheck className="h-4 w-4" />}>Admin</NavLink>
+          <NavLink to="/admin/restaurants" rail={rail} icon={<Building2 className="h-4 w-4" />}>Restaurantes</NavLink>
           <NavLink to="/admin/access-map" rail={rail} icon={<Map className="h-4 w-4" />}>Acessos</NavLink>
           <NavLink to="/admin/suppliers" rail={rail} icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
           <NavLink to="/app/catalog-admin" rail={rail} icon={<Database className="h-4 w-4" />}>Catálogo</NavLink>
           <NavLink to="/app/supplier-catalog-admin" rail={rail} icon={<Users className="h-4 w-4" />}>Cat. Fornec.</NavLink>
           <NavLink to="/app/pairings" rail={rail} icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
           <NavLink to="/app/pairing-knowledge" rail={rail} icon={<BookOpen className="h-4 w-4" />}>Sommelier</NavLink>
+          {adminScopedRestaurant && (
+            <>
+              <div className={rail ? "my-2 border-t border-border" : "my-2 border-t border-border"} />
+              {restaurantNav(rail)}
+            </>
+          )}
         </>
       )}
     </>
   );
+
 
 
   return (

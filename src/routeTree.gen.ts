@@ -18,6 +18,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as AppAdminAccessMapRouteImport } from './routes/_app.admin.access-map'
+import { Route as AppAdminRestaurantsRouteImport } from './routes/_app.admin.restaurants'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
 import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
 import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros'
@@ -84,6 +85,11 @@ const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
 const AppAdminAccessMapRoute = AppAdminAccessMapRouteImport.update({
   id: '/admin/access-map',
   path: '/admin/access-map',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRestaurantsRoute = AppAdminRestaurantsRouteImport.update({
+  id: '/admin/restaurants',
+  path: '/admin/restaurants',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminSuppliersRoute = AppAdminSuppliersRouteImport.update({
@@ -211,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
+  '/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
@@ -244,6 +251,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
+  '/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
@@ -279,6 +287,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_app/admin/access-map': typeof AppAdminAccessMapRoute
+  '/_app/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
   '/_app/app/cadastros': typeof AppAppCadastrosRoute
   '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
@@ -314,6 +323,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/access-map'
+    | '/admin/restaurants'
     | '/admin/suppliers'
     | '/app/cadastros'
     | '/app/catalog-admin'
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/access-map'
+    | '/admin/restaurants'
     | '/admin/suppliers'
     | '/app/cadastros'
     | '/app/catalog-admin'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_app/admin/access-map'
+    | '/_app/admin/restaurants'
     | '/_app/admin/suppliers'
     | '/_app/app/cadastros'
     | '/_app/app/catalog-admin'
@@ -481,6 +493,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/access-map'
       fullPath: '/admin/access-map'
       preLoaderRoute: typeof AppAdminAccessMapRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/restaurants': {
+      id: '/_app/admin/restaurants'
+      path: '/admin/restaurants'
+      fullPath: '/admin/restaurants'
+      preLoaderRoute: typeof AppAdminRestaurantsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin/suppliers': {
@@ -649,6 +668,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAdminAccessMapRoute: typeof AppAdminAccessMapRoute
+  AppAdminRestaurantsRoute: typeof AppAdminRestaurantsRoute
   AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
   AppAppCadastrosRoute: typeof AppAppCadastrosRoute
   AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
@@ -676,6 +696,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdminAccessMapRoute: AppAdminAccessMapRoute,
+  AppAdminRestaurantsRoute: AppAdminRestaurantsRoute,
   AppAdminSuppliersRoute: AppAdminSuppliersRoute,
   AppAppCadastrosRoute: AppAppCadastrosRoute,
   AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,

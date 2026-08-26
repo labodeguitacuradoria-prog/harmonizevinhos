@@ -10,10 +10,12 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { user, loading, role } = useAuth();
+  const { user, loading, role, restaurantId } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const adminScopedRestaurant = role === "admin" ? restaurantId : null;
+
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });

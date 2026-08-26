@@ -38,7 +38,15 @@ function AdminHome() {
             <div className="text-sm text-muted-foreground">Convide, remova e visualize usuários por restaurante.</div>
           </div>
         </Link>
+        <Link to="/admin/restaurants" className="flex items-start gap-3 rounded-lg border border-border bg-card p-5 hover:bg-accent">
+          <Building2 className="mt-1 h-5 w-5 text-primary" />
+          <div>
+            <div className="font-semibold">Restaurantes cadastrados</div>
+            <div className="text-sm text-muted-foreground">Abra cada restaurante para ajustar problemas e corrigir erros.</div>
+          </div>
+        </Link>
       </div>
+
     </div>
   );
 }

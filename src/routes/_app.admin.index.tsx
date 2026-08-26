@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { ShieldCheck, Users, Map } from "lucide-react";
+import { ShieldCheck, Users, Map, Building2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/admin/")({
   component: AdminHome,

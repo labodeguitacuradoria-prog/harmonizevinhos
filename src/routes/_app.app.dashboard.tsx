@@ -1497,7 +1497,7 @@ export function BarChart({
   const targetsForMax = hasTargets ? targets!.filter((t) => t > 0) : [];
   const rawMax = Math.max(1, ...curr, ...prev, ...targetsForMax);
   const maxVal = niceMax(rawMax);
-  const ticks = [1, 0.75, 0.5, 0.25, 0].map((f) => maxVal * f);
+
   const axisWidth = 0;
   const fmtFull = (n: number) =>
     n.toLocaleString("pt-BR", { maximumFractionDigits: 0 });

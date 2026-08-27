@@ -1449,7 +1449,7 @@ function SimpleYearPanel({
         <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
         <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
       </div>
-      <div className="grid gap-4 lg:grid-cols-[1fr_minmax(200px,240px)]">
+      <div className={annualTarget !== null ? "grid gap-4 lg:grid-cols-[1fr_minmax(200px,240px)]" : "grid gap-4"}>
         <BarChart
           curr={curr}
           prev={prev}

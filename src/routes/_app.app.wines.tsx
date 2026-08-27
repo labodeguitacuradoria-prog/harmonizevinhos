@@ -1163,6 +1163,85 @@ function WineForm({
   );
 }
 
+// Célula editável diretamente na tabela de produtos (código, custo e venda).
+function InlineCell({
+  wineId,
+  field,
+  value,
+  display,
+  numeric,
+  onSaved,
+}: {
+  wineId: string;
+  field: "internal_code" | "cost_price" | "sale_price";
+  value: string;
+  display: string;
+  numeric?: boolean;
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [saving, setSaving] = useState(false);
+
+  async function commit() {
+    setEditing(false);
+    const normalized = numeric ? draft.replace(",", ".").trim() : draft.trim();
+    if (normalized === (numeric ? value.replace(",", ".") : value)) return;
+    let payload: Record<string, unknown>;
+    if (numeric) {
+      const n = Number(normalized);
+      if (!Number.isFinite(n) || n < 0) return toast.error("Valor inválido.");
+      payload = { [field]: n };
+    } else {
+      payload = { [field]: normalized || null };
+    }
+    setSaving(true);
+    const { error } = await supabase.from("wines").update(payload as any).eq("id", wineId);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Atualizado");
+    onSaved();
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setDraft(value);
+          setEditing(true);
+        }}
+        title="Clique para editar"
+        className="w-full rounded px-2 py-1 text-left hover:bg-accent hover:text-primary"
+      >
+        {saving ? "..." : display}
+      </button>
+    );
+  }
+
+  return (
+    <input
+      autoFocus
+      type="text"
+      inputMode={numeric ? "decimal" : "text"}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          (e.target as HTMLInputElement).blur();
+        }
+        if (e.key === "Escape") {
+          setDraft(value);
+          setEditing(false);
+        }
+      }}
+      className="w-24 rounded border border-primary bg-background px-2 py-1 text-sm"
+    />
+  );
+}
+
 
 // ===== GLASSES =====
 

@@ -887,6 +887,7 @@ function DashboardPage() {
             totalBottles={agg.stockBottles}
             totalValue={agg.stockValue}
             targets={targetsFor(targets, "estoque")}
+            lastStockDate={stockData.lastDate}
           />
         )}
         {tab === "preco" && (

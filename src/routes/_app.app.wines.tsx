@@ -782,7 +782,15 @@ function WinesSection() {
               const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
               return (
                 <tr key={w.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{w.internal_code ?? "-"}</td>
+                  <td className="px-2 py-2 font-mono text-xs text-muted-foreground">
+                    <InlineCell
+                      wineId={w.id}
+                      field="internal_code"
+                      value={w.internal_code ?? ""}
+                      display={w.internal_code ?? "-"}
+                      onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <button type="button" onClick={() => setViewWine(w)} className="text-left hover:text-primary">
                       <div className="flex items-center gap-1.5">
@@ -795,8 +803,27 @@ function WinesSection() {
                   <td className="px-4 py-3">{w.vintage ?? "-"}</td>
                   <td className="px-4 py-3">{wineTypeLabel(w.wine_type)}</td>
                   <td className="px-4 py-3">{w.volume ?? "-"}</td>
-                  <td className="px-4 py-3">R$ {Number(w.cost_price).toFixed(2)}</td>
-                  <td className="px-4 py-3">R$ {Number(w.sale_price).toFixed(2)}</td>
+                  <td className="px-2 py-2">
+                    <InlineCell
+                      wineId={w.id}
+                      field="cost_price"
+                      numeric
+                      value={String(Number(w.cost_price))}
+                      display={`R$ ${Number(w.cost_price).toFixed(2)}`}
+                      onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
+                    />
+                  </td>
+                  <td className="px-2 py-2">
+                    <InlineCell
+                      wineId={w.id}
+                      field="sale_price"
+                      numeric
+                      value={String(Number(w.sale_price))}
+                      display={`R$ ${Number(w.sale_price).toFixed(2)}`}
+                      onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
+                    />
+                  </td>
+
                   <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>
                   <td className="px-4 py-3">
                     {isGlassVol(w.volume) ? (

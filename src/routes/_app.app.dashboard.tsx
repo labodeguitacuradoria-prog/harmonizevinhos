@@ -68,6 +68,12 @@ function monthLabel(year: number, monthIdx: number) {
   return `${MONTHS[monthIdx]}/${String(year).slice(-2)}`;
 }
 
+function formatDateBR(iso: string) {
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
 function findLastMonthWithData(
   byYearMonth: Record<number, number[]>,
   currentYear: number,
@@ -128,7 +134,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: stockMap = {} } = useQuery<Record<string, number>>({
+  const { data: stockData = { map: {}, lastDate: null as string | null } } = useQuery<{ map: Record<string, number>; lastDate: string | null }>({
     queryKey: ["dash-stock", scopeKey],
     enabled,
     queryFn: async () => {
@@ -140,12 +146,14 @@ function DashboardPage() {
         .eq("status", "closed")
         .order("reference_date", { ascending: false });
       const latestByRest = new Map<string, string>();
+      let lastDate: string | null = null;
       for (const s of sess ?? []) {
         if (!latestByRest.has(s.restaurant_id)) latestByRest.set(s.restaurant_id, s.id);
+        if (s.reference_date && (!lastDate || s.reference_date > lastDate)) lastDate = s.reference_date;
       }
       const map: Record<string, number> = {};
       const sessionIds = Array.from(latestByRest.values());
-      if (sessionIds.length === 0) return map;
+      if (sessionIds.length === 0) return { map, lastDate: null };
       const { data: items } = await supabase
         .from("stock_count_items")
         .select("wine_id, counted_qty")
@@ -153,9 +161,10 @@ function DashboardPage() {
       for (const it of items ?? []) {
         map[it.wine_id] = (map[it.wine_id] ?? 0) + (it.counted_qty ?? 0);
       }
-      return map;
+      return { map, lastDate };
     },
   });
+  const stockMap = stockData.map;
 
   const { data: movements = [] } = useQuery<Movement[]>({
     queryKey: ["dash-movements", scopeKey, currentYear],
@@ -884,6 +893,7 @@ function DashboardPage() {
             totalBottles={agg.stockBottles}
             totalValue={agg.stockValue}
             targets={targetsFor(targets, "estoque")}
+            lastStockDate={stockData.lastDate}
           />
         )}
         {tab === "preco" && (
@@ -1745,12 +1755,14 @@ function EstoquePanel({
   totalBottles,
   totalValue,
   targets,
+  lastStockDate,
 }: {
   wines: WineRow[];
   stockMap: Record<string, number>;
   totalBottles: number;
   totalValue: number;
   targets: TargetSet;
+  lastStockDate?: string | null;
 }) {
   const byType: Record<string, { bottles: number; value: number }> = {};
   let totalCost = 0;
@@ -1765,10 +1777,14 @@ function EstoquePanel({
   }
   const rows = Object.entries(byType).sort((a, b) => b[1].value - a[1].value);
   const annualTarget = resolveAnnualTarget(targets);
+  const dateLabel = lastStockDate ? formatDateBR(lastStockDate) : null;
+  const subtitle = dateLabel
+    ? `Consolidação da última contagem fechada em ${dateLabel}.`
+    : "Consolidação da última contagem fechada.";
 
   return (
     <div>
-      <SectionHeader icon={<Package size={14} />} title="Estoque em adega" subtitle="Consolidação da última contagem fechada." />
+      <SectionHeader icon={<Package size={14} />} title="Estoque em adega" subtitle={subtitle} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
         <MiniStat label="Garrafas em estoque" value={`${totalBottles}`} tone="primary" />
         <MiniStat label="Valor de venda" value={`R$ ${fmtBRL(totalValue)}`} />

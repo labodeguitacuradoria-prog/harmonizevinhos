@@ -1505,85 +1505,19 @@ export function BarChart({
   return (
     <div>
       <div className="relative w-full" style={{ height }}>
-        {/* Horizontal gridlines (Y axis labels suppressed) */}
+        {/* Squared grid background (same look as wine sales chart) */}
         <div className="absolute inset-0" style={{ paddingLeft: axisWidth, paddingBottom: 22 }}>
-          <div className="relative h-full w-full">
-            {ticks.map((t, i) => (
-              <div
-                key={i}
-                className="absolute left-0 right-0 flex items-center"
-                style={{ top: `${(i / (ticks.length - 1)) * 100}%`, transform: "translateY(-0.5px)" }}
-              >
-                <div
-                  className="h-px w-full"
-                  style={{ background: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
-                />
-              </div>
-            ))}
-
-            {/* Vertical gridlines between months */}
-            <div className="absolute inset-0 flex">
-              {MONTHS.map((_, i) => (
-                <div
-                  key={i}
-                  className="flex-1 border-l"
-                  style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 30%, transparent)" }}
-                />
-              ))}
-              <div
-                className="border-l"
-                style={{ borderColor: "color-mix(in oklab, var(--muted-foreground) 45%, transparent)" }}
-              />
-            </div>
-
-            {/* Bars */}
-            <div className="absolute inset-0 flex items-end justify-between gap-2 pt-6">
-              {MONTHS.map((mo, i) => {
-                const cPct = (curr[i] / maxVal) * 100;
-                const pPct = (prev[i] / maxVal) * 100;
-                const tVal = targets?.[i] ?? 0;
-                return (
-                  <div key={mo} className="relative flex h-full min-w-0 flex-1 items-end justify-center gap-0.5">
-                    <div
-                      className="relative flex w-2/5 justify-center rounded-t-sm transition-all"
-                      style={{
-                        height: prev[i] > 0 ? `max(2px, ${pPct}%)` : "0%",
-                        background: "#444444",
-                      }}
-                      title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
-                    >
-                      {prev[i] > 0 && (
-                        <span className="absolute bottom-full z-10 mb-1 whitespace-nowrap rounded bg-[color:var(--card)] px-1 text-[9px] font-semibold leading-none tabular-nums text-muted-foreground">
-                          {fmtFull(prev[i])}
-                        </span>
-                      )}
-                    </div>
-
-                    <div
-                      className="relative flex w-2/5 justify-center rounded-t-sm transition-all"
-                      style={{
-                        height: `${cPct}%`,
-                        background: "var(--gold)",
-                      }}
-                      title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}${
-                        tVal > 0 ? ` • Meta: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}` : ""
-                      }`}
-                    >
-                      {curr[i] > 0 && (
-                        <span className="absolute bottom-full z-10 mb-1 whitespace-nowrap rounded bg-[color:var(--card)] px-1 text-[9px] font-semibold leading-none tabular-nums text-primary">
-                          {fmtFull(curr[i])}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Continuous target step-line: full width, no gaps between months.
-                Paints on top of bars (visible across them) but behind number labels (z-10). */}
+          <div
+            className="relative h-full w-full rounded-md"
+            style={{
+              backgroundImage: `linear-gradient(to right, color-mix(in oklab, var(--gold) 16%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--gold) 16%, transparent) 1px, transparent 1px)`,
+              backgroundSize: "22px 22px",
+              border: "1px solid color-mix(in oklab, var(--gold) 22%, transparent)",
+            }}
+          >
+            {/* Target step-line: painted BEHIND the bars */}
             {hasTargets && (
-              <div className="pointer-events-none absolute inset-0 flex pt-6" style={{ zIndex: 1 }}>
+              <div className="pointer-events-none absolute inset-0 flex pt-6" style={{ zIndex: 0 }}>
                 {MONTHS.map((mo, i) => {
                   const tVal = targets?.[i] ?? 0;
                   const tPct = tVal > 0 ? (tVal / maxVal) * 100 : 0;
@@ -1601,6 +1535,50 @@ export function BarChart({
                 })}
               </div>
             )}
+
+            {/* Bars */}
+            <div className="absolute inset-0 flex items-end justify-between gap-2 px-1.5 pt-6" style={{ zIndex: 2 }}>
+              {MONTHS.map((mo, i) => {
+                const cPct = (curr[i] / maxVal) * 100;
+                const pPct = (prev[i] / maxVal) * 100;
+                const tVal = targets?.[i] ?? 0;
+                return (
+                  <div key={mo} className="relative flex h-full min-w-0 flex-1 items-end justify-center gap-0.5">
+                    <div
+                      className="relative flex w-2/5 justify-center rounded-t transition-all"
+                      style={{
+                        height: prev[i] > 0 ? `max(2px, ${pPct}%)` : "0%",
+                        background: "linear-gradient(180deg, #dcdcdc, #7a7a7a)",
+                      }}
+                      title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
+                    >
+                      {prev[i] > 0 && (
+                        <span className="absolute bottom-full z-10 mb-1 whitespace-nowrap rounded bg-[color:var(--card)] px-1 text-[9px] font-semibold leading-none tabular-nums text-muted-foreground">
+                          {fmtFull(prev[i])}
+                        </span>
+                      )}
+                    </div>
+
+                    <div
+                      className="relative flex w-2/5 justify-center rounded-t transition-all"
+                      style={{
+                        height: `${cPct}%`,
+                        background: "linear-gradient(180deg, var(--gold), var(--wine))",
+                      }}
+                      title={`${currentYear}: ${valuePrefix}${fmtBRL(curr[i])}${valueSuffix}${
+                        tVal > 0 ? ` • Meta: ${valuePrefix}${fmtBRL(tVal)}${valueSuffix}` : ""
+                      }`}
+                    >
+                      {curr[i] > 0 && (
+                        <span className="absolute bottom-full z-10 mb-1 whitespace-nowrap rounded bg-[color:var(--card)] px-1 text-[9px] font-semibold leading-none tabular-nums text-primary">
+                          {fmtFull(curr[i])}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
         {/* Month labels */}

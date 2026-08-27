@@ -1749,12 +1749,14 @@ function EstoquePanel({
   totalBottles,
   totalValue,
   targets,
+  lastStockDate,
 }: {
   wines: WineRow[];
   stockMap: Record<string, number>;
   totalBottles: number;
   totalValue: number;
   targets: TargetSet;
+  lastStockDate?: string | null;
 }) {
   const byType: Record<string, { bottles: number; value: number }> = {};
   let totalCost = 0;
@@ -1769,10 +1771,14 @@ function EstoquePanel({
   }
   const rows = Object.entries(byType).sort((a, b) => b[1].value - a[1].value);
   const annualTarget = resolveAnnualTarget(targets);
+  const dateLabel = lastStockDate ? formatDateBR(lastStockDate) : null;
+  const subtitle = dateLabel
+    ? `Consolidação da última contagem fechada em ${dateLabel}.`
+    : "Consolidação da última contagem fechada.";
 
   return (
     <div>
-      <SectionHeader icon={<Package size={14} />} title="Estoque em adega" subtitle="Consolidação da última contagem fechada." />
+      <SectionHeader icon={<Package size={14} />} title="Estoque em adega" subtitle={subtitle} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
         <MiniStat label="Garrafas em estoque" value={`${totalBottles}`} tone="primary" />
         <MiniStat label="Valor de venda" value={`R$ ${fmtBRL(totalValue)}`} />

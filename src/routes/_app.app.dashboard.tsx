@@ -128,7 +128,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: stockMap = {} } = useQuery<Record<string, number>>({
+  const { data: stockData = { map: {}, lastDate: null as string | null } } = useQuery<{ map: Record<string, number>; lastDate: string | null }>({
     queryKey: ["dash-stock", scopeKey],
     enabled,
     queryFn: async () => {
@@ -140,12 +140,14 @@ function DashboardPage() {
         .eq("status", "closed")
         .order("reference_date", { ascending: false });
       const latestByRest = new Map<string, string>();
+      let lastDate: string | null = null;
       for (const s of sess ?? []) {
         if (!latestByRest.has(s.restaurant_id)) latestByRest.set(s.restaurant_id, s.id);
+        if (s.reference_date && (!lastDate || s.reference_date > lastDate)) lastDate = s.reference_date;
       }
       const map: Record<string, number> = {};
       const sessionIds = Array.from(latestByRest.values());
-      if (sessionIds.length === 0) return map;
+      if (sessionIds.length === 0) return { map, lastDate: null };
       const { data: items } = await supabase
         .from("stock_count_items")
         .select("wine_id, counted_qty")
@@ -153,9 +155,10 @@ function DashboardPage() {
       for (const it of items ?? []) {
         map[it.wine_id] = (map[it.wine_id] ?? 0) + (it.counted_qty ?? 0);
       }
-      return map;
+      return { map, lastDate };
     },
   });
+  const stockMap = stockData.map;
 
   const { data: movements = [] } = useQuery<Movement[]>({
     queryKey: ["dash-movements", scopeKey, currentYear],

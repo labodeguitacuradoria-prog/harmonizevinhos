@@ -1449,23 +1449,25 @@ function SimpleYearPanel({
         <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
         <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
       </div>
-      {annualTarget !== null && (
-        <TargetSummary
-          label={`Meta anual ${currentYear}`}
-          achieved={currAcc}
-          target={annualTarget}
+      <div className="grid gap-4 lg:grid-cols-[1fr_minmax(200px,240px)]">
+        <BarChart
+          curr={curr}
+          prev={prev}
+          currentYear={currentYear}
+          previousYear={previousYear}
           valueSuffix={` ${unit}`}
+          height={240}
+          targets={targets.monthly.length === 12 ? targets.monthly : undefined}
         />
-      )}
-      <BarChart
-        curr={curr}
-        prev={prev}
-        currentYear={currentYear}
-        previousYear={previousYear}
-        valueSuffix={` ${unit}`}
-        height={240}
-        targets={targets.monthly.length === 12 ? targets.monthly : undefined}
-      />
+        {annualTarget !== null && (
+          <TargetSummary
+            label={`Meta anual ${currentYear}`}
+            achieved={currAcc}
+            target={annualTarget}
+            valueSuffix={` ${unit}`}
+          />
+        )}
+      </div>
     </div>
   );
 }

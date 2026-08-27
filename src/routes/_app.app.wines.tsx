@@ -782,7 +782,15 @@ function WinesSection() {
               const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
               return (
                 <tr key={w.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{w.internal_code ?? "-"}</td>
+                  <td className="px-2 py-2 font-mono text-xs text-muted-foreground">
+                    <InlineCell
+                      wineId={w.id}
+                      field="internal_code"
+                      value={w.internal_code ?? ""}
+                      display={w.internal_code ?? "-"}
+                      onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <button type="button" onClick={() => setViewWine(w)} className="text-left hover:text-primary">
                       <div className="flex items-center gap-1.5">
@@ -795,8 +803,27 @@ function WinesSection() {
                   <td className="px-4 py-3">{w.vintage ?? "-"}</td>
                   <td className="px-4 py-3">{wineTypeLabel(w.wine_type)}</td>
                   <td className="px-4 py-3">{w.volume ?? "-"}</td>
-                  <td className="px-4 py-3">R$ {Number(w.cost_price).toFixed(2)}</td>
-                  <td className="px-4 py-3">R$ {Number(w.sale_price).toFixed(2)}</td>
+                  <td className="px-2 py-2">
+                    <InlineCell
+                      wineId={w.id}
+                      field="cost_price"
+                      numeric
+                      value={String(Number(w.cost_price))}
+                      display={`R$ ${Number(w.cost_price).toFixed(2)}`}
+                      onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
+                    />
+                  </td>
+                  <td className="px-2 py-2">
+                    <InlineCell
+                      wineId={w.id}
+                      field="sale_price"
+                      numeric
+                      value={String(Number(w.sale_price))}
+                      display={`R$ ${Number(w.sale_price).toFixed(2)}`}
+                      onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
+                    />
+                  </td>
+
                   <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>
                   <td className="px-4 py-3">
                     {isGlassVol(w.volume) ? (
@@ -1133,6 +1160,85 @@ function WineForm({
         </div>
       </form>
     </Modal>
+  );
+}
+
+// Célula editável diretamente na tabela de produtos (código, custo e venda).
+function InlineCell({
+  wineId,
+  field,
+  value,
+  display,
+  numeric,
+  onSaved,
+}: {
+  wineId: string;
+  field: "internal_code" | "cost_price" | "sale_price";
+  value: string;
+  display: string;
+  numeric?: boolean;
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [saving, setSaving] = useState(false);
+
+  async function commit() {
+    setEditing(false);
+    const normalized = numeric ? draft.replace(",", ".").trim() : draft.trim();
+    if (normalized === (numeric ? value.replace(",", ".") : value)) return;
+    let payload: Record<string, unknown>;
+    if (numeric) {
+      const n = Number(normalized);
+      if (!Number.isFinite(n) || n < 0) return toast.error("Valor inválido.");
+      payload = { [field]: n };
+    } else {
+      payload = { [field]: normalized || null };
+    }
+    setSaving(true);
+    const { error } = await supabase.from("wines").update(payload as any).eq("id", wineId);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Atualizado");
+    onSaved();
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setDraft(value);
+          setEditing(true);
+        }}
+        title="Clique para editar"
+        className="w-full rounded px-2 py-1 text-left hover:bg-accent hover:text-primary"
+      >
+        {saving ? "..." : display}
+      </button>
+    );
+  }
+
+  return (
+    <input
+      autoFocus
+      type="text"
+      inputMode={numeric ? "decimal" : "text"}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          (e.target as HTMLInputElement).blur();
+        }
+        if (e.key === "Escape") {
+          setDraft(value);
+          setEditing(false);
+        }
+      }}
+      className="w-24 rounded border border-primary bg-background px-2 py-1 text-sm"
+    />
   );
 }
 

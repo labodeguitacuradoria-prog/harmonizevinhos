@@ -68,6 +68,12 @@ function monthLabel(year: number, monthIdx: number) {
   return `${MONTHS[monthIdx]}/${String(year).slice(-2)}`;
 }
 
+function formatDateBR(iso: string) {
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
 function findLastMonthWithData(
   byYearMonth: Record<number, number[]>,
   currentYear: number,

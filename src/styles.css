@@ -198,6 +198,12 @@
   scrollbar-width: none;
 }
 
+@utility nav-active {
+  background-image: var(--gradient-nav-active);
+  border-top: 1px solid color-mix(in oklab, var(--gold) 22%, transparent);
+  color: var(--gold);
+}
+
 @utility no-spin {
   appearance: textfield;
   &::-webkit-outer-spin-button,

@@ -198,11 +198,11 @@ function NavLink({
       <Link
         to={to}
         activeOptions={{ exact }}
-        className="flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        activeProps={{ className: "bg-accent text-primary" }}
+        className="flex flex-col items-center gap-1.5 rounded-lg px-1 py-3 text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+        activeProps={{ className: "nav-active text-primary" }}
       >
         {icon}
-        <span className="w-full text-center text-[9px] font-medium uppercase leading-tight tracking-wide">
+        <span className="w-full text-center text-[8px] font-medium uppercase leading-tight tracking-[0.14em]">
           {children}
         </span>
       </Link>
@@ -212,8 +212,8 @@ function NavLink({
     <Link
       to={to}
       activeOptions={{ exact }}
-      className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
-      activeProps={{ className: "bg-accent text-foreground" }}
+      className="flex items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground hover:bg-white/5 hover:text-foreground"
+      activeProps={{ className: "nav-active text-primary" }}
     >
       {icon}
       {children}

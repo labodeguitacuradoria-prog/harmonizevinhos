@@ -122,7 +122,7 @@ function AppLayout() {
               </button>
             </div>
             {role === "restaurant" && <RestaurantContextSwitcher />}
-            <nav className="flex flex-col gap-1 p-3" onClick={() => setMenuOpen(false)}>
+            <nav className="flex flex-col gap-1.5 p-3" onClick={() => setMenuOpen(false)}>
               {renderNav(false)}
 
             </nav>
@@ -139,27 +139,40 @@ function AppLayout() {
         </div>
       )}
 
-      <aside className="no-scrollbar hidden bg-card md:flex md:w-[92px] md:shrink-0 md:flex-col md:border-r md:border-border md:overflow-y-auto">
-        <div className="flex flex-col items-center gap-1 border-b border-border px-2 py-4">
-          <Wine className="h-6 w-6 text-primary" />
-          <span className="text-center text-[9px] font-semibold uppercase leading-tight tracking-[0.08em] text-primary">
+      <aside className="no-scrollbar relative hidden bg-card md:flex md:w-[92px] md:shrink-0 md:flex-col md:border-r md:border-border md:overflow-y-auto">
+        <div className="flex flex-col items-center gap-2 border-b border-border px-2 py-5">
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-full border"
+            style={{
+              borderColor: "color-mix(in oklab, var(--gold) 40%, transparent)",
+              background: "var(--card-raw)",
+              boxShadow: "0 0 15px color-mix(in oklab, var(--wine) 32%, transparent)",
+            }}
+          >
+            <Wine className="h-6 w-6 text-primary" />
+          </div>
+          <span className="text-center text-[8px] font-bold uppercase leading-tight tracking-[0.25em] text-primary">
             Gestão de<br />Vinhos
           </span>
         </div>
         {role === "restaurant" && <RestaurantContextSwitcher compact />}
-        <nav className="flex flex-col gap-1 px-2 pt-2">
+        <nav className="flex flex-col gap-1.5 px-2 pt-3">
           {renderNav(true)}
         </nav>
-        <div className="mt-auto border-t border-border px-2 py-3">
+        <div className="mt-auto px-2 py-4">
           <button
             onClick={handleSignOut}
             title={user.email ?? "Sair"}
-            className="flex w-full flex-col items-center gap-1 rounded-md py-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="flex w-full flex-col items-center gap-1 rounded-md py-3 text-muted-foreground opacity-50 transition-opacity hover:opacity-100"
           >
-            <LogOut className="h-4 w-4" />
-            <span className="text-[9px] font-medium uppercase tracking-wide">Sair</span>
+            <LogOut className="h-5 w-5" />
+            <span className="text-[7px] font-medium uppercase tracking-[0.2em]">Sair</span>
           </button>
         </div>
+        <div
+          className="pointer-events-none absolute right-0 top-0 hidden h-full w-px md:block"
+          style={{ background: "var(--border-gold-hairline)" }}
+        />
       </aside>
       <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
         <Outlet />

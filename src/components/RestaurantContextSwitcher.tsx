@@ -55,21 +55,31 @@ export default function RestaurantContextSwitcher({ compact = false }: { compact
 
   if (compact) {
     return (
-      <div ref={ref} className="relative border-b border-border px-2 py-2">
+      <div ref={ref} className="relative border-b border-border px-2 py-3">
         <button
           onClick={() => setOpen((v) => !v)}
           title={label}
-          className="flex w-full flex-col items-center gap-1 rounded-lg border border-border bg-[color:var(--surface-2)] px-1 py-2 text-muted-foreground hover:border-primary"
+          className="flex w-full flex-col items-center gap-2 rounded-lg px-1 py-1 text-muted-foreground"
         >
-          {activeGroup ? (
-            <Layers className="h-4 w-4 text-primary" />
-          ) : (
-            <Building2 className="h-4 w-4 text-primary" />
-          )}
-          <span className="w-full truncate text-center text-[9px] font-medium uppercase tracking-wide text-foreground">
+          <span
+            className="flex h-10 w-10 items-center justify-center rounded-full border"
+            style={{
+              borderColor: "color-mix(in oklab, var(--gold) 40%, transparent)",
+              background: "var(--card-raw)",
+              boxShadow: "0 0 12px color-mix(in oklab, var(--wine) 28%, transparent)",
+            }}
+          >
+            {activeGroup ? (
+              <Layers className="h-5 w-5 text-primary" />
+            ) : (
+              <Building2 className="h-5 w-5 text-primary" />
+            )}
+          </span>
+          <span className="w-full break-words text-center text-[7px] font-medium leading-[1.25] tracking-[0.02em] text-foreground">
             {label}
           </span>
         </button>
+
         {open && (
           <div className="absolute left-full top-2 z-50 ml-1 max-h-80 w-64 overflow-y-auto rounded-md border border-border bg-card shadow-lg">
             <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">

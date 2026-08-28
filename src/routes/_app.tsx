@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate, Link, useRouter } from "@tanstack
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, ClipboardCheck, Database, Building2, FolderCog, LayoutDashboard, Coins, Sparkles, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X } from "lucide-react";
+import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X } from "lucide-react";
 import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
 
 export const Route = createFileRoute("/_app")({
@@ -39,22 +39,20 @@ function AppLayout() {
     <>
       <NavLink to="/app" rail={rail} icon={<Home className="h-4 w-4" />}>Início</NavLink>
       <NavLink to="/app/dashboard" rail={rail} icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
-      <NavLink to="/app/price-analysis" rail={rail} icon={<Sparkles className="h-4 w-4" />}>Preços</NavLink>
+      <NavLink to="/app/price-analysis" rail={rail} icon={<DollarSign className="h-4 w-4" />}>Preços</NavLink>
       <NavLink to="/app/pairings" rail={rail} icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
       <NavLink to="/app/cadastros" rail={rail} icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
       <NavLink to="/app/wines" rail={rail} icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
       <NavLink to="/app/wine-menu" rail={rail} icon={<ScrollText className="h-4 w-4" />}>Carta</NavLink>
-      <NavLink to="/app/suppliers" rail={rail} icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
       <NavLink to="/app/orders" rail={rail} icon={<ShoppingCart className="h-4 w-4" />}>Pedidos</NavLink>
-      <NavLink to="/app/stock-counts" rail={rail} icon={<ClipboardList className="h-4 w-4" />}>Contagem</NavLink>
-      <NavLink to="/app/stock-counts-admin" rail={rail} icon={<ClipboardCheck className="h-4 w-4" />}>Revisão</NavLink>
+      <NavLink to="/app/estoque" rail={rail} icon={<ClipboardList className="h-4 w-4" />}>Estoque</NavLink>
       <NavLink to="/app/sales" rail={rail} icon={<BarChart3 className="h-4 w-4" />}>Vendas</NavLink>
       <NavLink to="/app/sales-monthly" rail={rail} icon={<CalendarRange className="h-4 w-4" />}>Venda mensal</NavLink>
       <NavLink to="/app/corkage-fees" rail={rail} icon={<Coins className="h-4 w-4" />}>Rolha</NavLink>
       <NavLink to="/app/sharing" rail={rail} icon={<Share2 className="h-4 w-4" />}>Compartilhar</NavLink>
-      <NavLink to="/app/restaurant-profile" rail={rail} icon={<Building2 className="h-4 w-4" />}>Restaurante</NavLink>
     </>
   );
+
 
   const renderNav = (rail: boolean) => (
     <>
@@ -198,11 +196,11 @@ function NavLink({
       <Link
         to={to}
         activeOptions={{ exact }}
-        className="flex flex-col items-center gap-1.5 rounded-lg px-1 py-3 text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
+        className="flex flex-col items-center gap-1.5 rounded-lg px-0.5 py-2.5 text-muted-foreground transition-colors hover:bg-white/5 hover:text-foreground"
         activeProps={{ className: "nav-active text-primary" }}
       >
         {icon}
-        <span className="w-full text-center text-[8px] font-medium uppercase leading-tight tracking-[0.14em]">
+        <span className="w-full break-words text-center text-[7px] font-medium normal-case leading-[1.25] tracking-[0.02em]">
           {children}
         </span>
       </Link>
@@ -212,7 +210,7 @@ function NavLink({
     <Link
       to={to}
       activeOptions={{ exact }}
-      className="flex items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground hover:bg-white/5 hover:text-foreground"
+      className="flex items-center gap-2.5 rounded-md px-3 py-2.5 text-[10px] font-medium normal-case tracking-[0.02em] text-muted-foreground hover:bg-white/5 hover:text-foreground"
       activeProps={{ className: "nav-active text-primary" }}
     >
       {icon}

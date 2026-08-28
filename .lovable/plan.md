@@ -1,29 +1,41 @@
-# Remover usuário de verdade (não apenas o vínculo)
+# Novo design do menu lateral (direção "Veludo artesanal")
 
-## Situação atual
+Aplicar a terceira direção escolhida no menu lateral esquerdo, com dois ajustes pedidos:
+sem o tracinho dourado vertical à esquerda do item, mantendo o degradê vinho que sobe
+no item ativo.
 
-No Mapa de acessos, a lixeira remove **somente o vínculo** do usuário com o restaurante (a linha de papel/acesso). A conta de login continua existindo: o usuário ainda pode entrar no sistema, e mantém acesso a outros restaurantes onde tenha vínculo.
+## O que muda visualmente
 
-## O que será adicionado
+- **Marca no topo**: ícone da taça dentro de um círculo com borda dourada suave e leve
+  brilho em vinho; abaixo, "Gestão de Vinhos" em dourado, maiúsculas e espaçamento amplo.
+- **Item ativo**: fundo em degradê ascendente do vinho (`#800020`, translúcido) para
+  transparente, com uma linha superior dourada muito discreta. Ícone e texto em dourado.
+  **Sem** a barra/tracinho dourado vertical na borda esquerda.
+- **Itens inativos**: ícone e rótulo em cinza neutro, com leve realce de fundo no hover.
+- **Tipografia dos rótulos**: maiúsculas, peso médio, espaçamento entre letras aumentado,
+  para um ar mais editorial e menos "utilitário".
+- **Rodapé**: o seletor de restaurante fica num bloco quadrado com borda dourada que
+  inverte para dourado sólido no hover; botão "Sair" discreto, ganhando presença no hover.
+- **Detalhe de acabamento**: fio dourado vertical em degradê na borda direita da barra,
+  separando o menu do conteúdo.
+- **Espaçamento**: um pouco mais de respiro vertical entre os itens, para reduzir a
+  sensação de aperto com a quantidade atual de itens.
 
-Uma ação de **excluir usuário definitivamente**, disponível apenas para o Administrador Geral, dentro do diálogo "Gerenciar" de cada linha do Mapa de acessos.
+Nada de navegação muda: os mesmos destinos, o mesmo seletor de restaurante, o mesmo
+"Sair" e as mesmas variações por perfil (restaurante, fornecedor, administrador).
 
-Comportamento:
-- Mostra quantos vínculos o usuário tem hoje (em quais restaurantes).
-- Exige confirmação digitando o e-mail do usuário, para evitar exclusão acidental.
-- Remove todos os vínculos de acesso do usuário e apaga a conta de login.
-- Bloqueios de segurança: o admin não pode excluir a própria conta, nem excluir outro Administrador Geral.
-- Após excluir, a lista é atualizada e o usuário desaparece do Mapa de acessos.
+## Menu no celular
 
-A lixeira atual continua existindo com o significado de "remover o acesso a este restaurante", e o texto do botão/confirmação será ajustado para deixar isso claro.
+O menu deslizante do celular recebe o mesmo tratamento de item ativo (degradê de vinho,
+texto dourado) e a mesma tipografia, para manter coerência entre telas.
 
 ## Detalhes técnicos
 
-- Nova server function `adminDeleteUser` em `src/lib/access.functions.ts`:
-  - middleware `requireSupabaseAuth` + verificação de admin global (mesma `assertAdmin` já usada);
-  - recusa se `target user_id === context.userId` ou se o alvo possui papel `admin`;
-  - apaga linhas de `user_roles` do usuário e chama a Auth Admin API (`auth.admin.deleteUser`) via `supabaseAdmin` importado dentro do handler.
-  - `profiles` tem FK para `auth.users` com `on delete cascade`, então é removido automaticamente.
-- `src/components/AccessManageDialog.tsx`: nova seção "Zona de risco" com o campo de confirmação e o botão de exclusão, visível apenas quando `isGlobalAdmin`.
-- `src/routes/_app.admin.access-map.tsx`: invalida `["admin-access-map"]` após a exclusão; ajuste do texto de confirmação da lixeira para "Remover o acesso deste usuário a este restaurante?".
-- Nenhuma migração de banco é necessária.
+- Arquivo: `src/routes/_app.tsx` — apenas o componente `NavLink`, o cabeçalho da `aside`,
+  o rodapé e o bloco do menu mobile.
+- Tokens novos em `src/styles.css` (dentro de `@theme inline` / `:root`) para o degradê
+  do item ativo e o fio dourado, evitando cores fixas nos componentes:
+  `--gradient-nav-active` e `--border-gold-hairline`.
+- Estados ativos continuam usando `activeProps` do `Link` do TanStack Router; sem
+  mudança na lógica de rotas ou permissões.
+- Nenhuma alteração de dados, consultas ou regras de acesso.

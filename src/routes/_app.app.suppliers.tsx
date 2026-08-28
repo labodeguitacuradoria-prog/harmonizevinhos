@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { Plus, X, Pencil, FileText, Mail, Phone, Globe, MapPin, Search, Check } from "lucide-react";
+import { Plus, X, Pencil, FileText, Mail, Phone, Globe, MapPin, Search, Check, Trash2 } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
 import { formatBRPhone } from "@/lib/phone-format";
 import { formatCEP } from "@/lib/cep-format";
@@ -109,18 +109,45 @@ function SuppliersPage() {
   });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers-list", restaurantId, activeSupplierIds, user?.id],
+    queryKey: ["suppliers-list", restaurantId, activeSupplierIds],
     queryFn: async () => {
-      const { data, error } = await supabase.from("suppliers").select("*").order("name");
+      if (activeSupplierIds.length === 0) return [] as Supplier[];
+      const { data, error } = await supabase
+        .from("suppliers")
+        .select("*")
+        .in("id", activeSupplierIds)
+        .order("name");
       if (error) throw error;
-      const all = (data ?? []) as Supplier[];
-      // Fornecedores com rótulos, vinculados ao restaurante, ou criados pelo usuário
-      return all.filter(
-        (s) => activeSupplierIds.includes(s.id) || (s as any).created_by === user?.id,
-      );
+      return (data ?? []) as Supplier[];
     },
     enabled: !!restaurantId,
   });
+
+  async function removeSupplier(s: Supplier) {
+    if (!restaurantId) return;
+    const { count } = await supabase
+      .from("wines")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", restaurantId)
+      .eq("supplier_id", s.id);
+    if ((count ?? 0) > 0) {
+      return toast.error(
+        `Este fornecedor está vinculado a ${count} rótulo(s) deste restaurante. Troque o fornecedor nesses rótulos antes de remover.`,
+      );
+    }
+    if (!confirm(`Remover ${s.trade_name || s.name} deste restaurante?`)) return;
+    const { error } = await supabase
+      .from("restaurant_supplier_access")
+      .delete()
+      .eq("restaurant_id", restaurantId)
+      .eq("supplier_id", s.id);
+    if (error) return toast.error(error.message);
+    toast.success("Fornecedor removido deste restaurante");
+    qc.invalidateQueries({ queryKey: ["restaurant-supplier-ids"] });
+    qc.invalidateQueries({ queryKey: ["suppliers-list"] });
+    qc.invalidateQueries({ queryKey: ["suppliers"] });
+  }
+
 
   const { data: materials = [] } = useQuery({
     queryKey: ["supplier-materials-all"],
@@ -163,13 +190,24 @@ function SuppliersPage() {
                   {s.legal_name && <div className="text-xs text-muted-foreground truncate">{s.legal_name}</div>}
                   {s.cnpj && <div className="text-xs text-muted-foreground">CNPJ {s.cnpj}</div>}
                 </div>
-                <button
-                  onClick={() => setEditing(s)}
-                  className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                  aria-label="Editar"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setEditing(s)}
+                    className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                    aria-label="Editar"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => removeSupplier(s)}
+                    className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Remover deste restaurante"
+                    title="Remover deste restaurante"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
               </div>
 
               <div className="mt-3 space-y-1 text-xs text-muted-foreground">

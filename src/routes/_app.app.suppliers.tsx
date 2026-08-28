@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { Plus, X, Pencil, FileText, Mail, Phone, Globe, MapPin, Search, Check } from "lucide-react";
+import { Plus, X, Pencil, FileText, Mail, Phone, Globe, MapPin, Search, Check, Trash2 } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
 import { formatBRPhone } from "@/lib/phone-format";
 import { formatCEP } from "@/lib/cep-format";

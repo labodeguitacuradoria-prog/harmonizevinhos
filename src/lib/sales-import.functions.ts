@@ -62,51 +62,73 @@ function coerce(parsed: any): SalesImportItem[] {
     .filter((it: SalesImportItem) => it.nome.length > 1);
 }
 
+function extractJson(raw: string): any {
+  const tryParse = (s: string) => {
+    try {
+      return JSON.parse(s);
+    } catch {
+      return null;
+    }
+  };
+  let parsed: any = tryParse(raw);
+  if (!parsed) {
+    const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    const candidate = fence?.[1] ?? raw;
+    const objStart = candidate.indexOf("{");
+    const objEnd = candidate.lastIndexOf("}");
+    if (objStart !== -1 && objEnd > objStart) parsed = tryParse(candidate.substring(objStart, objEnd + 1));
+    if (!parsed) {
+      const arrStart = candidate.indexOf("[");
+      const arrEnd = candidate.lastIndexOf("]");
+      if (arrStart !== -1 && arrEnd > arrStart) parsed = tryParse(candidate.substring(arrStart, arrEnd + 1));
+    }
+  }
+  return parsed;
+}
+
 async function callModel(userContent: unknown): Promise<SalesImportItem[]> {
   const apiKey = process.env['LOVABLE_API_KEY'];
   if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada.");
 
   const gateway = createLovableAiGateway(apiKey);
-  const model = gateway("google/gemini-3-flash-preview");
+  const messages = [{ role: "user" as const, content: userContent as any }];
 
+  // 1st attempt: structured output on a current-generation model.
   try {
     const { output } = await generateText({
-      model,
+      model: gateway("google/gemini-3.7-flash"),
       system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userContent as any }],
+      messages,
       output: Output.object({ schema: ResultSchema }),
       maxOutputTokens: 32768,
       temperature: 0.1,
     });
-    return coerce(output);
+    const items = coerce(output);
+    if (items.length) return items;
   } catch (error) {
-    if (NoObjectGeneratedError.isInstance(error)) {
-      const raw = error.text ?? "";
-      const tryParse = (s: string) => {
-        try {
-          return JSON.parse(s);
-        } catch {
-          return null;
-        }
-      };
-      let parsed: any = tryParse(raw);
-      if (!parsed) {
-        const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-        const candidate = fence?.[1] ?? raw;
-        const start = candidate.indexOf("{");
-        const end = candidate.lastIndexOf("}");
-        if (start !== -1 && end > start) parsed = tryParse(candidate.substring(start, end + 1));
-      }
-      if (parsed) {
-        const items = coerce(parsed);
-        if (items.length) return items;
-      }
-      throw new Error(
-        "A IA não conseguiu ler este relatório. Tente um PDF com melhor qualidade, envie página por página, ou cole o texto da tabela.",
-      );
-    }
-    throw error;
+    if (!NoObjectGeneratedError.isInstance(error)) throw error;
+    const parsed = extractJson(error.text ?? "");
+    const items = parsed ? coerce(parsed) : [];
+    if (items.length) return items;
   }
+
+  // 2nd attempt: plain text, parse the JSON ourselves (more tolerant of truncation/prose).
+  const { text } = await generateText({
+    model: gateway("google/gemini-3.1-pro-preview"),
+    system:
+      SYSTEM_PROMPT +
+      `\n\nResponda APENAS com JSON válido, sem markdown e sem comentários, no formato: {"itens":[{"nome":"","codigo":null,"safra":null,"volume":null,"quantidade":0,"faturamento":0,"confianca":"alta"}]}`,
+    messages,
+    maxOutputTokens: 32768,
+    temperature: 0,
+  });
+  const parsed = extractJson(text ?? "");
+  const items = parsed ? coerce(parsed) : [];
+  if (items.length) return items;
+
+  throw new Error(
+    "A IA não conseguiu ler este relatório. Tente um PDF com melhor qualidade, envie página por página, ou cole o texto da tabela.",
+  );
 }
 
 const FileInput = z.object({

@@ -81,33 +81,45 @@ function SuppliersPage() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [creating, setCreating] = useState(false);
-  const { restaurantId } = useAuth();
+  const { restaurantId, user } = useAuth();
 
-  // IDs dos fornecedores que possuem ao menos um rótulo cadastrado no restaurante ativo
+  // IDs relevantes para este restaurante: fornecedores com rótulos cadastrados
+  // ou vinculados explicitamente ao restaurante (acesso liberado).
   const { data: activeSupplierIds = [] } = useQuery({
     queryKey: ["restaurant-supplier-ids", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("wines")
-        .select("supplier_id")
-        .eq("restaurant_id", restaurantId!)
-        .not("supplier_id", "is", null);
-      const ids = new Set<string>((data ?? []).map((w) => w.supplier_id as string));
+      const [{ data: ws }, { data: rsa }] = await Promise.all([
+        supabase
+          .from("wines")
+          .select("supplier_id")
+          .eq("restaurant_id", restaurantId!)
+          .not("supplier_id", "is", null),
+        supabase
+          .from("restaurant_supplier_access")
+          .select("supplier_id")
+          .eq("restaurant_id", restaurantId!),
+      ]);
+      const ids = new Set<string>([
+        ...((ws ?? []).map((w) => w.supplier_id as string)),
+        ...((rsa ?? []).map((r) => r.supplier_id as string)),
+      ]);
       return Array.from(ids);
     },
   });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers-list", restaurantId],
+    queryKey: ["suppliers-list", restaurantId, activeSupplierIds, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase.from("suppliers").select("*").order("name");
       if (error) throw error;
       const all = (data ?? []) as Supplier[];
-      // Mostra apenas fornecedores que entregam rótulos neste restaurante
-      return all.filter((s) => activeSupplierIds.includes(s.id));
+      // Fornecedores com rótulos, vinculados ao restaurante, ou criados pelo usuário
+      return all.filter(
+        (s) => activeSupplierIds.includes(s.id) || (s as any).created_by === user?.id,
+      );
     },
-    enabled: !!restaurantId && activeSupplierIds.length >= 0,
+    enabled: !!restaurantId,
   });
 
   const { data: materials = [] } = useQuery({
@@ -223,6 +235,8 @@ function SuppliersPage() {
           }}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["suppliers-list"] });
+            qc.invalidateQueries({ queryKey: ["restaurant-supplier-ids"] });
+            qc.invalidateQueries({ queryKey: ["suppliers"] });
             qc.invalidateQueries({ queryKey: ["supplier-materials-all"] });
             setCreating(false);
             setEditing(null);
@@ -242,7 +256,7 @@ function SupplierForm({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const { user } = useAuth();
+  const { user, restaurantId } = useAuth();
   const [f, setF] = useState<Partial<Supplier>>(supplier ?? { address_country: "Brasil" });
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState<"dados" | "materiais">("dados");
@@ -278,11 +292,19 @@ function SupplierForm({
       if (error) { console.error("supplier update", error); return toast.error(error.message); }
       toast.success("Fornecedor atualizado");
     } else {
-      const { error } = await supabase
+      const { data: created, error } = await supabase
         .from("suppliers")
-        .insert({ ...payload, name: payload.name!, created_by: user?.id });
+        .insert({ ...payload, name: payload.name!, created_by: user?.id })
+        .select("id")
+        .maybeSingle();
+      if (error) { setSaving(false); console.error("supplier insert", error); return toast.error(error.message); }
+      // Vincula o fornecedor ao restaurante ativo para que apareça nas listas
+      if (created?.id && restaurantId) {
+        await supabase
+          .from("restaurant_supplier_access")
+          .insert({ restaurant_id: restaurantId, supplier_id: created.id, enabled: true });
+      }
       setSaving(false);
-      if (error) { console.error("supplier insert", error); return toast.error(error.message); }
       toast.success("Fornecedor criado");
     }
     onSaved();

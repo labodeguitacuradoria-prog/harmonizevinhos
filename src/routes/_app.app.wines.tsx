@@ -431,7 +431,7 @@ function matchText(filter: string, value: string | null | undefined): boolean {
 }
 
 function WinesSection() {
-  const { restaurantId } = useAuth();
+  const { restaurantId, user } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -483,15 +483,27 @@ function WinesSection() {
 
   // Fornecedores já usados em rótulos deste restaurante — evita mostrar
   // fornecedores globais que não atendem esta unidade.
-  const restaurantSupplierIds = useMemo(
+  const wineSupplierIds = useMemo(
     () => new Set((wines ?? []).map((w) => w.supplier_id).filter(Boolean) as string[]),
     [wines],
   );
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers"],
+    queryKey: ["suppliers", restaurantId, Array.from(wineSupplierIds)],
     queryFn: async () => {
-      const { data } = await supabase.from("suppliers").select("id, name").order("name");
-      return (data ?? []).filter((s: any) => restaurantSupplierIds.has(s.id));
+      const [{ data }, { data: rsa }] = await Promise.all([
+        supabase.from("suppliers").select("id, name, created_by").order("name"),
+        supabase
+          .from("restaurant_supplier_access")
+          .select("supplier_id")
+          .eq("restaurant_id", restaurantId!),
+      ]);
+      const linked = new Set<string>([
+        ...wineSupplierIds,
+        ...((rsa ?? []).map((r) => r.supplier_id as string)),
+      ]);
+      return (data ?? []).filter(
+        (s: any) => linked.has(s.id) || s.created_by === user?.id,
+      );
     },
     enabled: !!restaurantId,
   });

@@ -138,7 +138,7 @@ function SuppliersPage() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {suppliers.length === 0 && (
           <div className="col-span-full rounded-lg border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-            Nenhum fornecedor cadastrado ainda.
+            Nenhum fornecedor vinculado aos produtos deste restaurante. Cadastre um rótulo com fornecedor para que ele apareça aqui.
           </div>
         )}
         {suppliers.map((s) => {

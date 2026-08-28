@@ -431,7 +431,7 @@ function matchText(filter: string, value: string | null | undefined): boolean {
 }
 
 function WinesSection() {
-  const { restaurantId } = useAuth();
+  const { restaurantId, user } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);

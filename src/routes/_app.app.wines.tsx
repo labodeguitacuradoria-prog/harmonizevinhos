@@ -481,12 +481,19 @@ function WinesSection() {
     }
   }, [pendingWineId, autoOpened, wines, navigate]);
 
+  // Fornecedores já usados em rótulos deste restaurante — evita mostrar
+  // fornecedores globais que não atendem esta unidade.
+  const restaurantSupplierIds = useMemo(
+    () => new Set((wines ?? []).map((w) => w.supplier_id).filter(Boolean) as string[]),
+    [wines],
+  );
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],
     queryFn: async () => {
       const { data } = await supabase.from("suppliers").select("id, name").order("name");
-      return data ?? [];
+      return (data ?? []).filter((s: any) => restaurantSupplierIds.has(s.id));
     },
+    enabled: !!restaurantId,
   });
 
   const { data: stockMap = {} } = useQuery({

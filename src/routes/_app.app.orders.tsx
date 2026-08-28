@@ -143,8 +143,35 @@ function OrdersPage() {
 
 
 
+  const { data: activeSupplierIds = [] } = useQuery({
+    queryKey: ["restaurant-supplier-ids", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const [{ data: linkedWines, error: winesError }, { data: linkedAccess, error: accessError }] =
+        await Promise.all([
+          supabase
+            .from("wines")
+            .select("supplier_id")
+            .eq("restaurant_id", restaurantId!)
+            .not("supplier_id", "is", null),
+          supabase
+            .from("restaurant_supplier_access")
+            .select("supplier_id")
+            .eq("restaurant_id", restaurantId!),
+        ]);
+      if (winesError) throw winesError;
+      if (accessError) throw accessError;
+      return Array.from(
+        new Set([
+          ...(linkedWines ?? []).map((wine) => wine.supplier_id as string),
+          ...(linkedAccess ?? []).map((access) => access.supplier_id as string),
+        ]),
+      );
+    },
+  });
+
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["orders-suppliers"],
+    queryKey: ["orders-suppliers", restaurantId],
     queryFn: async () => {
       const { data } = await supabase
         .from("suppliers")
@@ -153,6 +180,11 @@ function OrdersPage() {
       return (data ?? []) as Supplier[];
     },
   });
+
+  const restaurantSuppliers = useMemo(
+    () => suppliers.filter((supplier) => activeSupplierIds.includes(supplier.id)),
+    [activeSupplierIds, suppliers],
+  );
 
   const { data: wines = [] } = useQuery({
     queryKey: ["orders-wines", restaurantId],
@@ -621,7 +653,7 @@ function OrdersPage() {
           restaurantName={restaurantName}
           restaurantCnpj={restaurantCnpj}
           senderEmail={user?.email ?? ""}
-          suppliers={suppliers}
+          suppliers={restaurantSuppliers}
           wines={wines}
           onClose={() => setShowNew(false)}
           onSaved={() => {

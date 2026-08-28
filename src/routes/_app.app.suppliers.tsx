@@ -109,18 +109,45 @@ function SuppliersPage() {
   });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers-list", restaurantId, activeSupplierIds, user?.id],
+    queryKey: ["suppliers-list", restaurantId, activeSupplierIds],
     queryFn: async () => {
-      const { data, error } = await supabase.from("suppliers").select("*").order("name");
+      if (activeSupplierIds.length === 0) return [] as Supplier[];
+      const { data, error } = await supabase
+        .from("suppliers")
+        .select("*")
+        .in("id", activeSupplierIds)
+        .order("name");
       if (error) throw error;
-      const all = (data ?? []) as Supplier[];
-      // Fornecedores com rótulos, vinculados ao restaurante, ou criados pelo usuário
-      return all.filter(
-        (s) => activeSupplierIds.includes(s.id) || (s as any).created_by === user?.id,
-      );
+      return (data ?? []) as Supplier[];
     },
     enabled: !!restaurantId,
   });
+
+  async function removeSupplier(s: Supplier) {
+    if (!restaurantId) return;
+    const { count } = await supabase
+      .from("wines")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", restaurantId)
+      .eq("supplier_id", s.id);
+    if ((count ?? 0) > 0) {
+      return toast.error(
+        `Este fornecedor está vinculado a ${count} rótulo(s) deste restaurante. Troque o fornecedor nesses rótulos antes de remover.`,
+      );
+    }
+    if (!confirm(`Remover ${s.trade_name || s.name} deste restaurante?`)) return;
+    const { error } = await supabase
+      .from("restaurant_supplier_access")
+      .delete()
+      .eq("restaurant_id", restaurantId)
+      .eq("supplier_id", s.id);
+    if (error) return toast.error(error.message);
+    toast.success("Fornecedor removido deste restaurante");
+    qc.invalidateQueries({ queryKey: ["restaurant-supplier-ids"] });
+    qc.invalidateQueries({ queryKey: ["suppliers-list"] });
+    qc.invalidateQueries({ queryKey: ["suppliers"] });
+  }
+
 
   const { data: materials = [] } = useQuery({
     queryKey: ["supplier-materials-all"],

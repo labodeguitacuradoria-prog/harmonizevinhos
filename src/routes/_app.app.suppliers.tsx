@@ -190,13 +190,24 @@ function SuppliersPage() {
                   {s.legal_name && <div className="text-xs text-muted-foreground truncate">{s.legal_name}</div>}
                   {s.cnpj && <div className="text-xs text-muted-foreground">CNPJ {s.cnpj}</div>}
                 </div>
-                <button
-                  onClick={() => setEditing(s)}
-                  className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                  aria-label="Editar"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setEditing(s)}
+                    className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                    aria-label="Editar"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => removeSupplier(s)}
+                    className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Remover deste restaurante"
+                    title="Remover deste restaurante"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
               </div>
 
               <div className="mt-3 space-y-1 text-xs text-muted-foreground">

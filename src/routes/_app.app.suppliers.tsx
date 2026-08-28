@@ -292,11 +292,19 @@ function SupplierForm({
       if (error) { console.error("supplier update", error); return toast.error(error.message); }
       toast.success("Fornecedor atualizado");
     } else {
-      const { error } = await supabase
+      const { data: created, error } = await supabase
         .from("suppliers")
-        .insert({ ...payload, name: payload.name!, created_by: user?.id });
+        .insert({ ...payload, name: payload.name!, created_by: user?.id })
+        .select("id")
+        .maybeSingle();
+      if (error) { setSaving(false); console.error("supplier insert", error); return toast.error(error.message); }
+      // Vincula o fornecedor ao restaurante ativo para que apareça nas listas
+      if (created?.id && restaurantId) {
+        await supabase
+          .from("restaurant_supplier_access")
+          .insert({ restaurant_id: restaurantId, supplier_id: created.id, enabled: true });
+      }
       setSaving(false);
-      if (error) { console.error("supplier insert", error); return toast.error(error.message); }
       toast.success("Fornecedor criado");
     }
     onSaved();

@@ -81,14 +81,33 @@ function SuppliersPage() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [creating, setCreating] = useState(false);
+  const { restaurantId } = useAuth();
+
+  // IDs dos fornecedores que possuem ao menos um rótulo cadastrado no restaurante ativo
+  const { data: activeSupplierIds = [] } = useQuery({
+    queryKey: ["restaurant-supplier-ids", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("wines")
+        .select("supplier_id")
+        .eq("restaurant_id", restaurantId!)
+        .not("supplier_id", "is", null);
+      const ids = new Set<string>((data ?? []).map((w) => w.supplier_id as string));
+      return Array.from(ids);
+    },
+  });
 
   const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers-list"],
+    queryKey: ["suppliers-list", restaurantId],
     queryFn: async () => {
       const { data, error } = await supabase.from("suppliers").select("*").order("name");
       if (error) throw error;
-      return (data ?? []) as Supplier[];
+      const all = (data ?? []) as Supplier[];
+      // Mostra apenas fornecedores que entregam rótulos neste restaurante
+      return all.filter((s) => activeSupplierIds.includes(s.id));
     },
+    enabled: !!restaurantId && activeSupplierIds.length >= 0,
   });
 
   const { data: materials = [] } = useQuery({

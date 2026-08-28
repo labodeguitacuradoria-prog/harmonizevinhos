@@ -1,5 +1,5 @@
 import { createFileRoute, useRouterState, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -431,7 +431,7 @@ function matchText(filter: string, value: string | null | undefined): boolean {
 }
 
 function WinesSection() {
-  const { restaurantId, user } = useAuth();
+  const { restaurantId } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -481,29 +481,41 @@ function WinesSection() {
     }
   }, [pendingWineId, autoOpened, wines, navigate]);
 
-  // Fornecedores já usados em rótulos deste restaurante — evita mostrar
-  // fornecedores globais que não atendem esta unidade.
-  const wineSupplierIds = useMemo(
-    () => new Set((wines ?? []).map((w) => w.supplier_id).filter(Boolean) as string[]),
-    [wines],
-  );
-  const { data: suppliers = [] } = useQuery({
-    queryKey: ["suppliers", restaurantId, Array.from(wineSupplierIds)],
+  // Usa exatamente os mesmos vínculos exibidos na tela Fornecedores:
+  // rótulos desta unidade ou cadastro explicitamente associado à unidade.
+  const { data: activeSupplierIds = [] } = useQuery({
+    queryKey: ["restaurant-supplier-ids", restaurantId],
+    enabled: !!restaurantId,
     queryFn: async () => {
-      const [{ data }, { data: rsa }] = await Promise.all([
-        supabase.from("suppliers").select("id, name, created_by").order("name"),
+      const [{ data: ws }, { data: rsa }] = await Promise.all([
+        supabase
+          .from("wines")
+          .select("supplier_id")
+          .eq("restaurant_id", restaurantId!)
+          .not("supplier_id", "is", null),
         supabase
           .from("restaurant_supplier_access")
           .select("supplier_id")
           .eq("restaurant_id", restaurantId!),
       ]);
-      const linked = new Set<string>([
-        ...wineSupplierIds,
+      return Array.from(new Set<string>([
+        ...((ws ?? []).map((w) => w.supplier_id as string)),
         ...((rsa ?? []).map((r) => r.supplier_id as string)),
-      ]);
-      return (data ?? []).filter(
-        (s: any) => linked.has(s.id) || s.created_by === user?.id,
-      );
+      ]));
+    },
+  });
+
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ["suppliers", restaurantId, activeSupplierIds],
+    queryFn: async () => {
+      if (activeSupplierIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("suppliers")
+        .select("id, name")
+        .in("id", activeSupplierIds)
+        .order("name");
+      if (error) throw error;
+      return data ?? [];
     },
     enabled: !!restaurantId,
   });

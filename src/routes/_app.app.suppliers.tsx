@@ -256,7 +256,7 @@ function SupplierForm({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const { user } = useAuth();
+  const { user, restaurantId } = useAuth();
   const [f, setF] = useState<Partial<Supplier>>(supplier ?? { address_country: "Brasil" });
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState<"dados" | "materiais">("dados");

@@ -235,6 +235,8 @@ function SuppliersPage() {
           }}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["suppliers-list"] });
+            qc.invalidateQueries({ queryKey: ["restaurant-supplier-ids"] });
+            qc.invalidateQueries({ queryKey: ["suppliers"] });
             qc.invalidateQueries({ queryKey: ["supplier-materials-all"] });
             setCreating(false);
             setEditing(null);

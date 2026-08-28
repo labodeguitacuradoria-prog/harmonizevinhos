@@ -66,6 +66,19 @@
   --surface-2: #1a1a1a;
   --text-kpi: #888888;
 
+  /* Menu lateral — item ativo e acabamento em fio dourado */
+  --gradient-nav-active: linear-gradient(
+    to top,
+    color-mix(in oklab, var(--wine) 45%, transparent),
+    transparent
+  );
+  --border-gold-hairline: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in oklab, var(--gold) 22%, transparent),
+    transparent
+  );
+
   --radius: 0.625rem;
 
   --background: oklch(0.13 0 0);
@@ -183,6 +196,12 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@utility nav-active {
+  background-image: var(--gradient-nav-active);
+  border-top: 1px solid color-mix(in oklab, var(--gold) 22%, transparent);
+  color: var(--gold);
 }
 
 @utility no-spin {

@@ -164,6 +164,28 @@ function SalesPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sales", restaurantId] }),
   });
 
+  const deleteMonthMut = useMutation({
+    mutationFn: async (ym: string) => {
+      const [y, m] = ym.split("-").map(Number);
+      const from = new Date(Date.UTC(y, m - 1, 1)).toISOString();
+      const to = new Date(Date.UTC(m === 12 ? y + 1 : y, m === 12 ? 0 : m, 1)).toISOString();
+      const { error } = await supabase
+        .from("inventory_movements")
+        .delete()
+        .eq("restaurant_id", restaurantId!)
+        .eq("movement_type", "sale")
+        .gte("occurred_at", from)
+        .lt("occurred_at", to);
+      if (error) throw error;
+    },
+    onSuccess: (_d, ym) => {
+      qc.invalidateQueries({ queryKey: ["sales", restaurantId] });
+      setDeleteMonth("");
+      toast.success(`Vendas de ${ym} excluídas.`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const filtered = sales.filter((s) => {
     const monthStr = `${formatMonth(s.occurred_at)} ${new Date(s.occurred_at).toISOString().slice(0, 7)}`;
     const label = [s.wines?.name, s.wines?.producer, s.wines?.vintage].filter(Boolean).join(" ");

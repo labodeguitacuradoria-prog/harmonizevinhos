@@ -1625,9 +1625,11 @@ export function BarChart({
                       }`}
                     >
                       {curr[i] > 0 && (
+                      {showValues && curr[i] > 0 && (
                         <span className="absolute bottom-full z-10 mb-1 whitespace-nowrap rounded bg-[color:var(--card)] px-1 text-[9px] font-semibold leading-none tabular-nums text-primary">
                           {fmtFull(curr[i])}
                         </span>
+                      )}
                       )}
                     </div>
                   </div>

@@ -1529,6 +1529,47 @@ export function BarChart({
               border: "1px solid color-mix(in oklab, var(--gold) 22%, transparent)",
             }}
           >
+            {/* Interruptor de valores — canto superior direito, por dentro do gráfico */}
+            <button
+              type="button"
+              onClick={() => setShowValues((v) => !v)}
+              title={showValues ? "Ocultar valores das vendas" : "Mostrar valores das vendas"}
+              aria-pressed={showValues}
+              aria-label={showValues ? "Ocultar valores das vendas" : "Mostrar valores das vendas"}
+              className="absolute right-1.5 top-1.5 z-20 flex items-center gap-1.5 rounded-full border px-1.5 py-1 transition-colors"
+              style={{
+                borderColor: showValues
+                  ? "color-mix(in oklab, var(--gold) 45%, transparent)"
+                  : "color-mix(in oklab, var(--gray-border) 80%, transparent)",
+                background: "color-mix(in oklab, var(--bg-raw) 70%, transparent)",
+                backdropFilter: "blur(4px)",
+              }}
+            >
+              <span
+                className="relative block h-3.5 w-7 rounded-full transition-colors duration-200"
+                style={{
+                  background: showValues
+                    ? "linear-gradient(90deg, var(--wine), var(--gold))"
+                    : "#2a2a2a",
+                }}
+              >
+                <span
+                  className="absolute top-0.5 h-2.5 w-2.5 rounded-full transition-all duration-200"
+                  style={{
+                    left: showValues ? "16px" : "3px",
+                    background: showValues ? "var(--gold)" : "#777",
+                    boxShadow: showValues ? "0 0 6px color-mix(in oklab, var(--gold) 60%, transparent)" : "none",
+                  }}
+                />
+              </span>
+              <span
+                className="pr-0.5 text-[8px] font-bold uppercase tracking-wider transition-colors"
+                style={{ color: showValues ? "var(--gold)" : "var(--text-kpi)" }}
+              >
+                R$
+              </span>
+            </button>
+
             {/* Target step-line: painted BEHIND the bars */}
             {hasTargets && (
               <div className="pointer-events-none absolute inset-0 flex pt-6" style={{ zIndex: 0 }}>

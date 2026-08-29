@@ -47,7 +47,7 @@ function AppLayout() {
       <NavLink to="/app/orders" rail={rail} icon={<ShoppingCart className="h-4 w-4" />}>Pedidos</NavLink>
       <NavLink to="/app/estoque" rail={rail} icon={<ClipboardList className="h-4 w-4" />}>Estoque</NavLink>
       <NavLink to="/app/sales" rail={rail} icon={<BarChart3 className="h-4 w-4" />}>Vendas</NavLink>
-      <NavLink to="/app/sales-monthly" rail={rail} icon={<CalendarRange className="h-4 w-4" />}>Venda mensal</NavLink>
+      
       <NavLink to="/app/corkage-fees" rail={rail} icon={<Coins className="h-4 w-4" />}>Rolha</NavLink>
       <NavLink to="/app/sharing" rail={rail} icon={<Share2 className="h-4 w-4" />}>Compartilhar</NavLink>
     </>

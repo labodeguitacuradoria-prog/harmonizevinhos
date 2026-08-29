@@ -85,6 +85,7 @@ function SalesPage() {
   const [editRevenue, setEditRevenue] = useState<string>("");
   const [editCost, setEditCost] = useState<string>("");
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
+  const [deleteMonth, setDeleteMonth] = useState<string>("");
   const setF = (k: keyof ColFilters, v: string | boolean) => setFilters((p) => ({ ...p, [k]: v }));
   const hasAnyFilter = Object.values(filters).some((v) => v !== "");
 

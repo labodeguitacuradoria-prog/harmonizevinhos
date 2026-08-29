@@ -1607,7 +1607,7 @@ export function BarChart({
                       }}
                       title={`${previousYear}: ${valuePrefix}${fmtBRL(prev[i])}${valueSuffix}`}
                     >
-                      {prev[i] > 0 && (
+                      {showValues && prev[i] > 0 && (
                         <span className="absolute bottom-full z-10 mb-1 whitespace-nowrap rounded bg-[color:var(--card)] px-1 text-[9px] font-semibold leading-none tabular-nums text-muted-foreground">
                           {fmtFull(prev[i])}
                         </span>

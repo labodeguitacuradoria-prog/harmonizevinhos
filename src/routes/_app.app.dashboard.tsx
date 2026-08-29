@@ -1509,6 +1509,8 @@ export function BarChart({
   const targetsForMax = hasTargets ? targets!.filter((t) => t > 0) : [];
   const rawMax = Math.max(1, ...curr, ...prev, ...targetsForMax);
   const maxVal = niceMax(rawMax);
+  // Interruptor deslizante: desligado mostra apenas as barras; ligado mostra os valores.
+  const [showValues, setShowValues] = useState(false);
 
   const axisWidth = 0;
   const fmtFull = (n: number) =>

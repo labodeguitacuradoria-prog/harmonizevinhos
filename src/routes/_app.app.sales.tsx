@@ -206,8 +206,6 @@ function SalesPage() {
 
 
   const missingCost = filtered.filter((s) => s.unit_cost == null || Number(s.unit_cost) === 0);
-  const total = filtered.reduce((s, m) => s + m.quantity * Number(m.unit_price ?? 0), 0);
-  const bottles = filtered.reduce((s, m) => s + m.quantity, 0);
 
   const startEdit = (s: SaleRow) => {
     setEditingId(s.id);

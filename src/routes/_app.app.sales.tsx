@@ -206,8 +206,6 @@ function SalesPage() {
 
 
   const missingCost = filtered.filter((s) => s.unit_cost == null || Number(s.unit_cost) === 0);
-  const total = filtered.reduce((s, m) => s + m.quantity * Number(m.unit_price ?? 0), 0);
-  const bottles = filtered.reduce((s, m) => s + m.quantity, 0);
 
   const startEdit = (s: SaleRow) => {
     setEditingId(s.id);
@@ -302,21 +300,9 @@ function SalesPage() {
 
 
 
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-border bg-card p-5">
-          <div className="text-xs uppercase text-muted-foreground">Garrafas vendidas</div>
-          <div className="mt-2 text-2xl font-semibold">{bottles}</div>
-        </div>
-        <div className="rounded-lg border border-border bg-card p-5">
-          <div className="text-xs uppercase text-muted-foreground">Receita</div>
-          <div className="mt-2 text-2xl font-semibold">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
-        </div>
-      </div>
-
-      <div className="mt-6 max-h-[65vh] overflow-auto rounded-lg border border-border bg-card">
+      <div className="mt-6 rounded-lg border border-border bg-card">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 z-20 text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr className="bg-card [&>th]:border-b [&>th]:border-border">
               <th className="px-4 py-3">Mês</th>
               <th className="px-4 py-3">Rótulo</th>

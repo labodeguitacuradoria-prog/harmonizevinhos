@@ -302,9 +302,9 @@ function SalesPage() {
 
 
 
-
+      <div className="mt-6 rounded-lg border border-border bg-card">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 z-20 text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr className="bg-card [&>th]:border-b [&>th]:border-border">
               <th className="px-4 py-3">Mês</th>
               <th className="px-4 py-3">Rótulo</th>

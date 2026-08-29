@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -85,6 +86,7 @@ function SalesPage() {
   const [editRevenue, setEditRevenue] = useState<string>("");
   const [editCost, setEditCost] = useState<string>("");
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
+  const [deleteMonth, setDeleteMonth] = useState<string>("");
   const setF = (k: keyof ColFilters, v: string | boolean) => setFilters((p) => ({ ...p, [k]: v }));
   const hasAnyFilter = Object.values(filters).some((v) => v !== "");
 
@@ -164,6 +166,28 @@ function SalesPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sales", restaurantId] }),
   });
 
+  const deleteMonthMut = useMutation({
+    mutationFn: async (ym: string) => {
+      const [y, m] = ym.split("-").map(Number);
+      const from = new Date(Date.UTC(y, m - 1, 1)).toISOString();
+      const to = new Date(Date.UTC(m === 12 ? y + 1 : y, m === 12 ? 0 : m, 1)).toISOString();
+      const { error } = await supabase
+        .from("inventory_movements")
+        .delete()
+        .eq("restaurant_id", restaurantId!)
+        .eq("movement_type", "sale")
+        .gte("occurred_at", from)
+        .lt("occurred_at", to);
+      if (error) throw error;
+    },
+    onSuccess: (_d, ym) => {
+      qc.invalidateQueries({ queryKey: ["sales", restaurantId] });
+      setDeleteMonth("");
+      toast.success(`Vendas de ${ym} excluídas.`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const filtered = sales.filter((s) => {
     const monthStr = `${formatMonth(s.occurred_at)} ${new Date(s.occurred_at).toISOString().slice(0, 7)}`;
     const label = [s.wines?.name, s.wines?.producer, s.wines?.vintage].filter(Boolean).join(" ");
@@ -201,6 +225,8 @@ function SalesPage() {
     updateMut.mutate({ id, quantity: q, unit_price: up, unit_cost: cost });
   };
 
+  const months = Array.from(new Set(sales.map((s) => s.occurred_at.slice(0, 7)))).sort().reverse();
+
   return (
     <div className="p-6 md:p-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -208,7 +234,42 @@ function SalesPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Vendas</h1>
           <p className="mt-1 text-sm text-muted-foreground">Histórico de saídas registradas.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/app/sales-monthly"
+            className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Novas vendas
+          </Link>
+          {months.length > 0 && (
+            <div className="flex items-center gap-1 rounded-full border border-border bg-card px-1 py-1">
+              <select
+                value={deleteMonth}
+                onChange={(e) => setDeleteMonth(e.target.value)}
+                className="rounded-full bg-transparent px-2 py-1 text-xs text-muted-foreground outline-none"
+              >
+                <option value="">Excluir mês inteiro…</option>
+                {months.map((m) => (
+                  <option key={m} value={m}>
+                    {m.slice(5)}/{m.slice(2, 4)}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={!deleteMonth || deleteMonthMut.isPending}
+                onClick={() => {
+                  const n = sales.filter((s) => s.occurred_at.slice(0, 7) === deleteMonth).length;
+                  if (confirm(`Excluir todas as ${n} venda(s) de ${deleteMonth}? Esta ação não pode ser desfeita.`))
+                    deleteMonthMut.mutate(deleteMonth);
+                }}
+                className="rounded-full border border-destructive/40 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-40"
+              >
+                {deleteMonthMut.isPending ? "Excluindo..." : "Excluir"}
+              </button>
+            </div>
+          )}
           {hasAnyFilter && (
             <button
               type="button"

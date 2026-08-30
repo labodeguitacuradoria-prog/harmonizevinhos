@@ -732,12 +732,21 @@ function WinesSection() {
         {filteredWines.map((w) => {
           const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
           return (
-            <button
+            <div
               key={w.id}
-              type="button"
-              onClick={() => setViewWine(w)}
-              className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-left active:bg-muted/40"
+              className={`flex items-start gap-2 rounded-lg border border-border bg-card px-3 py-2.5 ${selectedIds.includes(w.id) ? "bg-accent/40" : ""}`}
             >
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 shrink-0"
+                checked={selectedIds.includes(w.id)}
+                onChange={() => toggleSelected(w.id)}
+              />
+              <button
+                type="button"
+                onClick={() => setViewWine(w)}
+                className="min-w-0 flex-1 text-left active:opacity-80"
+              >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 truncate text-sm font-medium">

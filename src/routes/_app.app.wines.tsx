@@ -782,6 +782,17 @@ function WinesSection() {
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
+              <th className="w-8 px-2 py-3">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5"
+                  title="Selecionar todos"
+                  checked={filteredWines.length > 0 && filteredWines.every((w) => selectedIds.includes(w.id))}
+                  onChange={(e) =>
+                    setSelectedIds(e.target.checked ? filteredWines.map((w) => w.id) : [])
+                  }
+                />
+              </th>
               <th className="px-4 py-3">Código</th>
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Safra</th>

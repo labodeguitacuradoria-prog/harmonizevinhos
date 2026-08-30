@@ -854,10 +854,10 @@ function WinesSection() {
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={12} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && filteredWines.length === 0 && (
-              <tr><td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={12} className="px-4 py-8 text-center text-muted-foreground">
                 {hasAnyFilter || onlyActive ? "Nenhum vinho encontrado com esses filtros." : "Nenhum vinho cadastrado ainda."}
               </td></tr>
             )}

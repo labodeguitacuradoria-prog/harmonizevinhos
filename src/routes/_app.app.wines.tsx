@@ -674,6 +674,27 @@ function WinesSection() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {selectedIds.length > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">{selectedIds.length} selecionado(s)</span>
+              <button
+                type="button"
+                onClick={() => setSelectedIds([])}
+                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                Limpar seleção
+              </button>
+              <button
+                type="button"
+                onClick={bulkDelete}
+                disabled={bulkDeleting}
+                className="flex items-center gap-2 rounded-md border border-destructive px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-60"
+              >
+                <Trash2 className="h-4 w-4" />
+                {bulkDeleting ? "Excluindo..." : "Excluir selecionados"}
+              </button>
+            </>
+          )}
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"

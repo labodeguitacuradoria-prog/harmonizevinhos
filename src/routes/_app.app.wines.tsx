@@ -809,6 +809,7 @@ function WinesSection() {
               <th className="px-4 py-3">Alerta de compra</th>
             </tr>
             <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
+              <th />
               <th><FilterInput value={filters.internal_code} onChange={(v) => setF("internal_code", v)} placeholder="filtrar" /></th>
               <th><FilterInput value={filters.name} onChange={(v) => setF("name", v)} placeholder="rótulo/produtor" /></th>
               <th><FilterInput value={filters.vintage} onChange={(v) => setF("vintage", v)} placeholder="ex. 2020" /></th>

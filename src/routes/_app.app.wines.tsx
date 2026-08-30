@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info, FileUp, AlertTriangle, Check as CheckIcon, Pencil } from "lucide-react";
+import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info, FileUp, AlertTriangle, Check as CheckIcon, Pencil, Trash2 } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { WineOverview } from "@/components/WineOverview";
@@ -444,6 +444,26 @@ function WinesSection() {
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
   const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v as never }));
   const hasAnyFilter = Object.values(filters).some((v) => v !== "");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const toggleSelected = (id: string) =>
+    setSelectedIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  const bulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Excluir ${selectedIds.length} rótulo(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+    setBulkDeleting(true);
+    const { error } = await supabase.from("wines").delete().in("id", selectedIds);
+    setBulkDeleting(false);
+    if (error) {
+      toast.error(
+        "Não foi possível excluir. Alguns rótulos podem ter movimentações, contagens ou pedidos vinculados."
+      );
+      return;
+    }
+    toast.success(`${selectedIds.length} rótulo(s) excluído(s).`);
+    setSelectedIds([]);
+    qc.invalidateQueries({ queryKey: ["wines"] });
+  };
   const navigate = useNavigate();
   const routerState = useRouterState();
   const pendingWineId = (() => {
@@ -654,6 +674,27 @@ function WinesSection() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {selectedIds.length > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">{selectedIds.length} selecionado(s)</span>
+              <button
+                type="button"
+                onClick={() => setSelectedIds([])}
+                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                Limpar seleção
+              </button>
+              <button
+                type="button"
+                onClick={bulkDelete}
+                disabled={bulkDeleting}
+                className="flex items-center gap-2 rounded-md border border-destructive px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-60"
+              >
+                <Trash2 className="h-4 w-4" />
+                {bulkDeleting ? "Excluindo..." : "Excluir selecionados"}
+              </button>
+            </>
+          )}
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
@@ -691,12 +732,21 @@ function WinesSection() {
         {filteredWines.map((w) => {
           const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
           return (
-            <button
+            <div
               key={w.id}
-              type="button"
-              onClick={() => setViewWine(w)}
-              className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-left active:bg-muted/40"
+              className={`flex items-start gap-2 rounded-lg border border-border bg-card px-3 py-2.5 ${selectedIds.includes(w.id) ? "bg-accent/40" : ""}`}
             >
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 shrink-0"
+                checked={selectedIds.includes(w.id)}
+                onChange={() => toggleSelected(w.id)}
+              />
+              <button
+                type="button"
+                onClick={() => setViewWine(w)}
+                className="min-w-0 flex-1 text-left active:opacity-80"
+              >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 truncate text-sm font-medium">
@@ -731,7 +781,8 @@ function WinesSection() {
                   )}
                 </div>
               </div>
-            </button>
+              </button>
+            </div>
           );
         })}
       </div>
@@ -741,6 +792,17 @@ function WinesSection() {
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
+              <th className="w-8 px-2 py-3">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5"
+                  title="Selecionar todos"
+                  checked={filteredWines.length > 0 && filteredWines.every((w) => selectedIds.includes(w.id))}
+                  onChange={(e) =>
+                    setSelectedIds(e.target.checked ? filteredWines.map((w) => w.id) : [])
+                  }
+                />
+              </th>
               <th className="px-4 py-3">Código</th>
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Safra</th>
@@ -757,6 +819,7 @@ function WinesSection() {
               <th className="px-4 py-3">Alerta de compra</th>
             </tr>
             <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
+              <th />
               <th><FilterInput value={filters.internal_code} onChange={(v) => setF("internal_code", v)} placeholder="filtrar" /></th>
               <th><FilterInput value={filters.name} onChange={(v) => setF("name", v)} placeholder="rótulo/produtor" /></th>
               <th><FilterInput value={filters.vintage} onChange={(v) => setF("vintage", v)} placeholder="ex. 2020" /></th>
@@ -801,10 +864,10 @@ function WinesSection() {
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={12} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && filteredWines.length === 0 && (
-              <tr><td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={12} className="px-4 py-8 text-center text-muted-foreground">
                 {hasAnyFilter || onlyActive ? "Nenhum vinho encontrado com esses filtros." : "Nenhum vinho cadastrado ainda."}
               </td></tr>
             )}
@@ -812,7 +875,15 @@ function WinesSection() {
             {filteredWines.map((w) => {
               const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
               return (
-                <tr key={w.id} className="border-b border-border last:border-0">
+                <tr key={w.id} className={`border-b border-border last:border-0 ${selectedIds.includes(w.id) ? "bg-accent/40" : ""}`}>
+                  <td className="px-2 py-2">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5"
+                      checked={selectedIds.includes(w.id)}
+                      onChange={() => toggleSelected(w.id)}
+                    />
+                  </td>
                   <td className="px-2 py-2 font-mono text-xs text-muted-foreground">
                     <InlineCell
                       wineId={w.id}

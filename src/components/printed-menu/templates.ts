@@ -109,6 +109,7 @@ export const PAPER_LIST = [PAPERS.a4, PAPERS.a5, PAPERS.letter, PAPERS.dl];
 export const paperOf = (k: string | null | undefined): PaperDef => PAPERS[(k as PaperKey) ?? "a4"] ?? PAPERS.a4;
 
 export type VisibleFields = {
+  code: boolean;
   producer: boolean;
   vintage: boolean;
   origin: boolean;
@@ -118,6 +119,7 @@ export type VisibleFields = {
 };
 
 export const DEFAULT_VISIBLE_FIELDS: VisibleFields = {
+  code: false,
   producer: true,
   vintage: true,
   origin: true,
@@ -131,6 +133,7 @@ export type MenuSection = { id: string; title: string; wineIds: string[] };
 export type MenuWine = {
   id: string;
   name: string;
+  internal_code?: string | null;
   producer: string | null;
   vintage: number | null;
   region: string | null;

@@ -68,6 +68,7 @@ type SavedList = {
 };
 
 const FIELD_LABELS: { key: keyof VisibleFields; label: string }[] = [
+  { key: "code", label: "Código" },
   { key: "producer", label: "Produtor" },
   { key: "vintage", label: "Safra" },
   { key: "origin", label: "Região / País" },
@@ -96,7 +97,7 @@ function WineMenuPage() {
       const { data, error } = await supabase
         .from("wines")
         .select(
-          "id,name,producer,vintage,region,appellation,country,grape,wine_type,volume,sale_price,active_on_menu",
+          "id,name,internal_code,producer,vintage,region,appellation,country,grape,wine_type,volume,sale_price,active_on_menu",
         )
         .eq("restaurant_id", restaurantId!)
         .order("name");

@@ -98,7 +98,12 @@ export function MenuPreview({
                   return (
                     <li key={id} className="break-inside-avoid">
                       <div className="flex items-baseline gap-2">
-                        <span className={t.itemName}>{w.name}</span>
+                        <span className={t.itemName}>
+                          {fields.code && w.internal_code ? (
+                            <span className="mr-2 tabular-nums opacity-70">{w.internal_code}</span>
+                          ) : null}
+                          {w.name}
+                        </span>
                         {t.dotted && fields.price ? (
                           <span className="min-w-6 flex-1 translate-y-[-3px] border-b border-dotted border-black/50" />
                         ) : (

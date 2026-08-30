@@ -781,7 +781,8 @@ function WinesSection() {
                   )}
                 </div>
               </div>
-            </button>
+              </button>
+            </div>
           );
         })}
       </div>

@@ -25,6 +25,8 @@ const ROLE_LABEL: Record<string, string> = {
 function HomePage() {
   const { role, memberships, groups, loading } = useAuth();
   const navigate = useNavigate();
+  const { theme, toggle } = useTheme();
+
   const [newOpen, setNewOpen] = useState(false);
   const [accessFor, setAccessFor] = useState<{ id: string; name: string } | null>(null);
 

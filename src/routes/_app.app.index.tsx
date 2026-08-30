@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { setActiveGroup, setActiveRestaurant } from "@/lib/active-scope";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { createRestaurantWithAccess } from "@/lib/access.functions";
 import AccessMapDialog from "@/components/AccessMapDialog";
-import { Building2, Layers, Plus, Users, X, ArrowRight } from "lucide-react";
+import { Building2, Layers, Plus, Users, X, ArrowRight, Moon, Sun } from "lucide-react";
+
 
 export const Route = createFileRoute("/_app/app/")({
   component: HomePage,

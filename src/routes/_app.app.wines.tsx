@@ -444,6 +444,26 @@ function WinesSection() {
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
   const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v as never }));
   const hasAnyFilter = Object.values(filters).some((v) => v !== "");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const toggleSelected = (id: string) =>
+    setSelectedIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  const bulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Excluir ${selectedIds.length} rótulo(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+    setBulkDeleting(true);
+    const { error } = await supabase.from("wines").delete().in("id", selectedIds);
+    setBulkDeleting(false);
+    if (error) {
+      toast.error(
+        "Não foi possível excluir. Alguns rótulos podem ter movimentações, contagens ou pedidos vinculados."
+      );
+      return;
+    }
+    toast.success(`${selectedIds.length} rótulo(s) excluído(s).`);
+    setSelectedIds([]);
+    qc.invalidateQueries({ queryKey: ["wines"] });
+  };
   const navigate = useNavigate();
   const routerState = useRouterState();
   const pendingWineId = (() => {

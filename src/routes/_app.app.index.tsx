@@ -62,12 +62,23 @@ function HomePage() {
             Selecione um restaurante para gerenciar ou crie um novo.
           </p>
         </div>
-        <button
-          onClick={() => setNewOpen(true)}
-          className="flex shrink-0 items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:px-4"
-        >
-          <Plus size={16} /> <span className="hidden sm:inline">Novo restaurante</span><span className="sm:hidden">Novo</span>
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            onClick={toggle}
+            title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+            className="flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors hover:border-primary sm:px-3"
+          >
+            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+            <span className="hidden sm:inline">{theme === "dark" ? "Claro" : "Escuro"}</span>
+          </button>
+          <button
+            onClick={() => setNewOpen(true)}
+            className="flex shrink-0 items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:px-4"
+          >
+            <Plus size={16} /> <span className="hidden sm:inline">Novo restaurante</span><span className="sm:hidden">Novo</span>
+          </button>
+        </div>
+
       </div>
 
       {memberships.length === 0 ? (

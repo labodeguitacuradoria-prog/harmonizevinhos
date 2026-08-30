@@ -865,7 +865,15 @@ function WinesSection() {
             {filteredWines.map((w) => {
               const markup = w.cost_price > 0 ? ((Number(w.sale_price) / Number(w.cost_price) - 1) * 100).toFixed(0) : "-";
               return (
-                <tr key={w.id} className="border-b border-border last:border-0">
+                <tr key={w.id} className={`border-b border-border last:border-0 ${selectedIds.includes(w.id) ? "bg-accent/40" : ""}`}>
+                  <td className="px-2 py-2">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5"
+                      checked={selectedIds.includes(w.id)}
+                      onChange={() => toggleSelected(w.id)}
+                    />
+                  </td>
                   <td className="px-2 py-2 font-mono text-xs text-muted-foreground">
                     <InlineCell
                       wineId={w.id}

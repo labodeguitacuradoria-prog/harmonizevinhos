@@ -150,6 +150,62 @@
   --sidebar-ring: oklch(0.78 0.13 86);
 }
 
+/* ===== Modo claro (opcional, escolhido pelo usuário na tela Início) =====
+   Mantém a identidade dourado + vinho, sobre superfícies claras. */
+.light {
+  --gold: #9a7b18;
+  --wine: #800020;
+  --gray-border: #e4e0d8;
+  --bg-raw: #faf8f4;
+  --card-raw: #ffffff;
+  --surface-2: #f2efe8;
+  --text-kpi: #6b6b6b;
+
+  --gradient-nav-active: linear-gradient(
+    to top,
+    color-mix(in oklab, var(--wine) 16%, transparent),
+    transparent
+  );
+
+  --background: oklch(0.98 0.005 90);
+  --foreground: oklch(0.2 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0 0);
+  --primary: oklch(0.56 0.1 86);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.36 0.15 18);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.95 0.005 90);
+  --muted-foreground: oklch(0.48 0 0);
+  --accent: oklch(0.94 0.01 90);
+  --accent-foreground: oklch(0.4 0.1 86);
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.9 0.005 90);
+  --input: oklch(0.9 0.005 90);
+  --ring: oklch(0.56 0.1 86);
+  --chart-1: oklch(0.62 0.11 86);
+  --chart-2: oklch(0.4 0.15 18);
+  --chart-3: oklch(0.7 0 0);
+  --chart-4: oklch(0.78 0.09 86);
+  --chart-5: oklch(0.55 0.1 18);
+  --sidebar: oklch(0.96 0.008 90);
+  --sidebar-foreground: oklch(0.2 0 0);
+  --sidebar-primary: oklch(0.56 0.1 86);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.93 0.01 90);
+  --sidebar-accent-foreground: oklch(0.4 0.1 86);
+  --sidebar-border: oklch(0.89 0.005 90);
+  --sidebar-ring: oklch(0.56 0.1 86);
+}
+
+.light .section-title {
+  border-bottom-color: var(--gray-border);
+}
+
+
 @layer base {
   * {
     border-color: var(--color-border);

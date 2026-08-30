@@ -1,12 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { setActiveGroup, setActiveRestaurant } from "@/lib/active-scope";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { createRestaurantWithAccess } from "@/lib/access.functions";
 import AccessMapDialog from "@/components/AccessMapDialog";
-import { Building2, Layers, Plus, Users, X, ArrowRight } from "lucide-react";
+import { Building2, Layers, Plus, Users, X, ArrowRight, Moon, Sun } from "lucide-react";
+
 
 export const Route = createFileRoute("/_app/app/")({
   component: HomePage,
@@ -23,6 +25,8 @@ const ROLE_LABEL: Record<string, string> = {
 function HomePage() {
   const { role, memberships, groups, loading } = useAuth();
   const navigate = useNavigate();
+  const { theme, toggle } = useTheme();
+
   const [newOpen, setNewOpen] = useState(false);
   const [accessFor, setAccessFor] = useState<{ id: string; name: string } | null>(null);
 
@@ -60,12 +64,23 @@ function HomePage() {
             Selecione um restaurante para gerenciar ou crie um novo.
           </p>
         </div>
-        <button
-          onClick={() => setNewOpen(true)}
-          className="flex shrink-0 items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:px-4"
-        >
-          <Plus size={16} /> <span className="hidden sm:inline">Novo restaurante</span><span className="sm:hidden">Novo</span>
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            onClick={toggle}
+            title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+            className="flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors hover:border-primary sm:px-3"
+          >
+            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+            <span className="hidden sm:inline">{theme === "dark" ? "Claro" : "Escuro"}</span>
+          </button>
+          <button
+            onClick={() => setNewOpen(true)}
+            className="flex shrink-0 items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:px-4"
+          >
+            <Plus size={16} /> <span className="hidden sm:inline">Novo restaurante</span><span className="sm:hidden">Novo</span>
+          </button>
+        </div>
+
       </div>
 
       {memberships.length === 0 ? (

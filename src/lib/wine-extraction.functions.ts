@@ -315,14 +315,29 @@ export const extractWineFromUrl = createServerFn({ method: "POST" })
     }
 
     const html = await res.text();
-    const text = htmlToText(html).slice(0, 30000);
+    const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "").trim();
+    const text = htmlToText(html).slice(0, 24000);
+    console.log(`[extractWineFromUrl] ${data.url} -> ${text.length} chars, title="${title}"`);
     if (text.length < 80)
       throw new Error("A página não retornou conteúdo legível. Copie o texto e use a aba 'Texto colado'.");
 
+    const prompt = `Conteúdo extraído da página do produtor (URL: ${data.url}${title ? `, título: ${title}` : ""}).
+O texto abaixo vem de HTML e pode conter menus, rodapés e avisos legais misturados — ignore essas partes e use apenas o que descreve o vinho (descrição, harmonização, aromas, análise sensorial, teor alcoólico, açúcar, premiações, safra, vinificação, região).
+Se o texto não trouxer algum dado técnico, complete com seu conhecimento sobre este rótulo específico; use null apenas quando realmente não souber.
+
+"""
+${text}
+"""`;
+
+    const first = await callModel([{ type: "text" as const, text: prompt }]);
+    if (first.rotulo || first.informacoes_tecnicas || (first.premiacoes?.length ?? 0) > 0) return first;
+
+    console.warn("[extractWineFromUrl] primeira tentativa vazia, refazendo com foco no rótulo");
     return callModel([
       {
         type: "text" as const,
-        text: `Analise o conteúdo da página abaixo (URL: ${data.url}) e extraia todos os dados técnicos do vinho. Ignore menus, rodapés e conteúdo de navegação.\n\n"""\n${text}\n"""`,
+        text: `O rótulo é "${title || data.url}". Preencha a ficha técnica completa deste vinho usando seu conhecimento e o resumo de página a seguir:\n\n"""\n${text.slice(0, 12000)}\n"""`,
       },
     ]);
   });
+

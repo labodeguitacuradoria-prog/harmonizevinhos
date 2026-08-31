@@ -179,8 +179,38 @@ export function WineAiExtractor({ onExtracted }: Props) {
             }}
           />
         </label>
+      ) : tab === "url" ? (
+        <div className="space-y-2">
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleUrl();
+              }
+            }}
+            placeholder="https://site-do-produtor.com/vinho..."
+            className="w-full rounded-md border border-[#2a2a2a] bg-[#0b0b0b] p-3 text-sm text-white placeholder:text-[#555] focus:border-[#D4AF37] focus:outline-none"
+            disabled={busy}
+          />
+          <p className="text-[11px] text-[#666]">
+            Cole o link da página (ou do PDF) com as informações do vinho. A IA lê o conteúdo e preenche os campos.
+          </p>
+          <button
+            type="button"
+            onClick={handleUrl}
+            disabled={busy || url.trim().length < 10}
+            className="flex items-center gap-2 rounded-md bg-[#D4AF37] px-4 py-2 text-xs font-bold uppercase text-black transition hover:bg-[#e5c04a] disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
+            Extrair do link
+          </button>
+        </div>
       ) : (
         <div className="space-y-2">
+
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}

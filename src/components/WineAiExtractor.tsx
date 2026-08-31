@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Sparkles, FileText, Upload, Loader2 } from "lucide-react";
+import { Sparkles, FileText, Upload, Loader2, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   extractWineFromFile,
   extractWineFromText,
+  extractWineFromUrl,
   type ExtractedWine,
 } from "@/lib/wine-extraction.functions";
+
 
 type Props = {
   onExtracted: (data: ExtractedWine, meta?: { sourceFileUrl?: string; mimeType?: string }) => void;
@@ -24,11 +26,14 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export function WineAiExtractor({ onExtracted }: Props) {
-  const [tab, setTab] = useState<"file" | "text">("file");
+  const [tab, setTab] = useState<"file" | "text" | "url">("file");
   const [text, setText] = useState("");
+  const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const extractFile = useServerFn(extractWineFromFile);
   const extractText = useServerFn(extractWineFromText);
+  const extractUrl = useServerFn(extractWineFromUrl);
+
 
   async function handleFile(file: File) {
     if (file.size > 15 * 1024 * 1024) {
@@ -84,6 +89,25 @@ export function WineAiExtractor({ onExtracted }: Props) {
     }
   }
 
+  async function handleUrl() {
+    const value = url.trim();
+    if (!/^https?:\/\/\S+\.\S+/.test(value)) {
+      toast.error("Informe um link válido começando com http:// ou https://");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await extractUrl({ data: { url: value } });
+      onExtracted(res, { sourceFileUrl: value });
+      toast.success("Link analisado! Revise os campos antes de salvar.");
+    } catch (e: any) {
+      toast.error(e.message || "Falha ao analisar o link.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+
   return (
     <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">
       <div className="mb-3 flex items-center gap-2 text-[#D4AF37]">
@@ -116,7 +140,19 @@ export function WineAiExtractor({ onExtracted }: Props) {
         >
           <FileText className="h-3 w-3" /> Texto colado
         </button>
+        <button
+          type="button"
+          onClick={() => setTab("url")}
+          className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-bold uppercase transition ${
+            tab === "url"
+              ? "border-[#D4AF37] bg-[#1a1a1a] text-[#D4AF37]"
+              : "border-[#2a2a2a] text-[#888] hover:text-[#D4AF37]"
+          }`}
+        >
+          <Link2 className="h-3 w-3" /> Link da internet
+        </button>
       </div>
+
 
       {tab === "file" ? (
         <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#D4AF37]/50 bg-[#0b0b0b] px-3 py-6 text-sm text-[#888] hover:bg-[#1a1a1a]">
@@ -143,8 +179,38 @@ export function WineAiExtractor({ onExtracted }: Props) {
             }}
           />
         </label>
+      ) : tab === "url" ? (
+        <div className="space-y-2">
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleUrl();
+              }
+            }}
+            placeholder="https://site-do-produtor.com/vinho..."
+            className="w-full rounded-md border border-[#2a2a2a] bg-[#0b0b0b] p-3 text-sm text-white placeholder:text-[#555] focus:border-[#D4AF37] focus:outline-none"
+            disabled={busy}
+          />
+          <p className="text-[11px] text-[#666]">
+            Cole o link da página (ou do PDF) com as informações do vinho. A IA lê o conteúdo e preenche os campos.
+          </p>
+          <button
+            type="button"
+            onClick={handleUrl}
+            disabled={busy || url.trim().length < 10}
+            className="flex items-center gap-2 rounded-md bg-[#D4AF37] px-4 py-2 text-xs font-bold uppercase text-black transition hover:bg-[#e5c04a] disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
+            Extrair do link
+          </button>
+        </div>
       ) : (
         <div className="space-y-2">
+
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}

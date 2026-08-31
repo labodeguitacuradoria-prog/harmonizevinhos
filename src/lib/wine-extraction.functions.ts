@@ -260,3 +260,69 @@ export const extractWineFromText = createServerFn({ method: "POST" })
     ];
     return callModel(userContent);
   });
+
+const UrlInput = z.object({ url: z.string().url() });
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/[ \t\u00a0]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+export const extractWineFromUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => UrlInput.parse(d))
+  .handler(async ({ data }) => {
+    let res: Response;
+    try {
+      res = await fetch(data.url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml,application/pdf,*/*",
+        },
+      });
+    } catch {
+      throw new Error("Não foi possível acessar o link. Verifique o endereço.");
+    }
+    if (!res.ok) throw new Error(`O site respondeu com erro ${res.status}. Tente outro link.`);
+
+    const contentType = res.headers.get("content-type") ?? "";
+
+    if (contentType.includes("pdf")) {
+      const buf = new Uint8Array(await res.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]!);
+      const base64 = btoa(bin);
+      return callModel([
+        {
+          type: "text" as const,
+          text: `Extraia todas as informações técnicas desta ficha de vinho (origem: ${data.url}).`,
+        },
+        { type: "file" as const, data: base64, mediaType: "application/pdf" },
+      ]);
+    }
+
+    const html = await res.text();
+    const text = htmlToText(html).slice(0, 30000);
+    if (text.length < 80)
+      throw new Error("A página não retornou conteúdo legível. Copie o texto e use a aba 'Texto colado'.");
+
+    return callModel([
+      {
+        type: "text" as const,
+        text: `Analise o conteúdo da página abaixo (URL: ${data.url}) e extraia todos os dados técnicos do vinho. Ignore menus, rodapés e conteúdo de navegação.\n\n"""\n${text}\n"""`,
+      },
+    ]);
+  });

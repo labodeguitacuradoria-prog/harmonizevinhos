@@ -164,6 +164,46 @@ async function callModel(userContent: unknown): Promise<ExtractedWine> {
   }
 }
 
+/** Extração em modo texto puro: pede JSON no prompt e parseia com tolerância.
+ *  Mais robusto que o modo estruturado para conteúdo ruidoso (páginas web). */
+async function callModelJsonMode(userText: string): Promise<ExtractedWine> {
+  const apiKey = process.env.LOVABLE_API_KEY;
+  if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada.");
+
+  const gateway = createLovableAiGateway(apiKey);
+  const { text: raw } = await generateText({
+    model: gateway("google/gemini-3-flash-preview"),
+    system: `${SYSTEM_PROMPT}
+
+FORMATO DA RESPOSTA: responda APENAS com um único objeto JSON (sem texto antes/depois, sem array externo), contendo exatamente as chaves: rotulo, produtor, pais, regiao, denominacao, safra, tipo, estilo, grapes (array de {grape, pct, mesesBarrica}), mesesBarrica, alcool, acucar, acidezVal, ph, metodoProducao, pesos {corpo, acidez, taninos, docura, estagioBarrica, intensidadeAromatica}, informacoes_tecnicas, texto_original, premiacoes (array de strings), imagemUrl, elaboracao, maturacao, tempServicoMin, tempServicoMax, harmonizacao, nivelAcucar, conceitoCorpo, conceitoTaninos, conceitoAcidez, precoVendaSugerido.`,
+    prompt: userText,
+    maxOutputTokens: 16384,
+    temperature: 0.2,
+  });
+
+  const tryParse = (s: string) => {
+    try { return JSON.parse(s); } catch { return null; }
+  };
+  let parsed: any = tryParse(raw.trim());
+  if (!parsed) {
+    const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    const candidate = fence?.[1] ?? raw;
+    const s = candidate.indexOf("{");
+    const e = candidate.lastIndexOf("}");
+    if (s !== -1 && e > s) parsed = tryParse(candidate.substring(s, e + 1));
+  }
+  if (Array.isArray(parsed)) parsed = parsed.find((x) => x && typeof x === "object") ?? null;
+  if (!parsed || typeof parsed !== "object") {
+    console.error("[wine-extraction] JSON inválido. Prévia:", raw.slice(0, 400));
+    throw new Error(
+      "A IA não conseguiu estruturar as informações desta página. Tente novamente ou cole o texto na aba 'Texto colado'."
+    );
+  }
+  const safe = ExtractedSchema.safeParse(parsed);
+  return safe.success ? safe.data : coerceExtracted(parsed);
+}
+
+
 function coerceExtracted(p: any): ExtractedWine {
   const num = (v: any) => (typeof v === "number" && !isNaN(v) ? v : v != null && !isNaN(Number(v)) ? Number(v) : null);
   const str = (v: any) => (typeof v === "string" ? v : v == null ? null : String(v));

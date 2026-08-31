@@ -115,7 +115,7 @@ const ExtractedSchema = z.object({
 
 export type ExtractedWine = z.infer<typeof ExtractedSchema>;
 
-async function callModel(userContent: unknown): Promise<ExtractedWine> {
+async function callModel(userContent: unknown, fallbackText?: string): Promise<ExtractedWine> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada.");
 

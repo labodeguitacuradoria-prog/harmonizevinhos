@@ -26,11 +26,14 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export function WineAiExtractor({ onExtracted }: Props) {
-  const [tab, setTab] = useState<"file" | "text">("file");
+  const [tab, setTab] = useState<"file" | "text" | "url">("file");
   const [text, setText] = useState("");
+  const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const extractFile = useServerFn(extractWineFromFile);
   const extractText = useServerFn(extractWineFromText);
+  const extractUrl = useServerFn(extractWineFromUrl);
+
 
   async function handleFile(file: File) {
     if (file.size > 15 * 1024 * 1024) {

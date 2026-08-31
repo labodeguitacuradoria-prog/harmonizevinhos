@@ -115,7 +115,7 @@ const ExtractedSchema = z.object({
 
 export type ExtractedWine = z.infer<typeof ExtractedSchema>;
 
-async function callModel(userContent: unknown): Promise<ExtractedWine> {
+async function callModel(userContent: unknown, fallbackText?: string): Promise<ExtractedWine> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada.");
 
@@ -155,6 +155,10 @@ async function callModel(userContent: unknown): Promise<ExtractedWine> {
         return coerceExtracted(parsed);
       }
       console.error("[wine-extraction] Falha ao parsear resposta da IA. Prévia:", raw.slice(0, 400));
+      if (fallbackText && fallbackText.trim().length > 10) {
+        // Segunda tentativa em modo JSON tolerante (mais robusto que saída estruturada)
+        return callModelJsonMode(fallbackText);
+      }
       throw new Error(
         "A IA retornou uma resposta incompleta ou fora do formato esperado. Tente novamente — se persistir, cole o texto da ficha na aba 'Texto colado'."
       );
@@ -298,7 +302,7 @@ export const extractWineFromText = createServerFn({ method: "POST" })
         text: `Analise o texto a seguir e extraia todos os dados técnicos:\n\n"""\n${data.text}\n"""`,
       },
     ];
-    return callModel(userContent);
+    return callModel(userContent, `Analise o texto a seguir e extraia todos os dados técnicos:\n\n${data.text}`);
   });
 
 const UrlInput = z.object({ url: z.string().url() });

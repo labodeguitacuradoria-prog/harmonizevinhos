@@ -140,7 +140,19 @@ export function WineAiExtractor({ onExtracted }: Props) {
         >
           <FileText className="h-3 w-3" /> Texto colado
         </button>
+        <button
+          type="button"
+          onClick={() => setTab("url")}
+          className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-bold uppercase transition ${
+            tab === "url"
+              ? "border-[#D4AF37] bg-[#1a1a1a] text-[#D4AF37]"
+              : "border-[#2a2a2a] text-[#888] hover:text-[#D4AF37]"
+          }`}
+        >
+          <Link2 className="h-3 w-3" /> Link da internet
+        </button>
       </div>
+
 
       {tab === "file" ? (
         <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#D4AF37]/50 bg-[#0b0b0b] px-3 py-6 text-sm text-[#888] hover:bg-[#1a1a1a]">

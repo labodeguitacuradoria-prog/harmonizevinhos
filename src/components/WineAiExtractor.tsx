@@ -89,6 +89,25 @@ export function WineAiExtractor({ onExtracted }: Props) {
     }
   }
 
+  async function handleUrl() {
+    const value = url.trim();
+    if (!/^https?:\/\/\S+\.\S+/.test(value)) {
+      toast.error("Informe um link válido começando com http:// ou https://");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await extractUrl({ data: { url: value } });
+      onExtracted(res, { sourceFileUrl: value });
+      toast.success("Link analisado! Revise os campos antes de salvar.");
+    } catch (e: any) {
+      toast.error(e.message || "Falha ao analisar o link.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+
   return (
     <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-4">
       <div className="mb-3 flex items-center gap-2 text-[#D4AF37]">

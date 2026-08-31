@@ -369,15 +369,13 @@ Se o texto não trouxer algum dado técnico, complete com seu conhecimento sobre
 ${text}
 """`;
 
-    const first = await callModel([{ type: "text" as const, text: prompt }]);
+    const first = await callModelJsonMode(prompt);
     if (first.rotulo || first.informacoes_tecnicas || (first.premiacoes?.length ?? 0) > 0) return first;
 
     console.warn("[extractWineFromUrl] primeira tentativa vazia, refazendo com foco no rótulo");
-    return callModel([
-      {
-        type: "text" as const,
-        text: `O rótulo é "${title || data.url}". Preencha a ficha técnica completa deste vinho usando seu conhecimento e o resumo de página a seguir:\n\n"""\n${text.slice(0, 12000)}\n"""`,
-      },
-    ]);
+    return callModelJsonMode(
+      `O rótulo é "${title || data.url}". Preencha a ficha técnica completa deste vinho usando seu conhecimento e o resumo de página a seguir:\n\n"""\n${text.slice(0, 12000)}\n"""`
+    );
   });
+
 

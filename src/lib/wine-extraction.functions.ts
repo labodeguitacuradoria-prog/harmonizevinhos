@@ -302,7 +302,7 @@ export const extractWineFromText = createServerFn({ method: "POST" })
         text: `Analise o texto a seguir e extraia todos os dados técnicos:\n\n"""\n${data.text}\n"""`,
       },
     ];
-    return callModel(userContent);
+    return callModel(userContent, `Analise o texto a seguir e extraia todos os dados técnicos:\n\n${data.text}`);
   });
 
 const UrlInput = z.object({ url: z.string().url() });

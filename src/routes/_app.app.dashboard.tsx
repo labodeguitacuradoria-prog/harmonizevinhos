@@ -68,6 +68,17 @@ function monthLabel(year: number, monthIdx: number) {
   return `${MONTHS[monthIdx]}/${String(year).slice(-2)}`;
 }
 
+const MONTHS_FULL = [
+  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
+];
+
+function fullMonthLabel(year: number, monthIdx: number) {
+  if (monthIdx < 0) return "—";
+  return `${MONTHS_FULL[monthIdx]} ${year}`;
+}
+
+
 function formatDateBR(iso: string) {
   const d = new Date(iso + "T00:00:00");
   if (isNaN(d.getTime())) return iso;
@@ -522,6 +533,19 @@ function DashboardPage() {
   const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;
   const consolidatedUnitCount = isGroup ? memberships.filter((m) => m.groupId === activeGroupId).length : 0;
 
+  const restaurantName = memberships.find((m) => m.restaurantId === restaurantId)?.name;
+  const mobileTitle = isGroup ? (activeGroupName ?? "Rede") : (restaurantName ?? "Painel de Controle");
+  const mobilePeriodLabel = period
+    ? period.mode === "year"
+      ? period.year === currentYear
+        ? `Acumulado ${period.year}`
+        : `Ano ${period.year}`
+      : fullMonthLabel(period.year, period.month)
+    : agg.lastRev.month >= 0
+      ? fullMonthLabel(agg.lastRev.year, agg.lastRev.month)
+      : "Sem dados de vendas";
+
+
   return (
     <div className="p-3 md:p-10 space-y-3 md:space-y-6">
       {isGroup && (
@@ -541,26 +565,42 @@ function DashboardPage() {
         </div>
       )}
 
-      {/* Mobile header — compact */}
+      {/* Mobile header — compact (foco Chef/Owner) */}
       <header className="md:hidden space-y-2.5 border-b border-border pb-3">
-        <h1 className="text-center text-[12px] font-bold uppercase tracking-[0.16em] text-primary">
-          Gestão de Vinhos <span className="text-muted-foreground">para Restaurantes</span>
-        </h1>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col items-center gap-1.5">
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-full border"
+            style={{
+              borderColor: "color-mix(in oklab, var(--gold) 40%, transparent)",
+              background: "var(--card-raw)",
+              boxShadow: "0 0 15px color-mix(in oklab, var(--wine) 32%, transparent)",
+            }}
+          >
+            <Wine className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-center text-[12px] font-bold uppercase tracking-[0.14em] text-primary">
+            {mobileTitle}
+          </h1>
+          <p className="text-center text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            {mobilePeriodLabel}
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setDiagOpen(true)}
-            className="flex h-9 items-center justify-center gap-2 rounded-lg border border-primary bg-card text-[11px] font-semibold uppercase tracking-wider text-primary"
+            className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-primary bg-card px-1 text-[9px] font-semibold uppercase tracking-wider text-primary"
           >
-            <FileText size={13} /> Diagnóstico
+            <FileText size={11} /> Diagnóstico
           </button>
           <button
             onClick={() => setPeriodOpen((v) => !v)}
-            className={`flex h-9 items-center justify-between gap-2 rounded-lg border px-3 text-[11px] font-semibold uppercase tracking-wider ${
+            className={`flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border px-1 text-[9px] font-semibold uppercase tracking-wider ${
               period
                 ? "border-primary bg-[color:var(--wine)]/25 text-primary"
                 : "border-border bg-card text-primary"
             }`}
           >
+            <CalendarRange size={11} className="shrink-0" />
             <span className="truncate">
               {period
                 ? period.mode === "year"
@@ -570,18 +610,18 @@ function DashboardPage() {
                   : monthLabel(period.year, period.month)
                 : "Mês / Ano"}
             </span>
-            <CalendarRange size={13} className="shrink-0" />
           </button>
+          {!isGroup && (
+            <button
+              onClick={() => setMetasOpen(true)}
+              className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-border bg-card px-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              <Target size={11} /> Metas
+            </button>
+          )}
         </div>
-        {!isGroup && (
-          <button
-            onClick={() => setMetasOpen(true)}
-            className="flex h-8 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
-          >
-            <Target size={12} /> Metas
-          </button>
-        )}
       </header>
+
 
 
       <header className="hidden md:flex items-center justify-between border-b border-border pb-4">
@@ -1054,7 +1094,7 @@ function FaturamentoPanel({
       <div className="mb-5 border-b border-border pb-4" />
 
       <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)_minmax(220px,260px)]">
-        <div className="grid min-w-0 grid-cols-2 gap-2 lg:flex lg:flex-col lg:gap-3">
+        <div className="hidden min-w-0 gap-2 md:grid md:grid-cols-2 lg:flex lg:flex-col lg:gap-3">
           {monthTarget > 0 && lastMonth.month >= 0 && (
             <TargetGauge
               label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}
@@ -1152,7 +1192,30 @@ function FaturamentoPanel({
           corkageAmtYear
         }
       />
+
+      {/* Mobile: metas depois do Top 5 */}
+      <div className="mt-3 grid grid-cols-2 gap-2 md:hidden">
+        {monthTarget > 0 && lastMonth.month >= 0 && (
+          <TargetGauge
+            label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}
+            achieved={revLast}
+            target={monthTarget}
+            valuePrefix="R$ "
+            size="sm"
+          />
+        )}
+        {annualTarget !== null && (
+          <TargetGauge
+            label={`Meta anual ${currentYear}`}
+            achieved={currAcc}
+            target={annualTarget}
+            valuePrefix="R$ "
+            size="sm"
+          />
+        )}
+      </div>
     </div>
+
   );
 }
 

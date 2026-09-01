@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { X, FileDown, ClipboardCopy, TrendingUp, TrendingDown, Minus, Trophy, AlertTriangle, Lightbulb, BarChart3, Calendar, CalendarRange } from "lucide-react";
+import { ArrowLeft, FileDown, ClipboardCopy, TrendingUp, TrendingDown, Minus, Trophy, AlertTriangle, Lightbulb, BarChart3, Calendar, CalendarRange } from "lucide-react";
 import { targetsFor, type IndicatorKey } from "@/components/DashboardTargetsEditor";
 
 type WineRow = {
@@ -446,7 +446,7 @@ export default function SalesDiagnosticReport({
 
   async function copySummary() {
     const lines: string[] = [];
-    lines.push(`Relatório de Diagnóstico de Vendas — ${monthLabelStr} / YTD ${currentYear}`);
+    lines.push(`Diagnóstico de Vendas — ${monthLabelStr} / YTD ${currentYear}`);
     lines.push("");
     lines.push(`— Desempenho do Mês (${monthLabelStr} vs ${prevMonthLabelStr}) —`);
     lines.push(`• Faturamento: R$ ${fmtBRL(diag.monthRevTotal)} (${varRev.label})`);
@@ -520,27 +520,28 @@ export default function SalesDiagnosticReport({
   if (recYTD.length === 0) recYTD.push("Ano dentro do plano — priorizar consistência dos estilos campeões.");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 print:static print:bg-white print:p-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-0 sm:p-4 print:static print:bg-white print:p-0">
       <div
-        className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 print:max-h-none print:max-w-full print:overflow-visible print:rounded-none print:border-0 print:bg-white print:text-black"
+        className="relative max-h-[100dvh] w-full max-w-6xl overflow-y-auto no-scrollbar rounded-none border-0 bg-card p-4 sm:max-h-[90vh] sm:rounded-xl sm:border sm:border-border sm:p-6 print:max-h-none print:max-w-full print:overflow-visible print:rounded-none print:border-0 print:bg-white print:text-black"
         ref={printRef}
       >
-        <button
-          onClick={onClose}
-          className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground hover:text-primary print:hidden"
-          aria-label="Fechar"
-        >
-          <X size={18} />
-        </button>
-
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-3">
-          <div>
-            <h2 className="page-title text-base">Relatório de Diagnóstico de Vendas</h2>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Referência do mês: <span className="text-foreground">{monthLabelStr}</span> · YTD {currentYear}
-            </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              onClick={onClose}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:bg-primary hover:text-primary-foreground print:hidden"
+              aria-label="Voltar"
+            >
+              <ArrowLeft size={13} /> Voltar
+            </button>
+            <div className="min-w-0">
+              <h2 className="page-title truncate text-base">Diagnóstico de vendas</h2>
+              <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                Referência do mês: <span className="text-foreground">{monthLabelStr}</span> · YTD {currentYear}
+              </p>
+            </div>
           </div>
-          <div className="flex gap-2 print:hidden">
+          <div className="flex shrink-0 gap-2 print:hidden">
             <button
               onClick={copySummary}
               className="inline-flex items-center gap-2 rounded-md border border-border bg-[color:var(--surface-2)] px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"

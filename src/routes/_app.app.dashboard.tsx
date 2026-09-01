@@ -1192,7 +1192,30 @@ function FaturamentoPanel({
           corkageAmtYear
         }
       />
+
+      {/* Mobile: metas depois do Top 5 */}
+      <div className="mt-3 grid grid-cols-2 gap-2 md:hidden">
+        {monthTarget > 0 && lastMonth.month >= 0 && (
+          <TargetGauge
+            label={`Meta ${monthLabel(lastMonth.year, lastMonth.month)}`}
+            achieved={revLast}
+            target={monthTarget}
+            valuePrefix="R$ "
+            size="sm"
+          />
+        )}
+        {annualTarget !== null && (
+          <TargetGauge
+            label={`Meta anual ${currentYear}`}
+            achieved={currAcc}
+            target={annualTarget}
+            valuePrefix="R$ "
+            size="sm"
+          />
+        )}
+      </div>
     </div>
+
   );
 }
 

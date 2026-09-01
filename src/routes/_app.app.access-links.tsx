@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { publicOrigin } from "@/lib/public-origin";
 import { toast } from "sonner";
 import { KeyRound, Copy, Trash2, Ban, Smartphone, Monitor, Unlink } from "lucide-react";
 import {
@@ -116,7 +117,7 @@ function AccessLinksPage() {
         },
       });
       const kindSeg = scope === "stock_count" ? "contagem" : deviceKind === "mobile" ? "celular" : "desktop";
-      const url = `${window.location.origin}/acesso/${kindSeg}/${res.token}`;
+      const url = `${publicOrigin()}/acesso/${kindSeg}/${res.token}`;
       setFresh({ url, text: buildText(url, deviceKind, singleDevice, scopeLabel(scope)) });
       setLabel("");
       toast.success("Link criado. Copie agora — ele não será exibido novamente.");

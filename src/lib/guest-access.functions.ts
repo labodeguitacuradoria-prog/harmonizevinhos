@@ -362,3 +362,88 @@ export const saveGuestCount = createServerFn({ method: "POST" })
       return fail(e);
     }
   });
+
+// Retorna as MESMAS linhas cruas que o painel autenticado consome, para que a
+// tela aberta pelo link renderize o painel completo (KPIs, gráficos, metas,
+// diagnóstico) em modo somente leitura.
+export const getGuestDashboardData = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => TokenSchema.parse(d))
+  .handler(async ({ data }) => {
+    try {
+      const { link, restaurantName } = await resolveAccess(data.token, data.kind);
+      if (link.scope !== "dashboard") {
+        return fail({ code: "scope", message: "Link sem permissão para o painel." });
+      }
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const rid = link.restaurant_id;
+      const currentYear = new Date().getFullYear();
+      const previousYear = currentYear - 1;
+
+      const [{ data: wines }, { data: sessions }, { data: movements }, { data: corkage }, { data: targets }] =
+        await Promise.all([
+          supabaseAdmin
+            .from("wines")
+            .select("id,name,wine_type,volume,cost_price,sale_price,active_on_menu")
+            .eq("restaurant_id", rid),
+          supabaseAdmin
+            .from("stock_count_sessions")
+            .select("id, reference_date")
+            .eq("restaurant_id", rid)
+            .eq("status", "closed")
+            .order("reference_date", { ascending: false })
+            .limit(1),
+          supabaseAdmin
+            .from("inventory_movements")
+            .select("wine_id, quantity, unit_price, unit_cost, occurred_at")
+            .eq("restaurant_id", rid)
+            .eq("movement_type", "sale")
+            .gte("occurred_at", new Date(Date.UTC(previousYear, 0, 1)).toISOString()),
+          supabaseAdmin
+            .from("corkage_fees")
+            .select("reference_year, reference_month, quantity, total_amount")
+            .eq("restaurant_id", rid)
+            .in("reference_year", [currentYear, previousYear]),
+          supabaseAdmin
+            .from("dashboard_targets")
+            .select("id, indicator, reference_year, reference_month, target_value")
+            .eq("restaurant_id", rid)
+            .eq("reference_year", currentYear),
+        ]);
+
+      const lastSession = (sessions ?? [])[0] ?? null;
+      const stockMap: Record<string, number> = {};
+      if (lastSession) {
+        const { data: items } = await supabaseAdmin
+          .from("stock_count_items")
+          .select("wine_id, counted_qty")
+          .eq("session_id", lastSession.id);
+        for (const it of items ?? []) {
+          stockMap[it.wine_id] = (stockMap[it.wine_id] ?? 0) + (it.counted_qty ?? 0);
+        }
+      }
+
+      return {
+        ok: true as const,
+        restaurantName,
+        label: link.label,
+        wines: wines ?? [],
+        movements: movements ?? [],
+        corkage: (corkage ?? []).map((c) => ({
+          reference_year: c.reference_year,
+          reference_month: c.reference_month,
+          quantity: Number(c.quantity ?? 0),
+          total_amount: Number(c.total_amount ?? 0),
+        })),
+        stock: { map: stockMap, lastDate: lastSession?.reference_date ?? null },
+        targets: (targets ?? []).map((t) => ({
+          id: t.id as string,
+          indicator: t.indicator as string,
+          reference_year: t.reference_year as number,
+          reference_month: t.reference_month as number | null,
+          target_value: Number(t.target_value),
+        })),
+      };
+    } catch (e) {
+      return fail(e);
+    }
+  });

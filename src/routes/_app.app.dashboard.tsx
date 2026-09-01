@@ -637,7 +637,8 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
                 : "Mês / Ano"}
             </span>
           </button>
-          {!isGroup && (
+          {!isGroup && !guest && (
+
             <button
               onClick={() => setMetasOpen(true)}
               className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-border bg-card px-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground"
@@ -668,7 +669,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
           >
             <FileText size={14} /> Diagnóstico
           </button>
-          {!isGroup && (
+          {!isGroup && !guest && (
             <button
               onClick={() => setMetasOpen(true)}
               className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:border-primary"

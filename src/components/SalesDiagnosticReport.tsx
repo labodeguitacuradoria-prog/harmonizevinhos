@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { X, ArrowLeft, FileDown, ClipboardCopy, TrendingUp, TrendingDown, Minus, Trophy, AlertTriangle, Lightbulb, BarChart3, Calendar, CalendarRange } from "lucide-react";
+import { ArrowLeft, FileDown, ClipboardCopy, TrendingUp, TrendingDown, Minus, Trophy, AlertTriangle, Lightbulb, BarChart3, Calendar, CalendarRange } from "lucide-react";
 import { targetsFor, type IndicatorKey } from "@/components/DashboardTargetsEditor";
 
 type WineRow = {
@@ -446,7 +446,7 @@ export default function SalesDiagnosticReport({
 
   async function copySummary() {
     const lines: string[] = [];
-    lines.push(`Relatório de Diagnóstico de Vendas — ${monthLabelStr} / YTD ${currentYear}`);
+    lines.push(`Diagnóstico de Vendas — ${monthLabelStr} / YTD ${currentYear}`);
     lines.push("");
     lines.push(`— Desempenho do Mês (${monthLabelStr} vs ${prevMonthLabelStr}) —`);
     lines.push(`• Faturamento: R$ ${fmtBRL(diag.monthRevTotal)} (${varRev.label})`);

@@ -112,9 +112,25 @@ type TabKey =
   | "rolha"
   | "outras";
 
-function DashboardPage() {
+export type GuestDashboardData = {
+  restaurantName: string;
+  wines: WineRow[];
+  movements: Movement[];
+  corkage: Array<{ reference_year: number; reference_month: number; quantity: number; total_amount: number }>;
+  stock: { map: Record<string, number>; lastDate: string | null };
+  targets: Array<{
+    id: string;
+    indicator: string;
+    reference_year: number;
+    reference_month: number | null;
+    target_value: number;
+  }>;
+};
+
+export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
   const { restaurantId, activeGroupId, groups, memberships } = useAuth();
-  const { ids: scopeIds, isGroup } = useScopedRestaurantIds();
+  const { ids: scopeIds, isGroup: isGroupScope } = useScopedRestaurantIds();
+  const isGroup = guest ? false : isGroupScope;
   const [tab, setTab] = useState<TabKey>("faturamento");
   const [metasOpen, setMetasOpen] = useState(false);
   const [diagOpen, setDiagOpen] = useState(false);
@@ -128,12 +144,13 @@ function DashboardPage() {
   const currentMonth = now.getMonth();
 
   // Metas continuam sendo por unidade — no modo consolidado, ocultamos edição
-  const { data: targets = [] } = useDashboardTargets(restaurantId, currentYear);
+  const { data: authTargets = [] } = useDashboardTargets(guest ? null : restaurantId, currentYear);
+  const targets = guest ? guest.targets : authTargets;
 
   const scopeKey = scopeIds.join(",");
-  const enabled = scopeIds.length > 0;
+  const enabled = !guest && scopeIds.length > 0;
 
-  const { data: wines = [] } = useQuery({
+  const { data: authWines = [] } = useQuery({
     queryKey: ["dash-wines", scopeKey],
     enabled,
     queryFn: async () => {
@@ -145,7 +162,7 @@ function DashboardPage() {
     },
   });
 
-  const { data: stockData = { map: {}, lastDate: null as string | null } } = useQuery<{ map: Record<string, number>; lastDate: string | null }>({
+  const { data: authStock = { map: {}, lastDate: null as string | null } } = useQuery<{ map: Record<string, number>; lastDate: string | null }>({
     queryKey: ["dash-stock", scopeKey],
     enabled,
     queryFn: async () => {
@@ -175,9 +192,11 @@ function DashboardPage() {
       return { map, lastDate };
     },
   });
+  const wines = guest ? guest.wines : authWines;
+  const stockData = guest ? guest.stock : authStock;
   const stockMap = stockData.map;
 
-  const { data: movements = [] } = useQuery<Movement[]>({
+  const { data: authMovements = [] } = useQuery<Movement[]>({
     queryKey: ["dash-movements", scopeKey, currentYear],
     enabled,
     queryFn: async () => {
@@ -193,7 +212,7 @@ function DashboardPage() {
   });
 
   type CorkageRow = { reference_year: number; reference_month: number; quantity: number; total_amount: number };
-  const { data: corkage = [] } = useQuery<CorkageRow[]>({
+  const { data: authCorkage = [] } = useQuery<CorkageRow[]>({
     queryKey: ["dash-corkage", scopeKey],
     enabled,
     queryFn: async () => {
@@ -205,6 +224,10 @@ function DashboardPage() {
       return (data ?? []) as CorkageRow[];
     },
   });
+
+  const movements = guest ? guest.movements : authMovements;
+  const corkage = guest ? guest.corkage : authCorkage;
+
 
   const wineById = useMemo(() => {
     const m: Record<string, WineRow> = {};
@@ -533,8 +556,11 @@ function DashboardPage() {
   const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;
   const consolidatedUnitCount = isGroup ? memberships.filter((m) => m.groupId === activeGroupId).length : 0;
 
-  const restaurantName = memberships.find((m) => m.restaurantId === restaurantId)?.name;
+  const restaurantName = guest
+    ? guest.restaurantName
+    : memberships.find((m) => m.restaurantId === restaurantId)?.name;
   const mobileTitle = isGroup ? (activeGroupName ?? "Rede") : (restaurantName ?? "Painel de Controle");
+  const canEditTargets = !guest && !isGroup;
   const mobilePeriodLabel = period
     ? period.mode === "year"
       ? period.year === currentYear

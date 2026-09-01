@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Wine, ShieldAlert, Eye, ClipboardList, Sun, Moon } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
-import { getGuestDashboard, getGuestStockSession, saveGuestCount } from "@/lib/guest-access.functions";
+import { getGuestDashboardData, getGuestStockSession, saveGuestCount } from "@/lib/guest-access.functions";
+import { DashboardPage } from "@/routes/_app.app.dashboard";
 
 export const Route = createFileRoute("/acesso/$kind/$token")({
   head: () => ({
@@ -19,12 +20,6 @@ export const Route = createFileRoute("/acesso/$kind/$token")({
   }),
   component: GuestAccessPage,
 });
-
-const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
-function fmt(n: number, digits = 0) {
-  return n.toLocaleString("pt-BR", { minimumFractionDigits: digits, maximumFractionDigits: digits });
-}
 
 function GuestAccessPage() {
   const { kind, token } = Route.useParams();
@@ -82,105 +77,46 @@ function Loading() {
 }
 
 function GuestDashboard({ token, kind }: { token: string; kind: "celular" | "desktop" }) {
+  const { theme, toggle } = useTheme();
   const { data, isLoading } = useQuery({
-    queryKey: ["guest-dash", token],
+    queryKey: ["guest-dash-data", token],
     retry: false,
-    queryFn: () => getGuestDashboard({ data: { token, kind } }),
+    queryFn: () => getGuestDashboardData({ data: { token, kind } }),
   });
 
   if (isLoading) return <Loading />;
   if (!data || !data.ok) return <Blocked message={data?.message ?? "Link inválido."} />;
 
-  const t = data.totals;
-  const kpis = [
-    { label: "Faturamento (ano)", value: `R$ ${fmt(t.revenueYear)}` },
-    { label: "Garrafas vendidas", value: fmt(t.bottlesYear) },
-    { label: "Taças vendidas", value: fmt(t.glassesYear) },
-    { label: "Estoque em adega", value: `${fmt(t.stockBottles)} gf` },
-    { label: "Preço médio", value: `R$ ${fmt(t.avgPriceYear)}` },
-    { label: "CMV", value: `${fmt(t.cmvYear, 1)}%` },
-  ];
-
   return (
-    <Shell title={data.restaurantName} subtitle={`${data.label} · modo visualização`}>
-      <div className="mb-5 flex items-start gap-2 rounded-lg border border-border bg-card p-3 text-[11px] text-muted-foreground">
-        <Eye className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-        <span>
-          Modo visualização. Para acessar cadastros, pedidos e preços,{" "}
-          <a href="/auth" className="text-primary underline">entre com seu e-mail</a>.
-        </span>
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2">
+        <div className="flex min-w-0 items-center gap-2 text-[10px] text-muted-foreground">
+          <Eye className="h-3.5 w-3.5 shrink-0 text-primary" />
+          <span className="truncate">
+            Modo visualização ·{" "}
+            <a href="/auth" className="text-primary underline">
+              entrar com e-mail
+            </a>
+          </span>
+        </div>
+        <button
+          onClick={toggle}
+          aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border text-primary"
+        >
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
       </div>
-
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
-        {kpis.map((k) => (
-          <div key={k.label} className="rounded-xl border border-border bg-card p-3 text-center">
-            <span className="block text-[9px] uppercase tracking-wider text-muted-foreground">{k.label}</span>
-            <b className="mt-1 block text-base text-primary">{k.value}</b>
-          </div>
-        ))}
-      </div>
-
-      {t.lastCountDate && (
-        <p className="mt-3 text-[11px] text-muted-foreground">
-          Estoque referente à última contagem fechada em{" "}
-          {new Date(t.lastCountDate + "T00:00:00").toLocaleDateString("pt-BR")}.
-        </p>
-      )}
-
-      <Series title={`Faturamento — ${data.currentYear} vs ${data.previousYear}`} current={data.series.revenue.current} previous={data.series.revenue.previous} prefix="R$ " />
-      <Series title="Garrafas vendidas" current={data.series.bottles.current} previous={data.series.bottles.previous} />
-      <Series title="Preço médio" current={data.series.avgPrice.current} previous={data.series.avgPrice.previous} prefix="R$ " />
-      <Series title="CMV (%)" current={data.series.cmv.current} previous={data.series.cmv.previous} suffix="%" digits={1} />
-    </Shell>
-  );
-}
-
-function Series({
-  title,
-  current,
-  previous,
-  prefix = "",
-  suffix = "",
-  digits = 0,
-}: {
-  title: string;
-  current: number[];
-  previous: number[];
-  prefix?: string;
-  suffix?: string;
-  digits?: number;
-}) {
-  const max = Math.max(...current, ...previous, 1);
-  return (
-    <div className="mt-5 rounded-xl border border-border bg-card p-4">
-      <div className="mb-3 border-b border-border pb-2 text-[11px] font-bold uppercase tracking-wider text-primary">
-        {title}
-      </div>
-      <div className="flex items-end gap-1.5" style={{ height: 160 }}>
-        {MONTHS.map((m, i) => (
-          <div key={m} className="flex flex-1 flex-col items-center justify-end gap-1">
-            <div className="flex w-full items-end justify-center gap-[2px]" style={{ height: 120 }}>
-              <div
-                className="w-1/2 rounded-t"
-                style={{
-                  height: `${((previous[i] ?? 0) / max) * 100}%`,
-                  background: "#444",
-                }}
-                title={`${prefix}${fmt(previous[i] ?? 0, digits)}${suffix}`}
-              />
-              <div
-                className="w-1/2 rounded-t"
-                style={{
-                  height: `${((current[i] ?? 0) / max) * 100}%`,
-                  background: "linear-gradient(to top, var(--wine), var(--gold))",
-                }}
-                title={`${prefix}${fmt(current[i] ?? 0, digits)}${suffix}`}
-              />
-            </div>
-            <span className="text-[8px] text-muted-foreground">{m}</span>
-          </div>
-        ))}
-      </div>
+      <DashboardPage
+        guest={{
+          restaurantName: data.restaurantName,
+          wines: data.wines as never,
+          movements: data.movements as never,
+          corkage: data.corkage,
+          stock: data.stock,
+          targets: data.targets,
+        }}
+      />
     </div>
   );
 }

@@ -50,6 +50,7 @@ function AppLayout() {
       
       <NavLink to="/app/corkage-fees" rail={rail} icon={<Coins className="h-4 w-4" />}>Rolha</NavLink>
       <NavLink to="/app/sharing" rail={rail} icon={<Share2 className="h-4 w-4" />}>Compartilhar</NavLink>
+      <NavLink to="/app/access-links" rail={rail} icon={<KeyRound className="h-4 w-4" />}>Links de acesso</NavLink>
     </>
   );
 

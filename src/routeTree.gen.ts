@@ -21,6 +21,7 @@ import { Route as AppAdminAccessMapRouteImport } from './routes/_app.admin.acces
 import { Route as AppAdminRestaurantsRouteImport } from './routes/_app.admin.restaurants'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
 import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
+import { Route as AppAppAccessLinksRouteImport } from './routes/_app.app.access-links'
 import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros'
 import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
 import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage-fees'
@@ -102,6 +103,11 @@ const AppAdminSuppliersRoute = AppAdminSuppliersRouteImport.update({
 const AppAppIndexRoute = AppAppIndexRouteImport.update({
   id: '/app/',
   path: '/app/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppAccessLinksRoute = AppAppAccessLinksRouteImport.update({
+  id: '/app/access-links',
+  path: '/app/access-links',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppCadastrosRoute = AppAppCadastrosRouteImport.update({
@@ -231,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/app/access-links': typeof AppAppAccessLinksRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/app/access-links': typeof AppAppAccessLinksRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
@@ -305,6 +313,7 @@ export interface FileRoutesById {
   '/_app/admin/access-map': typeof AppAdminAccessMapRoute
   '/_app/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/_app/app/access-links': typeof AppAppAccessLinksRoute
   '/_app/app/cadastros': typeof AppAppCadastrosRoute
   '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/_app/app/corkage-fees': typeof AppAppCorkageFeesRoute
@@ -343,6 +352,7 @@ export interface FileRouteTypes {
     | '/admin/access-map'
     | '/admin/restaurants'
     | '/admin/suppliers'
+    | '/app/access-links'
     | '/app/cadastros'
     | '/app/catalog-admin'
     | '/app/corkage-fees'
@@ -379,6 +389,7 @@ export interface FileRouteTypes {
     | '/admin/access-map'
     | '/admin/restaurants'
     | '/admin/suppliers'
+    | '/app/access-links'
     | '/app/cadastros'
     | '/app/catalog-admin'
     | '/app/corkage-fees'
@@ -416,6 +427,7 @@ export interface FileRouteTypes {
     | '/_app/admin/access-map'
     | '/_app/admin/restaurants'
     | '/_app/admin/suppliers'
+    | '/_app/app/access-links'
     | '/_app/app/cadastros'
     | '/_app/app/catalog-admin'
     | '/_app/app/corkage-fees'
@@ -539,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app/'
       preLoaderRoute: typeof AppAppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/access-links': {
+      id: '/_app/app/access-links'
+      path: '/app/access-links'
+      fullPath: '/app/access-links'
+      preLoaderRoute: typeof AppAppAccessLinksRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/app/cadastros': {
@@ -709,6 +728,7 @@ interface AppRouteChildren {
   AppAdminAccessMapRoute: typeof AppAdminAccessMapRoute
   AppAdminRestaurantsRoute: typeof AppAdminRestaurantsRoute
   AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
+  AppAppAccessLinksRoute: typeof AppAppAccessLinksRoute
   AppAppCadastrosRoute: typeof AppAppCadastrosRoute
   AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
   AppAppCorkageFeesRoute: typeof AppAppCorkageFeesRoute
@@ -738,6 +758,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminAccessMapRoute: AppAdminAccessMapRoute,
   AppAdminRestaurantsRoute: AppAdminRestaurantsRoute,
   AppAdminSuppliersRoute: AppAdminSuppliersRoute,
+  AppAppAccessLinksRoute: AppAppAccessLinksRoute,
   AppAppCadastrosRoute: AppAppCadastrosRoute,
   AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,
   AppAppCorkageFeesRoute: AppAppCorkageFeesRoute,

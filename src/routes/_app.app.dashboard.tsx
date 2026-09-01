@@ -1016,28 +1016,27 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
         {tab === "outras" && <OutrasPanel />}
       </div>
 
-      {restaurantId && (
-        <>
-          <DashboardTargetsEditor
-            open={metasOpen}
-            onClose={() => setMetasOpen(false)}
-            restaurantId={restaurantId}
-            year={currentYear}
-          />
-          <SalesDiagnosticReport
-            open={diagOpen}
-            onClose={() => setDiagOpen(false)}
-            wines={wines}
-            movements={movements}
-            corkage={corkage}
-            stockMap={stockMap}
-            targets={targets}
-            currentYear={currentYear}
-            previousYear={previousYear}
-            currentMonth={currentMonth}
-          />
-        </>
+      {restaurantId && !guest && (
+        <DashboardTargetsEditor
+          open={metasOpen}
+          onClose={() => setMetasOpen(false)}
+          restaurantId={restaurantId}
+          year={currentYear}
+        />
       )}
+      <SalesDiagnosticReport
+        open={diagOpen}
+        onClose={() => setDiagOpen(false)}
+        wines={wines}
+        movements={movements}
+        corkage={corkage}
+        stockMap={stockMap}
+        targets={targets}
+        currentYear={currentYear}
+        previousYear={previousYear}
+        currentMonth={currentMonth}
+      />
+
     </div>
   );
 }

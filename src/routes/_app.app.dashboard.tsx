@@ -1346,10 +1346,28 @@ function TopWinesBlock({
           {rows.length === 0 && (
             <div className="text-[11px] text-muted-foreground">Sem vendas no período.</div>
           )}
+          {rows.length > 0 && (
+            <div className="hidden items-center gap-3 px-2.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground md:flex">
+              <span className="h-2.5 w-2.5 shrink-0" />
+              <div className="min-w-0 flex-1">Rótulo</div>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="w-12 text-right">% fat.</span>
+                <span className="w-14 text-right">Garrafas</span>
+                <span className="w-20 text-right">Faturam.</span>
+                <span className="w-20 text-right">CMV</span>
+              </div>
+            </div>
+          )}
           {rows.map((r, i) => {
             const pct = base > 0 ? (r.rev / base) * 100 : 0;
             const cmv = r.rev > 0 ? (r.cost / r.rev) * 100 : 0;
             const type = r.wine?.wine_type ? WINE_TYPE_LABEL[r.wine.wine_type] ?? r.wine.wine_type : null;
+            const cells = [
+              { label: "% fat.", value: `${pct.toFixed(1)}%`, cls: "font-semibold text-primary", w: "md:w-12" },
+              { label: "Garrafas", value: `${fmtBRL(r.qty)}`, cls: "text-muted-foreground", w: "md:w-14" },
+              { label: "Faturam.", value: `R$ ${fmtBRL(r.rev)}`, cls: "", w: "md:w-20" },
+              { label: "CMV", value: `${cmv.toFixed(1)}%`, cls: "text-muted-foreground", w: "md:w-20" },
+            ];
             return (
               <div
                 key={r.id}
@@ -1365,16 +1383,21 @@ function TopWinesBlock({
                     {[type, r.wine?.volume].filter(Boolean).join(" · ") || "—"}
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-3 text-[11px]">
-                  <span className="w-12 text-right font-semibold text-primary">{pct.toFixed(1)}%</span>
-                  <span className="w-14 text-right text-muted-foreground">{fmtBRL(r.qty)} gfa</span>
-                  <span className="w-20 text-right">R$ {fmtBRL(r.rev)}</span>
-                  <span className="w-20 text-right text-muted-foreground">CMV {cmv.toFixed(1)}%</span>
+                <div className="grid w-full grid-cols-4 gap-1 text-[10px] md:flex md:w-auto md:shrink-0 md:items-center md:gap-3 md:text-[11px]">
+                  {cells.map((c) => (
+                    <div key={c.label} className={`min-w-0 text-right ${c.w}`}>
+                      <div className="truncate text-[8px] uppercase tracking-wider text-muted-foreground md:hidden">
+                        {c.label}
+                      </div>
+                      <div className={`truncate ${c.cls}`}>{c.value}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             );
           })}
         </div>
+
       </div>
     </div>
   );

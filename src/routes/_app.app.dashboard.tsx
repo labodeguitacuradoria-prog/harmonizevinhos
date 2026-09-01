@@ -522,6 +522,19 @@ function DashboardPage() {
   const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;
   const consolidatedUnitCount = isGroup ? memberships.filter((m) => m.groupId === activeGroupId).length : 0;
 
+  const restaurantName = memberships.find((m) => m.restaurantId === restaurantId)?.name;
+  const mobileTitle = isGroup ? (activeGroupName ?? "Rede") : (restaurantName ?? "Painel de Controle");
+  const mobilePeriodLabel = period
+    ? period.mode === "year"
+      ? period.year === currentYear
+        ? `Acumulado ${period.year}`
+        : `Ano ${period.year}`
+      : fullMonthLabel(period.year, period.month)
+    : agg.lastRev.month >= 0
+      ? fullMonthLabel(agg.lastRev.year, agg.lastRev.month)
+      : "Sem dados de vendas";
+
+
   return (
     <div className="p-3 md:p-10 space-y-3 md:space-y-6">
       {isGroup && (

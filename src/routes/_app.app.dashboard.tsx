@@ -556,8 +556,11 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
   const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;
   const consolidatedUnitCount = isGroup ? memberships.filter((m) => m.groupId === activeGroupId).length : 0;
 
-  const restaurantName = memberships.find((m) => m.restaurantId === restaurantId)?.name;
+  const restaurantName = guest
+    ? guest.restaurantName
+    : memberships.find((m) => m.restaurantId === restaurantId)?.name;
   const mobileTitle = isGroup ? (activeGroupName ?? "Rede") : (restaurantName ?? "Painel de Controle");
+  const canEditTargets = !guest && !isGroup;
   const mobilePeriodLabel = period
     ? period.mode === "year"
       ? period.year === currentYear

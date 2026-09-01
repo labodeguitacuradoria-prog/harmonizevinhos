@@ -225,6 +225,10 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
     },
   });
 
+  const movements = guest ? guest.movements : authMovements;
+  const corkage = guest ? guest.corkage : authCorkage;
+
+
   const wineById = useMemo(() => {
     const m: Record<string, WineRow> = {};
     for (const w of wines) m[w.id] = w;

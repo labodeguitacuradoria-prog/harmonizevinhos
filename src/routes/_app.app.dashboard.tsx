@@ -112,9 +112,25 @@ type TabKey =
   | "rolha"
   | "outras";
 
-function DashboardPage() {
+export type GuestDashboardData = {
+  restaurantName: string;
+  wines: WineRow[];
+  movements: Movement[];
+  corkage: Array<{ reference_year: number; reference_month: number; quantity: number; total_amount: number }>;
+  stock: { map: Record<string, number>; lastDate: string | null };
+  targets: Array<{
+    id: string;
+    indicator: string;
+    reference_year: number;
+    reference_month: number | null;
+    target_value: number;
+  }>;
+};
+
+export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
   const { restaurantId, activeGroupId, groups, memberships } = useAuth();
-  const { ids: scopeIds, isGroup } = useScopedRestaurantIds();
+  const { ids: scopeIds, isGroup: isGroupScope } = useScopedRestaurantIds();
+  const isGroup = guest ? false : isGroupScope;
   const [tab, setTab] = useState<TabKey>("faturamento");
   const [metasOpen, setMetasOpen] = useState(false);
   const [diagOpen, setDiagOpen] = useState(false);
@@ -128,10 +144,11 @@ function DashboardPage() {
   const currentMonth = now.getMonth();
 
   // Metas continuam sendo por unidade — no modo consolidado, ocultamos edição
-  const { data: targets = [] } = useDashboardTargets(restaurantId, currentYear);
+  const { data: authTargets = [] } = useDashboardTargets(guest ? null : restaurantId, currentYear);
+  const targets = guest ? guest.targets : authTargets;
 
   const scopeKey = scopeIds.join(",");
-  const enabled = scopeIds.length > 0;
+  const enabled = !guest && scopeIds.length > 0;
 
   const { data: wines = [] } = useQuery({
     queryKey: ["dash-wines", scopeKey],

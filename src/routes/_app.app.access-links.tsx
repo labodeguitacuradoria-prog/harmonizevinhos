@@ -116,7 +116,7 @@ function AccessLinksPage() {
         },
       });
       const kindSeg = scope === "stock_count" ? "contagem" : deviceKind === "mobile" ? "celular" : "desktop";
-      const url = `${window.location.origin}/acesso/${kindSeg}/${res.token}`;
+      const url = `${publicOrigin()}/acesso/${kindSeg}/${res.token}`;
       setFresh({ url, text: buildText(url, deviceKind, singleDevice, scopeLabel(scope)) });
       setLabel("");
       toast.success("Link criado. Copie agora — ele não será exibido novamente.");

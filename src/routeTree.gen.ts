@@ -21,6 +21,7 @@ import { Route as AppAdminAccessMapRouteImport } from './routes/_app.admin.acces
 import { Route as AppAdminRestaurantsRouteImport } from './routes/_app.admin.restaurants'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
 import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
+import { Route as AppAppAccessLinksRouteImport } from './routes/_app.app.access-links'
 import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros'
 import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
 import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage-fees'
@@ -42,6 +43,7 @@ import { Route as AppAppWineMenuRouteImport } from './routes/_app.app.wine-menu'
 import { Route as AppAppWinesRouteImport } from './routes/_app.app.wines'
 import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.index'
 import { Route as AppSupplierProductsRouteImport } from './routes/_app.supplier.products'
+import { Route as AcessoKindTokenRouteImport } from './routes/acesso.$kind.$token'
 import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
 
 const IndexRoute = IndexRouteImport.update({
@@ -101,6 +103,11 @@ const AppAdminSuppliersRoute = AppAdminSuppliersRouteImport.update({
 const AppAppIndexRoute = AppAppIndexRouteImport.update({
   id: '/app/',
   path: '/app/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppAccessLinksRoute = AppAppAccessLinksRouteImport.update({
+  id: '/app/access-links',
+  path: '/app/access-links',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppCadastrosRoute = AppAppCadastrosRouteImport.update({
@@ -209,6 +216,11 @@ const AppSupplierProductsRoute = AppSupplierProductsRouteImport.update({
   path: '/supplier/products',
   getParentRoute: () => AppRoute,
 } as any)
+const AcessoKindTokenRoute = AcessoKindTokenRouteImport.update({
+  id: '/acesso/$kind/$token',
+  path: '/acesso/$kind/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCatalogFileRoute = ApiPublicCatalogFileRouteImport.update({
   id: '/api/public/catalog-file',
   path: '/api/public/catalog-file',
@@ -225,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/app/access-links': typeof AppAppAccessLinksRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
@@ -245,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/app/wine-menu': typeof AppAppWineMenuRoute
   '/app/wines': typeof AppAppWinesRoute
   '/supplier/products': typeof AppSupplierProductsRoute
+  '/acesso/$kind/$token': typeof AcessoKindTokenRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/admin/': typeof AppAdminIndexRoute
   '/app/': typeof AppAppIndexRoute
@@ -260,6 +274,7 @@ export interface FileRoutesByTo {
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/app/access-links': typeof AppAppAccessLinksRoute
   '/app/cadastros': typeof AppAppCadastrosRoute
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
@@ -280,6 +295,7 @@ export interface FileRoutesByTo {
   '/app/wine-menu': typeof AppAppWineMenuRoute
   '/app/wines': typeof AppAppWinesRoute
   '/supplier/products': typeof AppSupplierProductsRoute
+  '/acesso/$kind/$token': typeof AcessoKindTokenRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/admin': typeof AppAdminIndexRoute
   '/app': typeof AppAppIndexRoute
@@ -297,6 +313,7 @@ export interface FileRoutesById {
   '/_app/admin/access-map': typeof AppAdminAccessMapRoute
   '/_app/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
+  '/_app/app/access-links': typeof AppAppAccessLinksRoute
   '/_app/app/cadastros': typeof AppAppCadastrosRoute
   '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/_app/app/corkage-fees': typeof AppAppCorkageFeesRoute
@@ -317,6 +334,7 @@ export interface FileRoutesById {
   '/_app/app/wine-menu': typeof AppAppWineMenuRoute
   '/_app/app/wines': typeof AppAppWinesRoute
   '/_app/supplier/products': typeof AppSupplierProductsRoute
+  '/acesso/$kind/$token': typeof AcessoKindTokenRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/app/': typeof AppAppIndexRoute
@@ -334,6 +352,7 @@ export interface FileRouteTypes {
     | '/admin/access-map'
     | '/admin/restaurants'
     | '/admin/suppliers'
+    | '/app/access-links'
     | '/app/cadastros'
     | '/app/catalog-admin'
     | '/app/corkage-fees'
@@ -354,6 +373,7 @@ export interface FileRouteTypes {
     | '/app/wine-menu'
     | '/app/wines'
     | '/supplier/products'
+    | '/acesso/$kind/$token'
     | '/api/public/catalog-file'
     | '/admin/'
     | '/app/'
@@ -369,6 +389,7 @@ export interface FileRouteTypes {
     | '/admin/access-map'
     | '/admin/restaurants'
     | '/admin/suppliers'
+    | '/app/access-links'
     | '/app/cadastros'
     | '/app/catalog-admin'
     | '/app/corkage-fees'
@@ -389,6 +410,7 @@ export interface FileRouteTypes {
     | '/app/wine-menu'
     | '/app/wines'
     | '/supplier/products'
+    | '/acesso/$kind/$token'
     | '/api/public/catalog-file'
     | '/admin'
     | '/app'
@@ -405,6 +427,7 @@ export interface FileRouteTypes {
     | '/_app/admin/access-map'
     | '/_app/admin/restaurants'
     | '/_app/admin/suppliers'
+    | '/_app/app/access-links'
     | '/_app/app/cadastros'
     | '/_app/app/catalog-admin'
     | '/_app/app/corkage-fees'
@@ -425,6 +448,7 @@ export interface FileRouteTypes {
     | '/_app/app/wine-menu'
     | '/_app/app/wines'
     | '/_app/supplier/products'
+    | '/acesso/$kind/$token'
     | '/api/public/catalog-file'
     | '/_app/admin/'
     | '/_app/app/'
@@ -439,6 +463,7 @@ export interface RootRouteChildren {
   LandingRoute: typeof LandingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  AcessoKindTokenRoute: typeof AcessoKindTokenRoute
   ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
 }
 
@@ -526,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app/'
       preLoaderRoute: typeof AppAppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/app/access-links': {
+      id: '/_app/app/access-links'
+      path: '/app/access-links'
+      fullPath: '/app/access-links'
+      preLoaderRoute: typeof AppAppAccessLinksRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/app/cadastros': {
@@ -675,6 +707,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSupplierProductsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/acesso/$kind/$token': {
+      id: '/acesso/$kind/$token'
+      path: '/acesso/$kind/$token'
+      fullPath: '/acesso/$kind/$token'
+      preLoaderRoute: typeof AcessoKindTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/catalog-file': {
       id: '/api/public/catalog-file'
       path: '/api/public/catalog-file'
@@ -689,6 +728,7 @@ interface AppRouteChildren {
   AppAdminAccessMapRoute: typeof AppAdminAccessMapRoute
   AppAdminRestaurantsRoute: typeof AppAdminRestaurantsRoute
   AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
+  AppAppAccessLinksRoute: typeof AppAppAccessLinksRoute
   AppAppCadastrosRoute: typeof AppAppCadastrosRoute
   AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
   AppAppCorkageFeesRoute: typeof AppAppCorkageFeesRoute
@@ -718,6 +758,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminAccessMapRoute: AppAdminAccessMapRoute,
   AppAdminRestaurantsRoute: AppAdminRestaurantsRoute,
   AppAdminSuppliersRoute: AppAdminSuppliersRoute,
+  AppAppAccessLinksRoute: AppAppAccessLinksRoute,
   AppAppCadastrosRoute: AppAppCadastrosRoute,
   AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,
   AppAppCorkageFeesRoute: AppAppCorkageFeesRoute,
@@ -753,6 +794,7 @@ const rootRouteChildren: RootRouteChildren = {
   LandingRoute: LandingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  AcessoKindTokenRoute: AcessoKindTokenRoute,
   ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,
 }
 export const routeTree = rootRouteImport

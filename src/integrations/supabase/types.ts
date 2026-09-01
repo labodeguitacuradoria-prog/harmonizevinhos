@@ -14,6 +14,103 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_link_devices: {
+        Row: {
+          created_at: string
+          device_hash: string
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          link_id: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_hash: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          link_id: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_hash?: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          link_id?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_link_devices_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "access_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      access_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          device_kind: Database["public"]["Enums"]["access_link_device_kind"]
+          expires_at: string | null
+          id: string
+          label: string
+          last_access_at: string | null
+          restaurant_id: string
+          revoked_at: string | null
+          scope: Database["public"]["Enums"]["access_link_scope"]
+          single_device: boolean
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          device_kind?: Database["public"]["Enums"]["access_link_device_kind"]
+          expires_at?: string | null
+          id?: string
+          label: string
+          last_access_at?: string | null
+          restaurant_id: string
+          revoked_at?: string | null
+          scope?: Database["public"]["Enums"]["access_link_scope"]
+          single_device?: boolean
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          device_kind?: Database["public"]["Enums"]["access_link_device_kind"]
+          expires_at?: string | null
+          id?: string
+          label?: string
+          last_access_at?: string | null
+          restaurant_id?: string
+          revoked_at?: string | null
+          scope?: Database["public"]["Enums"]["access_link_scope"]
+          single_device?: boolean
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_links_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       corkage_fees: {
         Row: {
           created_at: string
@@ -1744,6 +1841,8 @@ export type Database = {
       supplier_id_of: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
+      access_link_device_kind: "mobile" | "desktop"
+      access_link_scope: "dashboard" | "stock_count"
       app_role:
         | "admin"
         | "restaurant"
@@ -1901,6 +2000,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      access_link_device_kind: ["mobile", "desktop"],
+      access_link_scope: ["dashboard", "stock_count"],
       app_role: [
         "admin",
         "restaurant",

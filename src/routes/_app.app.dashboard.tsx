@@ -150,7 +150,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
   const scopeKey = scopeIds.join(",");
   const enabled = !guest && scopeIds.length > 0;
 
-  const { data: wines = [] } = useQuery({
+  const { data: authWines = [] } = useQuery({
     queryKey: ["dash-wines", scopeKey],
     enabled,
     queryFn: async () => {
@@ -162,7 +162,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
     },
   });
 
-  const { data: stockData = { map: {}, lastDate: null as string | null } } = useQuery<{ map: Record<string, number>; lastDate: string | null }>({
+  const { data: authStock = { map: {}, lastDate: null as string | null } } = useQuery<{ map: Record<string, number>; lastDate: string | null }>({
     queryKey: ["dash-stock", scopeKey],
     enabled,
     queryFn: async () => {
@@ -192,9 +192,11 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       return { map, lastDate };
     },
   });
+  const wines = guest ? guest.wines : authWines;
+  const stockData = guest ? guest.stock : authStock;
   const stockMap = stockData.map;
 
-  const { data: movements = [] } = useQuery<Movement[]>({
+  const { data: authMovements = [] } = useQuery<Movement[]>({
     queryKey: ["dash-movements", scopeKey, currentYear],
     enabled,
     queryFn: async () => {
@@ -210,7 +212,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
   });
 
   type CorkageRow = { reference_year: number; reference_month: number; quantity: number; total_amount: number };
-  const { data: corkage = [] } = useQuery<CorkageRow[]>({
+  const { data: authCorkage = [] } = useQuery<CorkageRow[]>({
     queryKey: ["dash-corkage", scopeKey],
     enabled,
     queryFn: async () => {

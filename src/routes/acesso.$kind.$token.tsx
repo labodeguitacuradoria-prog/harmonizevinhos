@@ -21,12 +21,6 @@ export const Route = createFileRoute("/acesso/$kind/$token")({
   component: GuestAccessPage,
 });
 
-const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
-function fmt(n: number, digits = 0) {
-  return n.toLocaleString("pt-BR", { minimumFractionDigits: digits, maximumFractionDigits: digits });
-}
-
 function GuestAccessPage() {
   const { kind, token } = Route.useParams();
   const isStock = kind === "contagem" || kind === "estoque";
@@ -123,56 +117,6 @@ function GuestDashboard({ token, kind }: { token: string; kind: "celular" | "des
           targets: data.targets,
         }}
       />
-    </div>
-  );
-}
-
-function Series({
-  title,
-  current,
-  previous,
-  prefix = "",
-  suffix = "",
-  digits = 0,
-}: {
-  title: string;
-  current: number[];
-  previous: number[];
-  prefix?: string;
-  suffix?: string;
-  digits?: number;
-}) {
-  const max = Math.max(...current, ...previous, 1);
-  return (
-    <div className="mt-5 rounded-xl border border-border bg-card p-4">
-      <div className="mb-3 border-b border-border pb-2 text-[11px] font-bold uppercase tracking-wider text-primary">
-        {title}
-      </div>
-      <div className="flex items-end gap-1.5" style={{ height: 160 }}>
-        {MONTHS.map((m, i) => (
-          <div key={m} className="flex flex-1 flex-col items-center justify-end gap-1">
-            <div className="flex w-full items-end justify-center gap-[2px]" style={{ height: 120 }}>
-              <div
-                className="w-1/2 rounded-t"
-                style={{
-                  height: `${((previous[i] ?? 0) / max) * 100}%`,
-                  background: "#444",
-                }}
-                title={`${prefix}${fmt(previous[i] ?? 0, digits)}${suffix}`}
-              />
-              <div
-                className="w-1/2 rounded-t"
-                style={{
-                  height: `${((current[i] ?? 0) / max) * 100}%`,
-                  background: "linear-gradient(to top, var(--wine), var(--gold))",
-                }}
-                title={`${prefix}${fmt(current[i] ?? 0, digits)}${suffix}`}
-              />
-            </div>
-            <span className="text-[8px] text-muted-foreground">{m}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

@@ -544,13 +544,17 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       sub: refLabel(agg.lastCorkage),
       info: "Valor arrecadado com taxas de rolha no último mês lançado. Lance mensalmente em 'Taxa de rolha'; o valor entra no faturamento.",
     },
-    {
-      key: "outras",
-      label: "Outras",
-      primary: `+`,
-      sub: `Personalizar`,
-      info: "Espaço para indicadores personalizados do restaurante (em breve).",
-    },
+    ...(guest
+      ? []
+      : [
+          {
+            key: "outras" as TabKey,
+            label: "Outras",
+            primary: `+`,
+            sub: `Personalizar`,
+            info: "Espaço para indicadores personalizados do restaurante (em breve).",
+          },
+        ]),
   ];
 
   const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;
@@ -940,6 +944,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             previousYear={previousYear}
             currentMonth={currentMonth}
             targets={targetsFor(targets, "garrafas")}
+            guest={!!guest}
           />
         )}
         {tab === "tacas" && (
@@ -951,6 +956,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             previousYear={previousYear}
             currentMonth={currentMonth}
             targets={targetsFor(targets, "tacas")}
+            guest={!!guest}
           />
         )}
         {tab === "estoque" && (
@@ -961,6 +967,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             totalValue={agg.stockValue}
             targets={targetsFor(targets, "estoque")}
             lastStockDate={stockData.lastDate}
+            guest={!!guest}
           />
         )}
         {tab === "preco" && (
@@ -981,6 +988,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             previousYear={previousYear}
             lastMonth={agg.lastAvg}
             targets={targetsFor(targets, "preco")}
+            guest={!!guest}
           />
         )}
         {tab === "cmv" && (
@@ -997,6 +1005,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             currentYear={currentYear}
             previousYear={previousYear}
             targets={targetsFor(targets, "cmv")}
+            guest={!!guest}
           />
         )}
         {tab === "rolha" && (
@@ -1011,6 +1020,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             previousYear={previousYear}
             currentMonth={currentMonth}
             targets={targetsFor(targets, "rolha")}
+            guest={!!guest}
           />
         )}
 
@@ -1534,6 +1544,7 @@ function SimpleYearPanel({
   previousYear,
   currentMonth,
   targets,
+  guest,
 }: {
   title: string;
   unit: string;
@@ -1542,6 +1553,7 @@ function SimpleYearPanel({
   previousYear: number;
   currentMonth: number;
   targets: TargetSet;
+  guest?: boolean;
 }) {
   const curr = byYearMonth[currentYear];
   const prev = byYearMonth[previousYear];
@@ -1549,6 +1561,10 @@ function SimpleYearPanel({
   const prevTotal = prev.reduce((a, b) => a + b, 0);
   const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const annualTarget = resolveAnnualTarget(targets);
+  const accMonth = Math.max(currentMonth - 1, 0);
+  const accCurr = curr.slice(0, accMonth + 1).reduce((a, b) => a + b, 0);
+  const accPrev = prev.slice(0, accMonth + 1).reduce((a, b) => a + b, 0);
+  const accDiff = accPrev > 0 ? ((accCurr - accPrev) / accPrev) * 100 : 0;
 
   return (
     <div>
@@ -1557,20 +1573,46 @@ function SimpleYearPanel({
         title={title}
         subtitle="Comparativo mensal com o ano anterior."
       />
-      <div className="mb-5 grid grid-cols-2 gap-3">
-        <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
-        <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
-      </div>
+      {!guest && (
+        <div className="mb-5 grid grid-cols-2 gap-3">
+          <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
+          <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
+        </div>
+      )}
       <div className={annualTarget !== null ? "grid gap-4 lg:grid-cols-[1fr_minmax(200px,240px)]" : "grid gap-4"}>
-        <BarChart
-          curr={curr}
-          prev={prev}
-          currentYear={currentYear}
-          previousYear={previousYear}
-          valueSuffix={` ${unit}`}
-          height={240}
-          targets={targets.monthly.length === 12 ? targets.monthly : undefined}
-        />
+        <div>
+          <BarChart
+            curr={curr}
+            prev={prev}
+            currentYear={currentYear}
+            previousYear={previousYear}
+            valueSuffix={` ${unit}`}
+            height={240}
+            targets={targets.monthly.length === 12 ? targets.monthly : undefined}
+          />
+          <div className="mt-8 flex flex-col items-center gap-1 text-[11px]">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span>
+                {monthLabel(currentYear, 0)} - {monthLabel(currentYear, accMonth)}:
+              </span>
+              <span className="text-foreground">
+                {accCurr} {unit}
+              </span>
+              <span className={accDiff >= 0 ? "text-primary" : "text-destructive"}>
+                {accDiff >= 0 ? "+" : ""}
+                {accDiff.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span>
+                {monthLabel(previousYear, 0)} - {monthLabel(previousYear, accMonth)}:
+              </span>
+              <span className="text-foreground">
+                {accPrev} {unit}
+              </span>
+            </div>
+          </div>
+        </div>
         {annualTarget !== null && (
           <TargetSummary
             label={`Meta anual ${currentYear}`}
@@ -1913,6 +1955,7 @@ function EstoquePanel({
   totalValue,
   targets,
   lastStockDate,
+  guest,
 }: {
   wines: WineRow[];
   stockMap: Record<string, number>;
@@ -1920,6 +1963,7 @@ function EstoquePanel({
   totalValue: number;
   targets: TargetSet;
   lastStockDate?: string | null;
+  guest?: boolean;
 }) {
   const byType: Record<string, { bottles: number; value: number }> = {};
   let totalCost = 0;
@@ -1942,11 +1986,13 @@ function EstoquePanel({
   return (
     <div>
       <SectionHeader icon={<Package size={14} />} title="Estoque em adega" subtitle={subtitle} />
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
-        <MiniStat label="Garrafas em estoque" value={`${totalBottles}`} tone="primary" />
-        <MiniStat label="Valor de venda" value={`R$ ${fmtBRL(totalValue)}`} />
-        <MiniStat label="Valor de custo" value={`R$ ${fmtBRL(totalCost)}`} />
-      </div>
+      {!guest && (
+        <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
+          <MiniStat label="Garrafas em estoque" value={`${totalBottles}`} tone="primary" />
+          <MiniStat label="Valor de venda" value={`R$ ${fmtBRL(totalValue)}`} />
+          <MiniStat label="Valor de custo" value={`R$ ${fmtBRL(totalCost)}`} />
+        </div>
+      )}
       {annualTarget !== null && (
         <TargetSummary
           label="Meta de estoque (garrafas)"
@@ -1980,6 +2026,22 @@ function EstoquePanel({
           )}
         </tbody>
       </table>
+      {guest && (
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <div className="rounded-md border border-border bg-[color:var(--surface-2)] p-2 text-center">
+            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Garrafas</div>
+            <div className="mt-0.5 text-sm font-bold text-primary">{totalBottles}</div>
+          </div>
+          <div className="rounded-md border border-border bg-[color:var(--surface-2)] p-2 text-center">
+            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Vl. venda</div>
+            <div className="mt-0.5 text-sm font-bold text-primary">R$ {fmtBRL(totalValue)}</div>
+          </div>
+          <div className="rounded-md border border-border bg-[color:var(--surface-2)] p-2 text-center">
+            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Vl. custo</div>
+            <div className="mt-0.5 text-sm font-bold text-primary">R$ {fmtBRL(totalCost)}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2001,6 +2063,7 @@ function PrecoPanel({
   previousYear,
   lastMonth,
   targets,
+  guest,
 }: {
   avgAll: number;
   avgBottle: number;
@@ -2018,6 +2081,7 @@ function PrecoPanel({
   previousYear: number;
   lastMonth: { year: number; month: number };
   targets: TargetSet;
+  guest?: boolean;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const annualTarget = resolveAnnualTarget(targets);
@@ -2058,14 +2122,16 @@ function PrecoPanel({
           decimals={2}
         />
       )}
-      <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
-        <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
-        <MiniStat label={`Taça — ${ml}`} value={`R$ ${fmtBRL(avgGlass)}`} />
-        <MiniStat label="Geral (ano)" value={`R$ ${fmtBRL(avgAllYear)}`} />
-        <MiniStat label="Garrafa (ano)" value={`R$ ${fmtBRL(avgBottleYear)}`} />
-        <MiniStat label="Taça (ano)" value={`R$ ${fmtBRL(avgGlassYear)}`} />
-      </div>
+      {!guest && (
+        <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
+          <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
+          <MiniStat label={`Taça — ${ml}`} value={`R$ ${fmtBRL(avgGlass)}`} />
+          <MiniStat label="Geral (ano)" value={`R$ ${fmtBRL(avgAllYear)}`} />
+          <MiniStat label="Garrafa (ano)" value={`R$ ${fmtBRL(avgBottleYear)}`} />
+          <MiniStat label="Taça (ano)" value={`R$ ${fmtBRL(avgGlassYear)}`} />
+        </div>
+      )}
 
       <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -2120,6 +2186,7 @@ function CmvPanel({
   currentYear,
   previousYear,
   targets,
+  guest,
 }: {
   cmvMonth: number;
   cmvYear: number;
@@ -2132,6 +2199,7 @@ function CmvPanel({
   currentYear: number;
   previousYear: number;
   targets: TargetSet;
+  guest?: boolean;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const annualTarget = resolveAnnualTarget(targets);
@@ -2197,14 +2265,16 @@ function CmvPanel({
   return (
     <div>
       <SectionHeader icon={<Percent size={14} />} title="CMV do restaurante" subtitle="Custo da mercadoria vendida (custo / preço de venda das vendas de vinhos)." />
-      <div className="mb-3 rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-3 text-[11px] text-muted-foreground">
-        <span className="font-semibold text-primary">Como o CMV é calculado:</span> soma do
-        (custo unitário × quantidade vendida) ÷ soma do (preço de venda × quantidade vendida), somente
-        vendas de vinho do mês. A taxa de rolha fica fora (não tem custo de mercadoria). O custo usado é o
-        <em> custo histórico registrado na venda</em>; quando a venda não tem custo gravado, cai para o
-        custo atual do cadastro do rótulo — se o rótulo estiver com custo zerado, o CMV cai
-        artificialmente.
-      </div>
+      {!guest && (
+        <div className="mb-3 rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-3 text-[11px] text-muted-foreground">
+          <span className="font-semibold text-primary">Como o CMV é calculado:</span> soma do
+          (custo unitário × quantidade vendida) ÷ soma do (preço de venda × quantidade vendida), somente
+          vendas de vinho do mês. A taxa de rolha fica fora (não tem custo de mercadoria). O custo usado é o
+          <em> custo histórico registrado na venda</em>; quando a venda não tem custo gravado, cai para o
+          custo atual do cadastro do rótulo — se o rótulo estiver com custo zerado, o CMV cai
+          artificialmente.
+        </div>
+      )}
       <div className="mb-5 grid grid-cols-2 gap-3">
         <MiniStat
           label={`CMV — ${ml}`}
@@ -2217,7 +2287,7 @@ function CmvPanel({
           tone={cmvYear <= 33 ? "primary" : "danger"}
         />
       </div>
-      <div className="mb-4 rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
+      <div className={`mb-4 rounded-lg border border-border bg-[color:var(--surface-2)] p-3 ${guest ? "hidden" : ""}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-[11px] text-foreground">
             <span className="text-muted-foreground">Memória de cálculo {ml}: </span>
@@ -2483,6 +2553,7 @@ function RolhaPanel({
   previousYear,
   currentMonth,
   targets,
+  guest,
 }: {
   amtLast: number;
   qtyLast: number;
@@ -2494,6 +2565,7 @@ function RolhaPanel({
   previousYear: number;
   currentMonth: number;
   targets: TargetSet;
+  guest?: boolean;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const curr = corkageAmtByYearMonth[currentYear];
@@ -2508,12 +2580,14 @@ function RolhaPanel({
         title="Taxa de rolha"
         subtitle="Cobranças por trazer o próprio vinho. Valor integra o faturamento mensal."
       />
-      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MiniStat label={`Valor — ${ml}`} value={`R$ ${fmtBRL(amtLast)}`} tone="primary" />
-        <MiniStat label={`Qtd — ${ml}`} value={`${qtyLast}`} />
-        <MiniStat label={`Valor ${currentYear}`} value={`R$ ${fmtBRL(amtYear)}`} />
-        <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
-      </div>
+      {!guest && (
+        <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <MiniStat label={`Valor — ${ml}`} value={`R$ ${fmtBRL(amtLast)}`} tone="primary" />
+          <MiniStat label={`Qtd — ${ml}`} value={`${qtyLast}`} />
+          <MiniStat label={`Valor ${currentYear}`} value={`R$ ${fmtBRL(amtYear)}`} />
+          <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
+        </div>
+      )}
       {annualTarget !== null && (
         <TargetSummary
           label={`Meta anual ${currentYear}`}

@@ -2559,6 +2559,7 @@ function RolhaPanel({
   previousYear: number;
   currentMonth: number;
   targets: TargetSet;
+  guest?: boolean;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const curr = corkageAmtByYearMonth[currentYear];
@@ -2573,12 +2574,14 @@ function RolhaPanel({
         title="Taxa de rolha"
         subtitle="Cobranças por trazer o próprio vinho. Valor integra o faturamento mensal."
       />
-      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MiniStat label={`Valor — ${ml}`} value={`R$ ${fmtBRL(amtLast)}`} tone="primary" />
-        <MiniStat label={`Qtd — ${ml}`} value={`${qtyLast}`} />
-        <MiniStat label={`Valor ${currentYear}`} value={`R$ ${fmtBRL(amtYear)}`} />
-        <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
-      </div>
+      {!guest && (
+        <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <MiniStat label={`Valor — ${ml}`} value={`R$ ${fmtBRL(amtLast)}`} tone="primary" />
+          <MiniStat label={`Qtd — ${ml}`} value={`${qtyLast}`} />
+          <MiniStat label={`Valor ${currentYear}`} value={`R$ ${fmtBRL(amtYear)}`} />
+          <MiniStat label={`${previousYear} completo`} value={`R$ ${fmtBRL(prevYearTotal)}`} />
+        </div>
+      )}
       {annualTarget !== null && (
         <TargetSummary
           label={`Meta anual ${currentYear}`}

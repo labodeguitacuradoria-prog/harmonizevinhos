@@ -2193,6 +2193,7 @@ function CmvPanel({
   currentYear: number;
   previousYear: number;
   targets: TargetSet;
+  guest?: boolean;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const annualTarget = resolveAnnualTarget(targets);

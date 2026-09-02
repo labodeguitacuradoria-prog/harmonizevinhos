@@ -1,53 +1,38 @@
-# Links de acesso rápido (Chef e Staff)
+# Links de acesso com endereço curto e personalizado
 
-Criar links nomeados que dão acesso direto a uma tela específica do restaurante, sem e-mail nem senha, e que só funcionam no equipamento autorizado.
+Hoje o link gerado é enorme (um código aleatório de 43 caracteres) e por isso parece suspeito ao ser enviado por WhatsApp. A ideia é permitir dar um nome curto ao link, mantendo a mesma segurança.
 
-## Como vai funcionar
+## Como vai ficar
 
-Nova tela **Links de acesso** (dentro de Cadastros / Compartilhamento), visível para Administrador e Chef/Owner do restaurante.
-
-Ao criar um link, o gestor define:
-
-- **Nome do link** — ex. "Chef Ricardo — celular"
-- **O que o link abre** — "Painel de controle (somente leitura)" ou "Contagem de estoque"
-- **Onde vai ser usado** — "Celular" ou "Desktop"
-- **Tipo de uso** — "Somente 1 aparelho" (padrão para o chef) ou "Vários aparelhos" (padrão para o staff que faz a contagem)
-- **Validade** — sem prazo, 30, 90 ou 180 dias
-
-O sistema gera um endereço próprio para cada link, com o uso já indicado no texto, por exemplo:
+Ao criar o link, além do nome interno ("Chef Ricardo — celular"), o gestor informa um **apelido do endereço** (ex. `chef-ricardo`). O sistema monta um endereço curto:
 
 ```text
-Link do Chef — uso exclusivo no CELULAR
-https://harmonizevinhos.lovable.app/acesso/celular/<código>
-
-Este link fica travado no primeiro celular que abri-lo.
-Em outro aparelho ele não vai funcionar.
+https://harmonizevinhos.lovable.app/a/chef-ricardo-7q4m2x
 ```
 
-Botão para copiar o link já com esse texto de instrução pronto para enviar por WhatsApp.
+- A parte legível é escolhida pelo gestor (letras, números e hífen; acentos e espaços são convertidos automaticamente).
+- O sistema acrescenta 6 caracteres aleatórios, invisíveis na prática, que garantem que o endereço não possa ser adivinhado por quem não recebeu o link.
+- Se o apelido já existir no restaurante, o sistema avisa e sugere outro.
 
-## Trava no primeiro aparelho
+Na tela **Links de acesso**:
 
-1. Na primeira abertura, o sistema registra uma marca do aparelho (cookie assinado no navegador + registro no banco) e libera o acesso.
-2. Nas próximas aberturas, só passa se a marca do aparelho coincidir.
-3. Em qualquer outro aparelho aparece "Este link já está em uso em outro aparelho" — sem mostrar nenhum dado.
-4. Se o link é de celular e é aberto num desktop (ou o contrário), o acesso é recusado com a mensagem correta.
-5. Links "Vários aparelhos" (staff) não travam — cada aparelho registra um acesso, e o gestor vê quantos aparelhos usaram.
+- Novo campo "Apelido do endereço" no formulário, já preenchido automaticamente a partir do nome do link (editável).
+- O endereço completo passa a ficar visível na lista de links (não é mais segredo de exibição única), com botão de copiar e o texto de instrução pronto para WhatsApp.
+- Botão **Renomear endereço** em cada link existente: gera um novo endereço curto com o novo apelido; o antigo deixa de funcionar imediatamente. O aparelho já vinculado continua vinculado (o chef não precisa nada além de abrir o novo link).
 
-Na tela de gestão: lista dos links com nome, tipo, último acesso, aparelhos registrados, botões **Desvincular aparelho** (se o chef trocou de celular) e **Revogar**.
+Os links antigos e longos continuam funcionando, então nada que já foi enviado quebra.
 
-## O que o link mostra
+## Segurança
 
-- **Chef (painel)**: só o painel de controle em leitura — faturamento, garrafas vendidas, estoque, preço médio e CMV. Sem cadastros, pedidos, custos por rótulo, nem barra lateral. Um aviso no topo: "Modo visualização. Para acessar tudo, entre com seu e-mail."
-- **Staff (contagem)**: só a tela de contagem de estoque do restaurante, permitindo registrar as quantidades da sessão aberta.
-- Nenhum link permite alterar preços, cadastros, pedidos ou acessos.
+Nada é afrouxado:
+
+- A trava por aparelho, a validade e a revogação continuam iguais.
+- O segredo aleatório de 6 caracteres é combinado com a verificação de aparelho: mesmo que alguém tente adivinhar apelidos, sem o sufixo correto e sem o aparelho autorizado não há acesso.
+- Tentativas repetidas com endereço inválido são recusadas sem revelar se o apelido existe.
 
 ## Detalhes técnicos
 
-- Migração: tabela `access_links` (`id`, `restaurant_id`, `label`, `scope` enum `dashboard|stock_count`, `device_kind` enum `mobile|desktop`, `single_device` bool, `token_hash`, `expires_at`, `revoked_at`, `created_by`) e `access_link_devices` (`link_id`, `device_hash`, `user_agent`, `first_seen`, `last_seen`). GRANTs + RLS: leitura/escrita apenas para membros `rest_admin`/`rest_owner` do restaurante e `service_role`; o token nunca é lido pelo cliente anônimo.
-- O token vai na URL apenas como valor aleatório (32 bytes base64url); no banco guardamos só o hash SHA-256.
-- Rota pública `src/routes/acesso.$kind.$token.tsx` (top-level, não em `api/public`): server fn valida token, `device_kind` contra o User-Agent, expiração/revogação e a trava de aparelho; grava cookie httpOnly assinado com o `device_hash`. Só após validar, carrega os dados via `supabaseAdmin` importado dentro do handler.
-- Os dados do painel são calculados numa server fn dedicada, que devolve apenas os agregados exibidos (sem linhas de custo por rótulo), reaproveitando os mesmos cálculos do dashboard atual.
-- Gestão dos links: server fns autenticadas com `requireSupabaseAuth`, checando que o usuário é `rest_admin`/`rest_owner` do restaurante antes de criar/revogar.
-- `SESSION_SECRET` (gerado) assina o cookie de aparelho.
-- Nova tela `src/routes/_app.app.access-links.tsx` + item no menu junto de Compartilhamento.
+- Migração em `access_links`: colunas `slug text` e `slug_secret text` (o segredo continua guardado apenas como hash SHA-256 em `token_hash`; a validação passa a localizar a linha por `slug` e comparar o hash do sufixo recebido). Índice único parcial em `(restaurant_id, slug)` ignorando links revogados. Sem alteração de GRANTs/RLS além de permitir a leitura do `slug` pelos mesmos papéis que já leem os links.
+- Nova rota pública `src/routes/a.$code.tsx`: separa `slug` e sufixo, valida via server fn (mesma lógica de `acesso.$kind.$token.tsx`, extraída para helper compartilhado em `src/lib/access-links.server.ts`), e renderiza o painel convidado ou a contagem conforme o `scope` gravado no link — o tipo de aparelho vem do registro, não mais da URL. A rota antiga `acesso.$kind.$token.tsx` permanece para compatibilidade.
+- Server fns em `src/lib/access-links.functions.ts`: `createAccessLink` passa a aceitar `slug` (normalizado no servidor) e devolver a URL curta; nova `renameAccessLink` valida permissão (`can_manage_restaurant`), gera novo sufixo e atualiza `slug`/`token_hash` preservando `access_link_devices`.
+- `src/routes/_app.app.access-links.tsx`: campo de apelido com sugestão automática, exibição do endereço curto por link, botão Renomear e texto de instrução atualizado.

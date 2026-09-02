@@ -2074,6 +2074,7 @@ function PrecoPanel({
   previousYear: number;
   lastMonth: { year: number; month: number };
   targets: TargetSet;
+  guest?: boolean;
 }) {
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const annualTarget = resolveAnnualTarget(targets);

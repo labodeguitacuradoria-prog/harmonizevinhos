@@ -2180,6 +2180,7 @@ function CmvPanel({
   currentYear,
   previousYear,
   targets,
+  guest,
 }: {
   cmvMonth: number;
   cmvYear: number;

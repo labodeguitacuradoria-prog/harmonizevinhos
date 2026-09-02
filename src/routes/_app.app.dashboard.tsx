@@ -2281,7 +2281,7 @@ function CmvPanel({
           tone={cmvYear <= 33 ? "primary" : "danger"}
         />
       </div>
-      <div className="mb-4 rounded-lg border border-border bg-[color:var(--surface-2)] p-3">
+      <div className={`mb-4 rounded-lg border border-border bg-[color:var(--surface-2)] p-3 ${guest ? "hidden" : ""}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-[11px] text-foreground">
             <span className="text-muted-foreground">Memória de cálculo {ml}: </span>

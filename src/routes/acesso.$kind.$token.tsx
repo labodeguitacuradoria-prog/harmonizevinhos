@@ -89,16 +89,8 @@ function GuestDashboard({ token, kind }: { token: string; kind: "celular" | "des
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2">
-        <div className="flex min-w-0 items-center gap-2 text-[10px] text-muted-foreground">
-          <Eye className="h-3.5 w-3.5 shrink-0 text-primary" />
-          <span className="truncate">
-            Modo visualização ·{" "}
-            <a href="/auth" className="text-primary underline">
-              entrar com e-mail
-            </a>
-          </span>
-        </div>
+      <div className="flex items-center justify-end gap-2 border-b border-border bg-card px-3 py-2">
+        <div className="min-w-0 flex-1" />
         <button
           onClick={toggle}
           aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}

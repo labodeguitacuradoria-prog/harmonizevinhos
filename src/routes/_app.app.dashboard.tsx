@@ -944,6 +944,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             previousYear={previousYear}
             currentMonth={currentMonth}
             targets={targetsFor(targets, "garrafas")}
+            guest={!!guest}
           />
         )}
         {tab === "tacas" && (
@@ -955,6 +956,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             previousYear={previousYear}
             currentMonth={currentMonth}
             targets={targetsFor(targets, "tacas")}
+            guest={!!guest}
           />
         )}
         {tab === "estoque" && (
@@ -965,6 +967,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             totalValue={agg.stockValue}
             targets={targetsFor(targets, "estoque")}
             lastStockDate={stockData.lastDate}
+            guest={!!guest}
           />
         )}
         {tab === "preco" && (
@@ -985,6 +988,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             previousYear={previousYear}
             lastMonth={agg.lastAvg}
             targets={targetsFor(targets, "preco")}
+            guest={!!guest}
           />
         )}
         {tab === "cmv" && (
@@ -1001,6 +1005,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             currentYear={currentYear}
             previousYear={previousYear}
             targets={targetsFor(targets, "cmv")}
+            guest={!!guest}
           />
         )}
         {tab === "rolha" && (
@@ -1015,6 +1020,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             previousYear={previousYear}
             currentMonth={currentMonth}
             targets={targetsFor(targets, "rolha")}
+            guest={!!guest}
           />
         )}
 

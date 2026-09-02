@@ -544,13 +544,17 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       sub: refLabel(agg.lastCorkage),
       info: "Valor arrecadado com taxas de rolha no último mês lançado. Lance mensalmente em 'Taxa de rolha'; o valor entra no faturamento.",
     },
-    {
-      key: "outras",
-      label: "Outras",
-      primary: `+`,
-      sub: `Personalizar`,
-      info: "Espaço para indicadores personalizados do restaurante (em breve).",
-    },
+    ...(guest
+      ? []
+      : [
+          {
+            key: "outras" as TabKey,
+            label: "Outras",
+            primary: `+`,
+            sub: `Personalizar`,
+            info: "Espaço para indicadores personalizados do restaurante (em breve).",
+          },
+        ]),
   ];
 
   const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;

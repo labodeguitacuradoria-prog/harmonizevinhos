@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Wine, ShieldAlert, Eye, ClipboardList, Sun, Moon } from "lucide-react";
+import { Wine, ShieldAlert, ClipboardList, Sun, Moon } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { getGuestDashboardData, getGuestStockSession, saveGuestCount } from "@/lib/guest-access.functions";
 import { DashboardPage } from "@/routes/_app.app.dashboard";

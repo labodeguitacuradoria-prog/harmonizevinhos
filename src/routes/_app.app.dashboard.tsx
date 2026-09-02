@@ -1980,11 +1980,13 @@ function EstoquePanel({
   return (
     <div>
       <SectionHeader icon={<Package size={14} />} title="Estoque em adega" subtitle={subtitle} />
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
-        <MiniStat label="Garrafas em estoque" value={`${totalBottles}`} tone="primary" />
-        <MiniStat label="Valor de venda" value={`R$ ${fmtBRL(totalValue)}`} />
-        <MiniStat label="Valor de custo" value={`R$ ${fmtBRL(totalCost)}`} />
-      </div>
+      {!guest && (
+        <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
+          <MiniStat label="Garrafas em estoque" value={`${totalBottles}`} tone="primary" />
+          <MiniStat label="Valor de venda" value={`R$ ${fmtBRL(totalValue)}`} />
+          <MiniStat label="Valor de custo" value={`R$ ${fmtBRL(totalCost)}`} />
+        </div>
+      )}
       {annualTarget !== null && (
         <TargetSummary
           label="Meta de estoque (garrafas)"

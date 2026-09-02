@@ -1949,6 +1949,7 @@ function EstoquePanel({
   totalValue,
   targets,
   lastStockDate,
+  guest,
 }: {
   wines: WineRow[];
   stockMap: Record<string, number>;
@@ -1956,6 +1957,7 @@ function EstoquePanel({
   totalValue: number;
   targets: TargetSet;
   lastStockDate?: string | null;
+  guest?: boolean;
 }) {
   const byType: Record<string, { bottles: number; value: number }> = {};
   let totalCost = 0;

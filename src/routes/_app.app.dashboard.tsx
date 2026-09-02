@@ -2057,6 +2057,7 @@ function PrecoPanel({
   previousYear,
   lastMonth,
   targets,
+  guest,
 }: {
   avgAll: number;
   avgBottle: number;

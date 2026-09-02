@@ -7,16 +7,16 @@ export const Route = createFileRoute("/reset-password")({
   component: ResetPassword,
   head: () => ({
     meta: [
-      { title: "Redefinir senha | Harmonize Vinhos" },
+      { title: "Redefinir senha | La Bodeguita Vinhos" },
       {
         name: "description",
         content:
-          "Defina uma nova senha para acessar a gestão de vinhos do seu restaurante no Harmonize Vinhos.",
+          "Defina uma nova senha para acessar a gestão de vinhos do seu restaurante no La Bodeguita Vinhos.",
       },
-      { property: "og:title", content: "Redefinir senha | Harmonize Vinhos" },
+      { property: "og:title", content: "Redefinir senha | La Bodeguita Vinhos" },
       {
         property: "og:description",
-        content: "Defina uma nova senha para acessar o Harmonize Vinhos.",
+        content: "Defina uma nova senha para acessar o La Bodeguita Vinhos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -6,13 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Harmonize Vinhos" },
+      { title: "La Bodeguita Vinhos" },
       {
         name: "description",
         content:
           "Aumente sua lucratividade, controle seu estoque, monitore suas vendas, cadastre seus rótulos e dê visibilidade aos seus fornecedores.",
       },
-      { property: "og:title", content: "Harmonize Vinhos" },
+      { property: "og:title", content: "La Bodeguita Vinhos" },
       {
         property: "og:description",
         content:

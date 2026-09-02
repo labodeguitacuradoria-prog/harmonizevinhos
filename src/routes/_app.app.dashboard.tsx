@@ -2259,14 +2259,16 @@ function CmvPanel({
   return (
     <div>
       <SectionHeader icon={<Percent size={14} />} title="CMV do restaurante" subtitle="Custo da mercadoria vendida (custo / preço de venda das vendas de vinhos)." />
-      <div className="mb-3 rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-3 text-[11px] text-muted-foreground">
-        <span className="font-semibold text-primary">Como o CMV é calculado:</span> soma do
-        (custo unitário × quantidade vendida) ÷ soma do (preço de venda × quantidade vendida), somente
-        vendas de vinho do mês. A taxa de rolha fica fora (não tem custo de mercadoria). O custo usado é o
-        <em> custo histórico registrado na venda</em>; quando a venda não tem custo gravado, cai para o
-        custo atual do cadastro do rótulo — se o rótulo estiver com custo zerado, o CMV cai
-        artificialmente.
-      </div>
+      {!guest && (
+        <div className="mb-3 rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-3 text-[11px] text-muted-foreground">
+          <span className="font-semibold text-primary">Como o CMV é calculado:</span> soma do
+          (custo unitário × quantidade vendida) ÷ soma do (preço de venda × quantidade vendida), somente
+          vendas de vinho do mês. A taxa de rolha fica fora (não tem custo de mercadoria). O custo usado é o
+          <em> custo histórico registrado na venda</em>; quando a venda não tem custo gravado, cai para o
+          custo atual do cadastro do rótulo — se o rótulo estiver com custo zerado, o CMV cai
+          artificialmente.
+        </div>
+      )}
       <div className="mb-5 grid grid-cols-2 gap-3">
         <MiniStat
           label={`CMV — ${ml}`}

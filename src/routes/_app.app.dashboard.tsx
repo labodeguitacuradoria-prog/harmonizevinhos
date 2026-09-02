@@ -1538,6 +1538,7 @@ function SimpleYearPanel({
   previousYear,
   currentMonth,
   targets,
+  guest,
 }: {
   title: string;
   unit: string;
@@ -1546,6 +1547,7 @@ function SimpleYearPanel({
   previousYear: number;
   currentMonth: number;
   targets: TargetSet;
+  guest?: boolean;
 }) {
   const curr = byYearMonth[currentYear];
   const prev = byYearMonth[previousYear];
@@ -1553,6 +1555,10 @@ function SimpleYearPanel({
   const prevTotal = prev.reduce((a, b) => a + b, 0);
   const currAcc = curr.slice(0, currentMonth + 1).reduce((a, b) => a + b, 0);
   const annualTarget = resolveAnnualTarget(targets);
+  const accMonth = Math.max(currentMonth - 1, 0);
+  const accCurr = curr.slice(0, accMonth + 1).reduce((a, b) => a + b, 0);
+  const accPrev = prev.slice(0, accMonth + 1).reduce((a, b) => a + b, 0);
+  const accDiff = accPrev > 0 ? ((accCurr - accPrev) / accPrev) * 100 : 0;
 
   return (
     <div>
@@ -1561,20 +1567,46 @@ function SimpleYearPanel({
         title={title}
         subtitle="Comparativo mensal com o ano anterior."
       />
-      <div className="mb-5 grid grid-cols-2 gap-3">
-        <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
-        <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
-      </div>
+      {!guest && (
+        <div className="mb-5 grid grid-cols-2 gap-3">
+          <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
+          <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
+        </div>
+      )}
       <div className={annualTarget !== null ? "grid gap-4 lg:grid-cols-[1fr_minmax(200px,240px)]" : "grid gap-4"}>
-        <BarChart
-          curr={curr}
-          prev={prev}
-          currentYear={currentYear}
-          previousYear={previousYear}
-          valueSuffix={` ${unit}`}
-          height={240}
-          targets={targets.monthly.length === 12 ? targets.monthly : undefined}
-        />
+        <div>
+          <BarChart
+            curr={curr}
+            prev={prev}
+            currentYear={currentYear}
+            previousYear={previousYear}
+            valueSuffix={` ${unit}`}
+            height={240}
+            targets={targets.monthly.length === 12 ? targets.monthly : undefined}
+          />
+          <div className="mt-8 flex flex-col items-center gap-1 text-[11px]">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span>
+                {monthLabel(currentYear, 0)} - {monthLabel(currentYear, accMonth)}:
+              </span>
+              <span className="text-foreground">
+                {accCurr} {unit}
+              </span>
+              <span className={accDiff >= 0 ? "text-primary" : "text-destructive"}>
+                {accDiff >= 0 ? "+" : ""}
+                {accDiff.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span>
+                {monthLabel(previousYear, 0)} - {monthLabel(previousYear, accMonth)}:
+              </span>
+              <span className="text-foreground">
+                {accPrev} {unit}
+              </span>
+            </div>
+          </div>
+        </div>
         {annualTarget !== null && (
           <TargetSummary
             label={`Meta anual ${currentYear}`}

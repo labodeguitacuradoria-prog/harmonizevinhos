@@ -2547,6 +2547,7 @@ function RolhaPanel({
   previousYear,
   currentMonth,
   targets,
+  guest,
 }: {
   amtLast: number;
   qtyLast: number;

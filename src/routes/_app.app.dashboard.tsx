@@ -2115,14 +2115,16 @@ function PrecoPanel({
           decimals={2}
         />
       )}
-      <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-        <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
-        <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
-        <MiniStat label={`Taça — ${ml}`} value={`R$ ${fmtBRL(avgGlass)}`} />
-        <MiniStat label="Geral (ano)" value={`R$ ${fmtBRL(avgAllYear)}`} />
-        <MiniStat label="Garrafa (ano)" value={`R$ ${fmtBRL(avgBottleYear)}`} />
-        <MiniStat label="Taça (ano)" value={`R$ ${fmtBRL(avgGlassYear)}`} />
-      </div>
+      {!guest && (
+        <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
+          <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
+          <MiniStat label={`Taça — ${ml}`} value={`R$ ${fmtBRL(avgGlass)}`} />
+          <MiniStat label="Geral (ano)" value={`R$ ${fmtBRL(avgAllYear)}`} />
+          <MiniStat label="Garrafa (ano)" value={`R$ ${fmtBRL(avgBottleYear)}`} />
+          <MiniStat label="Taça (ano)" value={`R$ ${fmtBRL(avgGlassYear)}`} />
+        </div>
+      )}
 
       <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">

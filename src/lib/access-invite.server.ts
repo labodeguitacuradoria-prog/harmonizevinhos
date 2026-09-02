@@ -1,4 +1,4 @@
-const DEFAULT_SITE_URL = "https://harmonizevinhos.lovable.app";
+const DEFAULT_SITE_URL = "https://labodeguitavinhos.lovable.app";
 
 export type ManualAccessInvite = {
   ok: true;

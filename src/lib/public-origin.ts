@@ -3,7 +3,7 @@
  * O domínio de preview (id-preview--*.lovable.app) exige login da plataforma,
  * por isso links externos devem sempre usar o domínio publicado.
  */
-export const PUBLISHED_ORIGIN = "https://harmonizevinhos.lovable.app";
+export const PUBLISHED_ORIGIN = "https://labodeguitavinhos.lovable.app";
 
 export function publicOrigin(): string {
   if (typeof window === "undefined") return PUBLISHED_ORIGIN;

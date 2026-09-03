@@ -383,7 +383,7 @@ export const getGuestDashboardData = createServerFn({ method: "POST" })
         await Promise.all([
           supabaseAdmin
             .from("wines")
-            .select("id,name,wine_type,volume,cost_price,sale_price,active_on_menu")
+            .select("id,name,wine_type,volume,country,producer,cost_price,sale_price,active_on_menu")
             .eq("restaurant_id", rid),
           supabaseAdmin
             .from("stock_count_sessions")

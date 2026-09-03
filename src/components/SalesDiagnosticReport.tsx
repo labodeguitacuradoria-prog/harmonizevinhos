@@ -152,7 +152,7 @@ export default function SalesDiagnosticReport({
       if (y !== currentYear && y !== previousYear) continue;
       const w = wineById[m.wine_id];
       const price = Number(m.unit_price ?? w?.sale_price ?? 0);
-      const cost = Number(m.unit_cost ?? w?.cost_price ?? 0);
+      const cost = (Number(m.unit_cost ?? 0) > 0 ? Number(m.unit_cost) : Number(w?.cost_price ?? 0) || 0);
       const q = m.quantity ?? 0;
       const rev = price * q;
       const isGlass = w && isGlassVol(w.volume);

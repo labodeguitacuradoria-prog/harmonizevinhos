@@ -55,6 +55,18 @@ type Movement = {
 const isGlassVol = (v: string | null | undefined) =>
   !!v && /taça|taca|glass/i.test(v);
 
+// Custo unitário efetivo: movimentos importados podem vir com unit_cost 0
+// (custo não informado na venda). Nesse caso usamos o custo do cadastro.
+const effUnitCost = (
+  movCost: number | null | undefined,
+  wineCost: number | null | undefined,
+) => {
+  const m = Number(movCost ?? 0);
+  if (m > 0) return m;
+  return Number(wineCost ?? 0) || 0;
+};
+const hasMovCost = (movCost: number | null | undefined) => Number(movCost ?? 0) > 0;
+
 const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
 function fmtBRL(n: number, digits = 0) {

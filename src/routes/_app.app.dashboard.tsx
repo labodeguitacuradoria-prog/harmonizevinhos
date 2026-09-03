@@ -38,6 +38,8 @@ type WineRow = {
   name: string;
   wine_type: string | null;
   volume: string | null;
+  country: string | null;
+  producer: string | null;
   cost_price: number | null;
   sale_price: number | null;
   active_on_menu: boolean | null;
@@ -110,7 +112,7 @@ type TabKey =
   | "preco"
   | "cmv"
   | "rolha"
-  | "outras";
+  | "rotulos";
 
 export type GuestDashboardData = {
   restaurantName: string;
@@ -156,7 +158,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
     queryFn: async () => {
       const { data } = await supabase
         .from("wines")
-        .select("id,name,wine_type,volume,cost_price,sale_price,active_on_menu")
+        .select("id,name,wine_type,volume,country,producer,cost_price,sale_price,active_on_menu")
         .in("restaurant_id", scopeIds);
       return (data ?? []) as WineRow[];
     },
@@ -488,6 +490,8 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
         : `Ano ${yearView}`
       : monthLabel(p.year, p.month);
 
+  const activeLabelsCount = wines.filter((w) => w.active_on_menu !== false).length;
+
   const TABS: Array<{
     key: TabKey;
     label: string;
@@ -544,17 +548,13 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       sub: refLabel(agg.lastCorkage),
       info: "Valor arrecadado com taxas de rolha no último mês lançado. Lance mensalmente em 'Taxa de rolha'; o valor entra no faturamento.",
     },
-    ...(guest
-      ? []
-      : [
-          {
-            key: "outras" as TabKey,
-            label: "Outras",
-            primary: `+`,
-            sub: `Personalizar`,
-            info: "Espaço para indicadores personalizados do restaurante (em breve).",
-          },
-        ]),
+    {
+      key: "rotulos",
+      label: "Rótulos Ativos",
+      primary: `${activeLabelsCount}`,
+      sub: "Na carta",
+      info: "Total de rótulos ativos na carta. O painel mostra a composição da carta por tipo, país e vinícola.",
+    },
   ];
 
   const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;
@@ -1024,7 +1024,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
           />
         )}
 
-        {tab === "outras" && <OutrasPanel />}
+        {tab === "rotulos" && <RotulosPanel wines={wines} />}
       </div>
 
       {restaurantId && !guest && (
@@ -1973,7 +1973,7 @@ function EstoquePanel({
     const t = w.wine_type || "Outros";
     if (!byType[t]) byType[t] = { bottles: 0, value: 0 };
     byType[t].bottles += q;
-    byType[t].value += q * (Number(w.sale_price) || 0);
+    byType[t].value += q * (Number(w.cost_price) || 0);
     totalCost += q * (Number(w.cost_price) || 0);
   }
   const rows = Object.entries(byType).sort((a, b) => b[1].value - a[1].value);
@@ -2006,7 +2006,7 @@ function EstoquePanel({
           <tr className="border-b border-border">
             <th className="py-2">Categoria</th>
             <th className="py-2 text-right">Garrafas</th>
-            <th className="py-2 text-right">Valor (R$)</th>
+            <th className="py-2 text-right">Valor de custo (R$)</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -2618,17 +2618,6 @@ function RolhaPanel({
 
 
 
-function OutrasPanel() {
-  return (
-    <div>
-      <SectionHeader icon={<Sparkles size={14} />} title="Outras informações" subtitle="Espaço para indicadores personalizados do restaurante." />
-      <div className="rounded-lg border border-dashed border-border bg-[color:var(--surface-2)] p-6 text-center text-xs text-muted-foreground">
-        Em breve — você poderá cadastrar aqui indicadores específicos: ticket
-        médio, mesa mais vendida, evento sazonal, ranking de sommelier, etc.
-      </div>
-    </div>
-  );
-}
 
 function MiniStat({
   label,
@@ -2650,6 +2639,141 @@ function MiniStat({
         }`}
       >
         {value}
+      </div>
+    </div>
+  );
+}
+
+const TYPE_COLORS: Record<string, string> = {
+  Espumante: "#eeeeee",
+  Branco: "#f1e788",
+  "Rosé": "#ff8da1",
+  Tinto: "#800020",
+  Fortificado: "#4a0404",
+  Outros: "#7a7a7a",
+};
+
+const SERIES_COLORS = [
+  "#D4AF37", "#800020", "#f1e788", "#a8763e", "#4a0404",
+  "#e0c26a", "#5c5c5c", "#ff8da1", "#8a6d1f", "#c9c9c9",
+];
+
+function is750 (v: string | null | undefined) {
+  if (!v) return false;
+  const n = Number(String(v).replace(/[^0-9]/g, ""));
+  return n === 750;
+}
+
+function labelTypeBucket(w: WineRow) {
+  if (isGlassVol(w.volume) || !is750(w.volume)) return "Outros";
+  const t = (w.wine_type || "").trim().toLowerCase();
+  if (t.startsWith("espum")) return "Espumante";
+  if (t.startsWith("branc")) return "Branco";
+  if (t.startsWith("ros")) return "Rosé";
+  if (t.startsWith("tint")) return "Tinto";
+  if (t.startsWith("forti")) return "Fortificado";
+  return "Outros";
+}
+
+function countBy(wines: WineRow[], keyOf: (w: WineRow) => string) {
+  const map = new Map<string, number>();
+  for (const w of wines) {
+    const k = keyOf(w) || "Não informado";
+    map.set(k, (map.get(k) ?? 0) + 1);
+  }
+  return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+}
+
+function CompositionCard({
+  title,
+  entries,
+  total,
+  colorOf,
+  limit,
+}: {
+  title: string;
+  entries: Array<[string, number]>;
+  total: number;
+  colorOf: (label: string, i: number) => string;
+  limit?: number;
+}) {
+  let rows = entries;
+  if (limit && entries.length > limit) {
+    const head = entries.slice(0, limit);
+    const rest = entries.slice(limit).reduce((a, b) => a + b[1], 0);
+    rows = [...head, ["Outros", rest] as [string, number]];
+  }
+  const slices = rows.map(([label, value], i) => ({ label, value, color: colorOf(label, i) }));
+  return (
+    <div className="section-box flex h-full flex-col">
+      <div className="section-title mb-3">{title}</div>
+      <div className="flex flex-1 flex-col items-center gap-3">
+        <PieSvg slices={slices} />
+        <div className="w-full space-y-1.5">
+          {slices.map((s) => (
+            <div key={s.label} className="flex items-center justify-between gap-2 text-[11px]">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="inline-block h-3 w-3 shrink-0 rounded" style={{ background: s.color }} />
+                <span className="truncate text-muted-foreground">{s.label}</span>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="font-semibold text-foreground">{s.value}</span>
+                <span className="w-12 text-right font-semibold text-primary">
+                  {total > 0 ? ((s.value / total) * 100).toFixed(1) : "0.0"}%
+                </span>
+              </div>
+            </div>
+          ))}
+          {slices.length === 0 && (
+            <div className="py-4 text-center text-[11px] text-muted-foreground">Sem rótulos ativos.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RotulosPanel({ wines }: { wines: WineRow[] }) {
+  const active = wines.filter((w) => w.active_on_menu !== false);
+  const total = active.length;
+
+  const typeOrder = ["Espumante", "Branco", "Rosé", "Tinto", "Fortificado", "Outros"];
+  const typeCounts = countBy(active, labelTypeBucket);
+  const typeEntries = typeOrder
+    .map((t) => [t, typeCounts.find(([k]) => k === t)?.[1] ?? 0] as [string, number])
+    .filter(([, v]) => v > 0);
+
+  const countryEntries = countBy(active, (w) => (w.country || "").trim());
+  const producerEntries = countBy(active, (w) => (w.producer || "").trim());
+
+  return (
+    <div>
+      <SectionHeader
+        icon={<Tag size={14} />}
+        title="Rótulos ativos na carta"
+        subtitle={`${total} rótulo${total !== 1 ? "s" : ""} ativo${total !== 1 ? "s" : ""}. Taças e garrafas com volume diferente de 750 ml entram em "Outros".`}
+      />
+      <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3 md:gap-4">
+        <CompositionCard
+          title="Composição da carta"
+          entries={typeEntries}
+          total={total}
+          colorOf={(label, i) => TYPE_COLORS[label] ?? SERIES_COLORS[i % SERIES_COLORS.length]}
+        />
+        <CompositionCard
+          title="Composição por país"
+          entries={countryEntries}
+          total={total}
+          limit={8}
+          colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
+        />
+        <CompositionCard
+          title="Composição por vinícola"
+          entries={producerEntries}
+          total={total}
+          limit={9}
+          colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
+        />
       </div>
     </div>
   );

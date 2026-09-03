@@ -2708,23 +2708,31 @@ function CompositionCard({
       <div className="section-title mb-3">{title}</div>
       <div className="flex flex-1 flex-col items-center gap-3">
         <PieSvg slices={slices} />
-        <div className="w-full space-y-1.5">
+        <div className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-3">
           {slices.map((s) => (
-            <div key={s.label} className="flex items-center justify-between gap-2 text-[11px]">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="inline-block h-3 w-3 shrink-0 rounded" style={{ background: s.color }} />
-                <span className="truncate text-muted-foreground">{s.label}</span>
+            <div
+              key={s.label}
+              className="min-w-0 rounded-md border border-border bg-card px-2 py-1.5"
+            >
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
+                  style={{ background: s.color }}
+                />
+                <span className="truncate text-[10px] text-muted-foreground">{s.label}</span>
               </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <span className="font-semibold text-foreground">{s.value}</span>
-                <span className="w-12 text-right font-semibold text-primary">
+              <div className="mt-0.5 flex items-baseline justify-between gap-2 pl-4">
+                <span className="text-[11px] font-semibold text-foreground">{s.value}</span>
+                <span className="text-[11px] font-semibold text-primary">
                   {total > 0 ? ((s.value / total) * 100).toFixed(1) : "0.0"}%
                 </span>
               </div>
             </div>
           ))}
           {slices.length === 0 && (
-            <div className="py-4 text-center text-[11px] text-muted-foreground">Sem rótulos ativos.</div>
+            <div className="col-span-full py-4 text-center text-[11px] text-muted-foreground">
+              Sem rótulos ativos.
+            </div>
           )}
         </div>
       </div>

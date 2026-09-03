@@ -2704,7 +2704,7 @@ function CompositionCard({
   }
   const slices = rows.map(([label, value], i) => ({ label, value, color: colorOf(label, i) }));
   return (
-    <div className="section-box flex h-full flex-col">
+    <div className="flex h-full flex-col rounded-xl border border-border bg-card p-4">
       <div className="section-title mb-3">{title}</div>
       <div className="flex flex-1 flex-col items-center gap-3">
         <PieSvg slices={slices} />

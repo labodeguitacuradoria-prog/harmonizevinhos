@@ -2704,35 +2704,27 @@ function CompositionCard({
   }
   const slices = rows.map(([label, value], i) => ({ label, value, color: colorOf(label, i) }));
   return (
-    <div className="section-box flex h-full flex-col">
+    <div className="flex h-full flex-col rounded-xl border border-border bg-card p-4">
       <div className="section-title mb-3">{title}</div>
       <div className="flex flex-1 flex-col items-center gap-3">
         <PieSvg slices={slices} />
-        <div className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-3">
+        <div className="w-full space-y-1.5">
           {slices.map((s) => (
-            <div
-              key={s.label}
-              className="min-w-0 rounded-md border border-border bg-card px-2 py-1.5"
-            >
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
-                  style={{ background: s.color }}
-                />
-                <span className="truncate text-[10px] text-muted-foreground">{s.label}</span>
+            <div key={s.label} className="flex items-center justify-between gap-2 text-[11px]">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="inline-block h-3 w-3 shrink-0 rounded" style={{ background: s.color }} />
+                <span className="truncate text-muted-foreground">{s.label}</span>
               </div>
-              <div className="mt-0.5 flex items-baseline justify-between gap-2 pl-4">
-                <span className="text-[11px] font-semibold text-foreground">{s.value}</span>
-                <span className="text-[11px] font-semibold text-primary">
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="font-semibold text-foreground">{s.value}</span>
+                <span className="w-12 text-right font-semibold text-primary">
                   {total > 0 ? ((s.value / total) * 100).toFixed(1) : "0.0"}%
                 </span>
               </div>
             </div>
           ))}
           {slices.length === 0 && (
-            <div className="col-span-full py-4 text-center text-[11px] text-muted-foreground">
-              Sem rótulos ativos.
-            </div>
+            <div className="py-4 text-center text-[11px] text-muted-foreground">Sem rótulos ativos.</div>
           )}
         </div>
       </div>
@@ -2760,27 +2752,36 @@ function RotulosPanel({ wines }: { wines: WineRow[] }) {
         title="Rótulos ativos na carta"
         subtitle={`${total} rótulo${total !== 1 ? "s" : ""} ativo${total !== 1 ? "s" : ""}. Taças e garrafas com volume diferente de 750 ml entram em "Outros".`}
       />
-      <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3 md:gap-4">
-        <CompositionCard
-          title="Composição da carta"
-          entries={typeEntries}
-          total={total}
-          colorOf={(label, i) => TYPE_COLORS[label] ?? SERIES_COLORS[i % SERIES_COLORS.length]}
-        />
-        <CompositionCard
-          title="Composição por país"
-          entries={countryEntries}
-          total={total}
-          limit={8}
-          colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
-        />
-        <CompositionCard
-          title="Composição por vinícola"
-          entries={producerEntries}
-          total={total}
-          limit={9}
-          colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
-        />
+      <div className="flex flex-wrap items-stretch justify-center gap-3 md:gap-4">
+        {[
+          <CompositionCard
+            key="tipo"
+            title="Composição da carta"
+            entries={typeEntries}
+            total={total}
+            colorOf={(label, i) => TYPE_COLORS[label] ?? SERIES_COLORS[i % SERIES_COLORS.length]}
+          />,
+          <CompositionCard
+            key="pais"
+            title="Composição por país"
+            entries={countryEntries}
+            total={total}
+            limit={8}
+            colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
+          />,
+          <CompositionCard
+            key="vinicola"
+            title="Composição por vinícola"
+            entries={producerEntries}
+            total={total}
+            limit={9}
+            colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
+          />,
+        ].map((card) => (
+          <div key={(card as any).key} className="w-full max-w-[300px] min-w-[240px] flex-1">
+            {card}
+          </div>
+        ))}
       </div>
     </div>
   );

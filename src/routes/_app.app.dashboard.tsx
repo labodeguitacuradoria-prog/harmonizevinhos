@@ -2752,27 +2752,36 @@ function RotulosPanel({ wines }: { wines: WineRow[] }) {
         title="Rótulos ativos na carta"
         subtitle={`${total} rótulo${total !== 1 ? "s" : ""} ativo${total !== 1 ? "s" : ""}. Taças e garrafas com volume diferente de 750 ml entram em "Outros".`}
       />
-      <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3 md:gap-4">
-        <CompositionCard
-          title="Composição da carta"
-          entries={typeEntries}
-          total={total}
-          colorOf={(label, i) => TYPE_COLORS[label] ?? SERIES_COLORS[i % SERIES_COLORS.length]}
-        />
-        <CompositionCard
-          title="Composição por país"
-          entries={countryEntries}
-          total={total}
-          limit={8}
-          colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
-        />
-        <CompositionCard
-          title="Composição por vinícola"
-          entries={producerEntries}
-          total={total}
-          limit={9}
-          colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
-        />
+      <div className="flex flex-wrap items-stretch justify-center gap-3 md:gap-4">
+        {[
+          <CompositionCard
+            key="tipo"
+            title="Composição da carta"
+            entries={typeEntries}
+            total={total}
+            colorOf={(label, i) => TYPE_COLORS[label] ?? SERIES_COLORS[i % SERIES_COLORS.length]}
+          />,
+          <CompositionCard
+            key="pais"
+            title="Composição por país"
+            entries={countryEntries}
+            total={total}
+            limit={8}
+            colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
+          />,
+          <CompositionCard
+            key="vinicola"
+            title="Composição por vinícola"
+            entries={producerEntries}
+            total={total}
+            limit={9}
+            colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
+          />,
+        ].map((card) => (
+          <div key={(card as any).key} className="w-full max-w-[300px] min-w-[240px] flex-1">
+            {card}
+          </div>
+        ))}
       </div>
     </div>
   );

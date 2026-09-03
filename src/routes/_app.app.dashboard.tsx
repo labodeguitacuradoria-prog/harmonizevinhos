@@ -305,7 +305,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       if (y !== currentYear && y !== previousYear) continue;
       const w = wineById[m.wine_id];
       const price = Number(m.unit_price ?? w?.sale_price ?? 0);
-      const cost = Number(m.unit_cost ?? w?.cost_price ?? 0);
+      const cost = effUnitCost(m.unit_cost, w?.cost_price);
       const q = m.quantity ?? 0;
       const rev = price * q;
       revByYearMonth[y][mo] += rev;
@@ -1306,7 +1306,7 @@ function TopWinesBlock({
       } else if (dt.getFullYear() !== currentYear) continue;
       const qty = Number(m.quantity) || 0;
       const rev = qty * (Number(m.unit_price) || 0);
-      const unitCost = m.unit_cost != null ? Number(m.unit_cost) : Number(w.cost_price) || 0;
+      const unitCost = effUnitCost(m.unit_cost, w.cost_price);
       const cur = acc.get(m.wine_id) ?? { qty: 0, rev: 0, cost: 0 };
       cur.qty += qty;
       cur.rev += rev;
@@ -2236,7 +2236,7 @@ function CmvPanel({
       const w = wineById[m.wine_id];
       const q = m.quantity ?? 0;
       const price = Number(m.unit_price ?? w?.sale_price ?? 0);
-      const unitCost = Number(m.unit_cost ?? w?.cost_price ?? 0);
+      const unitCost = effUnitCost(m.unit_cost, w?.cost_price);
       const c = unitCost * q;
       const r = price * q;
       cost += c;
@@ -2249,7 +2249,7 @@ function CmvPanel({
         prev.revenue += r;
         prev.unitCost = prev.qty ? prev.cost / prev.qty : 0;
         prev.unitPrice = prev.qty ? prev.revenue / prev.qty : 0;
-        prev.costFallback = prev.costFallback || m.unit_cost == null;
+        prev.costFallback = prev.costFallback || !hasMovCost(m.unit_cost);
       } else {
         map.set(key, {
           name: w?.name ?? "Rótulo removido",
@@ -2258,7 +2258,7 @@ function CmvPanel({
           unitPrice: price,
           cost: c,
           revenue: r,
-          costFallback: m.unit_cost == null,
+          costFallback: !hasMovCost(m.unit_cost),
         });
       }
     }
@@ -2479,7 +2479,7 @@ function CmvByTypeChart({
       const key = isGlassVol(w.volume) ? "glass" : normalizeWineType(w.wine_type);
       if (!acc[key]) acc[key] = { cost: 0, rev: 0 };
       const q = m.quantity ?? 0;
-      acc[key].cost += Number(m.unit_cost ?? w.cost_price ?? 0) * q;
+      acc[key].cost += effUnitCost(m.unit_cost, w.cost_price) * q;
       acc[key].rev += Number(m.unit_price ?? w.sale_price ?? 0) * q;
     }
     const mapped = CMV_TYPE_GROUPS.map((g) => ({

@@ -13,7 +13,6 @@ import {
   Tag,
   Percent,
   Coins,
-  Sparkles,
   TrendingUp,
   Info,
   Target,

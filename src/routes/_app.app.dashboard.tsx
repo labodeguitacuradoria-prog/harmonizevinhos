@@ -1598,6 +1598,7 @@ function SimpleYearPanel({
             currentYear={currentYear}
             previousYear={previousYear}
             valueSuffix={` ${unit}`}
+            toggleLabel="Und"
             height={240}
             targets={targets.monthly.length === 12 ? targets.monthly : undefined}
           />
@@ -1658,6 +1659,7 @@ export function BarChart({
   previousYear,
   valuePrefix = "",
   valueSuffix = "",
+  toggleLabel,
   height = 260,
   targets,
 }: {
@@ -1667,6 +1669,7 @@ export function BarChart({
   previousYear: number;
   valuePrefix?: string;
   valueSuffix?: string;
+  toggleLabel?: string;
   height?: number;
   targets?: number[];
 }) {
@@ -1676,6 +1679,7 @@ export function BarChart({
   const maxVal = niceMax(rawMax);
   // Interruptor deslizante: desligado mostra apenas as barras; ligado mostra os valores.
   const [showValues, setShowValues] = useState(false);
+  const toggleText = toggleLabel ?? (valueSuffix ? "" : "R$");
 
   const axisWidth = 0;
   const fmtFull = (n: number) =>
@@ -1727,12 +1731,14 @@ export function BarChart({
                   }}
                 />
               </span>
-              <span
-                className="pr-0.5 text-[8px] font-bold uppercase tracking-wider transition-colors"
-                style={{ color: showValues ? "var(--gold)" : "var(--text-kpi)" }}
-              >
-                R$
-              </span>
+              {toggleText && (
+                <span
+                  className="pr-0.5 text-[8px] font-bold uppercase tracking-wider transition-colors"
+                  style={{ color: showValues ? "var(--gold)" : "var(--text-kpi)" }}
+                >
+                  {toggleText}
+                </span>
+              )}
             </button>
 
             {/* Target step-line: painted BEHIND the bars */}
@@ -2406,6 +2412,7 @@ function CmvPanel({
             currentYear={currentYear}
             previousYear={previousYear}
             valueSuffix="%"
+            toggleLabel="%"
             height={260}
             targets={targets.monthly.length === 12 ? targets.monthly : undefined}
           />

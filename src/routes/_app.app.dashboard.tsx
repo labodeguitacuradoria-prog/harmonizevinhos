@@ -1438,6 +1438,142 @@ function TopWinesBlock({
   );
 }
 
+function RevenueByTypeBlock({
+  movements,
+  wineById,
+  lastMonth,
+  currentYear,
+  totalMonth,
+  totalYear,
+}: {
+  movements: Movement[];
+  wineById: Record<string, WineRow>;
+  lastMonth: { year: number; month: number };
+  currentYear: number;
+  totalMonth: number;
+  totalYear: number;
+}) {
+  const [mode, setMode] = useState<"mes" | "ano">("mes");
+  const useMonth = mode === "mes" && lastMonth.month >= 0;
+
+  const rows = useMemo(() => {
+    const acc = new Map<string, { qty: number; rev: number; cost: number }>();
+    for (const m of movements) {
+      const w = wineById[m.wine_id];
+      if (!w) continue;
+      const dt = new Date(m.occurred_at);
+      if (useMonth) {
+        if (dt.getFullYear() !== lastMonth.year || dt.getMonth() !== lastMonth.month) continue;
+      } else if (dt.getFullYear() !== currentYear) continue;
+      const qty = Number(m.quantity) || 0;
+      const rev = qty * (Number(m.unit_price) || 0);
+      const unitCost = effUnitCost(m.unit_cost, w.cost_price);
+      const label = WINE_TYPE_LABEL[w.wine_type || ""] ?? "Outros";
+      const cur = acc.get(label) ?? { qty: 0, rev: 0, cost: 0 };
+      cur.qty += qty;
+      cur.rev += rev;
+      cur.cost += qty * unitCost;
+      acc.set(label, cur);
+    }
+    return Array.from(acc.entries())
+      .map(([label, v]) => ({ label, ...v }))
+      .sort((a, b) => b.rev - a.rev);
+  }, [movements, wineById, useMonth, lastMonth.year, lastMonth.month, currentYear]);
+
+  const base = useMonth ? totalMonth : totalYear;
+  const topSum = rows.reduce((a, r) => a + r.rev, 0);
+  const others = Math.max(base - topSum, 0);
+  const slices = [
+    ...rows.map((r, i) => ({
+      label: r.label,
+      value: r.rev,
+      color: TYPE_COLORS[r.label] ?? SERIES_COLORS[i % SERIES_COLORS.length],
+    })),
+    { label: "Outros", value: others, color: "#2a2a2a" },
+  ];
+
+  return (
+    <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+          Faturamento por Tipo
+        </div>
+        <div className="flex overflow-hidden rounded-md border border-border text-[10px]">
+          <button
+            onClick={() => setMode("mes")}
+            className={`px-2 py-1 ${mode === "mes" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}
+          >
+            Mês
+          </button>
+          <button
+            onClick={() => setMode("ano")}
+            className={`px-2 py-1 ${mode === "ano" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-primary"}`}
+          >
+            Ano
+          </button>
+        </div>
+      </div>
+      <div className="mb-4 text-[10px] text-muted-foreground">
+        {useMonth ? `Referência: ${monthLabel(lastMonth.year, lastMonth.month)}` : `Acumulado ${currentYear}`}
+      </div>
+
+      <div className="flex flex-col items-center gap-4">
+        <PieSvg slices={slices} />
+        <div className="w-full space-y-1.5">
+          {rows.length === 0 && (
+            <div className="text-[11px] text-muted-foreground">Sem vendas no período.</div>
+          )}
+          {rows.length > 0 && (
+            <div className="hidden items-center gap-3 px-2.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground md:flex">
+              <span className="h-2.5 w-2.5 shrink-0" />
+              <div className="min-w-0 flex-1">Tipo</div>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="w-12 text-right">% fat.</span>
+                <span className="w-14 text-right">Garrafas</span>
+                <span className="w-14 text-right">CMV</span>
+              </div>
+            </div>
+          )}
+          {rows.map((r, i) => {
+            const pct = base > 0 ? (r.rev / base) * 100 : 0;
+            const cmv = r.rev > 0 ? (r.cost / r.rev) * 100 : 0;
+            const color = TYPE_COLORS[r.label] ?? SERIES_COLORS[i % SERIES_COLORS.length];
+            const cells = [
+              { label: "% fat.", value: `${pct.toFixed(1)}%`, cls: "font-semibold text-primary", w: "md:w-12" },
+              { label: "Garrafas", value: `${fmtBRL(r.qty)}`, cls: "text-muted-foreground", w: "md:w-14" },
+              { label: "CMV", value: `${cmv.toFixed(1)}%`, cls: "text-muted-foreground", w: "md:w-14" },
+            ];
+            return (
+              <div
+                key={r.label}
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-border/60 bg-card px-2.5 py-2"
+              >
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                  style={{ background: color }}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[12px] font-medium">{r.label}</div>
+                </div>
+                <div className="grid w-full grid-cols-3 gap-1 text-[10px] md:flex md:w-auto md:shrink-0 md:items-center md:gap-3 md:text-[11px]">
+                  {cells.map((c) => (
+                    <div key={c.label} className={`min-w-0 text-right ${c.w}`}>
+                      <div className="truncate text-[8px] uppercase tracking-wider text-muted-foreground md:hidden">
+                        {c.label}
+                      </div>
+                      <div className={`truncate ${c.cls}`}>{c.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PieSvg({ slices }: { slices: { label: string; value: number; color: string }[] }) {
   const total = slices.reduce((a, s) => a + (s.value || 0), 0);
   const size = 180;

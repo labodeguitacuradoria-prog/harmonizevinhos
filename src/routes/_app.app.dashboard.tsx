@@ -2936,7 +2936,6 @@ function RotulosPanel({ wines }: { wines: WineRow[] }) {
             title="Composição por país"
             entries={countryEntries}
             total={total}
-            limit={8}
             colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
           />,
           <CompositionCard
@@ -2944,9 +2943,9 @@ function RotulosPanel({ wines }: { wines: WineRow[] }) {
             title="Composição por vinícola"
             entries={producerEntries}
             total={total}
-            limit={9}
             colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
           />,
+
         ].map((card) => (
           <div key={(card as any).key} className="w-full max-w-[300px] min-w-[240px] flex-1">
             {card}

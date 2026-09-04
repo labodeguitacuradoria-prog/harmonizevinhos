@@ -1730,12 +1730,14 @@ export function BarChart({
                   }}
                 />
               </span>
-              <span
-                className="pr-0.5 text-[8px] font-bold uppercase tracking-wider transition-colors"
-                style={{ color: showValues ? "var(--gold)" : "var(--text-kpi)" }}
-              >
-                R$
-              </span>
+              {toggleText && (
+                <span
+                  className="pr-0.5 text-[8px] font-bold uppercase tracking-wider transition-colors"
+                  style={{ color: showValues ? "var(--gold)" : "var(--text-kpi)" }}
+                >
+                  {toggleText}
+                </span>
+              )}
             </button>
 
             {/* Target step-line: painted BEHIND the bars */}

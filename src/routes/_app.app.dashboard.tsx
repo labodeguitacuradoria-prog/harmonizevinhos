@@ -2877,7 +2877,8 @@ function CompositionCard({
       <div className="section-title mb-3">{title}</div>
       <div className="flex flex-1 flex-col items-center gap-3">
         <PieSvg slices={slices} />
-        <div className="w-full space-y-1.5">
+        <div className="w-full space-y-1.5 max-h-[240px] overflow-y-auto pr-1">
+
           {slices.map((s) => (
             <div key={s.label} className="flex items-center justify-between gap-2 text-[11px]">
               <div className="flex min-w-0 items-center gap-2">
@@ -2935,7 +2936,6 @@ function RotulosPanel({ wines }: { wines: WineRow[] }) {
             title="Composição por país"
             entries={countryEntries}
             total={total}
-            limit={8}
             colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
           />,
           <CompositionCard
@@ -2943,9 +2943,9 @@ function RotulosPanel({ wines }: { wines: WineRow[] }) {
             title="Composição por vinícola"
             entries={producerEntries}
             total={total}
-            limit={9}
             colorOf={(_l, i) => SERIES_COLORS[i % SERIES_COLORS.length]}
           />,
+
         ].map((card) => (
           <div key={(card as any).key} className="w-full max-w-[300px] min-w-[240px] flex-1">
             {card}

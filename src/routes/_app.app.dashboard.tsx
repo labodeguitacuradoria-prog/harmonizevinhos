@@ -1227,18 +1227,32 @@ function FaturamentoPanel({
         </div>
       </div>
 
-      <TopWinesBlock
-        movements={movements}
-        wineById={wineById}
-        lastMonth={lastMonth}
-        currentYear={currentYear}
-        totalMonth={bottlesRev + glassesRev + corkageRev}
-        totalYear={
-          revBottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0) +
-          revGlassesByYearMonth[currentYear].reduce((a, b) => a + b, 0) +
-          corkageAmtYear
-        }
-      />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <TopWinesBlock
+          movements={movements}
+          wineById={wineById}
+          lastMonth={lastMonth}
+          currentYear={currentYear}
+          totalMonth={bottlesRev + glassesRev + corkageRev}
+          totalYear={
+            revBottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0) +
+            revGlassesByYearMonth[currentYear].reduce((a, b) => a + b, 0) +
+            corkageAmtYear
+          }
+        />
+        <RevenueByTypeBlock
+          movements={movements}
+          wineById={wineById}
+          lastMonth={lastMonth}
+          currentYear={currentYear}
+          totalMonth={bottlesRev + glassesRev + corkageRev}
+          totalYear={
+            revBottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0) +
+            revGlassesByYearMonth[currentYear].reduce((a, b) => a + b, 0) +
+            corkageAmtYear
+          }
+        />
+      </div>
 
       {/* Mobile: metas depois do Top 5 */}
       <div className="mt-3 grid grid-cols-2 gap-2 md:hidden">

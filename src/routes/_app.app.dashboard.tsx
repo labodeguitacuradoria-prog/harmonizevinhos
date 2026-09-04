@@ -1598,6 +1598,7 @@ function SimpleYearPanel({
             currentYear={currentYear}
             previousYear={previousYear}
             valueSuffix={` ${unit}`}
+            toggleLabel="Und"
             height={240}
             targets={targets.monthly.length === 12 ? targets.monthly : undefined}
           />

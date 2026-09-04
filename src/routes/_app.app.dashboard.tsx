@@ -1347,7 +1347,7 @@ function TopWinesBlock({
   ];
 
   return (
-    <div className="mt-5 rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
+    <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
       <div className="mb-1 flex items-center justify-between gap-3">
         <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
           Top 5 Rótulos no Faturamento

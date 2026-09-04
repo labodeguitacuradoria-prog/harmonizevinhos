@@ -1466,7 +1466,9 @@ function RevenueByTypeBlock({
       const qty = Number(m.quantity) || 0;
       const rev = qty * (Number(m.unit_price) || 0);
       const unitCost = effUnitCost(m.unit_cost, w.cost_price);
-      const label = WINE_TYPE_LABEL[w.wine_type || ""] ?? "Outros";
+      const label = w.wine_type
+        ? WINE_TYPE_LABEL[w.wine_type] ?? w.wine_type
+        : "Sem tipo";
       const cur = acc.get(label) ?? { qty: 0, rev: 0, cost: 0 };
       cur.qty += qty;
       cur.rev += rev;

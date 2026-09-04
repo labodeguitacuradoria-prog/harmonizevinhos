@@ -2412,6 +2412,7 @@ function CmvPanel({
             currentYear={currentYear}
             previousYear={previousYear}
             valueSuffix="%"
+            toggleLabel="%"
             height={260}
             targets={targets.monthly.length === 12 ? targets.monthly : undefined}
           />

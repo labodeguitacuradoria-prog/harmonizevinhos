@@ -1347,7 +1347,7 @@ function TopWinesBlock({
   ];
 
   return (
-    <div className="mt-5 rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
+    <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
       <div className="mb-1 flex items-center justify-between gap-3">
         <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
           Top 5 Rótulos no Faturamento
@@ -1372,12 +1372,10 @@ function TopWinesBlock({
         {" · "}exclui vendas em taças
       </div>
 
-      <div className="grid gap-5 md:grid-cols-[200px_minmax(0,1fr)] md:items-center">
-        <div className="flex justify-center">
-          <PieSvg slices={slices} />
-        </div>
+      <div className="flex flex-col items-center gap-4">
+        <PieSvg slices={slices} />
 
-        <div className="min-w-0 space-y-1.5">
+        <div className="w-full min-w-0 space-y-1.5">
           {rows.length === 0 && (
             <div className="text-[11px] text-muted-foreground">Sem vendas no período.</div>
           )}
@@ -1468,7 +1466,9 @@ function RevenueByTypeBlock({
       const qty = Number(m.quantity) || 0;
       const rev = qty * (Number(m.unit_price) || 0);
       const unitCost = effUnitCost(m.unit_cost, w.cost_price);
-      const label = WINE_TYPE_LABEL[w.wine_type || ""] ?? "Outros";
+      const label = w.wine_type
+        ? WINE_TYPE_LABEL[w.wine_type] ?? w.wine_type
+        : "Sem tipo";
       const cur = acc.get(label) ?? { qty: 0, rev: 0, cost: 0 };
       cur.qty += qty;
       cur.rev += rev;

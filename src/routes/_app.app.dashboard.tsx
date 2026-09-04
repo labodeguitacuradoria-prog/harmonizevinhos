@@ -1658,6 +1658,7 @@ export function BarChart({
   previousYear,
   valuePrefix = "",
   valueSuffix = "",
+  toggleLabel,
   height = 260,
   targets,
 }: {
@@ -1667,6 +1668,7 @@ export function BarChart({
   previousYear: number;
   valuePrefix?: string;
   valueSuffix?: string;
+  toggleLabel?: string;
   height?: number;
   targets?: number[];
 }) {
@@ -1676,6 +1678,7 @@ export function BarChart({
   const maxVal = niceMax(rawMax);
   // Interruptor deslizante: desligado mostra apenas as barras; ligado mostra os valores.
   const [showValues, setShowValues] = useState(false);
+  const toggleText = toggleLabel ?? (valueSuffix ? "" : "R$");
 
   const axisWidth = 0;
   const fmtFull = (n: number) =>

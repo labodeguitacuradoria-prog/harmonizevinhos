@@ -149,6 +149,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
   const [diagOpen, setDiagOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [period, setPeriod] = useState<{ year: number; month: number; mode?: "year" } | null>(null);
+  const [unitMenuOpen, setUnitMenuOpen] = useState(false);
 
 
   const now = new Date();

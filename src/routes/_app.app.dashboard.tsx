@@ -571,6 +571,14 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
 
   const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;
   const consolidatedUnitCount = isGroup ? memberships.filter((m) => m.groupId === activeGroupId).length : 0;
+  const currentMembership = memberships.find((m) => m.restaurantId === restaurantId) ?? null;
+  const currentUnitGroup = !isGroup && currentMembership?.groupId
+    ? (groups.find((g) => g.id === currentMembership.groupId) ?? null)
+    : null;
+  const unitsGroupId = isGroup ? activeGroupId : (currentUnitGroup?.id ?? null);
+  const groupUnits = memberships.filter((m) => m.groupId === unitsGroupId);
+
+
 
   const restaurantName = guest
     ? guest.restaurantName

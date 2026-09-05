@@ -30,8 +30,9 @@ Observação: cobrança por assinatura exige o plano Pro (ou superior) da Lovabl
 ## Detalhes técnicos
 
 - `payments--enable_paddle_payments`, depois `batch_create_product` para os dois preços (mensal/anual) do mesmo produto.
-- Migração nova: `public.subscriptions` (`restaurant_id`, `provider`, `customer_id`, `subscription_id`, `price_id`, `plan` `monthly|yearly`, `status` enum `trialing|active|past_due|canceled`, `trial_ends_at`, `current_period_end`) + `GRANT` para `authenticated`/`service_role`, RLS por `can_manage_restaurant`, escrita apenas via `service_role`.
+- Migração nova: `public.subscriptions` (`restaurant_id`, `provider`, `customer_id`, `subscription_id`, `price_id`, `plan` `monthly|yearly`, `status` enum `trialing|active|past_due|canceled|complimentary`, `trial_ends_at`, `current_period_end`, `comp_until`, `comp_reason`, `comp_granted_by`) + `GRANT` para `authenticated`/`service_role`, RLS por `can_manage_restaurant`, escrita apenas via `service_role`.
 - `trial_ends_at` default `now() + interval '90 days'`; trigger em `handle_new_user`/criação de restaurante insere a linha de teste.
+- Cortesia: server fn `setComplimentaryAccess` com `requireSupabaseAuth` que confere `has_role(userId,'admin')` antes de gravar via `supabaseAdmin`; o gate considera acesso liberado quando `status = 'complimentary'` e `comp_until` é nulo ou futuro.
 - Checkout: `createServerFn` com `requireSupabaseAuth`, valida que o usuário administra o restaurante, cria a sessão de checkout do Paddle e retorna a URL.
 - Webhook: rota `src/routes/api/public/paddle-webhook.ts`, valida a assinatura do Paddle antes de processar, grava com `supabaseAdmin`.
 - Guarda de acesso: helper `useSubscriptionGate` a partir de `subscriptions` + hook existente `use-auth`; aplicado nas telas de escrita, sem tocar em `/acesso/*` nem `/harmonizar`.

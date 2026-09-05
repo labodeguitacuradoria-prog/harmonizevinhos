@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useScopedRestaurantIds } from "@/hooks/use-scoped-restaurants";
-import { setActiveGroup } from "@/lib/active-scope";
+import { setActiveGroup, setActiveRestaurant } from "@/lib/active-scope";
 import {
   DollarSign,
   Wine,
@@ -149,6 +149,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
   const [diagOpen, setDiagOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [period, setPeriod] = useState<{ year: number; month: number; mode?: "year" } | null>(null);
+  const [unitMenuOpen, setUnitMenuOpen] = useState(false);
 
 
   const now = new Date();
@@ -570,6 +571,14 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
 
   const activeGroupName = groups.find((g) => g.id === activeGroupId)?.name;
   const consolidatedUnitCount = isGroup ? memberships.filter((m) => m.groupId === activeGroupId).length : 0;
+  const currentMembership = memberships.find((m) => m.restaurantId === restaurantId) ?? null;
+  const currentUnitGroup = !isGroup && currentMembership?.groupId
+    ? (groups.find((g) => g.id === currentMembership.groupId) ?? null)
+    : null;
+  const unitsGroupId = isGroup ? activeGroupId : (currentUnitGroup?.id ?? null);
+  const groupUnits = memberships.filter((m) => m.groupId === unitsGroupId);
+
+
 
   const restaurantName = guest
     ? guest.restaurantName
@@ -597,14 +606,82 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             </span>
             <span className="text-muted-foreground"> ({consolidatedUnitCount} unidade{consolidatedUnitCount !== 1 ? "s" : ""})</span>
           </div>
-          <button
-            onClick={() => setActiveGroup(null)}
-            className="rounded-md border border-primary/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-[color:var(--wine)]/30"
-          >
-            Ver uma unidade
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setUnitMenuOpen((v) => !v)}
+              className="rounded-md border border-primary/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-[color:var(--wine)]/30"
+            >
+              Ver uma unidade ▾
+            </button>
+            {unitMenuOpen && (
+              <div className="absolute right-0 z-30 mt-1 w-56 max-h-64 overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-xl">
+                {groupUnits.length === 0 && (
+                  <p className="px-2 py-2 text-[11px] text-muted-foreground">Nenhuma unidade encontrada.</p>
+                )}
+                {groupUnits.map((u) => (
+                  <button
+                    key={u.restaurantId}
+                    onClick={() => {
+                      setActiveRestaurant(u.restaurantId);
+                      setUnitMenuOpen(false);
+                    }}
+                    className="block w-full truncate rounded-md px-2 py-1.5 text-left text-[11px] text-foreground hover:bg-[color:var(--wine)]/25 hover:text-primary"
+                  >
+                    {u.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
+
+      {!guest && !isGroup && currentUnitGroup && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/40 bg-[color:var(--wine)]/20 px-3 py-2 md:px-4 md:py-3">
+          <div className="text-[11px] md:text-[12px] text-foreground">
+            <span className="font-semibold text-primary">Unidade: {restaurantName ?? "—"}</span>
+            <span className="text-muted-foreground"> · Rede {currentUnitGroup.name}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => setUnitMenuOpen((v) => !v)}
+                className="rounded-md border border-primary/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-[color:var(--wine)]/30"
+              >
+                Trocar unidade ▾
+              </button>
+              {unitMenuOpen && (
+                <div className="absolute right-0 z-30 mt-1 w-56 max-h-64 overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-xl">
+                  {groupUnits.map((u) => (
+                    <button
+                      key={u.restaurantId}
+                      onClick={() => {
+                        setActiveRestaurant(u.restaurantId);
+                        setUnitMenuOpen(false);
+                      }}
+                      className={`block w-full truncate rounded-md px-2 py-1.5 text-left text-[11px] hover:bg-[color:var(--wine)]/25 hover:text-primary ${
+                        u.restaurantId === restaurantId ? "text-primary" : "text-foreground"
+                      }`}
+                    >
+                      {u.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                setUnitMenuOpen(false);
+                setActiveGroup(currentUnitGroup.id);
+              }}
+              className="rounded-md border border-primary/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary hover:bg-[color:var(--wine)]/30"
+            >
+              Visão da rede
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {/* Mobile header — compact (foco Chef/Owner) */}
       <header className="md:hidden space-y-2.5 border-b border-border pb-3">

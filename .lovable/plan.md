@@ -24,7 +24,8 @@ Observação: cobrança por assinatura exige o plano Pro (ou superior) da Lovabl
 6. **Aviso de fim de teste** — faixa no topo do painel a partir de 15 dias antes do fim, com link para assinar.
 7. **Bloqueio suave após o vencimento** — sem assinatura ativa, o restaurante continua vendo o painel em leitura, mas cadastros, pedidos, contagens e importações ficam bloqueados com convite para assinar. Links de acesso do Chef e a página pública de harmonização continuam livres.
 8. **Confirmação automática do pagamento** — o Paddle avisa o sistema a cada pagamento, renovação, falha ou cancelamento, e a situação da assinatura é atualizada sozinha.
-9. **Testar de ponta a ponta** — assinar no ambiente de teste, conferir liberação do acesso, renovação, falha de pagamento e cancelamento.
+9. **Cortesia liberada pelo administrador** — na tela de restaurantes do administrador, um controle "Acesso gratuito" com data de validade opcional e campo de motivo. Restaurante em cortesia usa o sistema inteiro sem cobrança e sem aviso de teste; a tela de assinatura mostra "Cortesia concedida". Só o administrador geral pode ligar ou desligar.
+10. **Testar de ponta a ponta** — assinar no ambiente de teste, conferir liberação do acesso, renovação, falha de pagamento, cancelamento e cortesia.
 
 ## Detalhes técnicos
 

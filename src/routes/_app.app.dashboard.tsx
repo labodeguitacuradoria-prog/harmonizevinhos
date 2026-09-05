@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useScopedRestaurantIds } from "@/hooks/use-scoped-restaurants";
-import { setActiveGroup } from "@/lib/active-scope";
+import { setActiveGroup, setActiveRestaurant } from "@/lib/active-scope";
 import {
   DollarSign,
   Wine,

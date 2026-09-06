@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info, FileUp, AlertTriangle, Check as CheckIcon, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, ScanLine, Info, FileUp, AlertTriangle, Check as CheckIcon, Pencil, Trash2 } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { WineOverview } from "@/components/WineOverview";
@@ -327,49 +327,22 @@ function fmtDate(d: string | null | undefined) {
 }
 
 function ProductsPage() {
-  const [category, setCategory] = useState<"wine" | "glass">("wine");
-
   return (
     <div className="p-6 md:p-10">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Cadastro de Produtos</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Gerencie o catálogo do seu restaurante por categoria.
+          Gerencie os vinhos do seu restaurante.
         </p>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-2 border-b border-border">
-        <CategoryTab active={category === "wine"} onClick={() => setCategory("wine")} icon={<WineIcon className="h-4 w-4" />}>
-          Vinhos
-        </CategoryTab>
-        <CategoryTab active={category === "glass"} onClick={() => setCategory("glass")} icon={<GlassWater className="h-4 w-4" />}>
-          Taças
-        </CategoryTab>
-        <span className="ml-2 self-center text-xs text-muted-foreground">
-          Decanters · Saca-rolhas · Cartas · Acessórios — em breve
-        </span>
-      </div>
-
       <div className="mt-6">
-        {category === "wine" ? <WinesSection /> : <GlassesSection />}
+        <WinesSection />
       </div>
     </div>
   );
 }
 
-function CategoryTab({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-        active ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {icon}
-      {children}
-    </button>
-  );
-}
 
 // ===== WINES =====
 

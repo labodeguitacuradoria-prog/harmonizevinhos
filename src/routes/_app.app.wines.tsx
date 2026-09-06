@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, Wine as WineIcon, GlassWater, ScanLine, Info, FileUp, AlertTriangle, Check as CheckIcon, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, ScanLine, Info, FileUp, AlertTriangle, Check as CheckIcon, Pencil, Trash2 } from "lucide-react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { WineOverview } from "@/components/WineOverview";

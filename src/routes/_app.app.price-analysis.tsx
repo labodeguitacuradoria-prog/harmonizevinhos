@@ -1011,8 +1011,7 @@ function BracketCard({
         </div>
       )}
 
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{mult}</div>
-      <div className={`mt-1 text-sm font-semibold ${sweet ? "text-primary" : "text-foreground"}`}>{name}</div>
+      <div className={`text-sm font-semibold ${sweet ? "text-primary" : "text-foreground"}`}>{name}</div>
 
       <div className="mt-3 text-xs text-muted-foreground">Intervalo</div>
       <div className="text-sm font-semibold text-foreground">

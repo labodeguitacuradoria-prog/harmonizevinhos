@@ -270,10 +270,6 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       [currentYear]: Array(12).fill(0),
       [previousYear]: Array(12).fill(0),
     };
-    const bottlesByYearMonth: Record<number, number[]> = {
-      [currentYear]: Array(12).fill(0),
-      [previousYear]: Array(12).fill(0),
-    };
     const glassesByYearMonth: Record<number, number[]> = {
       [currentYear]: Array(12).fill(0),
       [previousYear]: Array(12).fill(0),
@@ -287,14 +283,17 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       [currentYear]: Array(12).fill(0),
       [previousYear]: Array(12).fill(0),
     };
-    const revBottlesByYearMonth: Record<number, number[]> = {
-      [currentYear]: Array(12).fill(0),
-      [previousYear]: Array(12).fill(0),
-    };
     const revGlassesByYearMonth: Record<number, number[]> = {
       [currentYear]: Array(12).fill(0),
       [previousYear]: Array(12).fill(0),
     };
+    // Average price by distinct bottle volume
+    const ensureVol = () => ({
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    });
+    const volumeQtyByYearMonth: Record<string, Record<number, number[]>> = {};
+    const volumeRevByYearMonth: Record<string, Record<number, number[]>> = {};
     // Corkage per year/month
     const corkageAmtByYearMonth: Record<number, number[]> = {
       [currentYear]: Array(12).fill(0),

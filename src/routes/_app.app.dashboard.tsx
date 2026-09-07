@@ -1111,17 +1111,17 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
         {tab === "preco" && (
           <PrecoPanel
             avgAll={agg.avgLast}
-            avgBottle={agg.avgBottleLast}
             avgGlass={agg.avgGlassLast}
             avgAllYear={agg.avgAll}
-            avgBottleYear={agg.avgBottle}
             avgGlassYear={agg.avgGlass}
             avgAllByMonth={agg.avgAllByMonth}
-            avgBottleByMonth={agg.avgBottleByMonth}
             avgGlassByMonth={agg.avgGlassByMonth}
             avgAllByMonthPrev={agg.avgAllByMonthPrev}
-            avgBottleByMonthPrev={agg.avgBottleByMonthPrev}
             avgGlassByMonthPrev={agg.avgGlassByMonthPrev}
+            volumes={agg.volumes}
+            avgVolumeByMonth={agg.avgVolumeByMonth}
+            avgVolumeByMonthPrev={agg.avgVolumeByMonthPrev}
+            avgVolumeYear={agg.avgVolumeYear}
             currentYear={currentYear}
             previousYear={previousYear}
             lastMonth={agg.lastAvg}

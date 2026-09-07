@@ -270,6 +270,10 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       [currentYear]: Array(12).fill(0),
       [previousYear]: Array(12).fill(0),
     };
+    const bottlesByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
     const glassesByYearMonth: Record<number, number[]> = {
       [currentYear]: Array(12).fill(0),
       [previousYear]: Array(12).fill(0),
@@ -280,6 +284,10 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       [previousYear]: Array(12).fill(0),
     };
     const costWineByYearMonth: Record<number, number[]> = {
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    };
+    const revBottlesByYearMonth: Record<number, number[]> = {
       [currentYear]: Array(12).fill(0),
       [previousYear]: Array(12).fill(0),
     };

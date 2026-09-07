@@ -55,6 +55,20 @@ type Movement = {
 const isGlassVol = (v: string | null | undefined) =>
   !!v && /taça|taca|glass/i.test(v);
 
+function normalizeVolume(v: string | null | undefined): string {
+  if (!v) return "Garrafas";
+  const s = v.toLowerCase();
+  if (/taça|taca|glass/.test(s)) return "Taças";
+  const m = s.match(/(\d+(?:[.,]\d+)?)\s*(ml|l)\b/);
+  if (m) {
+    const num = parseFloat(m[1].replace(",", "."));
+    const unit = m[2];
+    if (unit === "l") return `${num}L`;
+    return `${Math.round(num)}ml`;
+  }
+  return "Garrafas";
+}
+
 // Custo unitário efetivo: movimentos importados podem vir com unit_cost 0
 // (custo não informado na venda). Nesse caso usamos o custo do cadastro.
 const effUnitCost = (

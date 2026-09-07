@@ -1052,7 +1052,6 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             wines={wines}
             stockMap={stockMap}
             totalBottles={agg.stockBottles}
-            totalValue={agg.stockValue}
             targets={targetsFor(targets, "estoque")}
             lastStockDate={stockData.lastDate}
             guest={!!guest}
@@ -2190,7 +2189,6 @@ function EstoquePanel({
   wines,
   stockMap,
   totalBottles,
-  totalValue,
   targets,
   lastStockDate,
   guest,
@@ -2198,13 +2196,11 @@ function EstoquePanel({
   wines: WineRow[];
   stockMap: Record<string, number>;
   totalBottles: number;
-  totalValue: number;
   targets: TargetSet;
   lastStockDate?: string | null;
   guest?: boolean;
 }) {
   const byType: Record<string, { bottles: number; value: number }> = {};
-  let totalCost = 0;
   for (const w of wines) {
     if (isGlassVol(w.volume)) continue;
     const q = stockMap[w.id] ?? 0;
@@ -2212,7 +2208,6 @@ function EstoquePanel({
     if (!byType[t]) byType[t] = { bottles: 0, value: 0 };
     byType[t].bottles += q;
     byType[t].value += q * (Number(w.cost_price) || 0);
-    totalCost += q * (Number(w.cost_price) || 0);
   }
   const rows = Object.entries(byType).sort((a, b) => b[1].value - a[1].value);
   const annualTarget = resolveAnnualTarget(targets);
@@ -2224,13 +2219,6 @@ function EstoquePanel({
   return (
     <div>
       <SectionHeader icon={<Package size={14} />} title="Estoque em adega" subtitle={subtitle} />
-      {!guest && (
-        <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
-          <MiniStat label="Garrafas em estoque" value={`${totalBottles}`} tone="primary" />
-          <MiniStat label="Valor de venda" value={`R$ ${fmtBRL(totalValue)}`} />
-          <MiniStat label="Valor de custo" value={`R$ ${fmtBRL(totalCost)}`} />
-        </div>
-      )}
       {annualTarget !== null && (
         <TargetSummary
           label="Meta de estoque (garrafas)"
@@ -2264,22 +2252,6 @@ function EstoquePanel({
           )}
         </tbody>
       </table>
-      {guest && (
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="rounded-md border border-border bg-[color:var(--surface-2)] p-2 text-center">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Garrafas</div>
-            <div className="mt-0.5 text-sm font-bold text-primary">{totalBottles}</div>
-          </div>
-          <div className="rounded-md border border-border bg-[color:var(--surface-2)] p-2 text-center">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Vl. venda</div>
-            <div className="mt-0.5 text-sm font-bold text-primary">R$ {fmtBRL(totalValue)}</div>
-          </div>
-          <div className="rounded-md border border-border bg-[color:var(--surface-2)] p-2 text-center">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Vl. custo</div>
-            <div className="mt-0.5 text-sm font-bold text-primary">R$ {fmtBRL(totalCost)}</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

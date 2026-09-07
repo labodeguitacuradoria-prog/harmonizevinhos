@@ -1052,7 +1052,6 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             wines={wines}
             stockMap={stockMap}
             totalBottles={agg.stockBottles}
-            totalValue={agg.stockValue}
             targets={targetsFor(targets, "estoque")}
             lastStockDate={stockData.lastDate}
             guest={!!guest}
@@ -2190,7 +2189,6 @@ function EstoquePanel({
   wines,
   stockMap,
   totalBottles,
-  totalValue,
   targets,
   lastStockDate,
   guest,
@@ -2198,13 +2196,11 @@ function EstoquePanel({
   wines: WineRow[];
   stockMap: Record<string, number>;
   totalBottles: number;
-  totalValue: number;
   targets: TargetSet;
   lastStockDate?: string | null;
   guest?: boolean;
 }) {
   const byType: Record<string, { bottles: number; value: number }> = {};
-  let totalCost = 0;
   for (const w of wines) {
     if (isGlassVol(w.volume)) continue;
     const q = stockMap[w.id] ?? 0;
@@ -2212,7 +2208,6 @@ function EstoquePanel({
     if (!byType[t]) byType[t] = { bottles: 0, value: 0 };
     byType[t].bottles += q;
     byType[t].value += q * (Number(w.cost_price) || 0);
-    totalCost += q * (Number(w.cost_price) || 0);
   }
   const rows = Object.entries(byType).sort((a, b) => b[1].value - a[1].value);
   const annualTarget = resolveAnnualTarget(targets);

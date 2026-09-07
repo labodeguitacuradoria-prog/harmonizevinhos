@@ -337,6 +337,8 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
         glassesByYearMonth[y][mo] += q;
         revGlassesByYearMonth[y][mo] += rev;
       } else {
+        bottlesByYearMonth[y][mo] += q;
+        revBottlesByYearMonth[y][mo] += rev;
         const vol = normalizeVolume(w?.volume);
         if (!volumeQtyByYearMonth[vol]) volumeQtyByYearMonth[vol] = ensureVol();
         if (!volumeRevByYearMonth[vol]) volumeRevByYearMonth[vol] = ensureVol();

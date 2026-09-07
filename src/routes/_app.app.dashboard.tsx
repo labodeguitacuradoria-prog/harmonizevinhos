@@ -2252,22 +2252,6 @@ function EstoquePanel({
           )}
         </tbody>
       </table>
-      {guest && (
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="rounded-md border border-border bg-[color:var(--surface-2)] p-2 text-center">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Garrafas</div>
-            <div className="mt-0.5 text-sm font-bold text-primary">{totalBottles}</div>
-          </div>
-          <div className="rounded-md border border-border bg-[color:var(--surface-2)] p-2 text-center">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Vl. venda</div>
-            <div className="mt-0.5 text-sm font-bold text-primary">R$ {fmtBRL(totalValue)}</div>
-          </div>
-          <div className="rounded-md border border-border bg-[color:var(--surface-2)] p-2 text-center">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Vl. custo</div>
-            <div className="mt-0.5 text-sm font-bold text-primary">R$ {fmtBRL(totalCost)}</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

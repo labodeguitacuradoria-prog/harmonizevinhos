@@ -378,7 +378,13 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       stockValue += q * (Number(w.sale_price) || 0);
     }
 
-    // Preço médio por mês — ano atual e anterior (por volume de garrafa)
+    // Preço médio por mês — ano atual e anterior
+    const avgAllByMonth: number[] = Array(12).fill(0);
+    const avgBottleByMonth: number[] = Array(12).fill(0);
+    const avgGlassByMonth: number[] = Array(12).fill(0);
+    const avgAllByMonthPrev: number[] = Array(12).fill(0);
+    const avgBottleByMonthPrev: number[] = Array(12).fill(0);
+    const avgGlassByMonthPrev: number[] = Array(12).fill(0);
     const volumes = Object.keys(volumeQtyByYearMonth).sort();
     const avgVolumeByMonth: Record<string, number[]> = {};
     const avgVolumeByMonthPrev: Record<string, number[]> = {};
@@ -386,58 +392,50 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       avgVolumeByMonth[vol] = Array(12).fill(0);
       avgVolumeByMonthPrev[vol] = Array(12).fill(0);
     }
-    const avgAllByMonth: number[] = Array(12).fill(0);
-    const avgGlassByMonth: number[] = Array(12).fill(0);
-    const avgAllByMonthPrev: number[] = Array(12).fill(0);
-    const avgGlassByMonthPrev: number[] = Array(12).fill(0);
     for (let i = 0; i < 12; i++) {
+      const b = bottlesByYearMonth[currentYear][i];
       const g = glassesByYearMonth[currentYear][i];
+      const rb = revBottlesByYearMonth[currentYear][i];
       const rg = revGlassesByYearMonth[currentYear][i];
-      let totalQty = g;
-      let totalRev = rg;
+      avgBottleByMonth[i] = b > 0 ? rb / b : 0;
       avgGlassByMonth[i] = g > 0 ? rg / g : 0;
+      avgAllByMonth[i] = b + g > 0 ? (rb + rg) / (b + g) : 0;
       for (const vol of volumes) {
-        const q = volumeQtyByYearMonth[vol][currentYear][i];
-        const r = volumeRevByYearMonth[vol][currentYear][i];
-        avgVolumeByMonth[vol][i] = q > 0 ? r / q : 0;
-        totalQty += q;
-        totalRev += r;
+        const qv = volumeQtyByYearMonth[vol][currentYear][i];
+        const rv = volumeRevByYearMonth[vol][currentYear][i];
+        avgVolumeByMonth[vol][i] = qv > 0 ? rv / qv : 0;
       }
-      avgAllByMonth[i] = totalQty > 0 ? totalRev / totalQty : 0;
-
+      const bp = bottlesByYearMonth[previousYear][i];
       const gp = glassesByYearMonth[previousYear][i];
+      const rbp = revBottlesByYearMonth[previousYear][i];
       const rgp = revGlassesByYearMonth[previousYear][i];
-      let totalQtyP = gp;
-      let totalRevP = rgp;
+      avgBottleByMonthPrev[i] = bp > 0 ? rbp / bp : 0;
       avgGlassByMonthPrev[i] = gp > 0 ? rgp / gp : 0;
+      avgAllByMonthPrev[i] = bp + gp > 0 ? (rbp + rgp) / (bp + gp) : 0;
       for (const vol of volumes) {
-        const q = volumeQtyByYearMonth[vol][previousYear][i];
-        const r = volumeRevByYearMonth[vol][previousYear][i];
-        avgVolumeByMonthPrev[vol][i] = q > 0 ? r / q : 0;
-        totalQtyP += q;
-        totalRevP += r;
+        const qv = volumeQtyByYearMonth[vol][previousYear][i];
+        const rv = volumeRevByYearMonth[vol][previousYear][i];
+        avgVolumeByMonthPrev[vol][i] = qv > 0 ? rv / qv : 0;
       }
-      avgAllByMonthPrev[i] = totalQtyP > 0 ? totalRevP / totalQtyP : 0;
     }
 
     // Preço médio anual
+    const bottlesYearTotal = bottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
     const glassesYearTotal = glassesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
+    const revBottlesYear = revBottlesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
     const revGlassesYear = revGlassesByYearMonth[currentYear].reduce((a, b) => a + b, 0);
-    const avgVolumeYear: Record<string, number> = {};
-    let bottlesYearTotal = 0;
-    let revBottlesYear = 0;
-    for (const vol of volumes) {
-      const q = volumeQtyByYearMonth[vol][currentYear].reduce((a, b) => a + b, 0);
-      const r = volumeRevByYearMonth[vol][currentYear].reduce((a, b) => a + b, 0);
-      avgVolumeYear[vol] = q > 0 ? r / q : 0;
-      bottlesYearTotal += q;
-      revBottlesYear += r;
-    }
+    const avgBottle = bottlesYearTotal ? revBottlesYear / bottlesYearTotal : 0;
     const avgGlass = glassesYearTotal ? revGlassesYear / glassesYearTotal : 0;
     const avgAll =
       bottlesYearTotal + glassesYearTotal
         ? (revBottlesYear + revGlassesYear) / (bottlesYearTotal + glassesYearTotal)
         : 0;
+    const avgVolumeYear: Record<string, number> = {};
+    for (const vol of volumes) {
+      const q = volumeQtyByYearMonth[vol][currentYear].reduce((a, b) => a + b, 0);
+      const r = volumeRevByYearMonth[vol][currentYear].reduce((a, b) => a + b, 0);
+      avgVolumeYear[vol] = q > 0 ? r / q : 0;
+    }
 
     const pick = (byYM: Record<number, number[]>) => {
       if (period) return { year: period.year, month: period.month };

@@ -55,6 +55,20 @@ type Movement = {
 const isGlassVol = (v: string | null | undefined) =>
   !!v && /taça|taca|glass/i.test(v);
 
+function normalizeVolume(v: string | null | undefined): string {
+  if (!v) return "Garrafas";
+  const s = v.toLowerCase();
+  if (/taça|taca|glass/.test(s)) return "Taças";
+  const m = s.match(/(\d+(?:[.,]\d+)?)\s*(ml|l)\b/);
+  if (m) {
+    const num = parseFloat(m[1].replace(",", "."));
+    const unit = m[2];
+    if (unit === "l") return `${num}L`;
+    return `${Math.round(num)}ml`;
+  }
+  return "Garrafas";
+}
+
 // Custo unitário efetivo: movimentos importados podem vir com unit_cost 0
 // (custo não informado na venda). Nesse caso usamos o custo do cadastro.
 const effUnitCost = (
@@ -281,6 +295,13 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       [currentYear]: Array(12).fill(0),
       [previousYear]: Array(12).fill(0),
     };
+    // Average price by distinct bottle volume
+    const ensureVol = () => ({
+      [currentYear]: Array(12).fill(0),
+      [previousYear]: Array(12).fill(0),
+    });
+    const volumeQtyByYearMonth: Record<string, Record<number, number[]>> = {};
+    const volumeRevByYearMonth: Record<string, Record<number, number[]>> = {};
     // Corkage per year/month
     const corkageAmtByYearMonth: Record<number, number[]> = {
       [currentYear]: Array(12).fill(0),
@@ -316,8 +337,11 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
         glassesByYearMonth[y][mo] += q;
         revGlassesByYearMonth[y][mo] += rev;
       } else {
-        bottlesByYearMonth[y][mo] += q;
-        revBottlesByYearMonth[y][mo] += rev;
+        const vol = normalizeVolume(w?.volume);
+        if (!volumeQtyByYearMonth[vol]) volumeQtyByYearMonth[vol] = ensureVol();
+        if (!volumeRevByYearMonth[vol]) volumeRevByYearMonth[vol] = ensureVol();
+        volumeQtyByYearMonth[vol][y][mo] += q;
+        volumeRevByYearMonth[vol][y][mo] += rev;
       }
     }
 
@@ -361,6 +385,13 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
     const avgAllByMonthPrev: number[] = Array(12).fill(0);
     const avgBottleByMonthPrev: number[] = Array(12).fill(0);
     const avgGlassByMonthPrev: number[] = Array(12).fill(0);
+    const volumes = Object.keys(volumeQtyByYearMonth).sort();
+    const avgVolumeByMonth: Record<string, number[]> = {};
+    const avgVolumeByMonthPrev: Record<string, number[]> = {};
+    for (const vol of volumes) {
+      avgVolumeByMonth[vol] = Array(12).fill(0);
+      avgVolumeByMonthPrev[vol] = Array(12).fill(0);
+    }
     for (let i = 0; i < 12; i++) {
       const b = bottlesByYearMonth[currentYear][i];
       const g = glassesByYearMonth[currentYear][i];
@@ -369,6 +400,11 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       avgBottleByMonth[i] = b > 0 ? rb / b : 0;
       avgGlassByMonth[i] = g > 0 ? rg / g : 0;
       avgAllByMonth[i] = b + g > 0 ? (rb + rg) / (b + g) : 0;
+      for (const vol of volumes) {
+        const qv = volumeQtyByYearMonth[vol][currentYear][i];
+        const rv = volumeRevByYearMonth[vol][currentYear][i];
+        avgVolumeByMonth[vol][i] = qv > 0 ? rv / qv : 0;
+      }
       const bp = bottlesByYearMonth[previousYear][i];
       const gp = glassesByYearMonth[previousYear][i];
       const rbp = revBottlesByYearMonth[previousYear][i];
@@ -376,6 +412,11 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       avgBottleByMonthPrev[i] = bp > 0 ? rbp / bp : 0;
       avgGlassByMonthPrev[i] = gp > 0 ? rgp / gp : 0;
       avgAllByMonthPrev[i] = bp + gp > 0 ? (rbp + rgp) / (bp + gp) : 0;
+      for (const vol of volumes) {
+        const qv = volumeQtyByYearMonth[vol][previousYear][i];
+        const rv = volumeRevByYearMonth[vol][previousYear][i];
+        avgVolumeByMonthPrev[vol][i] = qv > 0 ? rv / qv : 0;
+      }
     }
 
     // Preço médio anual
@@ -389,6 +430,12 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       bottlesYearTotal + glassesYearTotal
         ? (revBottlesYear + revGlassesYear) / (bottlesYearTotal + glassesYearTotal)
         : 0;
+    const avgVolumeYear: Record<string, number> = {};
+    for (const vol of volumes) {
+      const q = volumeQtyByYearMonth[vol][currentYear].reduce((a, b) => a + b, 0);
+      const r = volumeRevByYearMonth[vol][currentYear].reduce((a, b) => a + b, 0);
+      avgVolumeYear[vol] = q > 0 ? r / q : 0;
+    }
 
     const pick = (byYM: Record<number, number[]>) => {
       if (period) return { year: period.year, month: period.month };
@@ -473,6 +520,10 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       avgAllByMonthPrev,
       avgBottleByMonthPrev,
       avgGlassByMonthPrev,
+      volumes,
+      avgVolumeByMonth,
+      avgVolumeByMonthPrev,
+      avgVolumeYear,
       lastRev,
       lastBottles,
       lastGlasses,
@@ -1060,17 +1111,17 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
         {tab === "preco" && (
           <PrecoPanel
             avgAll={agg.avgLast}
-            avgBottle={agg.avgBottleLast}
             avgGlass={agg.avgGlassLast}
             avgAllYear={agg.avgAll}
-            avgBottleYear={agg.avgBottle}
             avgGlassYear={agg.avgGlass}
             avgAllByMonth={agg.avgAllByMonth}
-            avgBottleByMonth={agg.avgBottleByMonth}
             avgGlassByMonth={agg.avgGlassByMonth}
             avgAllByMonthPrev={agg.avgAllByMonthPrev}
-            avgBottleByMonthPrev={agg.avgBottleByMonthPrev}
             avgGlassByMonthPrev={agg.avgGlassByMonthPrev}
+            volumes={agg.volumes}
+            avgVolumeByMonth={agg.avgVolumeByMonth}
+            avgVolumeByMonthPrev={agg.avgVolumeByMonthPrev}
+            avgVolumeYear={agg.avgVolumeYear}
             currentYear={currentYear}
             previousYear={previousYear}
             lastMonth={agg.lastAvg}
@@ -2258,17 +2309,17 @@ function EstoquePanel({
 
 function PrecoPanel({
   avgAll,
-  avgBottle,
   avgGlass,
   avgAllYear,
-  avgBottleYear,
   avgGlassYear,
   avgAllByMonth,
-  avgBottleByMonth,
   avgGlassByMonth,
   avgAllByMonthPrev,
-  avgBottleByMonthPrev,
   avgGlassByMonthPrev,
+  volumes,
+  avgVolumeByMonth,
+  avgVolumeByMonthPrev,
+  avgVolumeYear,
   currentYear,
   previousYear,
   lastMonth,
@@ -2276,17 +2327,17 @@ function PrecoPanel({
   guest,
 }: {
   avgAll: number;
-  avgBottle: number;
   avgGlass: number;
   avgAllYear: number;
-  avgBottleYear: number;
   avgGlassYear: number;
   avgAllByMonth: number[];
-  avgBottleByMonth: number[];
   avgGlassByMonth: number[];
   avgAllByMonthPrev: number[];
-  avgBottleByMonthPrev: number[];
   avgGlassByMonthPrev: number[];
+  volumes: string[];
+  avgVolumeByMonth: Record<string, number[]>;
+  avgVolumeByMonthPrev: Record<string, number[]>;
+  avgVolumeYear: Record<string, number>;
   currentYear: number;
   previousYear: number;
   lastMonth: { year: number; month: number };
@@ -2296,17 +2347,41 @@ function PrecoPanel({
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const annualTarget = resolveAnnualTarget(targets);
   const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
-  const [view, setView] = useState<"all" | "bottle" | "glass">("all");
+  const volumeOptions = useMemo(
+    () =>
+      volumes
+        .filter((v) => v !== "Taças")
+        .sort((a, b) => {
+          // 750ml first, then ascending numeric order
+          const na = parseFloat(a);
+          const nb = parseFloat(b);
+          if (!isNaN(na) && !isNaN(nb)) return na - nb;
+          if (!isNaN(na)) return -1;
+          if (!isNaN(nb)) return 1;
+          return a.localeCompare(b);
+        }),
+    [volumes],
+  );
+  const [view, setView] = useState<string>("all");
   const curr =
-    view === "bottle" ? avgBottleByMonth : view === "glass" ? avgGlassByMonth : avgAllByMonth;
+    view === "all"
+      ? avgAllByMonth
+      : view === "glass"
+        ? avgGlassByMonth
+        : avgVolumeByMonth[view] ?? avgAllByMonth;
   const prev =
-    view === "bottle"
-      ? avgBottleByMonthPrev
+    view === "all"
+      ? avgAllByMonthPrev
       : view === "glass"
         ? avgGlassByMonthPrev
-        : avgAllByMonthPrev;
+        : avgVolumeByMonthPrev[view] ?? avgAllByMonthPrev;
   const viewLabel =
-    view === "bottle" ? "Garrafas" : view === "glass" ? "Taças" : "Geral";
+    view === "all" ? "Geral" : view === "glass" ? "Taças" : view;
+  const buttons = [
+    { k: "all", label: "Geral" },
+    ...volumeOptions.map((v) => ({ k: v, label: v })),
+    { k: "glass", label: "Taças" },
+  ];
   return (
     <div>
       <SectionHeader
@@ -2332,34 +2407,18 @@ function PrecoPanel({
           decimals={2}
         />
       )}
-      {!guest && (
-        <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
-          <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
-          <MiniStat label={`Taça — ${ml}`} value={`R$ ${fmtBRL(avgGlass)}`} />
-          <MiniStat label="Geral (ano)" value={`R$ ${fmtBRL(avgAllYear)}`} />
-          <MiniStat label="Garrafa (ano)" value={`R$ ${fmtBRL(avgBottleYear)}`} />
-          <MiniStat label="Taça (ano)" value={`R$ ${fmtBRL(avgGlassYear)}`} />
-        </div>
-      )}
 
       <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
             Preço médio mensal — {viewLabel}
           </div>
-          <div className="flex overflow-hidden rounded-md border border-border text-[10px]">
-            {(
-              [
-                { k: "all", label: "Geral" },
-                { k: "bottle", label: "Garrafas" },
-                { k: "glass", label: "Taças" },
-              ] as const
-            ).map((o) => (
+          <div className="flex flex-wrap justify-end gap-1 rounded-md text-[10px]">
+            {buttons.map((o) => (
               <button
                 key={o.k}
                 onClick={() => setView(o.k)}
-                className={`px-2 py-1 ${
+                className={`rounded-sm border border-border px-2 py-1 ${
                   view === o.k
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-primary"

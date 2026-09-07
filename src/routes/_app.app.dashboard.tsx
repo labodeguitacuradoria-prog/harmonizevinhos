@@ -2309,17 +2309,17 @@ function EstoquePanel({
 
 function PrecoPanel({
   avgAll,
-  avgBottle,
   avgGlass,
   avgAllYear,
-  avgBottleYear,
   avgGlassYear,
   avgAllByMonth,
-  avgBottleByMonth,
   avgGlassByMonth,
   avgAllByMonthPrev,
-  avgBottleByMonthPrev,
   avgGlassByMonthPrev,
+  volumes,
+  avgVolumeByMonth,
+  avgVolumeByMonthPrev,
+  avgVolumeYear,
   currentYear,
   previousYear,
   lastMonth,
@@ -2327,17 +2327,17 @@ function PrecoPanel({
   guest,
 }: {
   avgAll: number;
-  avgBottle: number;
   avgGlass: number;
   avgAllYear: number;
-  avgBottleYear: number;
   avgGlassYear: number;
   avgAllByMonth: number[];
-  avgBottleByMonth: number[];
   avgGlassByMonth: number[];
   avgAllByMonthPrev: number[];
-  avgBottleByMonthPrev: number[];
   avgGlassByMonthPrev: number[];
+  volumes: string[];
+  avgVolumeByMonth: Record<string, number[]>;
+  avgVolumeByMonthPrev: Record<string, number[]>;
+  avgVolumeYear: Record<string, number>;
   currentYear: number;
   previousYear: number;
   lastMonth: { year: number; month: number };
@@ -2347,17 +2347,41 @@ function PrecoPanel({
   const ml = monthLabel(lastMonth.year, lastMonth.month);
   const annualTarget = resolveAnnualTarget(targets);
   const monthTarget = lastMonth.month >= 0 ? targets.monthly[lastMonth.month] ?? 0 : 0;
-  const [view, setView] = useState<"all" | "bottle" | "glass">("all");
+  const volumeOptions = useMemo(
+    () =>
+      volumes
+        .filter((v) => v !== "Taças")
+        .sort((a, b) => {
+          // 750ml first, then ascending numeric order
+          const na = parseFloat(a);
+          const nb = parseFloat(b);
+          if (!isNaN(na) && !isNaN(nb)) return na - nb;
+          if (!isNaN(na)) return -1;
+          if (!isNaN(nb)) return 1;
+          return a.localeCompare(b);
+        }),
+    [volumes],
+  );
+  const [view, setView] = useState<string>("all");
   const curr =
-    view === "bottle" ? avgBottleByMonth : view === "glass" ? avgGlassByMonth : avgAllByMonth;
+    view === "all"
+      ? avgAllByMonth
+      : view === "glass"
+        ? avgGlassByMonth
+        : avgVolumeByMonth[view] ?? avgAllByMonth;
   const prev =
-    view === "bottle"
-      ? avgBottleByMonthPrev
+    view === "all"
+      ? avgAllByMonthPrev
       : view === "glass"
         ? avgGlassByMonthPrev
-        : avgAllByMonthPrev;
+        : avgVolumeByMonthPrev[view] ?? avgAllByMonthPrev;
   const viewLabel =
-    view === "bottle" ? "Garrafas" : view === "glass" ? "Taças" : "Geral";
+    view === "all" ? "Geral" : view === "glass" ? "Taças" : view;
+  const buttons = [
+    { k: "all", label: "Geral" },
+    ...volumeOptions.map((v) => ({ k: v, label: v })),
+    { k: "glass", label: "Taças" },
+  ];
   return (
     <div>
       <SectionHeader
@@ -2383,34 +2407,18 @@ function PrecoPanel({
           decimals={2}
         />
       )}
-      {!guest && (
-        <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <MiniStat label={`Geral — ${ml}`} value={`R$ ${fmtBRL(avgAll)}`} tone="primary" />
-          <MiniStat label={`Garrafa — ${ml}`} value={`R$ ${fmtBRL(avgBottle)}`} />
-          <MiniStat label={`Taça — ${ml}`} value={`R$ ${fmtBRL(avgGlass)}`} />
-          <MiniStat label="Geral (ano)" value={`R$ ${fmtBRL(avgAllYear)}`} />
-          <MiniStat label="Garrafa (ano)" value={`R$ ${fmtBRL(avgBottleYear)}`} />
-          <MiniStat label="Taça (ano)" value={`R$ ${fmtBRL(avgGlassYear)}`} />
-        </div>
-      )}
 
       <div className="rounded-lg border border-border bg-[color:var(--surface-2)]/40 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
             Preço médio mensal — {viewLabel}
           </div>
-          <div className="flex overflow-hidden rounded-md border border-border text-[10px]">
-            {(
-              [
-                { k: "all", label: "Geral" },
-                { k: "bottle", label: "Garrafas" },
-                { k: "glass", label: "Taças" },
-              ] as const
-            ).map((o) => (
+          <div className="flex flex-wrap justify-end gap-1 rounded-md text-[10px]">
+            {buttons.map((o) => (
               <button
                 key={o.k}
                 onClick={() => setView(o.k)}
-                className={`px-2 py-1 ${
+                className={`rounded-sm border border-border px-2 py-1 ${
                   view === o.k
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-primary"

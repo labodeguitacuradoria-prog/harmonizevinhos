@@ -1811,12 +1811,6 @@ function SimpleYearPanel({
         title={title}
         subtitle="Comparativo mensal com o ano anterior."
       />
-      {!guest && (
-        <div className="mb-5 grid grid-cols-2 gap-3">
-          <MiniStat label={`Acumulado ${currentYear}`} value={`${currTotal} ${unit}`} tone="primary" />
-          <MiniStat label={`${previousYear} completo`} value={`${prevTotal} ${unit}`} />
-        </div>
-      )}
       <div className={annualTarget !== null ? "grid gap-4 lg:grid-cols-[1fr_minmax(200px,240px)]" : "grid gap-4"}>
         <div>
           <BarChart
@@ -1826,7 +1820,7 @@ function SimpleYearPanel({
             previousYear={previousYear}
             valueSuffix={` ${unit}`}
             toggleLabel="Und"
-            height={240}
+            height={340}
             targets={targets.monthly.length === 12 ? targets.monthly : undefined}
           />
           <div className="mt-8 flex flex-col items-center gap-1 text-[11px]">

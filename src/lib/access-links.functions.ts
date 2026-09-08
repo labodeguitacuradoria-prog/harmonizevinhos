@@ -60,7 +60,7 @@ export const revokeAccessLink = createServerFn({ method: "POST" })
       .select("restaurant_id")
       .eq("id", data.id)
       .maybeSingle();
-    if (!link) throw new Error("Link não encontrado.");
+    if (!link) return { ok: true };
     await assertCanManage(context, link.restaurant_id);
     const { error } = await supabaseAdmin
       .from("access_links")

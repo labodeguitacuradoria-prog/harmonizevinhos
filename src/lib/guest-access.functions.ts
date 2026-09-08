@@ -68,26 +68,46 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
   }
 
   const uaKey = userAgent.slice(0, 400);
-  // O cookie de aparelho pode se perder (nova versão do app, outro navegador do
-  // mesmo celular, limpeza de dados, aba privada). Nesse caso reconhecemos o
+  // Assinatura tolerante do navegador: ignora números de versão, que mudam a
+  // cada atualização do celular/navegador e não significam outro aparelho.
+  const uaFingerprint = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/[\d._]+/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  const fp = uaFingerprint(uaKey);
+
+  const rebind = async (rowId: string) => {
+    deviceRowId = rowId;
+    const renewedId = helpers.newDeviceId();
+    await supabaseAdmin
+      .from("access_link_devices")
+      .update({ device_hash: helpers.hashDeviceId(renewedId), user_agent: uaKey })
+      .eq("id", rowId);
+    setCookie(cookieName, helpers.signDeviceId(renewedId), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365 * 2,
+    });
+  };
+
+  // O cookie de aparelho pode se perder (nova versão do app, atualização do
+  // navegador, limpeza de dados, aba privada). Nesses casos reconhecemos o
   // mesmo aparelho pelo próprio navegador em vez de bloquear o acesso.
   if (!deviceRowId && uaKey) {
-    const match = known.find((d) => (d.user_agent ?? "") === uaKey);
-    if (match) {
-      deviceRowId = match.id;
-      const renewedId = helpers.newDeviceId();
-      await supabaseAdmin
-        .from("access_link_devices")
-        .update({ device_hash: helpers.hashDeviceId(renewedId) })
-        .eq("id", match.id);
-      setCookie(cookieName, helpers.signDeviceId(renewedId), {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: true,
-        path: "/",
-        maxAge: 60 * 60 * 24 * 365 * 2,
-      });
-    }
+    const exact = known.find((d) => (d.user_agent ?? "") === uaKey);
+    const fuzzy = exact ?? known.find((d) => uaFingerprint(d.user_agent ?? "") === fp);
+    if (fuzzy) await rebind(fuzzy.id);
+  }
+
+  // Último recurso para links de aparelho único: se existe apenas um aparelho
+  // vinculado, tratamos este acesso como o mesmo aparelho e revinculamos, para
+  // que atualizações do aplicativo nunca derrubem o link já enviado.
+  if (!deviceRowId && link.single_device && known.length === 1) {
+    await rebind(known[0].id);
   }
 
   if (!deviceRowId) {
@@ -97,6 +117,7 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
         "Este link já está em uso em outro aparelho. Peça ao restaurante para desvincular o aparelho anterior.",
       );
     }
+
     const newId = helpers.newDeviceId();
     const { data: inserted } = await supabaseAdmin
       .from("access_link_devices")

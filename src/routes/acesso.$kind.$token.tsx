@@ -285,6 +285,13 @@ function GuestStock({ token }: { token: string }) {
         >
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
+        <button
+          onClick={() => window.close()}
+          aria-label="Fechar tela"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </header>
 
       {!session ? (
@@ -326,7 +333,7 @@ function GuestStock({ token }: { token: string }) {
             </div>
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto no-scrollbar p-3 pb-24">
+          <div className="flex-1 space-y-4 overflow-y-auto no-scrollbar p-3 pb-28">
             {visible.length === 0 && (
               <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
                 Nenhum rótulo neste filtro.
@@ -344,7 +351,7 @@ function GuestStock({ token }: { token: string }) {
                     return (
                       <div
                         key={item.id}
-                        className={`flex items-center gap-2 rounded-lg border bg-card px-3 py-2 ${
+                        className={`flex items-start gap-2 rounded-lg border bg-card px-3 py-2 ${
                           flagged
                             ? "border-amber-500/60"
                             : counted
@@ -352,16 +359,16 @@ function GuestStock({ token }: { token: string }) {
                               : "border-border"
                         }`}
                       >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
+                        <div className="min-w-0 flex-1 py-0.5">
+                          <div className="flex items-start gap-1.5">
                             {item.internal_code && (
-                              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-semibold">
+                              <span className="mt-0.5 shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-semibold">
                                 {item.internal_code}
                               </span>
                             )}
-                            <span className="truncate text-sm font-medium leading-tight">{item.name}</span>
+                            <span className="line-clamp-2 text-sm font-medium leading-snug">{item.name}</span>
                           </div>
-                          <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                          <div className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
                             {[item.volume, item.producer, item.vintage].filter(Boolean).join(" · ") || "—"}
                             {flagged && item.flag_note ? (
                               <span className="ml-2 text-amber-500">⚑ {item.flag_note}</span>
@@ -369,62 +376,65 @@ function GuestStock({ token }: { token: string }) {
                           </div>
                         </div>
 
-                        {item.image_url && (
-                          <button
-                            type="button"
-                            onClick={() => setZoomImg(item.image_url!)}
-                            aria-label="Ver rótulo"
-                            className="shrink-0 rounded p-1 text-primary"
-                          >
-                            <ImageIcon className="h-4 w-4" />
-                          </button>
-                        )}
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          <div className="flex items-center gap-0.5">
+                            {item.image_url && (
+                              <button
+                                type="button"
+                                onClick={() => setZoomImg(item.image_url!)}
+                                aria-label="Ver rótulo"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded p-0 text-primary"
+                              >
+                                <ImageIcon className="h-4 w-4" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setFlagFor(item)}
+                              aria-label="Sinalizar problema"
+                              className={`inline-flex h-8 w-8 items-center justify-center rounded p-0 ${flagged ? "text-amber-500" : "text-muted-foreground"}`}
+                            >
+                              <Flag className="h-4 w-4" />
+                            </button>
+                          </div>
 
-                        <button
-                          type="button"
-                          onClick={() => setFlagFor(item)}
-                          aria-label="Sinalizar problema"
-                          className={`shrink-0 rounded p-1 ${flagged ? "text-amber-500" : "text-muted-foreground"}`}
-                        >
-                          <Flag className="h-4 w-4" />
-                        </button>
-
-                        <div className="flex shrink-0 items-center gap-1">
-                          <button
-                            type="button"
-                            aria-label="Diminuir"
-                            onClick={() => setQty(item, item.counted_qty === null ? 0 : Math.max(0, item.counted_qty - 1))}
-                            className="flex h-8 w-8 items-center justify-center rounded border border-input bg-background text-muted-foreground"
-                          >
-                            <Minus className="h-3.5 w-3.5" />
-                          </button>
-                          <input
-                            type="number"
-                            inputMode="numeric"
-                            min={0}
-                            placeholder="—"
-                            value={item.counted_qty ?? ""}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === "") {
-                                setLocal((p) => ({ ...p, [item.id]: null }));
-                                return;
-                              }
-                              setQty(item, Math.max(0, parseInt(v, 10) || 0));
-                            }}
-                            onBlur={(e) => {
-                              if (e.target.value === "") setQty(item, null);
-                            }}
-                            className="h-8 w-12 rounded border border-input bg-background text-center text-sm font-semibold"
-                          />
-                          <button
-                            type="button"
-                            aria-label="Aumentar"
-                            onClick={() => setQty(item, item.counted_qty === null ? 0 : item.counted_qty + 1)}
-                            className="flex h-8 w-8 items-center justify-center rounded border border-input bg-background text-muted-foreground"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex shrink-0 items-center gap-1">
+                            <button
+                              type="button"
+                              aria-label="Diminuir"
+                              onClick={() => setQty(item, item.counted_qty === null ? 0 : Math.max(0, item.counted_qty - 1))}
+                              className="flex h-8 w-8 items-center justify-center rounded border border-input bg-background text-muted-foreground"
+                            >
+                              <Minus className="h-3.5 w-3.5" />
+                            </button>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              placeholder="—"
+                              value={item.counted_qty ?? ""}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === "") {
+                                  setLocal((p) => ({ ...p, [item.id]: null }));
+                                  return;
+                                }
+                                setQty(item, Math.max(0, parseInt(v, 10) || 0));
+                              }}
+                              onBlur={(e) => {
+                                if (e.target.value === "") setQty(item, null);
+                              }}
+                              className="h-8 w-12 rounded border border-input bg-background text-center text-sm font-semibold"
+                            />
+                            <button
+                              type="button"
+                              aria-label="Aumentar"
+                              onClick={() => setQty(item, item.counted_qty === null ? 0 : item.counted_qty + 1)}
+                              className="flex h-8 w-8 items-center justify-center rounded border border-input bg-background text-muted-foreground"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -451,6 +461,7 @@ function GuestStock({ token }: { token: string }) {
           </div>
         </>
       )}
+
 
       {flagFor && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4" onClick={() => setFlagFor(null)}>

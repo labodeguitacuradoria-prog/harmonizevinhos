@@ -80,7 +80,7 @@ export const deleteAccessLink = createServerFn({ method: "POST" })
       .select("restaurant_id")
       .eq("id", data.id)
       .maybeSingle();
-    if (!link) throw new Error("Link não encontrado.");
+    if (!link) return { ok: true };
     await assertCanManage(context, link.restaurant_id);
     const { error } = await supabaseAdmin.from("access_links").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
@@ -97,7 +97,7 @@ export const unbindAccessLinkDevices = createServerFn({ method: "POST" })
       .select("restaurant_id")
       .eq("id", data.id)
       .maybeSingle();
-    if (!link) throw new Error("Link não encontrado.");
+    if (!link) return { ok: true };
     await assertCanManage(context, link.restaurant_id);
     const { error } = await supabaseAdmin.from("access_link_devices").delete().eq("link_id", data.id);
     if (error) throw new Error(error.message);

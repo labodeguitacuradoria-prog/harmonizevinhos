@@ -289,9 +289,13 @@ function AccessLinksPage() {
                 {!l.revoked_at && (
                   <button
                     onClick={async () => {
-                      await revokeAccessLink({ data: { id: l.id } });
-                      toast.success("Link revogado.");
-                      qc.invalidateQueries({ queryKey: ["access-links"] });
+                      try {
+                        await revokeAccessLink({ data: { id: l.id } });
+                        toast.success("Link revogado.");
+                        qc.invalidateQueries({ queryKey: ["access-links"] });
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Não foi possível revogar.");
+                      }
                     }}
                     className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-accent"
                   >

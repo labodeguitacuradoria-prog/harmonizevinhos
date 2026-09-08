@@ -56,7 +56,7 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
 
   const { data: devices } = await supabaseAdmin
     .from("access_link_devices")
-    .select("id, device_hash")
+    .select("id, device_hash, user_agent")
     .eq("link_id", link.id);
 
   const known = devices ?? [];
@@ -65,6 +65,29 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
     const h = helpers.hashDeviceId(deviceId);
     deviceRowId = known.find((d) => d.device_hash === h)?.id ?? null;
     if (!deviceRowId) deviceId = null;
+  }
+
+  const uaKey = userAgent.slice(0, 400);
+  // O cookie de aparelho pode se perder (nova versão do app, outro navegador do
+  // mesmo celular, limpeza de dados, aba privada). Nesse caso reconhecemos o
+  // mesmo aparelho pelo próprio navegador em vez de bloquear o acesso.
+  if (!deviceRowId && uaKey) {
+    const match = known.find((d) => (d.user_agent ?? "") === uaKey);
+    if (match) {
+      deviceRowId = match.id;
+      const renewedId = helpers.newDeviceId();
+      await supabaseAdmin
+        .from("access_link_devices")
+        .update({ device_hash: helpers.hashDeviceId(renewedId) })
+        .eq("id", match.id);
+      setCookie(cookieName, helpers.signDeviceId(renewedId), {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: true,
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365 * 2,
+      });
+    }
   }
 
   if (!deviceRowId) {
@@ -80,7 +103,7 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
       .insert({
         link_id: link.id,
         device_hash: helpers.hashDeviceId(newId),
-        user_agent: userAgent.slice(0, 400),
+        user_agent: uaKey,
       })
       .select("id")
       .single();
@@ -95,9 +118,10 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
   } else {
     await supabaseAdmin
       .from("access_link_devices")
-      .update({ last_seen_at: new Date().toISOString() })
+      .update({ last_seen_at: new Date().toISOString(), user_agent: uaKey })
       .eq("id", deviceRowId);
   }
+
 
   await supabaseAdmin
     .from("access_links")

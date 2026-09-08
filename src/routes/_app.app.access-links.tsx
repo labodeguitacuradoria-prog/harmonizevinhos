@@ -274,9 +274,13 @@ function AccessLinksPage() {
               <div className="flex gap-2">
                 <button
                   onClick={async () => {
-                    await unbindAccessLinkDevices({ data: { id: l.id } });
-                    toast.success("Aparelhos desvinculados. O próximo aparelho que abrir o link será registrado.");
-                    qc.invalidateQueries({ queryKey: ["access-link-devices"] });
+                    try {
+                      await unbindAccessLinkDevices({ data: { id: l.id } });
+                      toast.success("Aparelhos desvinculados. O próximo aparelho que abrir o link será registrado.");
+                      qc.invalidateQueries({ queryKey: ["access-link-devices"] });
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : "Não foi possível desvincular.");
+                    }
                   }}
                   className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-primary hover:bg-accent"
                 >
@@ -285,9 +289,13 @@ function AccessLinksPage() {
                 {!l.revoked_at && (
                   <button
                     onClick={async () => {
-                      await revokeAccessLink({ data: { id: l.id } });
-                      toast.success("Link revogado.");
-                      qc.invalidateQueries({ queryKey: ["access-links"] });
+                      try {
+                        await revokeAccessLink({ data: { id: l.id } });
+                        toast.success("Link revogado.");
+                        qc.invalidateQueries({ queryKey: ["access-links"] });
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Não foi possível revogar.");
+                      }
                     }}
                     className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-muted-foreground hover:bg-accent"
                   >
@@ -297,9 +305,13 @@ function AccessLinksPage() {
                 <button
                   onClick={async () => {
                     if (!confirm("Excluir este link definitivamente?")) return;
-                    await deleteAccessLink({ data: { id: l.id } });
-                    toast.success("Link excluído.");
-                    qc.invalidateQueries({ queryKey: ["access-links"] });
+                    try {
+                      await deleteAccessLink({ data: { id: l.id } });
+                      toast.success("Link excluído.");
+                      qc.invalidateQueries({ queryKey: ["access-links"] });
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : "Não foi possível excluir.");
+                    }
                   }}
                   className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-destructive hover:bg-accent"
                 >

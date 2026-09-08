@@ -686,7 +686,7 @@ function CountSessionView({ session }: { session: Session }) {
                         setQty(
                           item,
                           item.counted_qty === null
-                            ? 1
+                            ? 0
                             : item.counted_qty + 1,
                         )
                       }

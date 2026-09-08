@@ -389,26 +389,174 @@ export const getGuestStockSession = createServerFn({ method: "POST" })
 
       const { data: items } = await supabaseAdmin
         .from("stock_count_items")
-        .select("id, wine_id, previous_qty, counted_qty, wine:wines(name, producer, vintage, volume, internal_code)")
+        .select(
+          "id, wine_id, previous_qty, counted_qty, flag, flag_note, wine:wines(name, producer, vintage, volume, internal_code, wine_type, image_url)",
+        )
         .eq("session_id", session.id);
 
       const rows = (items ?? []).map((i: any) => ({
         id: i.id as string,
+        wine_id: i.wine_id as string,
         previous_qty: i.previous_qty as number,
         counted_qty: i.counted_qty as number | null,
+        flag: (i.flag ?? null) as string | null,
+        flag_note: (i.flag_note ?? null) as string | null,
         name: i.wine?.name ?? "—",
         producer: i.wine?.producer ?? null,
         vintage: i.wine?.vintage ?? null,
         volume: i.wine?.volume ?? null,
         internal_code: i.wine?.internal_code ?? null,
+        wine_type: i.wine?.wine_type ?? null,
+        image_url: i.wine?.image_url ?? null,
       }));
       rows.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
-      return { ok: true as const, restaurantName, label: link.label, session, items: rows };
+      const { data: issues } = await supabaseAdmin
+        .from("stock_count_issues")
+        .select("id, description, created_at")
+        .eq("session_id", session.id)
+        .order("created_at", { ascending: false });
+
+      return {
+        ok: true as const,
+        restaurantName,
+        label: link.label,
+        session,
+        items: rows,
+        issues: (issues ?? []).map((x: any) => ({
+          id: x.id as string,
+          description: x.description as string,
+        })),
+      };
     } catch (e) {
       return fail(e);
     }
   });
+
+// Sinaliza um problema em um rótulo específico (rótulo errado, duplicado etc.)
+export const saveGuestFlag = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    TokenSchema.extend({
+      item_id: z.string().uuid(),
+      flag: z.string().max(40).nullable(),
+      note: z.string().max(500).nullable().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { link } = await resolveAccess(data.token, data.kind);
+      if (link.scope !== "stock_count") return fail({ code: "scope", message: "Link sem permissão para a contagem." });
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      const { data: item } = await supabaseAdmin
+        .from("stock_count_items")
+        .select("id, session:stock_count_sessions(restaurant_id, status)")
+        .eq("id", data.item_id)
+        .maybeSingle();
+      const session = (item as any)?.session;
+      if (!item || !session || session.restaurant_id !== link.restaurant_id || session.status !== "draft") {
+        return fail({ code: "invalid", message: "Item não disponível para contagem." });
+      }
+      const { error } = await supabaseAdmin
+        .from("stock_count_items")
+        .update({ flag: data.flag, flag_note: data.note || null })
+        .eq("id", data.item_id);
+      if (error) return fail({ code: "save", message: error.message });
+      return { ok: true as const };
+    } catch (e) {
+      return fail(e);
+    }
+  });
+
+// Observação geral da contagem (falta um rótulo, rótulo errado etc.)
+export const saveGuestIssue = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    TokenSchema.extend({
+      session_id: z.string().uuid(),
+      description: z.string().trim().min(3).max(1000),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { link } = await resolveAccess(data.token, data.kind);
+      if (link.scope !== "stock_count") return fail({ code: "scope", message: "Link sem permissão para a contagem." });
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      const { data: session } = await supabaseAdmin
+        .from("stock_count_sessions")
+        .select("id, restaurant_id, status")
+        .eq("id", data.session_id)
+        .maybeSingle();
+      if (!session || session.restaurant_id !== link.restaurant_id || session.status !== "draft") {
+        return fail({ code: "invalid", message: "Contagem não disponível." });
+      }
+      const { error } = await supabaseAdmin
+        .from("stock_count_issues")
+        .insert({ session_id: data.session_id, description: data.description });
+      if (error) return fail({ code: "save", message: error.message });
+      return { ok: true as const };
+    } catch (e) {
+      return fail(e);
+    }
+  });
+
+// Encerra a contagem aberta pelo link, gerando os ajustes de estoque.
+export const closeGuestCount = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => TokenSchema.extend({ session_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    try {
+      const { link } = await resolveAccess(data.token, data.kind);
+      if (link.scope !== "stock_count") return fail({ code: "scope", message: "Link sem permissão para a contagem." });
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      const { data: session } = await supabaseAdmin
+        .from("stock_count_sessions")
+        .select("id, restaurant_id, status, reference_date")
+        .eq("id", data.session_id)
+        .maybeSingle();
+      if (!session || session.restaurant_id !== link.restaurant_id || session.status !== "draft") {
+        return fail({ code: "invalid", message: "Contagem não disponível." });
+      }
+
+      const { data: items } = await supabaseAdmin
+        .from("stock_count_items")
+        .select("wine_id, previous_qty, counted_qty, flag")
+        .eq("session_id", session.id);
+
+      const pending = (items ?? []).filter((i: any) => i.counted_qty === null && !i.flag);
+      if (pending.length > 0) {
+        return fail({ code: "pending", message: `${pending.length} rótulo(s) ainda sem contagem.` });
+      }
+
+      const adjustments = (items ?? [])
+        .filter((i: any) => i.counted_qty !== null && i.flag !== "duplicate" && i.flag !== "should_not_count")
+        .map((i: any) => ({ ...i, diff: (i.counted_qty as number) - (i.previous_qty as number) }))
+        .filter((i: any) => i.diff !== 0)
+        .map((i: any) => ({
+          wine_id: i.wine_id as string,
+          restaurant_id: link.restaurant_id,
+          movement_type: "adjustment" as const,
+          quantity: i.diff as number,
+          notes: `Ajuste por contagem (${session.reference_date})`,
+          source_session_id: session.id,
+        }));
+
+      if (adjustments.length > 0) {
+        const { error } = await supabaseAdmin.from("inventory_movements").insert(adjustments);
+        if (error) return fail({ code: "save", message: error.message });
+      }
+
+      const { error: errClose } = await supabaseAdmin
+        .from("stock_count_sessions")
+        .update({ status: "closed", closed_at: new Date().toISOString() })
+        .eq("id", session.id);
+      if (errClose) return fail({ code: "save", message: errClose.message });
+      return { ok: true as const, adjustments: adjustments.length };
+    } catch (e) {
+      return fail(e);
+    }
+  });
+
 
 export const saveGuestCount = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>

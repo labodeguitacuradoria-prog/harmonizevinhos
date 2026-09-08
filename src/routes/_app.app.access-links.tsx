@@ -305,9 +305,13 @@ function AccessLinksPage() {
                 <button
                   onClick={async () => {
                     if (!confirm("Excluir este link definitivamente?")) return;
-                    await deleteAccessLink({ data: { id: l.id } });
-                    toast.success("Link excluído.");
-                    qc.invalidateQueries({ queryKey: ["access-links"] });
+                    try {
+                      await deleteAccessLink({ data: { id: l.id } });
+                      toast.success("Link excluído.");
+                      qc.invalidateQueries({ queryKey: ["access-links"] });
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : "Não foi possível excluir.");
+                    }
                   }}
                   className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-destructive hover:bg-accent"
                 >

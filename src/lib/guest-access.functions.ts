@@ -313,7 +313,7 @@ export const getGuestStockSession = createServerFn({ method: "POST" })
       if (link.scope !== "stock_count") return fail({ code: "scope", message: "Link sem permissão para a contagem." });
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-      const { data: session } = await supabaseAdmin
+      let { data: session } = await supabaseAdmin
         .from("stock_count_sessions")
         .select("id, reference_date, status")
         .eq("restaurant_id", link.restaurant_id)
@@ -322,9 +322,49 @@ export const getGuestStockSession = createServerFn({ method: "POST" })
         .limit(1)
         .maybeSingle();
 
+      // Se não houver contagem aberta, o próprio acesso pelo link já significa
+      // uma nova contagem: cria a sessão e os itens automaticamente.
       if (!session) {
-        return { ok: true as const, restaurantName, label: link.label, session: null, items: [] };
+        const isGlass = (v: string | null | undefined) => {
+          const s = (v ?? "").toLowerCase();
+          return s.includes("taça") || s.includes("taca");
+        };
+        const { data: wines } = await supabaseAdmin
+          .from("wines")
+          .select("id, volume, count_in_stock")
+          .eq("restaurant_id", link.restaurant_id);
+        const countable = (wines ?? []).filter(
+          (w: any) => !isGlass(w.volume) && w.count_in_stock !== false,
+        );
+        if (countable.length === 0) {
+          return { ok: true as const, restaurantName, label: link.label, session: null, items: [] };
+        }
+        const { data: lastStock } = await supabaseAdmin.rpc("get_last_closed_stock", {
+          p_restaurant_id: link.restaurant_id,
+        });
+        const prev: Record<string, number> = {};
+        (lastStock ?? []).forEach((r: any) => {
+          prev[r.wine_id] = r.last_qty;
+        });
+        const { data: created, error: errSession } = await supabaseAdmin
+          .from("stock_count_sessions")
+          .insert({ restaurant_id: link.restaurant_id })
+          .select("id, reference_date, status")
+          .single();
+        if (errSession || !created) {
+          return fail({ code: "session", message: errSession?.message ?? "Não foi possível abrir a contagem." });
+        }
+        const { error: errItems } = await supabaseAdmin.from("stock_count_items").insert(
+          countable.map((w: any) => ({
+            session_id: created.id,
+            wine_id: w.id,
+            previous_qty: prev[w.id] ?? 0,
+          })),
+        );
+        if (errItems) return fail({ code: "items", message: errItems.message });
+        session = created;
       }
+
 
       const { data: items } = await supabaseAdmin
         .from("stock_count_items")

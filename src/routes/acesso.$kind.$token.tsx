@@ -52,28 +52,8 @@ function GuestAccessPage() {
   return <GuestDashboard token={token} kind={deviceKind as "celular" | "desktop"} />;
 }
 
-function Shell({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
-  const { theme, toggle } = useTheme();
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-        <Wine className="h-5 w-5 text-primary" />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-primary">{title}</div>
-          {subtitle && <div className="truncate text-[11px] text-muted-foreground">{subtitle}</div>}
-        </div>
-        <button
-          onClick={toggle}
-          aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-primary"
-        >
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </button>
-      </header>
-      <div className="p-4 md:p-8">{children}</div>
-    </div>
-  );
-}
+
+
 
 
 function Blocked({ message }: { message: string }) {

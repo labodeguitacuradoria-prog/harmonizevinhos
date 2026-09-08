@@ -1,10 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Wine, ShieldAlert, ClipboardList, Sun, Moon } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import {
+  Wine,
+  ShieldAlert,
+  ClipboardList,
+  Sun,
+  Moon,
+  Check,
+  AlertTriangle,
+  Flag,
+  Image as ImageIcon,
+  Minus,
+  Plus,
+  X,
+} from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
-import { getGuestDashboardData, getGuestStockSession, saveGuestCount } from "@/lib/guest-access.functions";
+import {
+  getGuestDashboardData,
+  getGuestStockSession,
+  saveGuestCount,
+  saveGuestFlag,
+  saveGuestIssue,
+  closeGuestCount,
+} from "@/lib/guest-access.functions";
 import { DashboardPage } from "@/routes/_app.app.dashboard";
+
 
 export const Route = createFileRoute("/acesso/$kind/$token")({
   head: () => ({

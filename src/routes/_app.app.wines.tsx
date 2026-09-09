@@ -322,7 +322,8 @@ const GLASS_MATERIALS = ["Cristal", "Vidro", "Outro"];
 
 function fmtDate(d: string | null | undefined) {
   if (!d) return "";
-  const dt = new Date(d);
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(d);
+  const dt = new Date(dateOnly ? `${d}T00:00:00` : d);
   return dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
 }
 
@@ -516,14 +517,16 @@ function WinesSection() {
   const { data: stockMap = {} } = useQuery({
     queryKey: ["last-stock-count-map", restaurantId],
     enabled: !!restaurantId,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       // Find latest closed session per restaurant, then read its item counts.
       const { data: sessions } = await supabase
         .from("stock_count_sessions")
-        .select("id, reference_date")
+        .select("id, reference_date, closed_at")
         .eq("restaurant_id", restaurantId!)
         .eq("status", "closed")
-        .order("reference_date", { ascending: false })
+        .order("closed_at", { ascending: false, nullsFirst: false })
         .limit(1);
       const session = sessions?.[0];
       const map: Record<string, { qty: number; date: string | null }> = {};
@@ -533,7 +536,10 @@ function WinesSection() {
         .select("wine_id, counted_qty")
         .eq("session_id", session.id);
       for (const it of items ?? []) {
-        map[it.wine_id] = { qty: it.counted_qty ?? 0, date: session.reference_date };
+        map[it.wine_id] = {
+          qty: it.counted_qty ?? 0,
+          date: session.closed_at ?? session.reference_date,
+        };
       }
       return map;
     },

@@ -106,6 +106,14 @@ function fullMonthLabel(year: number, monthIdx: number) {
 }
 
 
+function localDateKey(ts: string) {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return ts.slice(0, 10);
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
 function formatDateBR(iso: string) {
   const d = new Date(iso + "T00:00:00");
   if (isNaN(d.getTime())) return iso;

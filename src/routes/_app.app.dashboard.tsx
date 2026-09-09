@@ -201,6 +201,9 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
   const { data: authStock = { map: {}, lastDate: null as string | null } } = useQuery<{ map: Record<string, number>; lastDate: string | null }>({
     queryKey: ["dash-stock", scopeKey],
     enabled,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
     queryFn: async () => {
       // pega a última contagem fechada de cada restaurante do escopo
       const { data: sess } = await supabase

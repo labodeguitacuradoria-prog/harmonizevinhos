@@ -83,6 +83,9 @@ function GuestDashboard({ token, kind }: { token: string; kind: "celular" | "des
   const { data, isLoading } = useQuery({
     queryKey: ["guest-dash-data", token],
     retry: false,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
     queryFn: () => getGuestDashboardData({ data: { token, kind } }),
   });
 

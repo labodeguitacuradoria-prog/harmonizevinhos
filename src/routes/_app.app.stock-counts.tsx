@@ -436,6 +436,7 @@ function CountSessionView({ session }: { session: Session }) {
     toast.success("Contagem encerrada");
     qc.invalidateQueries({ queryKey: ["stock-count-session"] });
     qc.invalidateQueries({ queryKey: ["stock-map"] });
+    qc.invalidateQueries({ queryKey: ["dash-stock"] });
   }
 
   // mapa wine_id -> [qty por sessão histórica]

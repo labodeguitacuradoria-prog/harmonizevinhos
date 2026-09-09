@@ -106,6 +106,14 @@ function fullMonthLabel(year: number, monthIdx: number) {
 }
 
 
+function localDateKey(ts: string) {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return ts.slice(0, 10);
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
 function formatDateBR(iso: string) {
   const d = new Date(iso + "T00:00:00");
   if (isNaN(d.getTime())) return iso;
@@ -197,15 +205,17 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       // pega a última contagem fechada de cada restaurante do escopo
       const { data: sess } = await supabase
         .from("stock_count_sessions")
-        .select("id, restaurant_id, reference_date")
+        .select("id, restaurant_id, reference_date, closed_at")
         .in("restaurant_id", scopeIds)
         .eq("status", "closed")
-        .order("reference_date", { ascending: false });
+        .order("closed_at", { ascending: false, nullsFirst: false });
       const latestByRest = new Map<string, string>();
       let lastDate: string | null = null;
       for (const s of sess ?? []) {
         if (!latestByRest.has(s.restaurant_id)) latestByRest.set(s.restaurant_id, s.id);
-        if (s.reference_date && (!lastDate || s.reference_date > lastDate)) lastDate = s.reference_date;
+        // usa a data em que a contagem foi efetivamente fechada (hora local)
+        const d = s.closed_at ? localDateKey(s.closed_at) : s.reference_date;
+        if (d && (!lastDate || d > lastDate)) lastDate = d;
       }
       const map: Record<string, number> = {};
       const sessionIds = Array.from(latestByRest.values());

@@ -174,6 +174,22 @@ function fail(e: unknown) {
   return { ok: false as const, code, message };
 }
 
+function sessionDateBR(s?: { reference_date?: string | null; closed_at?: string | null } | null) {
+  if (!s) return null;
+  if (s.closed_at) {
+    const d = new Date(s.closed_at);
+    if (!isNaN(d.getTime())) {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Sao_Paulo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(d);
+    }
+  }
+  return s.reference_date ?? null;
+}
+
 export const openAccessLink = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => TokenSchema.parse(d))
   .handler(async ({ data }) => {
@@ -205,10 +221,10 @@ export const getGuestDashboard = createServerFn({ method: "POST" })
           supabaseAdmin.from("wines").select("id, volume, cost_price, sale_price").eq("restaurant_id", rid),
           supabaseAdmin
             .from("stock_count_sessions")
-            .select("id, reference_date")
+            .select("id, reference_date, closed_at")
             .eq("restaurant_id", rid)
             .eq("status", "closed")
-            .order("reference_date", { ascending: false })
+            .order("closed_at", { ascending: false, nullsFirst: false })
             .limit(1),
           supabaseAdmin
             .from("inventory_movements")
@@ -313,7 +329,7 @@ export const getGuestDashboard = createServerFn({ method: "POST" })
           cmvYear: revWineTotal > 0 ? (costTotal / revWineTotal) * 100 : 0,
           stockBottles,
           stockValue,
-          lastCountDate: lastSession?.reference_date ?? null,
+          lastCountDate: sessionDateBR(lastSession) ?? null,
         },
         targets: (targets ?? []).map((t) => ({
           indicator: t.indicator,
@@ -620,10 +636,10 @@ export const getGuestDashboardData = createServerFn({ method: "POST" })
             .eq("restaurant_id", rid),
           supabaseAdmin
             .from("stock_count_sessions")
-            .select("id, reference_date")
+            .select("id, reference_date, closed_at")
             .eq("restaurant_id", rid)
             .eq("status", "closed")
-            .order("reference_date", { ascending: false })
+            .order("closed_at", { ascending: false, nullsFirst: false })
             .limit(1),
           supabaseAdmin
             .from("inventory_movements")
@@ -667,7 +683,7 @@ export const getGuestDashboardData = createServerFn({ method: "POST" })
           quantity: Number(c.quantity ?? 0),
           total_amount: Number(c.total_amount ?? 0),
         })),
-        stock: { map: stockMap, lastDate: lastSession?.reference_date ?? null },
+        stock: { map: stockMap, lastDate: sessionDateBR(lastSession) ?? null },
         targets: (targets ?? []).map((t) => ({
           id: t.id as string,
           indicator: t.indicator as string,

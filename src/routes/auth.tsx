@@ -55,7 +55,7 @@ function AuthPage() {
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: name, restaurant_name: restaurantName },
+            data: { full_name: name },
           },
         });
         if (error) throw error;

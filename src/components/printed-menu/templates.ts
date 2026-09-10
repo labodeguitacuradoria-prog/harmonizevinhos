@@ -108,6 +108,34 @@ export const PAPER_LIST = [PAPERS.a4, PAPERS.a5, PAPERS.letter, PAPERS.dl];
 
 export const paperOf = (k: string | null | undefined): PaperDef => PAPERS[(k as PaperKey) ?? "a4"] ?? PAPERS.a4;
 
+/** Papel com dimensões definidas pelo usuário (em mm). */
+export function customPaper(widthMm: number, heightMm: number, padMm = 12): PaperDef {
+  const w = Math.min(Math.max(Number(widthMm) || 210, 60), 420);
+  const h = Math.min(Math.max(Number(heightMm) || 297, 80), 594);
+  const pad = Math.min(Math.max(Number(padMm) || 0, 0), 40);
+  return {
+    key: "a4",
+    code: "Personalizado",
+    dims: `${w.toString().replace(".", ",")} × ${h.toString().replace(".", ",")} mm`,
+    widthMm: w,
+    heightMm: h,
+    padMm: pad,
+    cssSize: `${w}mm ${h}mm`,
+  };
+}
+
+/** Espaçamento das linhas de informação abaixo do nome do rótulo (em pt). */
+export type MenuSpacing = {
+  /** distância entre o nome do rótulo e a primeira linha de informação */
+  nameGap: number;
+  /** distância entre as linhas de informação */
+  lineGap: number;
+  /** distância entre um rótulo e o próximo */
+  itemGap: number;
+};
+
+export const DEFAULT_SPACING: MenuSpacing = { nameGap: 1, lineGap: 1, itemGap: 8 };
+
 export type VisibleFields = {
   code: boolean;
   producer: boolean;

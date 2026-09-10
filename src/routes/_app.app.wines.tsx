@@ -833,7 +833,7 @@ function WinesSection() {
                   onChange={(e) => setF("wine_type", e.target.value)}
                   className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
                 >
-                  <option value="">Todos</option>
+                  <option value="">ex. Espumante</option>
                   {typeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </th>
@@ -843,7 +843,7 @@ function WinesSection() {
                   onChange={(e) => setF("volume", e.target.value)}
                   className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
                 >
-                  <option value="">Todos</option>
+                  <option value="">ex. 750 ml</option>
                   {volumeOptions.map((v) => <option key={v} value={v}>{v}</option>)}
                 </select>
               </th>

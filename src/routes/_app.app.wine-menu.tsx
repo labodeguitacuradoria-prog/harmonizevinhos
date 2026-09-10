@@ -358,6 +358,48 @@ function WineMenuPage() {
           </div>
         </div>
 
+        {/* Cartas salvas */}
+        <div className="mt-5 rounded-xl border border-border bg-card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Cartas salvas</div>
+            <div className="text-[11px] text-muted-foreground">
+              {currentId ? `Editando: ${listName || "sem nome"}` : "Nova carta (ainda não salva)"}
+            </div>
+          </div>
+          {savedLists.length === 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Nenhuma carta salva ainda. Monte a carta e clique em Salvar para dar um nome e guardá-la.
+            </p>
+          ) : (
+            <ul className="mt-3 grid gap-1 sm:grid-cols-2">
+              {savedLists.map((l) => (
+                <li
+                  key={l.id}
+                  className={`flex items-center gap-2 rounded border px-2 py-1.5 text-xs ${
+                    currentId === l.id ? "border-primary bg-accent" : "border-border hover:bg-accent"
+                  }`}
+                >
+                  <span className="flex-1 truncate">
+                    {l.name}
+                    <span className="ml-2 text-muted-foreground">
+                      {new Date(l.updated_at).toLocaleDateString("pt-BR")}
+                    </span>
+                  </span>
+                  <button
+                    onClick={() => loadSaved(l)}
+                    className="rounded border border-border px-2 py-0.5 text-[10px] uppercase text-primary hover:bg-background"
+                  >
+                    Carregar
+                  </button>
+                  <IconBtn onClick={() => deleteSaved(l.id)} title="Excluir carta">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </IconBtn>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         {/* Modelos */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {TEMPLATE_LIST.map((t) => (

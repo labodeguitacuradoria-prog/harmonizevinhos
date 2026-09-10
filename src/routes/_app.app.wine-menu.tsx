@@ -495,6 +495,7 @@ function WineMenuPage() {
                 onClick={() => {
                   setPaper(p.key);
                   setUseCustomPaper(false);
+                  setCustomOpen(false);
                 }}
                 className={`rounded-xl border p-3 text-left transition ${
                   !useCustomPaper && paper === p.key
@@ -506,26 +507,36 @@ function WineMenuPage() {
                 <div className="mt-1 text-xs text-muted-foreground">{p.dims}</div>
               </button>
             ))}
-            <button
-              onClick={() => setUseCustomPaper(true)}
-              className={`rounded-xl border p-3 text-left transition ${
-                useCustomPaper ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/60"
-              }`}
-            >
-              <div className="text-xs font-bold uppercase tracking-wider text-primary">Personalizado</div>
-              <div className="mt-1 text-xs text-muted-foreground">Você define largura e altura</div>
-            </button>
-          </div>
-          {useCustomPaper ? (
-            <div className="mt-3 grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-3">
-              <MmField label="Largura (mm)" value={customW} onChange={setCustomW} min={60} max={420} />
-              <MmField label="Altura (mm)" value={customH} onChange={setCustomH} min={80} max={594} />
-              <MmField label="Margem interna (mm)" value={customPad} onChange={setCustomPad} min={0} max={40} />
-              <p className="sm:col-span-3 text-[11px] text-muted-foreground">
-                Exemplos: 100 × 210 mm (folha estreita), 150 × 300 mm (carta alta). 10 mm = 1 cm.
-              </p>
+            <div className="relative" data-custom-dropdown>
+              <button
+                onClick={() => {
+                  setUseCustomPaper(true);
+                  setCustomOpen((v) => !v);
+                }}
+                className={`w-full rounded-xl border p-3 text-left transition ${
+                  useCustomPaper ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/60"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold uppercase tracking-wider text-primary">Personalizado</div>
+                  <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${customOpen ? "rotate-180" : ""}`} />
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">Você define as medidas</div>
+              </button>
+              {customOpen && (
+                <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
+                  <div className="grid gap-3">
+                    <MmField label="Largura (mm)" value={customW} onChange={setCustomW} min={60} max={420} />
+                    <MmField label="Altura (mm)" value={customH} onChange={setCustomH} min={80} max={594} />
+                    <MmField label="Margem interna (mm)" value={customPad} onChange={setCustomPad} min={0} max={40} />
+                  </div>
+                  <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
+                    Exemplos: 100 × 210 mm (folha estreita), 150 × 300 mm (carta alta). 10 mm = 1 cm.
+                  </p>
+                </div>
+              )}
             </div>
-          ) : null}
+          </div>
         </div>
 
         {/* Espaçamento das linhas */}

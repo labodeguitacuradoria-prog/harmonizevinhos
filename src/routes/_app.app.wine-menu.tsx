@@ -110,6 +110,7 @@ function WineMenuPage() {
   const [editingWineId, setEditingWineId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [savedOpen, setSavedOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
 
   useEffect(() => {
     if (!savedOpen) return;
@@ -120,6 +121,16 @@ function WineMenuPage() {
     document.addEventListener("mousedown", handle);
     return () => document.removeEventListener("mousedown", handle);
   }, [savedOpen]);
+
+  useEffect(() => {
+    if (!customOpen) return;
+    function handle(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-custom-dropdown]")) setCustomOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [customOpen]);
 
   async function saveWineName(id: string) {
     const name = editingName.trim();

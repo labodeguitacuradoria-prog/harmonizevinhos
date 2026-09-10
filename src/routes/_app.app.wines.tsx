@@ -366,6 +366,7 @@ type ColFilters = {
   vintage: string;
   wine_type: string;
   volume: string;
+  country: string;
   cost_price: string;
   sale_price: string;
   markup: string;
@@ -374,7 +375,7 @@ type ColFilters = {
   alert: "" | "comprar" | "ok" | "sem";
 };
 const EMPTY_FILTERS: ColFilters = {
-  internal_code: "", name: "", vintage: "", wine_type: "", volume: "",
+  internal_code: "", name: "", vintage: "", wine_type: "", volume: "", country: "",
   cost_price: "", sale_price: "", markup: "", stock: "", monthly: "", alert: "",
 };
 

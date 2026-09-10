@@ -1,44 +1,57 @@
-# Cobrança por assinatura do sistema
+# Plataforma em módulos: cada cliente usa só o que precisa
 
-Objetivo: cada restaurante assina o sistema, com 90 dias de teste grátis, plano mensal ou anual (anual com desconto), em reais, para clientes no Brasil.
+Hoje o sistema é um pacote único. A ideia é transformá-lo em cinco produtos que partem do mesmo ponto: o upload da carta de vinhos.
 
-## Provedor recomendado: Paddle (pagamentos integrados da Lovable)
+## Os módulos
 
-O produto é um software de gestão (SaaS), o que se encaixa no modelo do Paddle. Vantagens para o seu caso:
+| Módulo | O que entrega |
+| --- | --- |
+| Completo | Tudo o que existe hoje |
+| Painel de controle | Faturamento, garrafas, taças, estoque, preço médio, CMV, rolha, rótulos ativos, diagnóstico |
+| Análise de preços | Faixas de preço, margens, simulações, sugestões |
+| Carta para impressão | Modelos, seções, logotipo, PDF pronto |
+| Harmonização | Estúdio de harmonização com base na carta do restaurante |
 
-- Não precisa abrir conta em nenhum provedor de pagamento; a Lovable já cuida disso.
-- O Paddle atua como vendedor oficial: calcula, cobra e recolhe impostos, emite recibos, trata reembolsos e contestações.
-- Aceita cartões e métodos locais, com preços em reais.
-- Custo: 5% + US$ 0,50 por transação, sem taxas extras.
-- Começa em ambiente de teste, para você testar sem dinheiro real. Para receber de verdade, há uma verificação da sua empresa.
+Novos módulos podem ser somados depois sem refazer nada.
 
-Observação: cobrança por assinatura exige o plano Pro (ou superior) da Lovable.
+## Ponto de partida único: a carta
 
-## Passos
+Quem contrata um módulo isolado não precisa passar pelo cadastro completo. O caminho é:
 
-1. **Ativar os pagamentos** — abro o formulário de ativação do Paddle (e-mail, nome, empresa). Cria automaticamente o ambiente de teste.
-2. **Criar os planos** — cadastro dois preços do mesmo produto: "La Bodeguita — Mensal" e "La Bodeguita — Anual" (com desconto). Você me diz os valores; sugestão a confirmar: R$ 249/mês e R$ 2.490/ano (2 meses grátis).
-3. **Guardar a assinatura no banco** — tabela de assinaturas ligada a cada restaurante, com plano, situação (teste, ativa, atrasada, cancelada), fim do teste e fim do período pago.
-4. **Iniciar os 90 dias de teste** — quando um restaurante é criado, a data de fim do teste é gravada. Nenhum cartão é pedido nesse momento.
-5. **Tela de assinatura** — nova página dentro do app: mostra a situação atual, dias restantes do teste, comparação mensal x anual, botão para assinar e botão para gerenciar/cancelar.
-6. **Aviso de fim de teste** — faixa no topo do painel a partir de 15 dias antes do fim, com link para assinar.
-7. **Bloqueio suave após o vencimento** — sem assinatura ativa, o restaurante continua vendo o painel em leitura, mas cadastros, pedidos, contagens e importações ficam bloqueados com convite para assinar. Links de acesso do Chef e a página pública de harmonização continuam livres.
-8. **Confirmação automática do pagamento** — o Paddle avisa o sistema a cada pagamento, renovação, falha ou cancelamento, e a situação da assinatura é atualizada sozinha.
-9. **Cortesia liberada pelo administrador** — na tela de restaurantes do administrador, um controle "Acesso gratuito" com data de validade opcional e campo de motivo. Restaurante em cortesia usa o sistema inteiro sem cobrança e sem aviso de teste; a tela de assinatura mostra "Cortesia concedida". Só o administrador geral pode ligar ou desligar.
-10. **Testar de ponta a ponta** — assinar no ambiente de teste, conferir liberação do acesso, renovação, falha de pagamento, cancelamento e cortesia.
+1. Cria a conta (e-mail e senha, ou Google).
+2. Informa apenas o nome do restaurante.
+3. Faz o upload da carta (PDF, foto ou planilha) — a leitura por IA já existente preenche os rótulos.
+4. Cai direto na tela do módulo contratado.
+
+O restaurante é criado por trás dos panos, então quem começar só com a carta pode virar cliente do pacote completo depois sem perder nada.
+
+## Como o app muda
+
+- **Menu enxuto**: a barra lateral mostra somente os módulos liberados. Quem tem só "Carta para impressão" vê Início, Produtos e Carta.
+- **Início como vitrine**: os módulos não contratados aparecem como cartões com "Conhecer", levando a uma página de apresentação e ao pedido de liberação/assinatura.
+- **Endereços diretos**: quem entra num endereço de módulo não liberado vê a página de apresentação, não uma tela quebrada.
+- **Administrador geral** liga e desliga módulos por restaurante na tela de Restaurantes, com opção de liberar tudo por cortesia.
+- **Perfis**: sommelier autônomo pode ter vários restaurantes/clientes e trocar entre eles com o seletor já existente. Importador continua no portal do fornecedor. Pessoa física usa a harmonização pública, sem carta.
+- Visual, cores e tipografia atuais permanecem.
+
+## Ordem de entrega
+
+1. Base de módulos + menu e telas respeitando o que está liberado + controle do administrador.
+2. Entrada rápida "só a carta" e módulo **Carta para impressão** como primeiro produto vendido isolado.
+3. Análise de preços isolada.
+4. Painel de controle isolado.
+5. Harmonização isolada.
+6. Ligar os módulos à cobrança (planos por módulo), reaproveitando o plano de assinatura já definido.
 
 ## Detalhes técnicos
 
-- `payments--enable_paddle_payments`, depois `batch_create_product` para os dois preços (mensal/anual) do mesmo produto.
-- Migração nova: `public.subscriptions` (`restaurant_id`, `provider`, `customer_id`, `subscription_id`, `price_id`, `plan` `monthly|yearly`, `status` enum `trialing|active|past_due|canceled|complimentary`, `trial_ends_at`, `current_period_end`, `comp_until`, `comp_reason`, `comp_granted_by`) + `GRANT` para `authenticated`/`service_role`, RLS por `can_manage_restaurant`, escrita apenas via `service_role`.
-- `trial_ends_at` default `now() + interval '90 days'`; trigger em `handle_new_user`/criação de restaurante insere a linha de teste.
-- Cortesia: server fn `setComplimentaryAccess` com `requireSupabaseAuth` que confere `has_role(userId,'admin')` antes de gravar via `supabaseAdmin`; o gate considera acesso liberado quando `status = 'complimentary'` e `comp_until` é nulo ou futuro.
-- Checkout: `createServerFn` com `requireSupabaseAuth`, valida que o usuário administra o restaurante, cria a sessão de checkout do Paddle e retorna a URL.
-- Webhook: rota `src/routes/api/public/paddle-webhook.ts`, valida a assinatura do Paddle antes de processar, grava com `supabaseAdmin`.
-- Guarda de acesso: helper `useSubscriptionGate` a partir de `subscriptions` + hook existente `use-auth`; aplicado nas telas de escrita, sem tocar em `/acesso/*` nem `/harmonizar`.
-- Visual mantido no tema escuro dourado/vinho já existente.
-
-## O que preciso de você
-
-- Valores do plano mensal e do plano anual.
-- Nome comercial/empresa e e-mail para o cadastro no Paddle (preenchidos no formulário de ativação).
+- Migração: `public.module_entitlements` (`restaurant_id`, `module` enum `full|dashboard|pricing|printed_menu|pairing`, `enabled`, `source` `admin|subscription|trial`, `expires_at`, `granted_by`) + `GRANT` para `authenticated`/`service_role`; RLS de leitura por `can_manage_restaurant`/`belongs_to_group`, escrita só por `service_role`. Restaurantes existentes recebem `full` na própria migração.
+- `src/lib/modules.ts`: lista dos módulos, rotas de cada um e helper `hasModule()`; hook `use-entitlements` com React Query, integrado ao `useActiveScope`.
+- `src/hooks/use-auth.ts`: expõe `modules` do restaurante ativo (união dos módulos em visão consolidada de rede).
+- `src/routes/_app.tsx`: `renderNav` filtra os itens de `restaurantNav` por módulo; admin global continua vendo tudo.
+- Guarda por rota: componente `ModuleGate` nas telas de `dashboard`, `price-analysis`, `wine-menu`, `pairings` — sem `beforeLoad` (entitlement é dado do cliente), renderizando a página de apresentação quando faltar acesso.
+- `src/routes/_app.app.index.tsx`: grade de módulos com estado liberado/bloqueado.
+- Onboarding: nova rota pública `src/routes/comecar.tsx` com escolha do módulo → cadastro → criação do restaurante e do entitlement via `createServerFn` com `requireSupabaseAuth` → import da carta reutilizando `winelist-import.functions.ts` → redireciona para a rota do módulo.
+- `setModuleEntitlement` (server fn, `requireSupabaseAuth` + `has_role(userId,'admin')`, escreve com `supabaseAdmin`), usada na tela de Restaurantes do admin.
+- `/harmonizar` e `/acesso/*` continuam fora de qualquer bloqueio.
+- Cobrança futura: cada preço do Paddle mapeia para um `module`; o webhook grava o entitlement com `source = 'subscription'`. O plano de assinatura anterior (tabela `subscriptions`, 90 dias de teste, cortesia do administrador, bloqueio suave) segue válido e será retomado nesta etapa.

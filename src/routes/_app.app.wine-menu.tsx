@@ -917,6 +917,7 @@ function WineMenuPage() {
               paper={paper}
               paperDef={activePaper}
               spacing={spacing}
+              typography={typography}
               logoUrl={logoUrl}
               address={address}
               addressPosition={addressPosition}

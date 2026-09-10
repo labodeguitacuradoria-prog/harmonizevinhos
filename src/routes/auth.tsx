@@ -45,14 +45,16 @@ function AuthPage() {
   }, [navigate]);
 
   useEffect(() => {
-    if (chosenModule) {
-      try {
+    try {
+      if (mode === "signup" && chosenModule) {
         localStorage.setItem("signup-module", chosenModule);
-      } catch {
-        /* ignora */
+      } else {
+        localStorage.removeItem("signup-module");
       }
+    } catch {
+      /* ignora */
     }
-  }, [chosenModule]);
+  }, [chosenModule, mode]);
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();

@@ -11,6 +11,7 @@ import {
 } from "@/lib/access.functions";
 import { Copy, ShieldCheck, UserPlus, Trash2, Settings2, UserX } from "lucide-react";
 import AccessManageDialog, { type ManageTarget } from "@/components/AccessManageDialog";
+import { MODULE_LABEL, type AppModule } from "@/lib/modules";
 
 export const Route = createFileRoute("/_app/admin/access-map")({
   component: AccessMapAdmin,

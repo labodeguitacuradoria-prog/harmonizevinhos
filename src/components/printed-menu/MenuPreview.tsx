@@ -1,11 +1,14 @@
 import {
+  DEFAULT_SPACING,
   TEMPLATES,
   formatPrice,
   paperOf,
   wineMetaFirstLine,
   wineMetaGrapeLine,
   type MenuSection,
+  type MenuSpacing,
   type MenuWine,
+  type PaperDef,
   type PaperKey,
   type TemplateKey,
   type VisibleFields,
@@ -14,6 +17,8 @@ import {
 type Props = {
   template: TemplateKey;
   paper: PaperKey;
+  paperDef?: PaperDef;
+  spacing?: MenuSpacing;
   title: string;
   subtitle: string;
   footer: string;
@@ -31,6 +36,8 @@ type Props = {
 export function MenuPreview({
   template,
   paper,
+  paperDef,
+  spacing = DEFAULT_SPACING,
   title,
   subtitle,
   footer,
@@ -43,7 +50,7 @@ export function MenuPreview({
   winesById,
 }: Props) {
   const t = TEMPLATES[template];
-  const p = paperOf(paper);
+  const p = paperDef ?? paperOf(paper);
   const twoCols = t.columns === 2 && p.widthMm >= 148;
 
   const visibleSections = sections
@@ -94,7 +101,7 @@ export function MenuPreview({
           {visibleSections.map((sec) => (
             <section key={sec.id} className="mb-6 break-inside-avoid">
               <div className={`${t.sectionTitle} ${t.rule} pb-1`}>{sec.title}</div>
-              <ul className="mt-2.5 space-y-2">
+              <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>
                 {sec.wineIds.map((id) => {
                   const w = winesById[id];
                   const firstLine = wineMetaFirstLine(w, fields);
@@ -117,8 +124,19 @@ export function MenuPreview({
                           <span className={t.itemPrice}>{formatPrice(w.sale_price, priceDecimals)}</span>
                         ) : null}
                       </div>
-                      {firstLine ? <div className={t.itemMeta}>{firstLine}</div> : null}
-                      {grapeLine ? <div className={t.itemMeta}>{grapeLine}</div> : null}
+                      {firstLine ? (
+                        <div className={t.itemMeta} style={{ marginTop: `${spacing.nameGap}pt` }}>
+                          {firstLine}
+                        </div>
+                      ) : null}
+                      {grapeLine ? (
+                        <div
+                          className={t.itemMeta}
+                          style={{ marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}
+                        >
+                          {grapeLine}
+                        </div>
+                      ) : null}
                     </li>
                   );
                 })}

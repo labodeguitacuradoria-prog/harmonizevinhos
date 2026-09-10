@@ -22,13 +22,17 @@ import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
 import ModuleGate from "@/components/ModuleGate";
 import {
+  DEFAULT_SPACING,
   DEFAULT_VISIBLE_FIELDS,
   PAPER_LIST,
   TEMPLATE_LIST,
   autoSections,
+  customPaper,
   isGlassVol,
+  paperOf,
   typeLabel,
   type MenuSection,
+  type MenuSpacing,
   type MenuWine,
   type PaperKey,
   type TemplateKey,
@@ -67,7 +71,12 @@ type SavedList = {
   header_title: string | null;
   header_subtitle: string | null;
   footer_text: string | null;
-  visible_fields: VisibleFields & { addressPosition?: "header" | "footer"; priceDecimals?: boolean };
+  visible_fields: VisibleFields & {
+    addressPosition?: "header" | "footer";
+    priceDecimals?: boolean;
+    spacing?: MenuSpacing;
+    customPaper?: { widthMm: number; heightMm: number; padMm: number };
+  };
   sections: MenuSection[];
   logo_url: string | null;
   address_text: string | null;
@@ -163,6 +172,16 @@ function WineMenuPage() {
   const [subtitle, setSubtitle] = useState("");
   const [footer, setFooter] = useState("");
   const [paper, setPaper] = useState<PaperKey>("a4");
+  const [useCustomPaper, setUseCustomPaper] = useState(false);
+  const [customW, setCustomW] = useState(210);
+  const [customH, setCustomH] = useState(297);
+  const [customPad, setCustomPad] = useState(12);
+  const [spacing, setSpacing] = useState<MenuSpacing>(DEFAULT_SPACING);
+
+  const activePaper = useMemo(
+    () => (useCustomPaper ? customPaper(customW, customH, customPad) : paperOf(paper)),
+    [useCustomPaper, customW, customH, customPad, paper],
+  );
   const [logoUrl, setLogoUrl] = useState("");
   const [address, setAddress] = useState("");
   const [addressPosition, setAddressPosition] = useState<"header" | "footer">("header");
@@ -265,7 +284,15 @@ function WineMenuPage() {
       header_title: title,
       header_subtitle: subtitle,
       footer_text: footer,
-      visible_fields: JSON.parse(JSON.stringify({ ...fields, addressPosition, priceDecimals })),
+      visible_fields: JSON.parse(
+        JSON.stringify({
+          ...fields,
+          addressPosition,
+          priceDecimals,
+          spacing,
+          customPaper: useCustomPaper ? { widthMm: customW, heightMm: customH, padMm: customPad } : null,
+        }),
+      ),
       sections: JSON.parse(JSON.stringify(sections)),
       logo_url: logoUrl || null,
       address_text: address || null,
@@ -302,6 +329,14 @@ function WineMenuPage() {
     setLogoUrl(l.logo_url ?? "");
     setAddress(l.address_text ?? "");
     setPaper((l.paper_size as PaperKey) ?? "a4");
+    setSpacing({ ...DEFAULT_SPACING, ...(l.visible_fields?.spacing ?? {}) });
+    const cp = l.visible_fields?.customPaper;
+    setUseCustomPaper(!!cp);
+    if (cp) {
+      setCustomW(cp.widthMm);
+      setCustomH(cp.heightMm);
+      setCustomPad(cp.padMm ?? 12);
+    }
     setSections(Array.isArray(l.sections) ? l.sections : []);
     setInitialized(true);
     toast.success(`Carta "${l.name}" carregada.`);
@@ -442,19 +477,72 @@ function WineMenuPage() {
         {/* Tamanho do papel */}
         <div className="mt-4">
           <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Tamanho do papel</div>
-          <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {PAPER_LIST.map((p) => (
               <button
                 key={p.key}
-                onClick={() => setPaper(p.key)}
+                onClick={() => {
+                  setPaper(p.key);
+                  setUseCustomPaper(false);
+                }}
                 className={`rounded-xl border p-3 text-left transition ${
-                  paper === p.key ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/60"
+                  !useCustomPaper && paper === p.key
+                    ? "border-primary bg-accent"
+                    : "border-border bg-card hover:border-primary/60"
                 }`}
               >
                 <div className="text-xs font-bold uppercase tracking-wider text-primary">{p.code}</div>
                 <div className="mt-1 text-xs text-muted-foreground">{p.dims}</div>
               </button>
             ))}
+            <button
+              onClick={() => setUseCustomPaper(true)}
+              className={`rounded-xl border p-3 text-left transition ${
+                useCustomPaper ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/60"
+              }`}
+            >
+              <div className="text-xs font-bold uppercase tracking-wider text-primary">Personalizado</div>
+              <div className="mt-1 text-xs text-muted-foreground">Você define largura e altura</div>
+            </button>
+          </div>
+          {useCustomPaper ? (
+            <div className="mt-3 grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-3">
+              <MmField label="Largura (mm)" value={customW} onChange={setCustomW} min={60} max={420} />
+              <MmField label="Altura (mm)" value={customH} onChange={setCustomH} min={80} max={594} />
+              <MmField label="Margem interna (mm)" value={customPad} onChange={setCustomPad} min={0} max={40} />
+              <p className="sm:col-span-3 text-[11px] text-muted-foreground">
+                Exemplos: 100 × 210 mm (folha estreita), 150 × 300 mm (carta alta). 10 mm = 1 cm.
+              </p>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Espaçamento das linhas */}
+        <div className="mt-4">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Espaçamento das linhas</div>
+          <div className="mt-2 grid gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-3">
+            <SpaceSlider
+              label="Do rótulo para a linha de baixo"
+              value={spacing.nameGap}
+              onChange={(v) => setSpacing((s) => ({ ...s, nameGap: v }))}
+            />
+            <SpaceSlider
+              label="Entre as linhas de informação"
+              value={spacing.lineGap}
+              onChange={(v) => setSpacing((s) => ({ ...s, lineGap: v }))}
+            />
+            <SpaceSlider
+              label="Entre um rótulo e o próximo"
+              value={spacing.itemGap}
+              max={24}
+              onChange={(v) => setSpacing((s) => ({ ...s, itemGap: v }))}
+            />
+            <button
+              onClick={() => setSpacing(DEFAULT_SPACING)}
+              className="sm:col-span-3 justify-self-start inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+            >
+              <RotateCcw className="h-3 w-3" /> Voltar ao padrão
+            </button>
           </div>
         </div>
       </div>
@@ -713,12 +801,14 @@ function WineMenuPage() {
         {/* Pré-visualização */}
         <div className="print-root">
           <div className="no-print mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Pré-visualização · {PAPER_LIST.find((p) => p.key === paper)?.code} ({PAPER_LIST.find((p) => p.key === paper)?.dims})
+            Pré-visualização · {activePaper.code} ({activePaper.dims})
           </div>
           <div className="overflow-x-auto rounded-xl border border-border bg-neutral-200 p-4 print:border-0 print:bg-white print:p-0">
             <MenuPreview
               template={template}
               paper={paper}
+              paperDef={activePaper}
+              spacing={spacing}
               logoUrl={logoUrl}
               address={address}
               addressPosition={addressPosition}
@@ -778,5 +868,63 @@ function IconBtn({
     >
       {children}
     </button>
+  );
+}
+
+function MmField({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</label>
+      <input
+        type="number"
+        value={value}
+        min={min}
+        max={max}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+      />
+    </div>
+  );
+}
+
+function SpaceSlider({
+  label,
+  value,
+  onChange,
+  max = 12,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  max?: number;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <label className="flex items-center justify-between text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span>{label}</span>
+        <span className="tabular-nums text-primary">{value}</span>
+      </label>
+      <input
+        type="range"
+        min={0}
+        max={max}
+        step={0.5}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="accent-primary"
+      />
+    </div>
   );
 }

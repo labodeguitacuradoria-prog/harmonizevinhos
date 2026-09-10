@@ -172,6 +172,11 @@ function WineMenuPage() {
   const [subtitle, setSubtitle] = useState("");
   const [footer, setFooter] = useState("");
   const [paper, setPaper] = useState<PaperKey>("a4");
+  const [useCustomPaper, setUseCustomPaper] = useState(false);
+  const [customW, setCustomW] = useState(210);
+  const [customH, setCustomH] = useState(297);
+  const [customPad, setCustomPad] = useState(12);
+  const [spacing, setSpacing] = useState<MenuSpacing>(DEFAULT_SPACING);
   const [logoUrl, setLogoUrl] = useState("");
   const [address, setAddress] = useState("");
   const [addressPosition, setAddressPosition] = useState<"header" | "footer">("header");

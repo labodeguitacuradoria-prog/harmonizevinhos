@@ -52,11 +52,20 @@ export const createRestaurantWithAccess = createServerFn({ method: "POST" })
       .single();
     if (rErr) throw new Error(rErr.message);
 
-    await supabaseAdmin.from("user_roles").insert({
-      user_id: context.userId,
-      role: "rest_admin",
-      restaurant_id: rest.id,
-    });
+    // O vínculo do responsável é criado automaticamente pelo banco; garante caso não exista.
+    const { data: existingRole } = await supabaseAdmin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("restaurant_id", rest.id)
+      .maybeSingle();
+    if (!existingRole) {
+      await supabaseAdmin.from("user_roles").insert({
+        user_id: context.userId,
+        role: "rest_admin",
+        restaurant_id: rest.id,
+      });
+    }
     return { id: rest.id, group_id: groupId };
   });
 
@@ -231,7 +240,7 @@ export const listAllAccessMap = createServerFn({ method: "GET" })
     const restIds = Array.from(
       new Set((rows ?? []).map((r) => r.restaurant_id).filter(Boolean) as string[]),
     );
-    const [profRes, restRes] = await Promise.all([
+    const [profRes, restRes, entRes] = await Promise.all([
       userIds.length
         ? supabaseAdmin.from("profiles").select("id, email, full_name").in("id", userIds)
         : Promise.resolve({ data: [] as any[] }),
@@ -241,11 +250,45 @@ export const listAllAccessMap = createServerFn({ method: "GET" })
             .select("id, name, city, group_id, cnpj")
             .in("id", restIds)
         : Promise.resolve({ data: [] as any[] }),
+      restIds.length
+        ? supabaseAdmin
+            .from("module_entitlements")
+            .select("restaurant_id, module, enabled, expires_at")
+            .in("restaurant_id", restIds)
+        : Promise.resolve({ data: [] as any[] }),
     ]);
     const profiles: Record<string, any> = {};
     for (const p of profRes.data ?? []) profiles[p.id] = p;
     const restaurants: Record<string, any> = {};
     for (const r of restRes.data ?? []) restaurants[r.id] = r;
+    const modules: Record<string, string[]> = {};
+    const now = Date.now();
+    for (const e of entRes.data ?? []) {
+      if (!e.enabled) continue;
+      if (e.expires_at && new Date(e.expires_at).getTime() < now) continue;
+      (modules[e.restaurant_id] ??= []).push(e.module);
+    }
+
+    // E-mails ausentes no perfil vêm do próprio login.
+    const missing = userIds.filter((id) => !profiles[id]?.email);
+    if (missing.length) {
+      await Promise.all(
+        missing.map(async (id) => {
+          const { data: u } = await supabaseAdmin.auth.admin.getUserById(id);
+          if (!u?.user) return;
+          profiles[id] = {
+            ...(profiles[id] ?? {}),
+            email: profiles[id]?.email ?? u.user.email ?? null,
+            full_name:
+              profiles[id]?.full_name ??
+              (u.user.user_metadata?.['full_name'] as string | undefined) ??
+              (u.user.user_metadata?.['name'] as string | undefined) ??
+              null,
+          };
+        }),
+      );
+    }
+
     return (rows ?? []).map((r) => ({
       user_role_id: r.id,
       user_id: r.user_id,
@@ -255,6 +298,7 @@ export const listAllAccessMap = createServerFn({ method: "GET" })
       restaurant_id: r.restaurant_id,
       restaurant_name: r.restaurant_id ? restaurants[r.restaurant_id]?.name ?? null : null,
       restaurant_cnpj: r.restaurant_id ? restaurants[r.restaurant_id]?.cnpj ?? null : null,
+      modules: r.restaurant_id ? modules[r.restaurant_id] ?? [] : [],
       supplier_id: r.supplier_id,
       created_at: r.created_at,
     }));

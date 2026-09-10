@@ -11,6 +11,7 @@ import {
 } from "@/lib/access.functions";
 import { Copy, ShieldCheck, UserPlus, Trash2, Settings2, UserX } from "lucide-react";
 import AccessManageDialog, { type ManageTarget } from "@/components/AccessManageDialog";
+import { MODULE_LABEL, type AppModule } from "@/lib/modules";
 
 export const Route = createFileRoute("/_app/admin/access-map")({
   component: AccessMapAdmin,
@@ -136,15 +137,16 @@ function AccessMapAdmin() {
               <th className="px-3 py-2 text-left">E-mail</th>
               <th className="px-3 py-2 text-left">Nome</th>
               <th className="px-3 py-2 text-left">Papel</th>
+              <th className="px-3 py-2 text-left">Pacote</th>
               <th className="px-3 py-2 text-left">Restaurante</th>
               <th className="px-3 py-2 text-left">Desde</th>
-              <th className="px-3 py-2"></th>
+              <th className="px-3 py-2 text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground">
+                <td colSpan={7} className="px-3 py-4 text-center text-muted-foreground">
                   Carregando...
                 </td>
               </tr>
@@ -158,6 +160,22 @@ function AccessMapAdmin() {
                     <span className="rounded-md border border-primary/50 bg-[color:var(--wine)]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
                       {ROLE_LABEL[r.role] ?? r.role}
                     </span>
+                  </td>
+                  <td className="px-3 py-2">
+                    {r.modules?.length ? (
+                      <div className="flex flex-wrap gap-1">
+                        {(r.modules.includes("full") ? ["full"] : r.modules).map((m: string) => (
+                          <span
+                            key={m}
+                            className="rounded-md border border-border bg-[color:var(--surface-2)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground"
+                          >
+                            {MODULE_LABEL[m as AppModule] ?? m}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-muted-foreground">—</span>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-muted-foreground">
                     {r.restaurant_name ?? "—"}

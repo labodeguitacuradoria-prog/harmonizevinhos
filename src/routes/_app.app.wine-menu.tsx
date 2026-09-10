@@ -279,7 +279,15 @@ function WineMenuPage() {
       header_title: title,
       header_subtitle: subtitle,
       footer_text: footer,
-      visible_fields: JSON.parse(JSON.stringify({ ...fields, addressPosition, priceDecimals })),
+      visible_fields: JSON.parse(
+        JSON.stringify({
+          ...fields,
+          addressPosition,
+          priceDecimals,
+          spacing,
+          customPaper: useCustomPaper ? { widthMm: customW, heightMm: customH, padMm: customPad } : null,
+        }),
+      ),
       sections: JSON.parse(JSON.stringify(sections)),
       logo_url: logoUrl || null,
       address_text: address || null,

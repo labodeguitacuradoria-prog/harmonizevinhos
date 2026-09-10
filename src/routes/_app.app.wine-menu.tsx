@@ -118,6 +118,7 @@ function WineMenuPage() {
   const [savedOpen, setSavedOpen] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
   const [spacingOpen, setSpacingOpen] = useState(false);
+  const [fontOpen, setFontOpen] = useState(false);
 
   useEffect(() => {
     if (!savedOpen) return;

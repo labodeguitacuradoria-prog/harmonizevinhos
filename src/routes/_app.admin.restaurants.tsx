@@ -5,6 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { setActiveRestaurant } from "@/lib/active-scope";
 import { Building2, LogIn, Search } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { setModuleEntitlement } from "@/lib/modules.functions";
+import { MODULES, type AppModule } from "@/lib/modules";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/admin/restaurants")({
   component: AdminRestaurants,
@@ -62,6 +67,17 @@ function AdminRestaurants() {
           supabase.from("user_roles").select("restaurant_id, user_id, role"),
         ]);
 
+      const { data: ents } = await supabase
+        .from("module_entitlements")
+        .select("restaurant_id, module, enabled");
+      const modules = new Map<string, Set<AppModule>>();
+      for (const e of ents ?? []) {
+        if (!e.enabled) continue;
+        const set = modules.get(e.restaurant_id) ?? new Set<AppModule>();
+        set.add(e.module as AppModule);
+        modules.set(e.restaurant_id, set);
+      }
+
       const profileIds = Array.from(new Set((rests ?? []).map((r) => r.owner_id)));
       const { data: profiles } = profileIds.length
         ? await supabase.from("profiles").select("id, email, full_name").in("id", profileIds)
@@ -82,6 +98,7 @@ function AdminRestaurants() {
         owners: new Map(
           (profiles ?? []).map((p) => [p.id, p.email ?? p.full_name ?? "—"] as const),
         ),
+        modules,
       };
     },
   });
@@ -172,10 +189,63 @@ function AdminRestaurants() {
                 <Metric label="Pedidos" value={data?.orderCount.get(r.id) ?? 0} />
                 <Metric label="Acessos" value={data?.userCount.get(r.id) ?? 0} />
               </div>
+              <ModuleToggles
+                restaurantId={r.id}
+                active={data?.modules.get(r.id) ?? new Set<AppModule>()}
+              />
             </div>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function ModuleToggles({
+  restaurantId,
+  active,
+}: {
+  restaurantId: string;
+  active: Set<AppModule>;
+}) {
+  const qc = useQueryClient();
+  const setModule = useServerFn(setModuleEntitlement);
+  const mut = useMutation({
+    mutationFn: (vars: { module: AppModule; enabled: boolean }) =>
+      setModule({ data: { restaurant_id: restaurantId, ...vars } }),
+    onSuccess: () => {
+      toast.success("Módulos atualizados.");
+      qc.invalidateQueries({ queryKey: ["admin-restaurants"] });
+      qc.invalidateQueries({ queryKey: ["module-entitlements"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao atualizar módulos."),
+  });
+
+  return (
+    <div className="mt-3 border-t border-border pt-3">
+      <div className="text-[9px] uppercase tracking-wide text-muted-foreground">
+        Módulos liberados
+      </div>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {MODULES.map((m) => {
+          const on = active.has(m.key);
+          return (
+            <button
+              key={m.key}
+              disabled={mut.isPending}
+              onClick={() => mut.mutate({ module: m.key, enabled: !on })}
+              title={m.description}
+              className={`rounded-md border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide transition-colors disabled:opacity-60 ${
+                on
+                  ? "border-primary bg-[color:var(--wine)]/20 text-primary"
+                  : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+              }`}
+            >
+              {m.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

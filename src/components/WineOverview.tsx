@@ -64,6 +64,7 @@ export function WineOverview({
   onEdit,
   metric,
   onMetricChange,
+  simple = false,
 }: {
   wine: OverviewWine;
   restaurantId: string;
@@ -72,6 +73,8 @@ export function WineOverview({
 
   metric: Metric;
   onMetricChange: (m: Metric) => void;
+  /** Modo enxuto (módulo Carta para impressão): sem estoque, vendas e participação. */
+  simple?: boolean;
 }) {
   const now = new Date();
   const currentYear = now.getFullYear();

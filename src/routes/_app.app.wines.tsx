@@ -1016,6 +1016,7 @@ function WinesSection() {
       {(showForm || editWine) && (
         <WineForm
           wine={editWine}
+          printOnly={printOnly}
           suppliers={suppliers}
           restaurantId={restaurantId!}
           onClose={() => { setShowForm(false); setEditWine(null); }}

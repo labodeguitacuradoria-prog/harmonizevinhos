@@ -14,6 +14,9 @@ import {
   X,
   ScrollText,
   RotateCcw,
+  Pencil,
+  Check,
+
 } from "lucide-react";
 import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
@@ -94,6 +97,23 @@ function WineMenuPage() {
     () => memberships.find((m) => m.restaurantId === restaurantId)?.name ?? "",
     [memberships, restaurantId],
   );
+
+  const [editingWineId, setEditingWineId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+
+  async function saveWineName(id: string) {
+    const name = editingName.trim();
+    setEditingWineId(null);
+    if (!name) return;
+    const { error } = await supabase.from("wines").update({ name }).eq("id", id);
+    if (error) {
+      toast.error("Não foi possível salvar o nome do rótulo.");
+      return;
+    }
+    toast.success("Rótulo atualizado.");
+    queryClient.invalidateQueries({ queryKey: ["wine-menu-wines", restaurantId] });
+  }
+
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wine-menu-wines", restaurantId],
@@ -481,20 +501,56 @@ function WineMenuPage() {
                           key={id}
                           className="flex items-center gap-2 rounded px-2 py-1 text-xs text-foreground hover:bg-accent"
                         >
-                          <span className="flex-1 truncate">
-                            {w.name}
-                            {w.vintage ? ` ${w.vintage}` : ""}
-                            <span className="ml-1 text-muted-foreground">{w.volume ?? ""}</span>
-                          </span>
-                          <IconBtn onClick={() => moveWine(sec.id, wi, -1)} title="Subir">
-                            <ChevronUp className="h-3 w-3" />
-                          </IconBtn>
-                          <IconBtn onClick={() => moveWine(sec.id, wi, 1)} title="Descer">
-                            <ChevronDown className="h-3 w-3" />
-                          </IconBtn>
-                          <IconBtn onClick={() => removeWine(sec.id, id)} title="Retirar da carta">
-                            <X className="h-3 w-3" />
-                          </IconBtn>
+                          {editingWineId === id ? (
+                            <>
+                              <input
+                                autoFocus
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") saveWineName(id);
+                                  if (e.key === "Escape") setEditingWineId(null);
+                                }}
+                                className="flex-1 rounded border border-input bg-card px-2 py-1 text-xs"
+                              />
+                              <IconBtn onClick={() => saveWineName(id)} title="Salvar nome">
+                                <Check className="h-3 w-3" />
+                              </IconBtn>
+                              <IconBtn onClick={() => setEditingWineId(null)} title="Cancelar">
+                                <X className="h-3 w-3" />
+                              </IconBtn>
+                            </>
+                          ) : (
+                            <>
+                              <span className="flex-1 truncate">
+                                {w.name}
+                                {w.vintage ? ` ${w.vintage}` : ""}
+                                <span className="ml-1 text-muted-foreground">{w.volume ?? ""}</span>
+                              </span>
+                              <IconBtn
+                                onClick={() => {
+                                  setEditingWineId(id);
+                                  setEditingName(w.name ?? "");
+                                }}
+                                title="Editar nome do rótulo"
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </IconBtn>
+                              <IconBtn onClick={() => moveWine(sec.id, wi, -1)} title="Subir">
+                                <ChevronUp className="h-3 w-3" />
+                              </IconBtn>
+                              <IconBtn onClick={() => moveWine(sec.id, wi, 1)} title="Descer">
+                                <ChevronDown className="h-3 w-3" />
+                              </IconBtn>
+                            </>
+                          )}
+
+                          {editingWineId !== id && (
+                            <IconBtn onClick={() => removeWine(sec.id, id)} title="Retirar da carta">
+                              <X className="h-3 w-3" />
+                            </IconBtn>
+                          )}
+
                         </li>
                       );
                     })}

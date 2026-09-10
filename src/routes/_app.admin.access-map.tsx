@@ -6,9 +6,10 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   adminInviteAccess,
   adminRemoveAccess,
+  adminDeleteUserAccount,
   listAllAccessMap,
 } from "@/lib/access.functions";
-import { Copy, ShieldCheck, UserPlus, Trash2, Settings2 } from "lucide-react";
+import { Copy, ShieldCheck, UserPlus, Trash2, Settings2, UserX } from "lucide-react";
 import AccessManageDialog, { type ManageTarget } from "@/components/AccessManageDialog";
 
 export const Route = createFileRoute("/_app/admin/access-map")({

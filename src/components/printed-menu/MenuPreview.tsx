@@ -20,6 +20,7 @@ type Props = {
   address?: string;
   addressPosition?: "header" | "footer";
   fields: VisibleFields;
+  priceDecimals?: boolean;
   sections: MenuSection[];
   winesById: Record<string, MenuWine>;
 };
@@ -36,6 +37,7 @@ export function MenuPreview({
   address,
   addressPosition = "header",
   fields,
+  priceDecimals = true,
   sections,
   winesById,
 }: Props) {
@@ -110,7 +112,7 @@ export function MenuPreview({
                           <span className="flex-1" />
                         )}
                         {fields.price && w.sale_price != null ? (
-                          <span className={t.itemPrice}>{formatPrice(w.sale_price)}</span>
+                          <span className={t.itemPrice}>{formatPrice(w.sale_price, priceDecimals)}</span>
                         ) : null}
                       </div>
                       {meta ? <div className={t.itemMeta}>{meta}</div> : null}

@@ -181,9 +181,10 @@ export function autoSections(wines: MenuWine[]): MenuSection[] {
   return keys.map((k) => ({ id: `sec-${k}`, title: k, wineIds: buckets.get(k)! }));
 }
 
-export function formatPrice(v: number | null | undefined): string {
+export function formatPrice(v: number | null | undefined, decimals = true): string {
   if (v == null) return "";
-  return Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const d = decimals ? 2 : 0;
+  return Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 
 export function wineMeta(w: MenuWine, f: VisibleFields): string {

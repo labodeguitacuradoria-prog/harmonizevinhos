@@ -5,6 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { setActiveRestaurant } from "@/lib/active-scope";
 import { Building2, LogIn, Search } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { setModuleEntitlement } from "@/lib/modules.functions";
+import { MODULES, type AppModule } from "@/lib/modules";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/admin/restaurants")({
   component: AdminRestaurants,

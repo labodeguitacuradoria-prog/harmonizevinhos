@@ -1,4 +1,4 @@
-export type TemplateKey = "classic" | "twocol" | "minimal";
+export type TemplateKey = "classic" | "twocol" | "minimal" | "casual";
 
 export type TemplateDef = {
   key: TemplateKey;

@@ -366,6 +366,7 @@ type ColFilters = {
   vintage: string;
   wine_type: string;
   volume: string;
+  country: string;
   cost_price: string;
   sale_price: string;
   markup: string;
@@ -374,7 +375,7 @@ type ColFilters = {
   alert: "" | "comprar" | "ok" | "sem";
 };
 const EMPTY_FILTERS: ColFilters = {
-  internal_code: "", name: "", vintage: "", wine_type: "", volume: "",
+  internal_code: "", name: "", vintage: "", wine_type: "", volume: "", country: "",
   cost_price: "", sale_price: "", markup: "", stock: "", monthly: "", alert: "",
 };
 
@@ -405,7 +406,7 @@ function matchText(filter: string, value: string | null | undefined): boolean {
 }
 
 function WinesSection() {
-  const { restaurantId } = useAuth();
+  const { restaurantId, modules, modulesLoading } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -422,6 +423,13 @@ function WinesSection() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const toggleSelected = (id: string) =>
     setSelectedIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+
+  // Usuários que contrataram apenas o módulo de Carta para impressão
+  // não precisam de dados operacionais (custo, estoque, vendas, alertas).
+  const printOnly =
+    !modulesLoading &&
+    modules.length === 1 &&
+    modules.includes("printed_menu");
   const bulkDelete = async () => {
     if (selectedIds.length === 0) return;
     if (!confirm(`Excluir ${selectedIds.length} rótulo(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
@@ -601,6 +609,17 @@ function WinesSection() {
   const filteredWines = wines
     .filter((w) => (onlyActive ? w.active_on_menu : true))
     .filter((w) => {
+      if (printOnly) {
+        return (
+          matchText(filters.internal_code, w.internal_code) &&
+          (matchText(filters.name, w.name) || matchText(filters.name, w.producer)) &&
+          matchText(filters.vintage, w.vintage != null ? String(w.vintage) : "") &&
+          (filters.wine_type === "" || filters.wine_type === wineTypeLabel(w.wine_type)) &&
+          (filters.volume === "" || filters.volume === (w.volume ?? "")) &&
+          matchText(filters.country, w.country) &&
+          matchNum(filters.sale_price, Number(w.sale_price))
+        );
+      }
       const markup = Number(w.cost_price) > 0 ? (Number(w.sale_price) / Number(w.cost_price) - 1) * 100 : null;
       const stock = isGlassVol(w.volume) ? null : (stockMap[w.id]?.qty ?? null);
       const monthly = monthlySalesMap[w.id] ?? 0;
@@ -738,27 +757,30 @@ function WinesSection() {
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
                     <span>{wineTypeLabel(w.wine_type)}</span>
                     {w.volume && <span>{w.volume}</span>}
+                    {w.country && <span>{w.country}</span>}
                     <span>R$ {Number(w.sale_price).toFixed(2)}</span>
-                    {markup !== "-" && <span>mk {markup}%</span>}
+                    {!printOnly && markup !== "-" && <span>mk {markup}%</span>}
                   </div>
                 </div>
-                <div className="shrink-0 text-right">
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Estoque</div>
-                  <div className="text-base font-semibold leading-none">
-                    {isGlassVol(w.volume) ? "—" : (stockMap[w.id]?.qty ?? "—")}
-                  </div>
-                  {!isGlassVol(w.volume) && stockMap[w.id]?.date && (
-                    <div className="text-[9px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
-                  )}
-                  <div className="mt-1 text-[10px] text-muted-foreground">
-                    Mês: <span className="font-medium text-foreground">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
-                  </div>
-                  {!isGlassVol(w.volume) && (
-                    <div className="mt-1" onClick={(e) => e.stopPropagation()}>
-                      <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} compact />
+                {!printOnly && (
+                  <div className="shrink-0 text-right">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Estoque</div>
+                    <div className="text-base font-semibold leading-none">
+                      {isGlassVol(w.volume) ? "—" : (stockMap[w.id]?.qty ?? "—")}
                     </div>
-                  )}
-                </div>
+                    {!isGlassVol(w.volume) && stockMap[w.id]?.date && (
+                      <div className="text-[9px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
+                    )}
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      Mês: <span className="font-medium text-foreground">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
+                    </div>
+                    {!isGlassVol(w.volume) && (
+                      <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                        <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} compact />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               </button>
             </div>
@@ -787,15 +809,18 @@ function WinesSection() {
               <th className="px-4 py-3">Safra</th>
               <th className="px-4 py-3">Tipo</th>
               <th className="px-4 py-3">Volume</th>
-              <th className="px-4 py-3">Custo</th>
+              {printOnly ? <th className="px-4 py-3">País</th> : null}
+              {!printOnly ? <th className="px-4 py-3">Custo</th> : null}
               <th className="px-4 py-3">Venda</th>
-              <th className="px-4 py-3">Markup</th>
-              <th className="px-4 py-3">
-                <div>Estoque</div>
-                <div className="text-[9px] font-normal normal-case text-muted-foreground/70">última contagem</div>
-              </th>
-              <th className="px-4 py-3">Venda mensal</th>
-              <th className="px-4 py-3">Alerta de compra</th>
+              {!printOnly ? <th className="px-4 py-3">Markup</th> : null}
+              {!printOnly ? (
+                <th className="px-4 py-3">
+                  <div>Estoque</div>
+                  <div className="text-[9px] font-normal normal-case text-muted-foreground/70">última contagem</div>
+                </th>
+              ) : null}
+              {!printOnly ? <th className="px-4 py-3">Venda mensal</th> : null}
+              {!printOnly ? <th className="px-4 py-3">Alerta de compra</th> : null}
             </tr>
             <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
               <th />
@@ -822,31 +847,34 @@ function WinesSection() {
                   {volumeOptions.map((v) => <option key={v} value={v}>{v}</option>)}
                 </select>
               </th>
-              <th><FilterInput value={filters.cost_price} onChange={(v) => setF("cost_price", v)} placeholder=">50 ou 10-30" /></th>
+              {printOnly ? <th><FilterInput value={filters.country} onChange={(v) => setF("country", v)} placeholder="país" /></th> : null}
+              {!printOnly ? <th><FilterInput value={filters.cost_price} onChange={(v) => setF("cost_price", v)} placeholder=">50 ou 10-30" /></th> : null}
               <th><FilterInput value={filters.sale_price} onChange={(v) => setF("sale_price", v)} placeholder=">100" /></th>
-              <th><FilterInput value={filters.markup} onChange={(v) => setF("markup", v)} placeholder=">150" /></th>
-              <th><FilterInput value={filters.stock} onChange={(v) => setF("stock", v)} placeholder="<5" /></th>
-              <th><FilterInput value={filters.monthly} onChange={(v) => setF("monthly", v)} placeholder=">0" /></th>
-              <th>
-                <select
-                  value={filters.alert}
-                  onChange={(e) => setF("alert", e.target.value)}
-                  className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
-                >
-                  <option value="">Todos</option>
-                  <option value="comprar">Comprar</option>
-                  <option value="ok">Ok</option>
-                  <option value="sem">Sem contagem</option>
-                </select>
-              </th>
+              {!printOnly ? <th><FilterInput value={filters.markup} onChange={(v) => setF("markup", v)} placeholder=">150" /></th> : null}
+              {!printOnly ? <th><FilterInput value={filters.stock} onChange={(v) => setF("stock", v)} placeholder="<5" /></th> : null}
+              {!printOnly ? <th><FilterInput value={filters.monthly} onChange={(v) => setF("monthly", v)} placeholder=">0" /></th> : null}
+              {!printOnly ? (
+                <th>
+                  <select
+                    value={filters.alert}
+                    onChange={(e) => setF("alert", e.target.value)}
+                    className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
+                  >
+                    <option value="">Todos</option>
+                    <option value="comprar">Comprar</option>
+                    <option value="ok">Ok</option>
+                    <option value="sem">Sem contagem</option>
+                  </select>
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={12} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={printOnly ? 8 : 12} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && filteredWines.length === 0 && (
-              <tr><td colSpan={12} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={printOnly ? 8 : 12} className="px-4 py-8 text-center text-muted-foreground">
                 {hasAnyFilter || onlyActive ? "Nenhum vinho encontrado com esses filtros." : "Nenhum vinho cadastrado ainda."}
               </td></tr>
             )}
@@ -884,16 +912,19 @@ function WinesSection() {
                   <td className="px-4 py-3">{w.vintage ?? "-"}</td>
                   <td className="px-4 py-3">{wineTypeLabel(w.wine_type)}</td>
                   <td className="px-4 py-3">{w.volume ?? "-"}</td>
-                  <td className="px-2 py-2">
-                    <InlineCell
-                      wineId={w.id}
-                      field="cost_price"
-                      numeric
-                      value={String(Number(w.cost_price))}
-                      display={`R$ ${Number(w.cost_price).toFixed(2)}`}
-                      onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
-                    />
-                  </td>
+                  {printOnly ? <td className="px-4 py-3">{w.country ?? "-"}</td> : null}
+                  {!printOnly ? (
+                    <td className="px-2 py-2">
+                      <InlineCell
+                        wineId={w.id}
+                        field="cost_price"
+                        numeric
+                        value={String(Number(w.cost_price))}
+                        display={`R$ ${Number(w.cost_price).toFixed(2)}`}
+                        onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
+                      />
+                    </td>
+                  ) : null}
                   <td className="px-2 py-2">
                     <InlineCell
                       wineId={w.id}
@@ -904,30 +935,33 @@ function WinesSection() {
                       onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
                     />
                   </td>
-
-                  <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>
-                  <td className="px-4 py-3">
-                    {isGlassVol(w.volume) ? (
-                      "—"
-                    ) : stockMap[w.id] ? (
-                      <>
-                        <div className="font-medium leading-none">{stockMap[w.id].qty}</div>
-                        {stockMap[w.id].date && (
-                          <div className="mt-0.5 text-[10px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
-                  <td className="px-4 py-3">
-                    {isGlassVol(w.volume) ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} />
-                    )}
-                  </td>
+                  {!printOnly ? <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td> : null}
+                  {!printOnly ? (
+                    <td className="px-4 py-3">
+                      {isGlassVol(w.volume) ? (
+                        "—"
+                      ) : stockMap[w.id] ? (
+                        <>
+                          <div className="font-medium leading-none">{stockMap[w.id].qty}</div>
+                          {stockMap[w.id].date && (
+                            <div className="mt-0.5 text-[10px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  ) : null}
+                  {!printOnly ? <td className="px-4 py-3">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td> : null}
+                  {!printOnly ? (
+                    <td className="px-4 py-3">
+                      {isGlassVol(w.volume) ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} />
+                      )}
+                    </td>
+                  ) : null}
                 </tr>
               );
             })}

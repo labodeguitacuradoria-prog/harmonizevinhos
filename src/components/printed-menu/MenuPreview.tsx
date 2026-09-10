@@ -50,7 +50,7 @@ export function MenuPreview({
   winesById,
 }: Props) {
   const t = TEMPLATES[template];
-  const p = paperOf(paper);
+  const p = paperDef ?? paperOf(paper);
   const twoCols = t.columns === 2 && p.widthMm >= 148;
 
   const visibleSections = sections

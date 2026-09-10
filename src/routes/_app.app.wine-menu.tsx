@@ -644,6 +644,43 @@ function WineMenuPage() {
                 </div>
               </div>
             ) : null}
+            <div className="relative mt-4" data-spacing-dropdown>
+              <button
+                onClick={() => setSpacingOpen((v) => !v)}
+                className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+              >
+                Espaçamento das linhas
+                <ChevronDown className={`h-3 w-3 transition-transform ${spacingOpen ? "rotate-180" : ""}`} />
+              </button>
+              {spacingOpen && (
+                <div className="absolute left-0 top-full z-50 mt-1 w-80 rounded-xl border border-border bg-card p-3 shadow-lg">
+                  <div className="grid gap-4">
+                    <SpaceSlider
+                      label="Do rótulo para a linha de baixo"
+                      value={spacing.nameGap}
+                      onChange={(v) => setSpacing((s) => ({ ...s, nameGap: v }))}
+                    />
+                    <SpaceSlider
+                      label="Entre as linhas de informação"
+                      value={spacing.lineGap}
+                      onChange={(v) => setSpacing((s) => ({ ...s, lineGap: v }))}
+                    />
+                    <SpaceSlider
+                      label="Entre um rótulo e o próximo"
+                      value={spacing.itemGap}
+                      max={24}
+                      onChange={(v) => setSpacing((s) => ({ ...s, itemGap: v }))}
+                    />
+                    <button
+                      onClick={() => setSpacing(DEFAULT_SPACING)}
+                      className="justify-self-start inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Voltar ao padrão
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="rounded-xl border border-border bg-card p-4">

@@ -71,7 +71,12 @@ type SavedList = {
   header_title: string | null;
   header_subtitle: string | null;
   footer_text: string | null;
-  visible_fields: VisibleFields & { addressPosition?: "header" | "footer"; priceDecimals?: boolean };
+  visible_fields: VisibleFields & {
+    addressPosition?: "header" | "footer";
+    priceDecimals?: boolean;
+    spacing?: MenuSpacing;
+    customPaper?: { widthMm: number; heightMm: number; padMm: number };
+  };
   sections: MenuSection[];
   logo_url: string | null;
   address_text: string | null;

@@ -124,8 +124,19 @@ export function MenuPreview({
                           <span className={t.itemPrice}>{formatPrice(w.sale_price, priceDecimals)}</span>
                         ) : null}
                       </div>
-                      {firstLine ? <div className={t.itemMeta}>{firstLine}</div> : null}
-                      {grapeLine ? <div className={t.itemMeta}>{grapeLine}</div> : null}
+                      {firstLine ? (
+                        <div className={t.itemMeta} style={{ marginTop: `${spacing.nameGap}pt` }}>
+                          {firstLine}
+                        </div>
+                      ) : null}
+                      {grapeLine ? (
+                        <div
+                          className={t.itemMeta}
+                          style={{ marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}
+                        >
+                          {grapeLine}
+                        </div>
+                      ) : null}
                     </li>
                   );
                 })}

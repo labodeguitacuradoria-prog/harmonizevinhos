@@ -72,6 +72,15 @@ function AccessMapAdmin() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-access-map"] }),
   });
 
+  const deleteAccountMut = useMutation({
+    mutationFn: async (user_role_id: string) => deleteAccountFn({ data: { user_role_id } }),
+    onSuccess: () => {
+      setErr(null);
+      qc.invalidateQueries({ queryKey: ["admin-access-map"] });
+    },
+    onError: (e: any) => setErr(e?.message ?? "Falha ao excluir a conta"),
+  });
+
   return (
     <div className="p-6 md:p-10">
       <div className="flex flex-wrap items-center justify-between gap-3">

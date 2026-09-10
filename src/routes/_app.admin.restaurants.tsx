@@ -189,10 +189,63 @@ function AdminRestaurants() {
                 <Metric label="Pedidos" value={data?.orderCount.get(r.id) ?? 0} />
                 <Metric label="Acessos" value={data?.userCount.get(r.id) ?? 0} />
               </div>
+              <ModuleToggles
+                restaurantId={r.id}
+                active={data?.modules.get(r.id) ?? new Set<AppModule>()}
+              />
             </div>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function ModuleToggles({
+  restaurantId,
+  active,
+}: {
+  restaurantId: string;
+  active: Set<AppModule>;
+}) {
+  const qc = useQueryClient();
+  const setModule = useServerFn(setModuleEntitlement);
+  const mut = useMutation({
+    mutationFn: (vars: { module: AppModule; enabled: boolean }) =>
+      setModule({ data: { restaurant_id: restaurantId, ...vars } }),
+    onSuccess: () => {
+      toast.success("Módulos atualizados.");
+      qc.invalidateQueries({ queryKey: ["admin-restaurants"] });
+      qc.invalidateQueries({ queryKey: ["module-entitlements"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao atualizar módulos."),
+  });
+
+  return (
+    <div className="mt-3 border-t border-border pt-3">
+      <div className="text-[9px] uppercase tracking-wide text-muted-foreground">
+        Módulos liberados
+      </div>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {MODULES.map((m) => {
+          const on = active.has(m.key);
+          return (
+            <button
+              key={m.key}
+              disabled={mut.isPending}
+              onClick={() => mut.mutate({ module: m.key, enabled: !on })}
+              title={m.description}
+              className={`rounded-md border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide transition-colors disabled:opacity-60 ${
+                on
+                  ? "border-primary bg-[color:var(--wine)]/20 text-primary"
+                  : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+              }`}
+            >
+              {m.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

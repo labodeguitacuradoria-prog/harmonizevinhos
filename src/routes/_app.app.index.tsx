@@ -8,6 +8,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { createRestaurantWithAccess } from "@/lib/access.functions";
 import AccessMapDialog from "@/components/AccessMapDialog";
 import { Building2, Layers, Plus, Users, X, ArrowRight, Moon, Sun } from "lucide-react";
+import { useEntitlements } from "@/hooks/use-entitlements";
+import { MODULES, SINGLE_MODULES, type AppModule } from "@/lib/modules";
 
 
 export const Route = createFileRoute("/_app/app/")({

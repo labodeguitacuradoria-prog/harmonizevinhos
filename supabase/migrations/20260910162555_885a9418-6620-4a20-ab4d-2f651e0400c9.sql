@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.ensure_owner_role() FROM anon, authenticated;

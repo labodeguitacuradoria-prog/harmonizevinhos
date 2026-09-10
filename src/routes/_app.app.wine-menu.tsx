@@ -701,7 +701,53 @@ function WineMenuPage() {
                 </div>
               )}
             </div>
+            <div className="relative mt-3" data-font-dropdown>
+              <button
+                onClick={() => setFontOpen((v) => !v)}
+                className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+              >
+                Fontes e tamanhos
+                <ChevronDown className={`h-3 w-3 transition-transform ${fontOpen ? "rotate-180" : ""}`} />
+              </button>
+              {fontOpen && (
+                <div className="absolute left-0 top-full z-50 mt-1 w-80 rounded-xl border border-border bg-card p-3 shadow-lg">
+                  <div className="grid gap-4">
+                    <FontControl
+                      label="Nome do rótulo"
+                      font={typography.nameFont}
+                      size={typography.nameSize}
+                      defaultSize={11}
+                      onFont={(f) => setTypography((t) => ({ ...t, nameFont: f }))}
+                      onSize={(s) => setTypography((t) => ({ ...t, nameSize: s }))}
+                    />
+                    <FontControl
+                      label="Tipo de vinho (seções)"
+                      font={typography.sectionFont}
+                      size={typography.sectionSize}
+                      defaultSize={12}
+                      onFont={(f) => setTypography((t) => ({ ...t, sectionFont: f }))}
+                      onSize={(s) => setTypography((t) => ({ ...t, sectionSize: s }))}
+                    />
+                    <FontControl
+                      label="Informações do rótulo"
+                      font={typography.metaFont}
+                      size={typography.metaSize}
+                      defaultSize={9}
+                      onFont={(f) => setTypography((t) => ({ ...t, metaFont: f }))}
+                      onSize={(s) => setTypography((t) => ({ ...t, metaSize: s }))}
+                    />
+                    <button
+                      onClick={() => setTypography({})}
+                      className="justify-self-start inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Usar fontes do modelo
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
 
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">

@@ -22,6 +22,28 @@ function AppLayout() {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
 
+  // Aplica o pacote escolhido na tela inicial ao entrar pela primeira vez.
+  useEffect(() => {
+    if (loading || !user) return;
+    let chosen: string | null = null;
+    try {
+      chosen = localStorage.getItem("signup-module");
+    } catch {
+      chosen = null;
+    }
+    if (!chosen) return;
+    claimModule({ data: { module: chosen } })
+      .catch(() => undefined)
+      .finally(() => {
+        try {
+          localStorage.removeItem("signup-module");
+        } catch {
+          /* ignora */
+        }
+        router.invalidate();
+      });
+  }, [loading, user, claimModule, router]);
+
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">

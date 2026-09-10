@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X, KeyRound } from "lucide-react";
 import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
 import { canAccessRoute, type AppModule } from "@/lib/modules";
+import { useServerFn } from "@tanstack/react-start";
+import { claimSignupModule } from "@/lib/modules.functions";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,

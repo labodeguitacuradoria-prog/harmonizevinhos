@@ -1212,19 +1212,23 @@ function WineForm({
           generalPricing={
             <>
               <Field label="Código no restaurante" value={internalCode} onChange={setInternalCode} hint="Código interno usado pelo restaurante para identificar o rótulo (PDV, carta, planilha)." placeholder="Ex: V-014" />
-              <Field label="Preço de Custo (R$)" type="number" value={costPrice} onChange={setCostPrice} hint="Valor pago ao fornecedor por unidade (garrafa/dose). Usado para cálculo de margem." placeholder="Ex: 85.00" />
+              {!printOnly && (
+                <Field label="Preço de Custo (R$)" type="number" value={costPrice} onChange={setCostPrice} hint="Valor pago ao fornecedor por unidade (garrafa/dose). Usado para cálculo de margem." placeholder="Ex: 85.00" />
+              )}
               <Field label="Preço de Venda (R$)" type="number" value={salePrice} onChange={setSalePrice} hint="Preço cobrado do cliente final, conforme a carta do restaurante." placeholder="Ex: 220.00" />
-              <label className="block">
-                <FieldLabel hint="Fornecedor cadastrado do restaurante responsável por este rótulo.">Fornecedor (cadastro do restaurante)</FieldLabel>
-                <select
-                  value={supplierId}
-                  onChange={(e) => setSupplierId(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">Sem fornecedor</option>
-                  {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </label>
+              {!printOnly && (
+                <label className="block">
+                  <FieldLabel hint="Fornecedor cadastrado do restaurante responsável por este rótulo.">Fornecedor (cadastro do restaurante)</FieldLabel>
+                  <select
+                    value={supplierId}
+                    onChange={(e) => setSupplierId(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">Sem fornecedor</option>
+                    {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </label>
+              )}
               <div className="md:col-span-2">
                 <button
                   type="button"

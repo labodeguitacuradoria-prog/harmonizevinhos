@@ -757,32 +757,35 @@ function WinesSection() {
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
                     <span>{wineTypeLabel(w.wine_type)}</span>
                     {w.volume && <span>{w.volume}</span>}
+                    {w.country && <span>{w.country}</span>}
                     <span>R$ {Number(w.sale_price).toFixed(2)}</span>
-                    {markup !== "-" && <span>mk {markup}%</span>}
+                    {!printOnly && markup !== "-" && <span>mk {markup}%</span>}
                   </div>
                 </div>
-                <div className="shrink-0 text-right">
-                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Estoque</div>
-                  <div className="text-base font-semibold leading-none">
-                    {isGlassVol(w.volume) ? "—" : (stockMap[w.id]?.qty ?? "—")}
-                  </div>
-                  {!isGlassVol(w.volume) && stockMap[w.id]?.date && (
-                    <div className="text-[9px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
-                  )}
-                  <div className="mt-1 text-[10px] text-muted-foreground">
-                    Mês: <span className="font-medium text-foreground">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
-                  </div>
-                  {!isGlassVol(w.volume) && (
-                    <div className="mt-1" onClick={(e) => e.stopPropagation()}>
-                      <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} compact />
+                {!printOnly && (
+                  <div className="shrink-0 text-right">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Estoque</div>
+                    <div className="text-base font-semibold leading-none">
+                      {isGlassVol(w.volume) ? "—" : (stockMap[w.id]?.qty ?? "—")}
                     </div>
-                  )}
-                </div>
+                    {!isGlassVol(w.volume) && stockMap[w.id]?.date && (
+                      <div className="text-[9px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
+                    )}
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      Mês: <span className="font-medium text-foreground">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span>
+                    </div>
+                    {!isGlassVol(w.volume) && (
+                      <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                        <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} compact />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               </button>
             </div>
           );
-        })}
+        })
       </div>
 
       {/* Desktop: table */}

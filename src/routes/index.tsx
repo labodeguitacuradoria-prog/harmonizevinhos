@@ -96,10 +96,12 @@ function Landing() {
   }, [navigate]);
 
   function go(module: AppModule, mode: "signup" | "signin") {
+    setSelected(module);
     setPending(`${module}:${mode}`);
     // Navegação imediata; o estado só serve para dar retorno visual ao clique.
     void navigate({ to: "/auth", search: { mode, module } }).finally(() => setPending(null));
   }
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">

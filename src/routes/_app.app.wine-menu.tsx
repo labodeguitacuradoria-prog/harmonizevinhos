@@ -149,6 +149,16 @@ function WineMenuPage() {
     return () => document.removeEventListener("mousedown", handle);
   }, [spacingOpen]);
 
+  useEffect(() => {
+    if (!fontOpen) return;
+    function handle(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-font-dropdown]")) setFontOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [fontOpen]);
+
   async function saveWineName(id: string) {
     const name = editingName.trim();
     setEditingWineId(null);

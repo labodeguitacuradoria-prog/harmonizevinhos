@@ -116,6 +116,12 @@ function HomePage() {
             const canManage = m.role === "rest_admin" || m.role === "rest_owner";
             const groupName = groups.find((g) => g.id === m.groupId)?.name;
             const meta = [m.city, groupName].filter(Boolean).join(" · ") || "—";
+            const mods = modulesOf(m.restaurantId);
+            const planLabel = mods.includes("full")
+              ? "Pacote completo"
+              : SINGLE_MODULES.filter((s) => mods.includes(s.key))
+                  .map((s) => s.label)
+                  .join(" · ") || "Sem módulo liberado";
             return (
               <div
                 key={m.restaurantId}

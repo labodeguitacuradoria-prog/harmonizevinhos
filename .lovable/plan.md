@@ -14,6 +14,13 @@ Hoje o sistema é um pacote único. A ideia é transformá-lo em cinco produtos 
 
 Novos módulos podem ser somados depois sem refazer nada.
 
+## Nada do que já existe se perde
+
+- Todos os restaurantes, rótulos, vendas, estoques, pedidos e contagens já cadastrados permanecem intactos: nenhuma tabela é apagada ou alterada de forma destrutiva.
+- Todos os restaurantes existentes hoje recebem automaticamente o **módulo Completo**, então o app continua exatamente como você usa hoje.
+- Sua conta `silvamoises1965@gmail.com` segue como administrador geral, com acesso ao pacote completo de todos os restaurantes e ao controle de módulos.
+- A separação por módulos só afeta clientes novos que entrarem por um módulo isolado.
+
 ## Ponto de partida único: a carta
 
 Quem contrata um módulo isolado não precisa passar pelo cadastro completo. O caminho é:

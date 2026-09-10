@@ -36,7 +36,6 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">(initialMode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -53,10 +52,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { full_name: name },
-          },
+          options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
         toast.success("Conta criada! Você já está conectado.");
@@ -128,10 +124,8 @@ function AuthPage() {
         </div>
 
         <form onSubmit={handleEmail} className="space-y-3">
-          {mode === "signup" && (
-            <Input label="Seu nome" value={name} onChange={setName} />
-          )}
           <Input label="E-mail" type="email" value={email} onChange={setEmail} required />
+
           <Input
             label="Senha"
             type="password"

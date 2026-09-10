@@ -6,9 +6,14 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Sparkles, Store, Building2, Info, HelpCircle, Layers, SlidersHorizontal, ArrowUpRight, ArrowDownRight, CheckCircle2, Save, Clock } from "lucide-react";
+import ModuleGate from "@/components/ModuleGate";
 
 export const Route = createFileRoute("/_app/app/price-analysis")({
-  component: PriceAnalysisPage,
+  component: () => (
+    <ModuleGate route="/app/price-analysis">
+      <PriceAnalysisPage />
+    </ModuleGate>
+  ),
 });
 
 type WineRow = {

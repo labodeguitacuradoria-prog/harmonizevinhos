@@ -4,13 +4,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X, KeyRound } from "lucide-react";
 import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
+import { canAccessRoute, type AppModule } from "@/lib/modules";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
 function AppLayout() {
-  const { user, loading, role, restaurantId } = useAuth();
+  const { user, loading, role, restaurantId, modules } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -35,24 +36,36 @@ function AppLayout() {
     navigate({ to: "/" });
   }
 
-  const restaurantNav = (rail: boolean) => (
-    <>
-      <NavLink to="/app" rail={rail} icon={<Home className="h-4 w-4" />}>Início</NavLink>
-      <NavLink to="/app/dashboard" rail={rail} icon={<LayoutDashboard className="h-4 w-4" />}>Painel</NavLink>
-      <NavLink to="/app/price-analysis" rail={rail} icon={<DollarSign className="h-4 w-4" />}>Preços</NavLink>
-      <NavLink to="/app/pairings" rail={rail} icon={<UtensilsCrossed className="h-4 w-4" />}>Harmonizações</NavLink>
-      <NavLink to="/app/cadastros" rail={rail} icon={<FolderCog className="h-4 w-4" />}>Cadastros</NavLink>
-      <NavLink to="/app/wines" rail={rail} icon={<Package className="h-4 w-4" />}>Produtos</NavLink>
-      <NavLink to="/app/wine-menu" rail={rail} icon={<ScrollText className="h-4 w-4" />}>Carta</NavLink>
-      <NavLink to="/app/orders" rail={rail} icon={<ShoppingCart className="h-4 w-4" />}>Pedidos</NavLink>
-      <NavLink to="/app/estoque" rail={rail} icon={<ClipboardList className="h-4 w-4" />}>Estoque</NavLink>
-      <NavLink to="/app/sales" rail={rail} icon={<BarChart3 className="h-4 w-4" />}>Vendas</NavLink>
-      
-      <NavLink to="/app/corkage-fees" rail={rail} icon={<Coins className="h-4 w-4" />}>Rolha</NavLink>
-      <NavLink to="/app/sharing" rail={rail} icon={<Share2 className="h-4 w-4" />}>Compartilhar</NavLink>
-      <NavLink to="/app/access-links" rail={rail} icon={<KeyRound className="h-4 w-4" />}>Links de acesso</NavLink>
-    </>
-  );
+  const restaurantNav = (rail: boolean) => {
+    const items: { to: string; icon: React.ReactNode; label: string }[] = [
+      { to: "/app", icon: <Home className="h-4 w-4" />, label: "Início" },
+      { to: "/app/dashboard", icon: <LayoutDashboard className="h-4 w-4" />, label: "Painel" },
+      { to: "/app/price-analysis", icon: <DollarSign className="h-4 w-4" />, label: "Preços" },
+      { to: "/app/pairings", icon: <UtensilsCrossed className="h-4 w-4" />, label: "Harmonizações" },
+      { to: "/app/cadastros", icon: <FolderCog className="h-4 w-4" />, label: "Cadastros" },
+      { to: "/app/wines", icon: <Package className="h-4 w-4" />, label: "Produtos" },
+      { to: "/app/wine-menu", icon: <ScrollText className="h-4 w-4" />, label: "Carta" },
+      { to: "/app/orders", icon: <ShoppingCart className="h-4 w-4" />, label: "Pedidos" },
+      { to: "/app/estoque", icon: <ClipboardList className="h-4 w-4" />, label: "Estoque" },
+      { to: "/app/sales", icon: <BarChart3 className="h-4 w-4" />, label: "Vendas" },
+      { to: "/app/corkage-fees", icon: <Coins className="h-4 w-4" />, label: "Rolha" },
+      { to: "/app/sharing", icon: <Share2 className="h-4 w-4" />, label: "Compartilhar" },
+      { to: "/app/access-links", icon: <KeyRound className="h-4 w-4" />, label: "Links de acesso" },
+    ];
+    const visible =
+      role === "admin"
+        ? items
+        : items.filter((it) => canAccessRoute(modules as AppModule[], it.to));
+    return (
+      <>
+        {visible.map((it) => (
+          <NavLink key={it.to} to={it.to} rail={rail} icon={it.icon}>
+            {it.label}
+          </NavLink>
+        ))}
+      </>
+    );
+  };
 
 
   const renderNav = (rail: boolean) => (

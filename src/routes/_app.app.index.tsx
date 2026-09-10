@@ -8,6 +8,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { createRestaurantWithAccess } from "@/lib/access.functions";
 import AccessMapDialog from "@/components/AccessMapDialog";
 import { Building2, Layers, Plus, Users, X, ArrowRight, Moon, Sun } from "lucide-react";
+import { useEntitlements } from "@/hooks/use-entitlements";
+import { MODULES, SINGLE_MODULES, type AppModule } from "@/lib/modules";
 
 
 export const Route = createFileRoute("/_app/app/")({
@@ -29,6 +31,7 @@ function HomePage() {
 
   const [newOpen, setNewOpen] = useState(false);
   const [accessFor, setAccessFor] = useState<{ id: string; name: string } | null>(null);
+  const { byRestaurant } = useEntitlements(memberships.map((m) => m.restaurantId));
 
   useEffect(() => {
     if (loading) return;
@@ -39,9 +42,20 @@ function HomePage() {
   if (loading) return null;
   if (role && role !== "restaurant") return null;
 
+  function modulesOf(id: string): AppModule[] {
+    return byRestaurant.get(id) ?? [];
+  }
+
+  function homeRouteFor(id: string) {
+    const mods = modulesOf(id);
+    if (mods.includes("full") || mods.includes("dashboard")) return "/app/dashboard";
+    const first = SINGLE_MODULES.find((m) => mods.includes(m.key));
+    return first?.route ?? "/app/wines";
+  }
+
   function openUnit(id: string) {
     setActiveRestaurant(id);
-    navigate({ to: "/app/dashboard" });
+    navigate({ to: homeRouteFor(id) });
   }
   function openGroup(id: string) {
     setActiveGroup(id);
@@ -102,6 +116,12 @@ function HomePage() {
             const canManage = m.role === "rest_admin" || m.role === "rest_owner";
             const groupName = groups.find((g) => g.id === m.groupId)?.name;
             const meta = [m.city, groupName].filter(Boolean).join(" · ") || "—";
+            const mods = modulesOf(m.restaurantId);
+            const planLabel = mods.includes("full")
+              ? "Pacote completo"
+              : SINGLE_MODULES.filter((s) => mods.includes(s.key))
+                  .map((s) => s.label)
+                  .join(" · ") || "Sem módulo liberado";
             return (
               <div
                 key={m.restaurantId}
@@ -113,8 +133,13 @@ function HomePage() {
                   title="Entrar no restaurante"
                 >
                   <Building2 className="h-4 w-4 shrink-0 text-primary/70" />
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-                    {m.name}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-foreground">
+                      {m.name}
+                    </span>
+                    <span className="block truncate text-[10px] text-muted-foreground">
+                      {planLabel}
+                    </span>
                   </span>
                   <span className="hidden shrink-0 truncate text-[10px] text-muted-foreground sm:inline md:max-w-[180px]">
                     {meta}

@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.grant_full_module_on_restaurant() FROM PUBLIC, anon, authenticated;

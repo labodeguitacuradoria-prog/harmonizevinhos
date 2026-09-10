@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UtensilsCrossed, ExternalLink } from "lucide-react";
 import { PairingStudio } from "@/components/PairingStudio";
+import ModuleGate from "@/components/ModuleGate";
 
 export const Route = createFileRoute("/_app/app/pairings")({
   head: () => ({
@@ -20,7 +21,11 @@ export const Route = createFileRoute("/_app/app/pairings")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: PairingsPage,
+  component: () => (
+    <ModuleGate route="/app/pairings">
+      <PairingsPage />
+    </ModuleGate>
+  ),
 });
 
 function PairingsPage() {

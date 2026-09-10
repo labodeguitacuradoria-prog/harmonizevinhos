@@ -324,6 +324,16 @@ function WineMenuPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
+              onClick={() => {
+                setCurrentId(null);
+                setListName("");
+                toast.info("Nova carta: ao salvar, você escolhe o nome.");
+              }}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-accent"
+            >
+              Nova carta
+            </button>
+            <button
               onClick={() => save(false)}
               disabled={saving}
               className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-accent disabled:opacity-50"

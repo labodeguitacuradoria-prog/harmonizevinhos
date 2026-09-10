@@ -238,10 +238,18 @@ function WineMenuPage() {
 
   async function save(asNew = false) {
     if (!restaurantId) return;
+    let name = listName.trim();
+    if (!currentId || asNew || !name) {
+      const suggested = asNew ? `${name || "Carta de Vinhos"} (cópia)` : name || "Carta de Vinhos";
+      const typed = window.prompt("Dê um nome para esta carta:", suggested);
+      if (typed === null) return;
+      name = typed.trim() || suggested;
+      setListName(name);
+    }
     setSaving(true);
     const payload = {
       restaurant_id: restaurantId,
-      name: listName || "Carta de Vinhos",
+      name,
       template,
       header_title: title,
       header_subtitle: subtitle,

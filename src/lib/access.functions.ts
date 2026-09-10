@@ -162,15 +162,20 @@ export const removeRestaurantAccess = createServerFn({ method: "POST" })
     if (error || !row) throw new Error("Vínculo não encontrado");
     if (!row.restaurant_id) throw new Error("Vínculo inválido");
     await assertCanManage(context, row.restaurant_id);
-    // impedir remover o último rest_admin
+    // impedir remover o último rest_admin (administrador geral pode remover)
     if (row.role === "rest_admin") {
-      const { data: admins } = await supabaseAdmin
-        .from("user_roles")
-        .select("id")
-        .eq("restaurant_id", row.restaurant_id)
-        .eq("role", "rest_admin");
-      if ((admins?.length ?? 0) <= 1) {
-        throw new Error("Não é possível remover o último administrador da unidade.");
+      const { data: isGlobalAdmin } = await context.supabase.rpc("is_admin", {
+        _user_id: context.userId,
+      });
+      if (!isGlobalAdmin) {
+        const { data: admins } = await supabaseAdmin
+          .from("user_roles")
+          .select("id")
+          .eq("restaurant_id", row.restaurant_id)
+          .eq("role", "rest_admin");
+        if ((admins?.length ?? 0) <= 1) {
+          throw new Error("Não é possível remover o último administrador da unidade.");
+        }
       }
     }
     const { error: delErr } = await supabaseAdmin

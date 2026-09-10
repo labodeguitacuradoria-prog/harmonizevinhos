@@ -52,11 +52,20 @@ export const createRestaurantWithAccess = createServerFn({ method: "POST" })
       .single();
     if (rErr) throw new Error(rErr.message);
 
-    await supabaseAdmin.from("user_roles").insert({
-      user_id: context.userId,
-      role: "rest_admin",
-      restaurant_id: rest.id,
-    });
+    // O vínculo do responsável é criado automaticamente pelo banco; garante caso não exista.
+    const { data: existingRole } = await supabaseAdmin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("restaurant_id", rest.id)
+      .maybeSingle();
+    if (!existingRole) {
+      await supabaseAdmin.from("user_roles").insert({
+        user_id: context.userId,
+        role: "rest_admin",
+        restaurant_id: rest.id,
+      });
+    }
     return { id: rest.id, group_id: groupId };
   });
 

@@ -186,9 +186,24 @@ function AccessMapAdmin() {
                       onClick={() => {
                         if (confirm("Remover vínculo?")) removeMut.mutate(r.user_role_id);
                       }}
-                      className="rounded-md p-1 text-muted-foreground hover:text-red-400"
+                      className="mr-1 rounded-md p-1 text-muted-foreground hover:text-red-400"
+                      title="Remover apenas o vínculo com o restaurante"
                     >
                       <Trash2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (
+                          confirm(
+                            `Excluir definitivamente a conta ${r.email ?? ""}? Todos os vínculos e o login serão apagados e o e-mail ficará livre para um novo cadastro.`,
+                          )
+                        )
+                          deleteAccountMut.mutate(r.user_role_id);
+                      }}
+                      className="rounded-md p-1 text-muted-foreground hover:text-red-500"
+                      title="Excluir a conta inteira e liberar o e-mail"
+                    >
+                      <UserX size={16} />
                     </button>
                   </td>
                 </tr>

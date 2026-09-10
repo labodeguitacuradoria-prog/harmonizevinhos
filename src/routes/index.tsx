@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/use-theme";
 import { Moon, Sun, ScrollText, UtensilsCrossed, DollarSign, LayoutDashboard, Wine } from "lucide-react";
@@ -75,6 +75,7 @@ const PACKS: Pack[] = [
 function Landing() {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const [pending, setPending] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,7 +94,9 @@ function Landing() {
   }, [navigate]);
 
   function go(module: AppModule, mode: "signup" | "signin") {
-    navigate({ to: "/auth", search: { mode, module } });
+    setPending(`${module}:${mode}`);
+    // Navegação imediata; o estado só serve para dar retorno visual ao clique.
+    void navigate({ to: "/auth", search: { mode, module } }).finally(() => setPending(null));
   }
 
   return (
@@ -160,16 +163,22 @@ function Landing() {
               </ul>
               <div className="mt-6 space-y-2 border-t border-border pt-4">
                 <button
+                  type="button"
+                  onPointerDown={() => setPending(`${p.module}:signup`)}
                   onClick={() => go(p.module, "signup")}
-                  className="w-full rounded-md bg-primary px-4 py-2.5 text-[12px] font-semibold text-primary-foreground hover:opacity-90"
+                  aria-busy={pending === `${p.module}:signup`}
+                  className="w-full rounded-md bg-primary px-4 py-2.5 text-[12px] font-semibold text-primary-foreground transition-all duration-100 hover:opacity-90 active:scale-[0.98] active:brightness-90 disabled:cursor-wait disabled:opacity-70"
                 >
-                  Experimente grátis
+                  {pending === `${p.module}:signup` ? "Abrindo…" : "Experimente grátis"}
                 </button>
                 <button
+                  type="button"
+                  onPointerDown={() => setPending(`${p.module}:signin`)}
                   onClick={() => go(p.module, "signin")}
-                  className="w-full rounded-md border border-border px-4 py-2.5 text-[12px] font-semibold text-primary hover:border-primary"
+                  aria-busy={pending === `${p.module}:signin`}
+                  className="w-full rounded-md border border-border px-4 py-2.5 text-[12px] font-semibold text-primary transition-all duration-100 hover:border-primary active:scale-[0.98] active:bg-accent disabled:cursor-wait disabled:opacity-70"
                 >
-                  Entrar
+                  {pending === `${p.module}:signin` ? "Abrindo…" : "Entrar"}
                 </button>
               </div>
             </div>

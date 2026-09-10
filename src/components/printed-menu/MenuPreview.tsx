@@ -118,7 +118,9 @@ export function MenuPreview({
         <div className={twoCols ? "[column-count:2] [column-gap:10mm]" : ""}>
           {visibleSections.map((sec) => (
             <section key={sec.id} className="mb-6 break-inside-avoid">
-              <div className={`${t.sectionTitle} ${t.rule} pb-1`}>{sec.title}</div>
+              <div className={`${t.sectionTitle} ${t.rule} pb-1`} style={sectionStyle}>
+                {sec.title}
+              </div>
               <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>
                 {sec.wineIds.map((id) => {
                   const w = winesById[id];

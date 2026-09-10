@@ -472,19 +472,72 @@ function WineMenuPage() {
         {/* Tamanho do papel */}
         <div className="mt-4">
           <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Tamanho do papel</div>
-          <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {PAPER_LIST.map((p) => (
               <button
                 key={p.key}
-                onClick={() => setPaper(p.key)}
+                onClick={() => {
+                  setPaper(p.key);
+                  setUseCustomPaper(false);
+                }}
                 className={`rounded-xl border p-3 text-left transition ${
-                  paper === p.key ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/60"
+                  !useCustomPaper && paper === p.key
+                    ? "border-primary bg-accent"
+                    : "border-border bg-card hover:border-primary/60"
                 }`}
               >
                 <div className="text-xs font-bold uppercase tracking-wider text-primary">{p.code}</div>
                 <div className="mt-1 text-xs text-muted-foreground">{p.dims}</div>
               </button>
             ))}
+            <button
+              onClick={() => setUseCustomPaper(true)}
+              className={`rounded-xl border p-3 text-left transition ${
+                useCustomPaper ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/60"
+              }`}
+            >
+              <div className="text-xs font-bold uppercase tracking-wider text-primary">Personalizado</div>
+              <div className="mt-1 text-xs text-muted-foreground">Você define largura e altura</div>
+            </button>
+          </div>
+          {useCustomPaper ? (
+            <div className="mt-3 grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-3">
+              <MmField label="Largura (mm)" value={customW} onChange={setCustomW} min={60} max={420} />
+              <MmField label="Altura (mm)" value={customH} onChange={setCustomH} min={80} max={594} />
+              <MmField label="Margem interna (mm)" value={customPad} onChange={setCustomPad} min={0} max={40} />
+              <p className="sm:col-span-3 text-[11px] text-muted-foreground">
+                Exemplos: 100 × 210 mm (folha estreita), 150 × 300 mm (carta alta). 10 mm = 1 cm.
+              </p>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Espaçamento das linhas */}
+        <div className="mt-4">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Espaçamento das linhas</div>
+          <div className="mt-2 grid gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-3">
+            <SpaceSlider
+              label="Do rótulo para a linha de baixo"
+              value={spacing.nameGap}
+              onChange={(v) => setSpacing((s) => ({ ...s, nameGap: v }))}
+            />
+            <SpaceSlider
+              label="Entre as linhas de informação"
+              value={spacing.lineGap}
+              onChange={(v) => setSpacing((s) => ({ ...s, lineGap: v }))}
+            />
+            <SpaceSlider
+              label="Entre um rótulo e o próximo"
+              value={spacing.itemGap}
+              max={24}
+              onChange={(v) => setSpacing((s) => ({ ...s, itemGap: v }))}
+            />
+            <button
+              onClick={() => setSpacing(DEFAULT_SPACING)}
+              className="sm:col-span-3 justify-self-start inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+            >
+              <RotateCcw className="h-3 w-3" /> Voltar ao padrão
+            </button>
           </div>
         </div>
       </div>

@@ -67,6 +67,17 @@ function AdminRestaurants() {
           supabase.from("user_roles").select("restaurant_id, user_id, role"),
         ]);
 
+      const { data: ents } = await supabase
+        .from("module_entitlements")
+        .select("restaurant_id, module, enabled");
+      const modules = new Map<string, Set<AppModule>>();
+      for (const e of ents ?? []) {
+        if (!e.enabled) continue;
+        const set = modules.get(e.restaurant_id) ?? new Set<AppModule>();
+        set.add(e.module as AppModule);
+        modules.set(e.restaurant_id, set);
+      }
+
       const profileIds = Array.from(new Set((rests ?? []).map((r) => r.owner_id)));
       const { data: profiles } = profileIds.length
         ? await supabase.from("profiles").select("id, email, full_name").in("id", profileIds)

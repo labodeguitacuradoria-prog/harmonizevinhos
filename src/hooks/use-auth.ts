@@ -98,10 +98,28 @@ export function useAuth(): UserContext {
   });
 
   useEffect(() => {
-    if (data?.memberships?.length) {
-      ensureActiveRestaurant(data.memberships[0].restaurantId);
+    if (!data) return;
+    const ms = data.memberships ?? [];
+    const gs = data.groups ?? [];
+    if (!ms.length && !gs.length) return;
+    // Escopo persistido pode ser de outra conta: descarta o que não pertence a este usuário.
+    const current = getActiveScope();
+    const groupOk = current.activeGroupId
+      ? gs.some((g) => g.id === current.activeGroupId)
+      : false;
+    const restOk = current.activeRestaurantId
+      ? ms.some((m) => m.restaurantId === current.activeRestaurantId)
+      : false;
+    if (current.activeGroupId && !groupOk) {
+      setActiveRestaurant(ms[0]?.restaurantId ?? null);
+      return;
     }
-  }, [data?.memberships]);
+    if (current.activeRestaurantId && !restOk) {
+      setActiveRestaurant(ms[0]?.restaurantId ?? null);
+      return;
+    }
+    if (ms.length) ensureActiveRestaurant(ms[0].restaurantId);
+  }, [data]);
 
   const memberships = data?.memberships ?? [];
   const groups = data?.groups ?? [];

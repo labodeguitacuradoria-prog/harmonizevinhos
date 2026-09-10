@@ -136,15 +136,16 @@ function AccessMapAdmin() {
               <th className="px-3 py-2 text-left">E-mail</th>
               <th className="px-3 py-2 text-left">Nome</th>
               <th className="px-3 py-2 text-left">Papel</th>
+              <th className="px-3 py-2 text-left">Pacote</th>
               <th className="px-3 py-2 text-left">Restaurante</th>
               <th className="px-3 py-2 text-left">Desde</th>
-              <th className="px-3 py-2"></th>
+              <th className="px-3 py-2 text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground">
+                <td colSpan={7} className="px-3 py-4 text-center text-muted-foreground">
                   Carregando...
                 </td>
               </tr>

@@ -22,6 +22,7 @@ type Props = {
   paper: PaperKey;
   paperDef?: PaperDef;
   spacing?: MenuSpacing;
+  typography?: MenuTypography;
   title: string;
   subtitle: string;
   footer: string;

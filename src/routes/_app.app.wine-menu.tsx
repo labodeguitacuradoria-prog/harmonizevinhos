@@ -863,3 +863,61 @@ function IconBtn({
     </button>
   );
 }
+
+function MmField({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</label>
+      <input
+        type="number"
+        value={value}
+        min={min}
+        max={max}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+      />
+    </div>
+  );
+}
+
+function SpaceSlider({
+  label,
+  value,
+  onChange,
+  max = 12,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  max?: number;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <label className="flex items-center justify-between text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span>{label}</span>
+        <span className="tabular-nums text-primary">{value}</span>
+      </label>
+      <input
+        type="range"
+        min={0}
+        max={max}
+        step={0.5}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="accent-primary"
+      />
+    </div>
+  );
+}

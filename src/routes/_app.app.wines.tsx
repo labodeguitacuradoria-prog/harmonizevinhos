@@ -871,10 +871,10 @@ function WinesSection() {
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={12} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={printOnly ? 8 : 12} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && filteredWines.length === 0 && (
-              <tr><td colSpan={12} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={printOnly ? 8 : 12} className="px-4 py-8 text-center text-muted-foreground">
                 {hasAnyFilter || onlyActive ? "Nenhum vinho encontrado com esses filtros." : "Nenhum vinho cadastrado ainda."}
               </td></tr>
             )}
@@ -912,16 +912,19 @@ function WinesSection() {
                   <td className="px-4 py-3">{w.vintage ?? "-"}</td>
                   <td className="px-4 py-3">{wineTypeLabel(w.wine_type)}</td>
                   <td className="px-4 py-3">{w.volume ?? "-"}</td>
-                  <td className="px-2 py-2">
-                    <InlineCell
-                      wineId={w.id}
-                      field="cost_price"
-                      numeric
-                      value={String(Number(w.cost_price))}
-                      display={`R$ ${Number(w.cost_price).toFixed(2)}`}
-                      onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
-                    />
-                  </td>
+                  {printOnly ? <td className="px-4 py-3">{w.country ?? "-"}</td> : null}
+                  {!printOnly ? (
+                    <td className="px-2 py-2">
+                      <InlineCell
+                        wineId={w.id}
+                        field="cost_price"
+                        numeric
+                        value={String(Number(w.cost_price))}
+                        display={`R$ ${Number(w.cost_price).toFixed(2)}`}
+                        onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
+                      />
+                    </td>
+                  ) : null}
                   <td className="px-2 py-2">
                     <InlineCell
                       wineId={w.id}
@@ -932,30 +935,33 @@ function WinesSection() {
                       onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
                     />
                   </td>
-
-                  <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td>
-                  <td className="px-4 py-3">
-                    {isGlassVol(w.volume) ? (
-                      "—"
-                    ) : stockMap[w.id] ? (
-                      <>
-                        <div className="font-medium leading-none">{stockMap[w.id].qty}</div>
-                        {stockMap[w.id].date && (
-                          <div className="mt-0.5 text-[10px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
-                  <td className="px-4 py-3">
-                    {isGlassVol(w.volume) ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} />
-                    )}
-                  </td>
+                  {!printOnly ? <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td> : null}
+                  {!printOnly ? (
+                    <td className="px-4 py-3">
+                      {isGlassVol(w.volume) ? (
+                        "—"
+                      ) : stockMap[w.id] ? (
+                        <>
+                          <div className="font-medium leading-none">{stockMap[w.id].qty}</div>
+                          {stockMap[w.id].date && (
+                            <div className="mt-0.5 text-[10px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  ) : null}
+                  {!printOnly ? <td className="px-4 py-3">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td> : null}
+                  {!printOnly ? (
+                    <td className="px-4 py-3">
+                      {isGlassVol(w.volume) ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <ReorderAlertCell wine={w} stock={stockMap[w.id]?.qty ?? null} avg4m={avg4mMap[w.id] ?? 0} />
+                      )}
+                    </td>
+                  ) : null}
                 </tr>
               );
             })}

@@ -131,23 +131,30 @@ function Landing() {
           quiser.
         </p>
 
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {PACKS.map((p) => (
+        <div className="mt-8 grid items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {PACKS.map((p) => {
+            const active = selected ? selected === p.module : !!p.highlight;
+            return (
             <div
               key={p.module}
-              className="relative flex flex-col rounded-2xl border bg-card p-5"
+              className="relative flex h-full flex-col rounded-2xl border bg-card p-5 transition-all duration-150"
               style={{
-                borderColor: p.highlight
+                borderColor: active
                   ? "color-mix(in oklab, var(--gold) 55%, transparent)"
                   : "var(--border)",
-                boxShadow: p.highlight
+                boxShadow: active
                   ? "0 0 24px color-mix(in oklab, var(--wine) 28%, transparent)"
                   : undefined,
               }}
             >
-              {p.highlight && (
+              {p.highlight && !selected && (
                 <span className="absolute -top-2.5 right-4 rounded-full bg-primary px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-foreground">
                   Mais procurado
+                </span>
+              )}
+              {selected === p.module && (
+                <span className="absolute -top-2.5 right-4 rounded-full bg-primary px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-foreground">
+                  Escolhido
                 </span>
               )}
               <div className="flex items-center gap-2 text-primary">
@@ -165,10 +172,13 @@ function Landing() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-6 space-y-2 border-t border-border pt-4">
+              <div className="mt-auto space-y-2 border-t border-border pt-4">
                 <button
                   type="button"
-                  onPointerDown={() => setPending(`${p.module}:signup`)}
+                  onPointerDown={() => {
+                    setSelected(p.module);
+                    setPending(`${p.module}:signup`);
+                  }}
                   onClick={() => go(p.module, "signup")}
                   aria-busy={pending === `${p.module}:signup`}
                   className="w-full rounded-md bg-primary px-4 py-2.5 text-[12px] font-semibold text-primary-foreground transition-all duration-100 hover:opacity-90 active:scale-[0.98] active:brightness-90 disabled:cursor-wait disabled:opacity-70"
@@ -177,7 +187,10 @@ function Landing() {
                 </button>
                 <button
                   type="button"
-                  onPointerDown={() => setPending(`${p.module}:signin`)}
+                  onPointerDown={() => {
+                    setSelected(p.module);
+                    setPending(`${p.module}:signin`);
+                  }}
                   onClick={() => go(p.module, "signin")}
                   aria-busy={pending === `${p.module}:signin`}
                   className="w-full rounded-md border border-border px-4 py-2.5 text-[12px] font-semibold text-primary transition-all duration-100 hover:border-primary active:scale-[0.98] active:bg-accent disabled:cursor-wait disabled:opacity-70"
@@ -186,8 +199,10 @@ function Landing() {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
+
       </main>
     </div>
   );

@@ -52,7 +52,7 @@ export const MODULE_LABEL: Record<AppModule, string> = MODULES.reduce(
 export const SINGLE_MODULES = MODULES.filter((m) => m.key !== "full");
 
 /** Rotas liberadas para qualquer restaurante, independente do módulo contratado. */
-export const ALWAYS_ALLOWED_ROUTES = ["/app", "/app/cadastros", "/app/wines"];
+export const ALWAYS_ALLOWED_ROUTES = ["/app", "/app/wines"];
 
 /** Rotas que exigem o pacote completo. */
 const FULL_ONLY_ROUTES = [
@@ -80,6 +80,11 @@ export function canAccessRoute(modules: AppModule[], route: string) {
   if (ALWAYS_ALLOWED_ROUTES.includes(route)) return true;
   if (modules.includes("full")) return true;
   if (FULL_ONLY_ROUTES.includes(route)) return false;
+  // O hub de cadastros só faz sentido para quem tem módulos de gestão;
+  // usuários apenas com o módulo de impressão de carta acessam diretamente as rotas próprias.
+  if (route === "/app/cadastros") {
+    return modules.length > 0 && modules.some((m) => m !== "printed_menu");
+  }
   const needed = ROUTE_MODULE[route];
   if (!needed) return true;
   return modules.includes(needed);

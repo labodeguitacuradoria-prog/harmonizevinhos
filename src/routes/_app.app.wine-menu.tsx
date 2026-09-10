@@ -481,7 +481,7 @@ function WineMenuPage() {
         </div>
 
         {/* Modelos */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {TEMPLATE_LIST.map((t) => (
             <button
               key={t.key}

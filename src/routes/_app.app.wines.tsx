@@ -608,6 +608,17 @@ function WinesSection() {
   const filteredWines = wines
     .filter((w) => (onlyActive ? w.active_on_menu : true))
     .filter((w) => {
+      if (printOnly) {
+        return (
+          matchText(filters.internal_code, w.internal_code) &&
+          (matchText(filters.name, w.name) || matchText(filters.name, w.producer)) &&
+          matchText(filters.vintage, w.vintage != null ? String(w.vintage) : "") &&
+          (filters.wine_type === "" || filters.wine_type === wineTypeLabel(w.wine_type)) &&
+          (filters.volume === "" || filters.volume === (w.volume ?? "")) &&
+          matchText(filters.country, w.country) &&
+          matchNum(filters.sale_price, Number(w.sale_price))
+        );
+      }
       const markup = Number(w.cost_price) > 0 ? (Number(w.sale_price) / Number(w.cost_price) - 1) * 100 : null;
       const stock = isGlassVol(w.volume) ? null : (stockMap[w.id]?.qty ?? null);
       const monthly = monthlySalesMap[w.id] ?? 0;

@@ -76,6 +76,8 @@ function Landing() {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
   const [pending, setPending] = useState<string | null>(null);
+  const [selected, setSelected] = useState<AppModule | null>(null);
+
 
   useEffect(() => {
     let cancelled = false;

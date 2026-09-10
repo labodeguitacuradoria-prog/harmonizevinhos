@@ -42,6 +42,7 @@ export function MenuPreview({
   paper,
   paperDef,
   spacing = DEFAULT_SPACING,
+  typography = DEFAULT_TYPOGRAPHY,
   title,
   subtitle,
   footer,

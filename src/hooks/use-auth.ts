@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
-import { ensureActiveRestaurant, useActiveScope } from "@/lib/active-scope";
+import {
+  ensureActiveRestaurant,
+  getActiveScope,
+  setActiveRestaurant,
+  useActiveScope,
+} from "@/lib/active-scope";
 import { useEntitlements } from "@/hooks/use-entitlements";
 import type { AppModule } from "@/lib/modules";
 

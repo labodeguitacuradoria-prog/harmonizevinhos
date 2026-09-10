@@ -113,6 +113,18 @@ export function useAuth(): UserContext {
   const canManageActive =
     role === "admin" || activeRole === "rest_admin" || activeRole === "rest_owner";
 
+  const scopedIds = scope.activeGroupId
+    ? memberships.filter((m) => m.groupId === scope.activeGroupId).map((m) => m.restaurantId)
+    : scope.activeRestaurantId
+      ? [scope.activeRestaurantId]
+      : active
+        ? [active.restaurantId]
+        : [];
+  const { byRestaurant, loading: entLoading } = useEntitlements(scopedIds);
+  const modules = Array.from(
+    new Set(scopedIds.flatMap((id) => byRestaurant.get(id) ?? [])),
+  ) as AppModule[];
+
   return {
     user: session?.user ?? null,
     session,
@@ -127,5 +139,7 @@ export function useAuth(): UserContext {
     activeGroupId: scope.activeGroupId,
     activeRole,
     canManageActive,
+    modules,
+    modulesLoading: entLoading && scopedIds.length > 0,
   };
 }

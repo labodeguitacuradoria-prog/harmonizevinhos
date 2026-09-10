@@ -587,9 +587,11 @@ export const adminDeleteUserAccount = createServerFn({ method: "POST" })
       await supabaseAdmin.from("restaurants").delete().eq("id", r.id);
     }
 
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", row.user_id);
-    await supabaseAdmin.from("profiles").delete().eq("id", row.user_id);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(row.user_id);
     if (error) throw new Error(error.message);
+
+    // Reforço idempotente para instalações antigas sem cascata completa.
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", row.user_id);
+    await supabaseAdmin.from("profiles").delete().eq("id", row.user_id);
     return { ok: true };
   });

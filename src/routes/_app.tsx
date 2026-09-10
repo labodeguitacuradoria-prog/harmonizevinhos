@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useNavigate, Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X, KeyRound } from "lucide-react";
@@ -16,6 +17,8 @@ function AppLayout() {
   const { user, loading, role, restaurantId, modules } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const claimedForUser = useRef<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const adminScopedRestaurant = role === "admin" ? restaurantId : null;
   const claimModule = useServerFn(claimSignupModule);
@@ -28,6 +31,7 @@ function AppLayout() {
   // Aplica o pacote escolhido na tela inicial ao entrar pela primeira vez.
   useEffect(() => {
     if (loading || !user) return;
+    if (claimedForUser.current === user.id) return;
     let chosen: string | null = null;
     try {
       chosen = localStorage.getItem("signup-module");
@@ -35,17 +39,24 @@ function AppLayout() {
       chosen = null;
     }
     if (!chosen) return;
+    claimedForUser.current = user.id;
     claimModule({ data: { module: chosen } })
-      .catch(() => undefined)
-      .finally(() => {
+      .then(async () => {
         try {
           localStorage.removeItem("signup-module");
         } catch {
           /* ignora */
         }
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["auth-context", user.id] }),
+          queryClient.invalidateQueries({ queryKey: ["module-entitlements"] }),
+        ]);
         router.invalidate();
+      })
+      .catch(() => {
+        claimedForUser.current = null;
       });
-  }, [loading, user, claimModule, router]);
+  }, [loading, user, claimModule, queryClient, router]);
 
   if (loading || !user) {
     return (

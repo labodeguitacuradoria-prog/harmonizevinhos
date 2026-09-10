@@ -61,10 +61,11 @@ export const claimSignupModule = createServerFn({ method: "POST" })
     if (isAdmin) return { ok: true, applied: false };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rests } = await supabaseAdmin
+    const { data: rests, error: restsError } = await supabaseAdmin
       .from("restaurants")
       .select("id")
       .eq("owner_id", context.userId);
+    if (restsError) throw new Error(restsError.message);
     if (!rests?.length) return { ok: true, applied: false };
 
     let applied = false;
@@ -75,7 +76,11 @@ export const claimSignupModule = createServerFn({ method: "POST" })
         .eq("restaurant_id", r.id);
       if ((count ?? 0) > 0) continue;
 
-      await supabaseAdmin.from("module_entitlements").delete().eq("restaurant_id", r.id);
+      const { error: deleteError } = await supabaseAdmin
+        .from("module_entitlements")
+        .delete()
+        .eq("restaurant_id", r.id);
+      if (deleteError) throw new Error(deleteError.message);
       const { error } = await supabaseAdmin.from("module_entitlements").insert({
         restaurant_id: r.id,
         module: data.module,

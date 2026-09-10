@@ -16,6 +16,7 @@ function AppLayout() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const adminScopedRestaurant = role === "admin" ? restaurantId : null;
+  const claimModule = useServerFn(claimSignupModule);
 
 
   useEffect(() => {

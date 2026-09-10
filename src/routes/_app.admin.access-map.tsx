@@ -160,6 +160,22 @@ function AccessMapAdmin() {
                       {ROLE_LABEL[r.role] ?? r.role}
                     </span>
                   </td>
+                  <td className="px-3 py-2">
+                    {r.modules?.length ? (
+                      <div className="flex flex-wrap gap-1">
+                        {(r.modules.includes("full") ? ["full"] : r.modules).map((m: string) => (
+                          <span
+                            key={m}
+                            className="rounded-md border border-border bg-[color:var(--surface-2)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground"
+                          >
+                            {MODULE_LABEL[m as AppModule] ?? m}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-muted-foreground">—</span>
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-muted-foreground">
                     {r.restaurant_name ?? "—"}
                   </td>

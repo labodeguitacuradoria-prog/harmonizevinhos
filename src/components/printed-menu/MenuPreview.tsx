@@ -97,7 +97,8 @@ export function MenuPreview({
               <ul className="mt-2.5 space-y-2">
                 {sec.wineIds.map((id) => {
                   const w = winesById[id];
-                  const meta = wineMeta(w, fields);
+                  const firstLine = wineMetaFirstLine(w, fields);
+                  const grapeLine = wineMetaGrapeLine(w, fields);
                   return (
                     <li key={id} className="break-inside-avoid">
                       <div className="flex items-baseline gap-2">
@@ -116,7 +117,8 @@ export function MenuPreview({
                           <span className={t.itemPrice}>{formatPrice(w.sale_price, priceDecimals)}</span>
                         ) : null}
                       </div>
-                      {meta ? <div className={t.itemMeta}>{meta}</div> : null}
+                      {firstLine ? <div className={t.itemMeta}>{firstLine}</div> : null}
+                      {grapeLine ? <div className={t.itemMeta}>{grapeLine}</div> : null}
                     </li>
                   );
                 })}

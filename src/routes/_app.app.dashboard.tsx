@@ -27,9 +27,14 @@ import DashboardTargetsEditor, {
   type IndicatorKey,
 } from "@/components/DashboardTargetsEditor";
 import SalesDiagnosticReport from "@/components/SalesDiagnosticReport";
+import ModuleGate from "@/components/ModuleGate";
 
 export const Route = createFileRoute("/_app/app/dashboard")({
-  component: DashboardPage,
+  component: () => (
+    <ModuleGate route="/app/dashboard">
+      <DashboardPage />
+    </ModuleGate>
+  ),
 });
 
 type WineRow = {

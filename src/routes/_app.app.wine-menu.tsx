@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
 import {
+import ModuleGate from "@/components/ModuleGate";
   DEFAULT_VISIBLE_FIELDS,
   PAPER_LIST,
   TEMPLATE_LIST,
@@ -32,7 +33,11 @@ import {
 } from "@/components/printed-menu/templates";
 
 export const Route = createFileRoute("/_app/app/wine-menu")({
-  component: WineMenuPage,
+  component: () => (
+    <ModuleGate route="/app/wine-menu">
+      <WineMenuPage />
+    </ModuleGate>
+  ),
   head: () => ({
     meta: [
       { title: "Carta de Vinhos para Impressão | Gestão de Vinhos" },

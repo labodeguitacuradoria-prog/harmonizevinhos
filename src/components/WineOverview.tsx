@@ -371,7 +371,9 @@ export function WineOverview({
             />
           </div>
         </div>
+        )}
         </div>
+
 
       </div>
 

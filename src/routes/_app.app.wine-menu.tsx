@@ -100,6 +100,17 @@ function WineMenuPage() {
 
   const [editingWineId, setEditingWineId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [savedOpen, setSavedOpen] = useState(false);
+
+  useEffect(() => {
+    if (!savedOpen) return;
+    function handle(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-saved-dropdown]")) setSavedOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [savedOpen]);
 
   async function saveWineName(id: string) {
     const name = editingName.trim();
@@ -310,94 +321,106 @@ function WineMenuPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="no-print">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1
-              className="flex items-center gap-2 text-xl font-semibold uppercase tracking-[2px] text-primary md:text-2xl"
-            >
-              <ScrollText className="h-5 w-5" /> Carta impressa
-            </h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Monte a carta com os rótulos do restaurante, escolha um modelo e imprima. Os preços vêm sempre do
-              cadastro atual.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => {
-                setCurrentId(null);
-                setListName("");
-                toast.info("Nova carta: ao salvar, você escolhe o nome.");
-              }}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-accent"
-            >
-              Nova carta
-            </button>
-            <button
-              onClick={() => save(false)}
-              disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-accent disabled:opacity-50"
-            >
-              <Save className="h-3.5 w-3.5" /> Salvar
-            </button>
-            {currentId && (
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h1
+                className="flex items-center gap-2 text-xl font-semibold uppercase tracking-[2px] text-primary md:text-2xl"
+              >
+                <ScrollText className="h-5 w-5" /> Carta impressa
+              </h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Monte a carta com os rótulos do restaurante, escolha um modelo e imprima. Os preços vêm sempre do
+                cadastro atual.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={() => save(true)}
-                disabled={saving}
+                onClick={() => {
+                  setCurrentId(null);
+                  setListName("");
+                  toast.info("Nova carta: ao salvar, você escolhe o nome.");
+                }}
                 className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-accent"
               >
-                <Copy className="h-3.5 w-3.5" /> Duplicar
+                Nova carta
               </button>
-            )}
-            <button
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-foreground hover:opacity-90"
-            >
-              <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
-            </button>
-          </div>
-        </div>
+              <button
+                onClick={() => save(false)}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-accent disabled:opacity-50"
+              >
+                <Save className="h-3.5 w-3.5" /> Salvar
+              </button>
+              {currentId && (
+                <button
+                  onClick={() => save(true)}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                >
+                  <Copy className="h-3.5 w-3.5" /> Duplicar
+                </button>
+              )}
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-foreground hover:opacity-90"
+              >
+                <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
+              </button>
 
-        {/* Cartas salvas */}
-        <div className="mt-5 rounded-xl border border-border bg-card p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Cartas salvas</div>
-            <div className="text-[11px] text-muted-foreground">
-              {currentId ? `Editando: ${listName || "sem nome"}` : "Nova carta (ainda não salva)"}
-            </div>
-          </div>
-          {savedLists.length === 0 ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Nenhuma carta salva ainda. Monte a carta e clique em Salvar para dar um nome e guardá-la.
-            </p>
-          ) : (
-            <ul className="mt-3 grid gap-1 sm:grid-cols-2">
-              {savedLists.map((l) => (
-                <li
-                  key={l.id}
-                  className={`flex items-center gap-2 rounded border px-2 py-1.5 text-xs ${
-                    currentId === l.id ? "border-primary bg-accent" : "border-border hover:bg-accent"
+              {/* Cartas salvas — dropdown */}
+              <div className="relative" data-saved-dropdown>
+                <button
+                  onClick={() => setSavedOpen((v) => !v)}
+                  className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-wide ${
+                    currentId ? "border-primary text-primary hover:bg-accent" : "border-border text-muted-foreground hover:bg-accent"
                   }`}
                 >
-                  <span className="flex-1 truncate">
-                    {l.name}
-                    <span className="ml-2 text-muted-foreground">
-                      {new Date(l.updated_at).toLocaleDateString("pt-BR")}
-                    </span>
-                  </span>
-                  <button
-                    onClick={() => loadSaved(l)}
-                    className="rounded border border-border px-2 py-0.5 text-[10px] uppercase text-primary hover:bg-background"
-                  >
-                    Carregar
-                  </button>
-                  <IconBtn onClick={() => deleteSaved(l.id)} title="Excluir carta">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </IconBtn>
-                </li>
-              ))}
-            </ul>
-          )}
+                  {currentId ? listName || "Carta salva" : "Cartas salvas"}
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${savedOpen ? "rotate-180" : ""}`} />
+                </button>
+                {savedOpen && (
+                  <div className="absolute right-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-2 shadow-lg">
+                    <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                      Cartas salvas
+                    </div>
+                    {savedLists.length === 0 ? (
+                      <p className="px-2 py-2 text-xs text-muted-foreground">
+                        Nenhuma carta salva ainda.
+                      </p>
+                    ) : (
+                      <ul className="max-h-64 space-y-1 overflow-y-auto">
+                        {savedLists.map((l) => (
+                          <li
+                            key={l.id}
+                            className={`flex items-center gap-2 rounded px-2 py-1.5 ${
+                              currentId === l.id ? "bg-accent" : "hover:bg-accent"
+                            }`}
+                          >
+                            <button
+                              onClick={() => {
+                                loadSaved(l);
+                                setSavedOpen(false);
+                              }}
+                              className="flex-1 text-left"
+                            >
+                              <div className="text-xs">{l.name}</div>
+                              <div className="text-[10px] text-muted-foreground">
+                                {new Date(l.updated_at).toLocaleDateString("pt-BR")}
+                              </div>
+                            </button>
+                            <IconBtn onClick={() => deleteSaved(l.id)} title="Excluir carta">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </IconBtn>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Modelos */}

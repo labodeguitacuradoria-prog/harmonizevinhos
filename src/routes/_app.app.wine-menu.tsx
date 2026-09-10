@@ -22,13 +22,17 @@ import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
 import ModuleGate from "@/components/ModuleGate";
 import {
+  DEFAULT_SPACING,
   DEFAULT_VISIBLE_FIELDS,
   PAPER_LIST,
   TEMPLATE_LIST,
   autoSections,
+  customPaper,
   isGlassVol,
+  paperOf,
   typeLabel,
   type MenuSection,
+  type MenuSpacing,
   type MenuWine,
   type PaperKey,
   type TemplateKey,

@@ -501,3 +501,34 @@ export const transferAccess = createServerFn({ method: "POST" })
     await supabaseAdmin.from("user_roles").delete().eq("id", row.id);
     return { ok: true, user_id: newUserId };
   });
+
+const DeleteAccountSchema = z.object({ user_role_id: z.string().uuid() });
+
+/**
+ * Exclui completamente a conta de acesso (todos os vínculos, o perfil e o
+ * login), liberando o e-mail para ser cadastrado novamente do zero.
+ * Somente admin global.
+ */
+export const adminDeleteUserAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => DeleteAccountSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("id", data.user_role_id)
+      .maybeSingle();
+    if (!row) return { ok: true };
+    if (row.user_id === context.userId) throw new Error("Não é possível excluir a própria conta.");
+
+    const { data: isTargetAdmin } = await supabaseAdmin.rpc("is_admin", { _user_id: row.user_id });
+    if (isTargetAdmin) throw new Error("Contas de administrador geral não podem ser excluídas aqui.");
+
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", row.user_id);
+    await supabaseAdmin.from("profiles").delete().eq("id", row.user_id);
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(row.user_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

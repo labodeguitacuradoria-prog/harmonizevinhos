@@ -1036,3 +1036,49 @@ function SpaceSlider({
     </div>
   );
 }
+
+function FontControl({
+  label,
+  font,
+  size,
+  defaultSize,
+  onFont,
+  onSize,
+}: {
+  label: string;
+  font?: (typeof FONT_LIST)[number]["key"];
+  size?: number;
+  defaultSize: number;
+  onFont: (f: (typeof FONT_LIST)[number]["key"] | undefined) => void;
+  onSize: (s: number) => void;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="flex items-center gap-2">
+        <select
+          value={font ?? ""}
+          onChange={(e) => onFont((e.target.value || undefined) as never)}
+          className="flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+        >
+          <option value="">Fonte do modelo</option>
+          {FONT_LIST.map((f) => (
+            <option key={f.key} value={f.key}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          min={6}
+          max={40}
+          step={0.5}
+          value={size ?? defaultSize}
+          onChange={(e) => onSize(Number(e.target.value))}
+          className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-xs tabular-nums"
+        />
+        <span className="text-[10px] text-muted-foreground">pt</span>
+      </div>
+    </div>
+  );
+}

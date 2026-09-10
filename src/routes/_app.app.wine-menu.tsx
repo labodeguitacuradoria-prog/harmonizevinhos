@@ -364,7 +364,7 @@ function WineMenuPage() {
     setTitle(l.header_title ?? "");
     setSubtitle(l.header_subtitle ?? "");
     setFooter(l.footer_text ?? "");
-    setFields({ ...DEFAULT_VISIBLE_FIELDS, ...(l.visible_fields ?? {}) });
+    setFields(normalizeFields(l.visible_fields));
     setAddressPosition(l.visible_fields?.addressPosition === "footer" ? "footer" : "header");
     setPriceDecimals(l.visible_fields?.priceDecimals !== false);
     setLogoUrl(l.logo_url ?? "");

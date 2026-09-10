@@ -37,7 +37,6 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [restaurantName, setRestaurantName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -56,7 +55,7 @@ function AuthPage() {
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: name, restaurant_name: restaurantName },
+            data: { full_name: name },
           },
         });
         if (error) throw error;
@@ -130,14 +129,7 @@ function AuthPage() {
 
         <form onSubmit={handleEmail} className="space-y-3">
           {mode === "signup" && (
-            <>
-              <Input label="Seu nome" value={name} onChange={setName} />
-              <Input
-                label="Nome do restaurante"
-                value={restaurantName}
-                onChange={setRestaurantName}
-              />
-            </>
+            <Input label="Seu nome" value={name} onChange={setName} />
           )}
           <Input label="E-mail" type="email" value={email} onChange={setEmail} required />
           <Input

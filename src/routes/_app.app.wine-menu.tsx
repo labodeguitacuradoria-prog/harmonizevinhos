@@ -111,6 +111,7 @@ function WineMenuPage() {
   const [editingName, setEditingName] = useState("");
   const [savedOpen, setSavedOpen] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
+  const [spacingOpen, setSpacingOpen] = useState(false);
 
   useEffect(() => {
     if (!savedOpen) return;
@@ -131,6 +132,16 @@ function WineMenuPage() {
     document.addEventListener("mousedown", handle);
     return () => document.removeEventListener("mousedown", handle);
   }, [customOpen]);
+
+  useEffect(() => {
+    if (!spacingOpen) return;
+    function handle(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-spacing-dropdown]")) setSpacingOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [spacingOpen]);
 
   async function saveWineName(id: string) {
     const name = editingName.trim();

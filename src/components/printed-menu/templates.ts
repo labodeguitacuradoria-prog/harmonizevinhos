@@ -187,15 +187,18 @@ export function formatPrice(v: number | null | undefined, decimals = true): stri
   return Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 
-export function wineMeta(w: MenuWine, f: VisibleFields): string {
+export function wineMetaFirstLine(w: MenuWine, f: VisibleFields): string {
   const parts: string[] = [];
   if (f.producer && w.producer) parts.push(w.producer);
   if (f.vintage && w.vintage) parts.push(String(w.vintage));
-  if (f.grape && w.grape) parts.push(w.grape);
   if (f.origin) {
     const origin = [w.appellation || w.region, w.country].filter(Boolean).join(", ");
     if (origin) parts.push(origin);
   }
   if (f.volume && w.volume) parts.push(w.volume);
   return parts.join(" · ");
+}
+
+export function wineMetaGrapeLine(w: MenuWine, f: VisibleFields): string | null {
+  return f.grape && w.grape ? w.grape : null;
 }

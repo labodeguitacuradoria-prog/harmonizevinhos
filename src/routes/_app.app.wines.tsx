@@ -1191,7 +1191,7 @@ function WineForm({
 
   return (
     <Modal title={isEdit ? `Editar — ${wine!.name}` : "Novo vinho"} onClose={onClose}>
-      {isEdit && (
+      {isEdit && !printOnly && (
         <p className="mb-3 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
           Alterar Preço de Custo ou Preço de Venda afeta apenas vendas e entradas <strong>futuras</strong>. O histórico de faturamento e os indicadores dos dashboards continuam usando os preços registrados em cada movimento.
         </p>

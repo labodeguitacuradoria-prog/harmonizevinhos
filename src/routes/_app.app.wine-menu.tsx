@@ -100,6 +100,17 @@ function WineMenuPage() {
 
   const [editingWineId, setEditingWineId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [savedOpen, setSavedOpen] = useState(false);
+
+  useEffect(() => {
+    if (!savedOpen) return;
+    function handle(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-saved-dropdown]")) setSavedOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [savedOpen]);
 
   async function saveWineName(id: string) {
     const name = editingName.trim();

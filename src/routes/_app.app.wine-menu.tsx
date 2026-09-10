@@ -14,6 +14,9 @@ import {
   X,
   ScrollText,
   RotateCcw,
+  Pencil,
+  Check,
+
 } from "lucide-react";
 import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
@@ -94,6 +97,23 @@ function WineMenuPage() {
     () => memberships.find((m) => m.restaurantId === restaurantId)?.name ?? "",
     [memberships, restaurantId],
   );
+
+  const [editingWineId, setEditingWineId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+
+  async function saveWineName(id: string) {
+    const name = editingName.trim();
+    setEditingWineId(null);
+    if (!name) return;
+    const { error } = await supabase.from("wines").update({ name }).eq("id", id);
+    if (error) {
+      toast.error("Não foi possível salvar o nome do rótulo.");
+      return;
+    }
+    toast.success("Rótulo atualizado.");
+    queryClient.invalidateQueries({ queryKey: ["wine-menu-wines", restaurantId] });
+  }
+
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["wine-menu-wines", restaurantId],

@@ -371,6 +371,7 @@ function WineMenuPage() {
     setAddress(l.address_text ?? "");
     setPaper((l.paper_size as PaperKey) ?? "a4");
     setSpacing({ ...DEFAULT_SPACING, ...(l.visible_fields?.spacing ?? {}) });
+    setTypography({ ...(l.visible_fields?.typography ?? {}) });
     const cp = l.visible_fields?.customPaper;
     setUseCustomPaper(!!cp);
     if (cp) {

@@ -64,6 +64,7 @@ export function WineOverview({
   onEdit,
   metric,
   onMetricChange,
+  simple = false,
 }: {
   wine: OverviewWine;
   restaurantId: string;
@@ -72,6 +73,8 @@ export function WineOverview({
 
   metric: Metric;
   onMetricChange: (m: Metric) => void;
+  /** Modo enxuto (módulo Carta para impressão): sem estoque, vendas e participação. */
+  simple?: boolean;
 }) {
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -270,22 +273,25 @@ export function WineOverview({
           {/* KPI column */}
           <div className="flex flex-col justify-center gap-3">
             <Kpi label="Preço de venda" value={`R$ ${fmtBRL(Number(wine.sale_price), 2)}`} tone="primary" />
-            <Kpi
-              label="Estoque atual"
-              value={
-                isGlassVol(wine.volume)
-                  ? "—"
-                  : stock?.qty != null
-                    ? `${stock.qty} un`
-                    : "sem contagem"
-              }
-              hint={stock?.date ? new Date(stock.date).toLocaleDateString("pt-BR") : undefined}
-              icon={<Package className="h-3.5 w-3.5" />}
-            />
+            {!simple && (
+              <Kpi
+                label="Estoque atual"
+                value={
+                  isGlassVol(wine.volume)
+                    ? "—"
+                    : stock?.qty != null
+                      ? `${stock.qty} un`
+                      : "sem contagem"
+                }
+                hint={stock?.date ? new Date(stock.date).toLocaleDateString("pt-BR") : undefined}
+                icon={<Package className="h-3.5 w-3.5" />}
+              />
+            )}
           </div>
         </div>
 
         {/* Charts */}
+        {!simple && (
         <div className="grid gap-5 p-5 md:grid-cols-[1fr_300px]">
           {/* Sales bar chart */}
           <div className="flex min-h-[360px] flex-col rounded-xl border border-border bg-background/40 p-3">
@@ -365,7 +371,9 @@ export function WineOverview({
             />
           </div>
         </div>
+        )}
         </div>
+
 
       </div>
 

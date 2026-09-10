@@ -978,6 +978,7 @@ function WinesSection() {
           onEdit={() => setEditWine(viewWine)}
           metric={overviewMetric}
           onMetricChange={setOverviewMetric}
+          simple={printOnly}
         />
       )}
 

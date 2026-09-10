@@ -785,7 +785,7 @@ function WinesSection() {
               </button>
             </div>
           );
-        })
+        })}
       </div>
 
       {/* Desktop: table */}

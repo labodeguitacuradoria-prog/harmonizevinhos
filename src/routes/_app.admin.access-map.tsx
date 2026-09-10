@@ -6,9 +6,10 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   adminInviteAccess,
   adminRemoveAccess,
+  adminDeleteUserAccount,
   listAllAccessMap,
 } from "@/lib/access.functions";
-import { Copy, ShieldCheck, UserPlus, Trash2, Settings2 } from "lucide-react";
+import { Copy, ShieldCheck, UserPlus, Trash2, Settings2, UserX } from "lucide-react";
 import AccessManageDialog, { type ManageTarget } from "@/components/AccessManageDialog";
 
 export const Route = createFileRoute("/_app/admin/access-map")({
@@ -32,6 +33,7 @@ function AccessMapAdmin() {
   const listFn = useServerFn(listAllAccessMap);
   const inviteFn = useServerFn(adminInviteAccess);
   const removeFn = useServerFn(adminRemoveAccess);
+  const deleteAccountFn = useServerFn(adminDeleteUserAccount);
 
   const [filterEmail, setFilterEmail] = useState("");
   const [filterRest, setFilterRest] = useState("");
@@ -68,6 +70,15 @@ function AccessMapAdmin() {
   const removeMut = useMutation({
     mutationFn: async (user_role_id: string) => removeFn({ data: { user_role_id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-access-map"] }),
+  });
+
+  const deleteAccountMut = useMutation({
+    mutationFn: async (user_role_id: string) => deleteAccountFn({ data: { user_role_id } }),
+    onSuccess: () => {
+      setErr(null);
+      qc.invalidateQueries({ queryKey: ["admin-access-map"] });
+    },
+    onError: (e: any) => setErr(e?.message ?? "Falha ao excluir a conta"),
   });
 
   return (
@@ -175,9 +186,24 @@ function AccessMapAdmin() {
                       onClick={() => {
                         if (confirm("Remover vínculo?")) removeMut.mutate(r.user_role_id);
                       }}
-                      className="rounded-md p-1 text-muted-foreground hover:text-red-400"
+                      className="mr-1 rounded-md p-1 text-muted-foreground hover:text-red-400"
+                      title="Remover apenas o vínculo com o restaurante"
                     >
                       <Trash2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (
+                          confirm(
+                            `Excluir definitivamente a conta ${r.email ?? ""}? Todos os vínculos e o login serão apagados e o e-mail ficará livre para um novo cadastro.`,
+                          )
+                        )
+                          deleteAccountMut.mutate(r.user_role_id);
+                      }}
+                      className="rounded-md p-1 text-muted-foreground hover:text-red-500"
+                      title="Excluir a conta inteira e liberar o e-mail"
+                    >
+                      <UserX size={16} />
                     </button>
                   </td>
                 </tr>

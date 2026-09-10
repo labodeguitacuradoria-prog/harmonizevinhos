@@ -23,7 +23,11 @@ import { MenuPreview } from "@/components/printed-menu/MenuPreview";
 import ModuleGate from "@/components/ModuleGate";
 import {
   DEFAULT_SPACING,
+  DEFAULT_TYPOGRAPHY,
   DEFAULT_VISIBLE_FIELDS,
+  FONT_LIST,
+  normalizeFields,
+  type MenuTypography,
   PAPER_LIST,
   TEMPLATE_LIST,
   autoSections,

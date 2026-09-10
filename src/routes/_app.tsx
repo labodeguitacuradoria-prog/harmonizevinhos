@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X, KeyRound } from "lucide-react";
 import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
 import { canAccessRoute, type AppModule } from "@/lib/modules";
+import { useServerFn } from "@tanstack/react-start";
+import { claimSignupModule } from "@/lib/modules.functions";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -16,11 +18,34 @@ function AppLayout() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const adminScopedRestaurant = role === "admin" ? restaurantId : null;
+  const claimModule = useServerFn(claimSignupModule);
 
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
+
+  // Aplica o pacote escolhido na tela inicial ao entrar pela primeira vez.
+  useEffect(() => {
+    if (loading || !user) return;
+    let chosen: string | null = null;
+    try {
+      chosen = localStorage.getItem("signup-module");
+    } catch {
+      chosen = null;
+    }
+    if (!chosen) return;
+    claimModule({ data: { module: chosen } })
+      .catch(() => undefined)
+      .finally(() => {
+        try {
+          localStorage.removeItem("signup-module");
+        } catch {
+          /* ignora */
+        }
+        router.invalidate();
+      });
+  }, [loading, user, claimModule, router]);
 
   if (loading || !user) {
     return (

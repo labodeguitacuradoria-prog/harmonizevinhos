@@ -570,6 +570,23 @@ export const adminDeleteUserAccount = createServerFn({ method: "POST" })
     const { data: isTargetAdmin } = await supabaseAdmin.rpc("is_admin", { _user_id: row.user_id });
     if (isTargetAdmin) throw new Error("Contas de administrador geral não podem ser excluídas aqui.");
 
+    // Restaurantes vazios criados no cadastro dessa conta também são apagados,
+    // para que o e-mail volte a ser um usuário totalmente novo.
+    const { data: owned } = await supabaseAdmin
+      .from("restaurants")
+      .select("id")
+      .eq("owner_id", row.user_id);
+    for (const r of owned ?? []) {
+      const { count } = await supabaseAdmin
+        .from("wines")
+        .select("id", { count: "exact", head: true })
+        .eq("restaurant_id", r.id);
+      if ((count ?? 0) > 0) continue;
+      await supabaseAdmin.from("module_entitlements").delete().eq("restaurant_id", r.id);
+      await supabaseAdmin.from("user_roles").delete().eq("restaurant_id", r.id);
+      await supabaseAdmin.from("restaurants").delete().eq("id", r.id);
+    }
+
     await supabaseAdmin.from("user_roles").delete().eq("user_id", row.user_id);
     await supabaseAdmin.from("profiles").delete().eq("id", row.user_id);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(row.user_id);

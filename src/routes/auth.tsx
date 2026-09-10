@@ -44,6 +44,16 @@ function AuthPage() {
     });
   }, [navigate]);
 
+  useEffect(() => {
+    if (chosenModule) {
+      try {
+        localStorage.setItem("signup-module", chosenModule);
+      } catch {
+        /* ignora */
+      }
+    }
+  }, [chosenModule]);
+
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);

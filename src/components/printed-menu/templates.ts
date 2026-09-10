@@ -1,4 +1,4 @@
-export type TemplateKey = "classic" | "twocol" | "minimal";
+export type TemplateKey = "classic" | "twocol" | "minimal" | "casual";
 
 export type TemplateDef = {
   key: TemplateKey;
@@ -63,9 +63,24 @@ export const TEMPLATES: Record<TemplateKey, TemplateDef> = {
     dotted: false,
     rule: "",
   },
+  casual: {
+    key: "casual",
+    label: "Casual / Moderno",
+    desc: "Tipografia moderna, leve e descontraída, ideal para bistrôs.",
+    columns: 1,
+    page: "font-sans text-[11pt] leading-relaxed",
+    headerTitle: "text-[24pt] font-semibold lowercase tracking-[0.04em]",
+    headerSubtitle: "text-[10pt] font-medium tracking-wide mt-2 text-black/70",
+    sectionTitle: "text-[11pt] font-bold tracking-wide text-black/80",
+    itemName: "text-[11pt] font-semibold",
+    itemMeta: "text-[9.5pt] text-black/70",
+    itemPrice: "text-[11pt] font-semibold tabular-nums",
+    dotted: false,
+    rule: "",
+  },
 };
 
-export const TEMPLATE_LIST = [TEMPLATES.classic, TEMPLATES.twocol, TEMPLATES.minimal];
+export const TEMPLATE_LIST = [TEMPLATES.classic, TEMPLATES.twocol, TEMPLATES.minimal, TEMPLATES.casual];
 
 /* ===== Tamanhos de papel ===== */
 export type PaperKey = "a4" | "a5" | "letter" | "dl";

@@ -67,7 +67,7 @@ type SavedList = {
   header_title: string | null;
   header_subtitle: string | null;
   footer_text: string | null;
-  visible_fields: VisibleFields & { addressPosition?: "header" | "footer" };
+  visible_fields: VisibleFields & { addressPosition?: "header" | "footer"; priceDecimals?: boolean };
   sections: MenuSection[];
   logo_url: string | null;
   address_text: string | null;
@@ -156,6 +156,7 @@ function WineMenuPage() {
   const [address, setAddress] = useState("");
   const [addressPosition, setAddressPosition] = useState<"header" | "footer">("header");
   const [fields, setFields] = useState<VisibleFields>(DEFAULT_VISIBLE_FIELDS);
+  const [priceDecimals, setPriceDecimals] = useState(true);
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -245,7 +246,7 @@ function WineMenuPage() {
       header_title: title,
       header_subtitle: subtitle,
       footer_text: footer,
-      visible_fields: JSON.parse(JSON.stringify({ ...fields, addressPosition })),
+      visible_fields: JSON.parse(JSON.stringify({ ...fields, addressPosition, priceDecimals })),
       sections: JSON.parse(JSON.stringify(sections)),
       logo_url: logoUrl || null,
       address_text: address || null,
@@ -278,6 +279,7 @@ function WineMenuPage() {
     setFooter(l.footer_text ?? "");
     setFields({ ...DEFAULT_VISIBLE_FIELDS, ...(l.visible_fields ?? {}) });
     setAddressPosition(l.visible_fields?.addressPosition === "footer" ? "footer" : "header");
+    setPriceDecimals(l.visible_fields?.priceDecimals !== false);
     setLogoUrl(l.logo_url ?? "");
     setAddress(l.address_text ?? "");
     setPaper((l.paper_size as PaperKey) ?? "a4");
@@ -445,6 +447,27 @@ function WineMenuPage() {
                 </label>
               ))}
             </div>
+            {fields.price ? (
+              <div className="mt-4">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Formato do preço</div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {[
+                    { dec: true, label: "Com centavos (120,00)" },
+                    { dec: false, label: "Sem centavos (120)" },
+                  ].map((o) => (
+                    <button
+                      key={String(o.dec)}
+                      onClick={() => setPriceDecimals(o.dec)}
+                      className={`rounded-full border px-3 py-1.5 text-xs ${
+                        priceDecimals === o.dec ? "border-primary text-primary" : "border-border text-muted-foreground"
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="rounded-xl border border-border bg-card p-4">
@@ -646,6 +669,7 @@ function WineMenuPage() {
               subtitle={subtitle}
               footer={footer}
               fields={fields}
+              priceDecimals={priceDecimals}
               sections={sections}
               winesById={winesById}
             />

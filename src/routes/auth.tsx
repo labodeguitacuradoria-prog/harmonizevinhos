@@ -32,7 +32,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { mode: initialMode } = Route.useSearch();
+  const { mode: initialMode, module: chosenModule } = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">(initialMode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

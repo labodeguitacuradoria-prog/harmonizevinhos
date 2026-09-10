@@ -1041,10 +1041,12 @@ function WineForm({
   wine,
   suppliers,
   restaurantId,
+  printOnly = false,
   onClose,
   onSaved,
 }: {
   wine?: Wine | null;
+  printOnly?: boolean;
   suppliers: { id: string; name: string }[];
   restaurantId: string;
   onClose: () => void;

@@ -79,6 +79,7 @@ type SavedList = {
     addressPosition?: "header" | "footer";
     priceDecimals?: boolean;
     spacing?: MenuSpacing;
+    typography?: MenuTypography;
     customPaper?: { widthMm: number; heightMm: number; padMm: number };
   };
   sections: MenuSection[];

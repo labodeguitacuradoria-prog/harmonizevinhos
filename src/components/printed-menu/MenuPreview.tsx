@@ -129,7 +129,7 @@ export function MenuPreview({
                   return (
                     <li key={id} className="break-inside-avoid">
                       <div className="flex items-baseline gap-2">
-                        <span className={t.itemName}>
+                        <span className={t.itemName} style={nameStyle}>
                           {fields.code && w.internal_code ? (
                             <span className="mr-2 tabular-nums opacity-70">{w.internal_code}</span>
                           ) : null}
@@ -141,18 +141,20 @@ export function MenuPreview({
                           <span className="flex-1" />
                         )}
                         {fields.price && w.sale_price != null ? (
-                          <span className={t.itemPrice}>{formatPrice(w.sale_price, priceDecimals)}</span>
+                          <span className={t.itemPrice} style={nameStyle}>
+                            {formatPrice(w.sale_price, priceDecimals)}
+                          </span>
                         ) : null}
                       </div>
                       {firstLine ? (
-                        <div className={t.itemMeta} style={{ marginTop: `${spacing.nameGap}pt` }}>
+                        <div className={t.itemMeta} style={{ ...metaStyle, marginTop: `${spacing.nameGap}pt` }}>
                           {firstLine}
                         </div>
                       ) : null}
                       {grapeLine ? (
                         <div
                           className={t.itemMeta}
-                          style={{ marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}
+                          style={{ ...metaStyle, marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}
                         >
                           {grapeLine}
                         </div>

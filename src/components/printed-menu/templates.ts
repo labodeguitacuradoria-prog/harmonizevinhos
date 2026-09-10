@@ -273,10 +273,10 @@ export function wineMetaFirstLine(w: MenuWine, f: VisibleFields): string {
   const parts: string[] = [];
   if (f.producer && w.producer) parts.push(w.producer);
   if (f.vintage && w.vintage) parts.push(String(w.vintage));
-  if (f.origin) {
-    const origin = [w.appellation || w.region, w.country].filter(Boolean).join(", ");
-    if (origin) parts.push(origin);
-  }
+  const originBits: string[] = [];
+  if (f.region && (w.appellation || w.region)) originBits.push((w.appellation || w.region)!);
+  if (f.country && w.country) originBits.push(w.country);
+  if (originBits.length) parts.push(originBits.join(", "));
   if (f.volume && w.volume) parts.push(w.volume);
   return parts.join(" · ");
 }

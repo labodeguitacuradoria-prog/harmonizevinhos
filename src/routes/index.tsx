@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/use-theme";
 import { Moon, Sun, ScrollText, UtensilsCrossed, DollarSign, LayoutDashboard, Wine } from "lucide-react";
@@ -75,6 +75,7 @@ const PACKS: Pack[] = [
 function Landing() {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const [pending, setPending] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,7 +94,9 @@ function Landing() {
   }, [navigate]);
 
   function go(module: AppModule, mode: "signup" | "signin") {
-    navigate({ to: "/auth", search: { mode, module } });
+    setPending(`${module}:${mode}`);
+    // Navegação imediata; o estado só serve para dar retorno visual ao clique.
+    void navigate({ to: "/auth", search: { mode, module } }).finally(() => setPending(null));
   }
 
   return (

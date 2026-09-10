@@ -98,6 +98,7 @@ function AdminRestaurants() {
         owners: new Map(
           (profiles ?? []).map((p) => [p.id, p.email ?? p.full_name ?? "—"] as const),
         ),
+        modules,
       };
     },
   });

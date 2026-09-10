@@ -860,7 +860,7 @@ function WinesSection() {
               </th>
               {printOnly ? <th><FilterInput value={filters.country} onChange={(v) => setF("country", v)} placeholder="país" /></th> : null}
               {!printOnly ? <th><FilterInput value={filters.cost_price} onChange={(v) => setF("cost_price", v)} placeholder=">50 ou 10-30" /></th> : null}
-              <th><FilterInput value={filters.sale_price} onChange={(v) => setF("sale_price", v)} placeholder=">100" /></th>
+              <th><FilterInput value={filters.sale_price} onChange={(v) => setF("sale_price", v)} placeholder="ex: R$100,00" /></th>
               {!printOnly ? <th><FilterInput value={filters.markup} onChange={(v) => setF("markup", v)} placeholder=">150" /></th> : null}
               {!printOnly ? <th><FilterInput value={filters.stock} onChange={(v) => setF("stock", v)} placeholder="<5" /></th> : null}
               {!printOnly ? <th><FilterInput value={filters.monthly} onChange={(v) => setF("monthly", v)} placeholder=">0" /></th> : null}

@@ -166,7 +166,6 @@ function Landing() {
                   type="button"
                   onPointerDown={() => setPending(`${p.module}:signup`)}
                   onClick={() => go(p.module, "signup")}
-                  disabled={!!pending}
                   aria-busy={pending === `${p.module}:signup`}
                   className="w-full rounded-md bg-primary px-4 py-2.5 text-[12px] font-semibold text-primary-foreground transition-all duration-100 hover:opacity-90 active:scale-[0.98] active:brightness-90 disabled:cursor-wait disabled:opacity-70"
                 >
@@ -176,7 +175,6 @@ function Landing() {
                   type="button"
                   onPointerDown={() => setPending(`${p.module}:signin`)}
                   onClick={() => go(p.module, "signin")}
-                  disabled={!!pending}
                   aria-busy={pending === `${p.module}:signin`}
                   className="w-full rounded-md border border-border px-4 py-2.5 text-[12px] font-semibold text-primary transition-all duration-100 hover:border-primary active:scale-[0.98] active:bg-accent disabled:cursor-wait disabled:opacity-70"
                 >

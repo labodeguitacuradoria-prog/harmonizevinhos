@@ -4,13 +4,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X, KeyRound } from "lucide-react";
 import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
+import { canAccessRoute, type AppModule } from "@/lib/modules";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
 function AppLayout() {
-  const { user, loading, role, restaurantId } = useAuth();
+  const { user, loading, role, restaurantId, modules } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);

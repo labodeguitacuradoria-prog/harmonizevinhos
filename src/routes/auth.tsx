@@ -102,6 +102,11 @@ function AuthPage() {
             ? "Acesse o painel do seu restaurante."
             : "Crie sua conta de restaurante em segundos."}
         </p>
+        {chosenModule && (
+          <div className="mt-3 rounded-md border border-primary/40 bg-[color:var(--wine)]/12 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
+            Pacote escolhido: {MODULE_TITLE[chosenModule]}
+          </div>
+        )}
 
         <button
           onClick={handleGoogle}

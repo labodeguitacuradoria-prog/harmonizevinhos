@@ -36,6 +36,8 @@ type Props = {
 export function MenuPreview({
   template,
   paper,
+  paperDef,
+  spacing = DEFAULT_SPACING,
   title,
   subtitle,
   footer,

@@ -1,11 +1,14 @@
 import {
+  DEFAULT_SPACING,
   TEMPLATES,
   formatPrice,
   paperOf,
   wineMetaFirstLine,
   wineMetaGrapeLine,
   type MenuSection,
+  type MenuSpacing,
   type MenuWine,
+  type PaperDef,
   type PaperKey,
   type TemplateKey,
   type VisibleFields,
@@ -14,6 +17,8 @@ import {
 type Props = {
   template: TemplateKey;
   paper: PaperKey;
+  paperDef?: PaperDef;
+  spacing?: MenuSpacing;
   title: string;
   subtitle: string;
   footer: string;

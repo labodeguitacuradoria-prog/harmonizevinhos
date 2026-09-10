@@ -62,6 +62,19 @@ export function MenuPreview({
     .map((s) => ({ ...s, wineIds: s.wineIds.filter((id) => winesById[id]) }))
     .filter((s) => s.wineIds.length > 0);
 
+  const nameStyle = {
+    fontFamily: fontCss(typography.nameFont),
+    fontSize: typography.nameSize ? `${typography.nameSize}pt` : undefined,
+  };
+  const sectionStyle = {
+    fontFamily: fontCss(typography.sectionFont),
+    fontSize: typography.sectionSize ? `${typography.sectionSize}pt` : undefined,
+  };
+  const metaStyle = {
+    fontFamily: fontCss(typography.metaFont),
+    fontSize: typography.metaSize ? `${typography.metaSize}pt` : undefined,
+  };
+
   const addressInHeader = !!address && addressPosition === "header";
   const addressInFooter = !!address && addressPosition === "footer";
 

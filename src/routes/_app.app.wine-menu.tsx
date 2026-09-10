@@ -685,32 +685,6 @@ function WineMenuPage() {
             </ul>
           </div>
 
-          {savedLists.length > 0 && (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Cartas salvas</div>
-              <ul className="mt-3 space-y-1">
-                {savedLists.map((l) => (
-                  <li key={l.id} className="flex items-center gap-2 rounded px-2 py-1 text-xs hover:bg-accent">
-                    <span className="flex-1 truncate">
-                      {l.name}
-                      <span className="ml-2 text-muted-foreground">
-                        {new Date(l.updated_at).toLocaleDateString("pt-BR")}
-                      </span>
-                    </span>
-                    <button
-                      onClick={() => loadSaved(l)}
-                      className="rounded border border-border px-2 py-0.5 text-[10px] uppercase text-primary hover:bg-background"
-                    >
-                      Abrir
-                    </button>
-                    <IconBtn onClick={() => deleteSaved(l.id)} title="Excluir carta">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </IconBtn>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
 
         {/* Pré-visualização */}

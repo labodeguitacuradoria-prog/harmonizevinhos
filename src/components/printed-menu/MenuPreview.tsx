@@ -1,12 +1,15 @@
 import {
   DEFAULT_SPACING,
+  DEFAULT_TYPOGRAPHY,
   TEMPLATES,
+  fontCss,
   formatPrice,
   paperOf,
   wineMetaFirstLine,
   wineMetaGrapeLine,
   type MenuSection,
   type MenuSpacing,
+  type MenuTypography,
   type MenuWine,
   type PaperDef,
   type PaperKey,
@@ -19,6 +22,7 @@ type Props = {
   paper: PaperKey;
   paperDef?: PaperDef;
   spacing?: MenuSpacing;
+  typography?: MenuTypography;
   title: string;
   subtitle: string;
   footer: string;
@@ -38,6 +42,7 @@ export function MenuPreview({
   paper,
   paperDef,
   spacing = DEFAULT_SPACING,
+  typography = DEFAULT_TYPOGRAPHY,
   title,
   subtitle,
   footer,
@@ -56,6 +61,19 @@ export function MenuPreview({
   const visibleSections = sections
     .map((s) => ({ ...s, wineIds: s.wineIds.filter((id) => winesById[id]) }))
     .filter((s) => s.wineIds.length > 0);
+
+  const nameStyle = {
+    fontFamily: fontCss(typography.nameFont),
+    fontSize: typography.nameSize ? `${typography.nameSize}pt` : undefined,
+  };
+  const sectionStyle = {
+    fontFamily: fontCss(typography.sectionFont),
+    fontSize: typography.sectionSize ? `${typography.sectionSize}pt` : undefined,
+  };
+  const metaStyle = {
+    fontFamily: fontCss(typography.metaFont),
+    fontSize: typography.metaSize ? `${typography.metaSize}pt` : undefined,
+  };
 
   const addressInHeader = !!address && addressPosition === "header";
   const addressInFooter = !!address && addressPosition === "footer";
@@ -100,7 +118,9 @@ export function MenuPreview({
         <div className={twoCols ? "[column-count:2] [column-gap:10mm]" : ""}>
           {visibleSections.map((sec) => (
             <section key={sec.id} className="mb-6 break-inside-avoid">
-              <div className={`${t.sectionTitle} ${t.rule} pb-1`}>{sec.title}</div>
+              <div className={`${t.sectionTitle} ${t.rule} pb-1`} style={sectionStyle}>
+                {sec.title}
+              </div>
               <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>
                 {sec.wineIds.map((id) => {
                   const w = winesById[id];
@@ -109,7 +129,7 @@ export function MenuPreview({
                   return (
                     <li key={id} className="break-inside-avoid">
                       <div className="flex items-baseline gap-2">
-                        <span className={t.itemName}>
+                        <span className={t.itemName} style={nameStyle}>
                           {fields.code && w.internal_code ? (
                             <span className="mr-2 tabular-nums opacity-70">{w.internal_code}</span>
                           ) : null}
@@ -121,18 +141,20 @@ export function MenuPreview({
                           <span className="flex-1" />
                         )}
                         {fields.price && w.sale_price != null ? (
-                          <span className={t.itemPrice}>{formatPrice(w.sale_price, priceDecimals)}</span>
+                          <span className={t.itemPrice} style={nameStyle}>
+                            {formatPrice(w.sale_price, priceDecimals)}
+                          </span>
                         ) : null}
                       </div>
                       {firstLine ? (
-                        <div className={t.itemMeta} style={{ marginTop: `${spacing.nameGap}pt` }}>
+                        <div className={t.itemMeta} style={{ ...metaStyle, marginTop: `${spacing.nameGap}pt` }}>
                           {firstLine}
                         </div>
                       ) : null}
                       {grapeLine ? (
                         <div
                           className={t.itemMeta}
-                          style={{ marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}
+                          style={{ ...metaStyle, marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}
                         >
                           {grapeLine}
                         </div>

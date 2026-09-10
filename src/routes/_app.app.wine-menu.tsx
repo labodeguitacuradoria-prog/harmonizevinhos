@@ -23,7 +23,11 @@ import { MenuPreview } from "@/components/printed-menu/MenuPreview";
 import ModuleGate from "@/components/ModuleGate";
 import {
   DEFAULT_SPACING,
+  DEFAULT_TYPOGRAPHY,
   DEFAULT_VISIBLE_FIELDS,
+  FONT_LIST,
+  normalizeFields,
+  type MenuTypography,
   PAPER_LIST,
   TEMPLATE_LIST,
   autoSections,
@@ -75,6 +79,7 @@ type SavedList = {
     addressPosition?: "header" | "footer";
     priceDecimals?: boolean;
     spacing?: MenuSpacing;
+    typography?: MenuTypography;
     customPaper?: { widthMm: number; heightMm: number; padMm: number };
   };
   sections: MenuSection[];
@@ -88,7 +93,8 @@ const FIELD_LABELS: { key: keyof VisibleFields; label: string }[] = [
   { key: "code", label: "Código" },
   { key: "producer", label: "Produtor" },
   { key: "vintage", label: "Safra" },
-  { key: "origin", label: "Região / País" },
+  { key: "region", label: "Região" },
+  { key: "country", label: "País" },
   { key: "grape", label: "Uvas" },
   { key: "volume", label: "Volume" },
   { key: "price", label: "Preço" },
@@ -112,6 +118,7 @@ function WineMenuPage() {
   const [savedOpen, setSavedOpen] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
   const [spacingOpen, setSpacingOpen] = useState(false);
+  const [fontOpen, setFontOpen] = useState(false);
 
   useEffect(() => {
     if (!savedOpen) return;
@@ -142,6 +149,16 @@ function WineMenuPage() {
     document.addEventListener("mousedown", handle);
     return () => document.removeEventListener("mousedown", handle);
   }, [spacingOpen]);
+
+  useEffect(() => {
+    if (!fontOpen) return;
+    function handle(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-font-dropdown]")) setFontOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [fontOpen]);
 
   async function saveWineName(id: string) {
     const name = editingName.trim();
@@ -199,6 +216,7 @@ function WineMenuPage() {
   const [customH, setCustomH] = useState(297);
   const [customPad, setCustomPad] = useState(12);
   const [spacing, setSpacing] = useState<MenuSpacing>(DEFAULT_SPACING);
+  const [typography, setTypography] = useState<MenuTypography>(DEFAULT_TYPOGRAPHY);
 
   const activePaper = useMemo(
     () => (useCustomPaper ? customPaper(customW, customH, customPad) : paperOf(paper)),
@@ -312,6 +330,7 @@ function WineMenuPage() {
           addressPosition,
           priceDecimals,
           spacing,
+          typography,
           customPaper: useCustomPaper ? { widthMm: customW, heightMm: customH, padMm: customPad } : null,
         }),
       ),
@@ -345,13 +364,14 @@ function WineMenuPage() {
     setTitle(l.header_title ?? "");
     setSubtitle(l.header_subtitle ?? "");
     setFooter(l.footer_text ?? "");
-    setFields({ ...DEFAULT_VISIBLE_FIELDS, ...(l.visible_fields ?? {}) });
+    setFields(normalizeFields(l.visible_fields));
     setAddressPosition(l.visible_fields?.addressPosition === "footer" ? "footer" : "header");
     setPriceDecimals(l.visible_fields?.priceDecimals !== false);
     setLogoUrl(l.logo_url ?? "");
     setAddress(l.address_text ?? "");
     setPaper((l.paper_size as PaperKey) ?? "a4");
     setSpacing({ ...DEFAULT_SPACING, ...(l.visible_fields?.spacing ?? {}) });
+    setTypography({ ...(l.visible_fields?.typography ?? {}) });
     const cp = l.visible_fields?.customPaper;
     setUseCustomPaper(!!cp);
     if (cp) {
@@ -681,7 +701,53 @@ function WineMenuPage() {
                 </div>
               )}
             </div>
+            <div className="relative mt-3" data-font-dropdown>
+              <button
+                onClick={() => setFontOpen((v) => !v)}
+                className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+              >
+                Fontes e tamanhos
+                <ChevronDown className={`h-3 w-3 transition-transform ${fontOpen ? "rotate-180" : ""}`} />
+              </button>
+              {fontOpen && (
+                <div className="absolute left-0 top-full z-50 mt-1 w-80 rounded-xl border border-border bg-card p-3 shadow-lg">
+                  <div className="grid gap-4">
+                    <FontControl
+                      label="Nome do rótulo"
+                      font={typography.nameFont}
+                      size={typography.nameSize}
+                      defaultSize={11}
+                      onFont={(f) => setTypography((t) => ({ ...t, nameFont: f }))}
+                      onSize={(s) => setTypography((t) => ({ ...t, nameSize: s }))}
+                    />
+                    <FontControl
+                      label="Tipo de vinho (seções)"
+                      font={typography.sectionFont}
+                      size={typography.sectionSize}
+                      defaultSize={12}
+                      onFont={(f) => setTypography((t) => ({ ...t, sectionFont: f }))}
+                      onSize={(s) => setTypography((t) => ({ ...t, sectionSize: s }))}
+                    />
+                    <FontControl
+                      label="Informações do rótulo"
+                      font={typography.metaFont}
+                      size={typography.metaSize}
+                      defaultSize={9}
+                      onFont={(f) => setTypography((t) => ({ ...t, metaFont: f }))}
+                      onSize={(s) => setTypography((t) => ({ ...t, metaSize: s }))}
+                    />
+                    <button
+                      onClick={() => setTypography({})}
+                      className="justify-self-start inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Usar fontes do modelo
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
 
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
@@ -851,6 +917,7 @@ function WineMenuPage() {
               paper={paper}
               paperDef={activePaper}
               spacing={spacing}
+              typography={typography}
               logoUrl={logoUrl}
               address={address}
               addressPosition={addressPosition}
@@ -967,6 +1034,52 @@ function SpaceSlider({
         onChange={(e) => onChange(Number(e.target.value))}
         className="accent-primary"
       />
+    </div>
+  );
+}
+
+function FontControl({
+  label,
+  font,
+  size,
+  defaultSize,
+  onFont,
+  onSize,
+}: {
+  label: string;
+  font?: (typeof FONT_LIST)[number]["key"];
+  size?: number;
+  defaultSize: number;
+  onFont: (f: (typeof FONT_LIST)[number]["key"] | undefined) => void;
+  onSize: (s: number) => void;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="flex items-center gap-2">
+        <select
+          value={font ?? ""}
+          onChange={(e) => onFont((e.target.value || undefined) as never)}
+          className="flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+        >
+          <option value="">Fonte do modelo</option>
+          {FONT_LIST.map((f) => (
+            <option key={f.key} value={f.key}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          min={6}
+          max={40}
+          step={0.5}
+          value={size ?? defaultSize}
+          onChange={(e) => onSize(Number(e.target.value))}
+          className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-xs tabular-nums"
+        />
+        <span className="text-[10px] text-muted-foreground">pt</span>
+      </div>
     </div>
   );
 }

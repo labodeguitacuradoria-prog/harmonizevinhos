@@ -6,7 +6,18 @@ import { lovable } from "@/integrations/lovable/index";
 import { Wine } from "lucide-react";
 import { toast } from "sonner";
 
-const search = z.object({ mode: z.enum(["signin", "signup"]).optional() });
+const search = z.object({
+  mode: z.enum(["signin", "signup"]).optional(),
+  module: z.enum(["full", "dashboard", "pricing", "printed_menu", "pairing"]).optional(),
+});
+
+const MODULE_TITLE: Record<string, string> = {
+  full: "Gestão Completa dos Vinhos",
+  dashboard: "Painel de controle",
+  pricing: "Precificação",
+  printed_menu: "Impressão de Cartas de Vinhos",
+  pairing: "Harmonização",
+};
 
 export const Route = createFileRoute("/auth")({
   validateSearch: search,

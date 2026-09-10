@@ -133,8 +133,13 @@ function HomePage() {
                   title="Entrar no restaurante"
                 >
                   <Building2 className="h-4 w-4 shrink-0 text-primary/70" />
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-                    {m.name}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-foreground">
+                      {m.name}
+                    </span>
+                    <span className="block truncate text-[10px] text-muted-foreground">
+                      {planLabel}
+                    </span>
                   </span>
                   <span className="hidden shrink-0 truncate text-[10px] text-muted-foreground sm:inline md:max-w-[180px]">
                     {meta}

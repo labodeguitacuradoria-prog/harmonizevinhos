@@ -809,15 +809,18 @@ function WinesSection() {
               <th className="px-4 py-3">Safra</th>
               <th className="px-4 py-3">Tipo</th>
               <th className="px-4 py-3">Volume</th>
-              <th className="px-4 py-3">Custo</th>
+              {printOnly ? <th className="px-4 py-3">País</th> : null}
+              {!printOnly ? <th className="px-4 py-3">Custo</th> : null}
               <th className="px-4 py-3">Venda</th>
-              <th className="px-4 py-3">Markup</th>
-              <th className="px-4 py-3">
-                <div>Estoque</div>
-                <div className="text-[9px] font-normal normal-case text-muted-foreground/70">última contagem</div>
-              </th>
-              <th className="px-4 py-3">Venda mensal</th>
-              <th className="px-4 py-3">Alerta de compra</th>
+              {!printOnly ? <th className="px-4 py-3">Markup</th> : null}
+              {!printOnly ? (
+                <th className="px-4 py-3">
+                  <div>Estoque</div>
+                  <div className="text-[9px] font-normal normal-case text-muted-foreground/70">última contagem</div>
+                </th>
+              ) : null}
+              {!printOnly ? <th className="px-4 py-3">Venda mensal</th> : null}
+              {!printOnly ? <th className="px-4 py-3">Alerta de compra</th> : null}
             </tr>
             <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
               <th />
@@ -844,23 +847,26 @@ function WinesSection() {
                   {volumeOptions.map((v) => <option key={v} value={v}>{v}</option>)}
                 </select>
               </th>
-              <th><FilterInput value={filters.cost_price} onChange={(v) => setF("cost_price", v)} placeholder=">50 ou 10-30" /></th>
+              {printOnly ? <th><FilterInput value={filters.country} onChange={(v) => setF("country", v)} placeholder="país" /></th> : null}
+              {!printOnly ? <th><FilterInput value={filters.cost_price} onChange={(v) => setF("cost_price", v)} placeholder=">50 ou 10-30" /></th> : null}
               <th><FilterInput value={filters.sale_price} onChange={(v) => setF("sale_price", v)} placeholder=">100" /></th>
-              <th><FilterInput value={filters.markup} onChange={(v) => setF("markup", v)} placeholder=">150" /></th>
-              <th><FilterInput value={filters.stock} onChange={(v) => setF("stock", v)} placeholder="<5" /></th>
-              <th><FilterInput value={filters.monthly} onChange={(v) => setF("monthly", v)} placeholder=">0" /></th>
-              <th>
-                <select
-                  value={filters.alert}
-                  onChange={(e) => setF("alert", e.target.value)}
-                  className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
-                >
-                  <option value="">Todos</option>
-                  <option value="comprar">Comprar</option>
-                  <option value="ok">Ok</option>
-                  <option value="sem">Sem contagem</option>
-                </select>
-              </th>
+              {!printOnly ? <th><FilterInput value={filters.markup} onChange={(v) => setF("markup", v)} placeholder=">150" /></th> : null}
+              {!printOnly ? <th><FilterInput value={filters.stock} onChange={(v) => setF("stock", v)} placeholder="<5" /></th> : null}
+              {!printOnly ? <th><FilterInput value={filters.monthly} onChange={(v) => setF("monthly", v)} placeholder=">0" /></th> : null}
+              {!printOnly ? (
+                <th>
+                  <select
+                    value={filters.alert}
+                    onChange={(e) => setF("alert", e.target.value)}
+                    className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
+                  >
+                    <option value="">Todos</option>
+                    <option value="comprar">Comprar</option>
+                    <option value="ok">Ok</option>
+                    <option value="sem">Sem contagem</option>
+                  </select>
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody>

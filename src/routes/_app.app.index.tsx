@@ -31,6 +31,7 @@ function HomePage() {
 
   const [newOpen, setNewOpen] = useState(false);
   const [accessFor, setAccessFor] = useState<{ id: string; name: string } | null>(null);
+  const { byRestaurant } = useEntitlements(memberships.map((m) => m.restaurantId));
 
   useEffect(() => {
     if (loading) return;
@@ -41,9 +42,20 @@ function HomePage() {
   if (loading) return null;
   if (role && role !== "restaurant") return null;
 
+  function modulesOf(id: string): AppModule[] {
+    return byRestaurant.get(id) ?? [];
+  }
+
+  function homeRouteFor(id: string) {
+    const mods = modulesOf(id);
+    if (mods.includes("full") || mods.includes("dashboard")) return "/app/dashboard";
+    const first = SINGLE_MODULES.find((m) => mods.includes(m.key));
+    return first?.route ?? "/app/wines";
+  }
+
   function openUnit(id: string) {
     setActiveRestaurant(id);
-    navigate({ to: "/app/dashboard" });
+    navigate({ to: homeRouteFor(id) });
   }
   function openGroup(id: string) {
     setActiveGroup(id);

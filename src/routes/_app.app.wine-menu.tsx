@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
-import {
 import ModuleGate from "@/components/ModuleGate";
+import {
   DEFAULT_VISIBLE_FIELDS,
   PAPER_LIST,
   TEMPLATE_LIST,

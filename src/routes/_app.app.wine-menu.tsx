@@ -330,6 +330,7 @@ function WineMenuPage() {
           addressPosition,
           priceDecimals,
           spacing,
+          typography,
           customPaper: useCustomPaper ? { widthMm: customW, heightMm: customH, padMm: customPad } : null,
         }),
       ),

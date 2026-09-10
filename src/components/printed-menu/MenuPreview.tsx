@@ -101,7 +101,7 @@ export function MenuPreview({
           {visibleSections.map((sec) => (
             <section key={sec.id} className="mb-6 break-inside-avoid">
               <div className={`${t.sectionTitle} ${t.rule} pb-1`}>{sec.title}</div>
-              <ul className="mt-2.5 space-y-2">
+              <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>
                 {sec.wineIds.map((id) => {
                   const w = winesById[id];
                   const firstLine = wineMetaFirstLine(w, fields);

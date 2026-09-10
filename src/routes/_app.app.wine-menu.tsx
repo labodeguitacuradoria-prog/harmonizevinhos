@@ -216,6 +216,7 @@ function WineMenuPage() {
   const [customH, setCustomH] = useState(297);
   const [customPad, setCustomPad] = useState(12);
   const [spacing, setSpacing] = useState<MenuSpacing>(DEFAULT_SPACING);
+  const [typography, setTypography] = useState<MenuTypography>(DEFAULT_TYPOGRAPHY);
 
   const activePaper = useMemo(
     () => (useCustomPaper ? customPaper(customW, customH, customPad) : paperOf(paper)),

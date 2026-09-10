@@ -1,16 +1,16 @@
-# Tornar a tela de login mais discreta
+# Corrigir recriação de permissões após excluir uma conta
 
-## Problema
-A tela de autorização que aparece ao clicar em "Continuar com Google" é a tela de consentimento do gateway OAuth gerenciado pela Lovable. Ela não pode ser editada diretamente no código, mas podemos trocar o caminho de autenticação para mostrar a tela de consentimento padrão do Google (mais familiar) ou, se preferir, remover o botão Google.
+## Alterações
+- Alterar a criação automática de novos usuários para não conceder mais o pacote completo por padrão.
+- Criar o restaurante inicial com apenas o pacote escolhido na entrada; na ausência da escolha, usar Carta para impressão como opção segura.
+- Remover a criação duplicada do vínculo de administrador do restaurante.
+- Manter intactos os restaurantes, usuários e pacotes já existentes.
+- Corrigir a conta de teste `moitanomundo@gmail.com`, removendo o pacote completo e mantendo somente Carta para impressão.
 
-## O que será feito
-1. Em `src/routes/auth.tsx`, substituir o login via `lovable.auth.signInWithOAuth` pelo login direto da Lovable Cloud (`supabase.auth.signInWithOAuth({ provider: 'google' })`), usando `redirectTo: window.location.origin`.
-2. Manter o botão "Continuar com Google" e o fluxo de e-mail/senha inalterados.
-3. Verificar no preview se o botão Google agora abre a tela de consentimento do Google em vez da tela da Lovable.
-4. Se o nome que aparecer na tela do Google ainda for "Cuidadoria de Vinhos", informar que o nome do aplicativo OAuth precisa ser ajustado nas configurações de Auth da Lovable Cloud (fora do código).
+## Validação
+- Confirmar que a conta de teste possui um único vínculo e somente o módulo Carta para impressão.
+- Confirmar que excluir e recriar uma conta não restaura autorizações antigas nem libera todos os módulos.
 
-## Resultado esperado
-O usuário verá a tela de login do Google padrão, que é mais discreta e familiar, em vez da tela de autorização da Lovable.
-
-## Observação
-Se, mesmo assim, você preferir não ter nenhuma tela intermediária, a alternativa é remover o botão Google e deixar apenas e-mail/senha. Podemos fazer isso em um segundo passo.
+## Detalhes técnicos
+- Atualizar os gatilhos de criação no banco sem alterar dados dos demais clientes.
+- Tornar a aplicação do pacote escolhido confiável após login por Google ou e-mail.

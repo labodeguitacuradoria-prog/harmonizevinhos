@@ -322,6 +322,53 @@ export type Database = {
           },
         ]
       }
+      module_entitlements: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          expires_at: string | null
+          granted_by: string | null
+          id: string
+          module: Database["public"]["Enums"]["app_module"]
+          notes: string | null
+          restaurant_id: string
+          source: Database["public"]["Enums"]["entitlement_source"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          expires_at?: string | null
+          granted_by?: string | null
+          id?: string
+          module: Database["public"]["Enums"]["app_module"]
+          notes?: string | null
+          restaurant_id: string
+          source?: Database["public"]["Enums"]["entitlement_source"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          expires_at?: string | null
+          granted_by?: string | null
+          id?: string
+          module?: Database["public"]["Enums"]["app_module"]
+          notes?: string | null
+          restaurant_id?: string
+          source?: Database["public"]["Enums"]["entitlement_source"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_entitlements_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pairing_knowledge: {
         Row: {
           active: boolean
@@ -1843,6 +1890,7 @@ export type Database = {
     Enums: {
       access_link_device_kind: "mobile" | "desktop"
       access_link_scope: "dashboard" | "stock_count"
+      app_module: "full" | "dashboard" | "pricing" | "printed_menu" | "pairing"
       app_role:
         | "admin"
         | "restaurant"
@@ -1852,6 +1900,7 @@ export type Database = {
         | "rest_admin"
         | "rest_owner"
       catalog_status: "pending" | "approved" | "rejected"
+      entitlement_source: "admin" | "subscription" | "trial"
       movement_type: "entry" | "sale" | "adjustment"
       purchase_doc_type:
         | "invoice"
@@ -2002,6 +2051,7 @@ export const Constants = {
     Enums: {
       access_link_device_kind: ["mobile", "desktop"],
       access_link_scope: ["dashboard", "stock_count"],
+      app_module: ["full", "dashboard", "pricing", "printed_menu", "pairing"],
       app_role: [
         "admin",
         "restaurant",
@@ -2012,6 +2062,7 @@ export const Constants = {
         "rest_owner",
       ],
       catalog_status: ["pending", "approved", "rejected"],
+      entitlement_source: ["admin", "subscription", "trial"],
       movement_type: ["entry", "sale", "adjustment"],
       purchase_doc_type: [
         "invoice",

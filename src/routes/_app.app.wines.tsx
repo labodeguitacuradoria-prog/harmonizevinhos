@@ -807,22 +807,11 @@ function WinesSection() {
               <th className="px-4 py-3">Código</th>
               <th className="px-4 py-3">Rótulo</th>
               <th className="px-4 py-3">Safra</th>
-              <th className="px-4 py-3">
-                <div>Tipo</div>
-                <div className="text-[9px] font-normal normal-case text-muted-foreground/70">ex. Espumante</div>
-              </th>
+              <th className="px-4 py-3">Tipo</th>
               <th className="px-4 py-3">Volume</th>
-              {printOnly ? (
-                <th className="px-4 py-3">
-                  <div>País</div>
-                  <div className="text-[9px] font-normal normal-case text-muted-foreground/70">ex. Brasil</div>
-                </th>
-              ) : null}
+              {printOnly ? <th className="px-4 py-3">País</th> : null}
               {!printOnly ? <th className="px-4 py-3">Custo</th> : null}
-              <th className="px-4 py-3">
-                <div>Preço de Venda</div>
-                <div className="text-[9px] font-normal normal-case text-muted-foreground/70">ex: R$100,00</div>
-              </th>
+              <th className="px-4 py-3">Preço de Venda</th>
               {!printOnly ? <th className="px-4 py-3">Markup</th> : null}
               {!printOnly ? (
                 <th className="px-4 py-3">

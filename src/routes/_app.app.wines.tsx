@@ -405,7 +405,7 @@ function matchText(filter: string, value: string | null | undefined): boolean {
 }
 
 function WinesSection() {
-  const { restaurantId } = useAuth();
+  const { restaurantId, modules, modulesLoading } = useAuth();
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -422,6 +422,13 @@ function WinesSection() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const toggleSelected = (id: string) =>
     setSelectedIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+
+  // Usuários que contrataram apenas o módulo de Carta para impressão
+  // não precisam de dados operacionais (custo, estoque, vendas, alertas).
+  const printOnly =
+    !modulesLoading &&
+    modules.length === 1 &&
+    modules.includes("printed_menu");
   const bulkDelete = async () => {
     if (selectedIds.length === 0) return;
     if (!confirm(`Excluir ${selectedIds.length} rótulo(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;

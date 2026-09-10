@@ -33,6 +33,7 @@ function AccessMapAdmin() {
   const listFn = useServerFn(listAllAccessMap);
   const inviteFn = useServerFn(adminInviteAccess);
   const removeFn = useServerFn(adminRemoveAccess);
+  const deleteAccountFn = useServerFn(adminDeleteUserAccount);
 
   const [filterEmail, setFilterEmail] = useState("");
   const [filterRest, setFilterRest] = useState("");

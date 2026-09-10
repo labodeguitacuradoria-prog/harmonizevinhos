@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { ensureActiveRestaurant, useActiveScope } from "@/lib/active-scope";
+import { useEntitlements } from "@/hooks/use-entitlements";
+import type { AppModule } from "@/lib/modules";
 
 export type AppRole = "admin" | "restaurant" | "supplier";
 
@@ -28,6 +30,9 @@ export interface UserContext {
   activeGroupId: string | null;
   activeRole: string | null;
   canManageActive: boolean;
+  /** Módulos liberados no escopo ativo (restaurante ou rede). */
+  modules: AppModule[];
+  modulesLoading: boolean;
 }
 
 export function useAuth(): UserContext {

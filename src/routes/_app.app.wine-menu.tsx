@@ -238,10 +238,18 @@ function WineMenuPage() {
 
   async function save(asNew = false) {
     if (!restaurantId) return;
+    let name = listName.trim();
+    if (!currentId || asNew || !name) {
+      const suggested = asNew ? `${name || "Carta de Vinhos"} (cópia)` : name || "Carta de Vinhos";
+      const typed = window.prompt("Dê um nome para esta carta:", suggested);
+      if (typed === null) return;
+      name = typed.trim() || suggested;
+      setListName(name);
+    }
     setSaving(true);
     const payload = {
       restaurant_id: restaurantId,
-      name: listName || "Carta de Vinhos",
+      name,
       template,
       header_title: title,
       header_subtitle: subtitle,
@@ -316,6 +324,16 @@ function WineMenuPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
+              onClick={() => {
+                setCurrentId(null);
+                setListName("");
+                toast.info("Nova carta: ao salvar, você escolhe o nome.");
+              }}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-accent"
+            >
+              Nova carta
+            </button>
+            <button
               onClick={() => save(false)}
               disabled={saving}
               className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-accent disabled:opacity-50"
@@ -338,6 +356,48 @@ function WineMenuPage() {
               <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
             </button>
           </div>
+        </div>
+
+        {/* Cartas salvas */}
+        <div className="mt-5 rounded-xl border border-border bg-card p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Cartas salvas</div>
+            <div className="text-[11px] text-muted-foreground">
+              {currentId ? `Editando: ${listName || "sem nome"}` : "Nova carta (ainda não salva)"}
+            </div>
+          </div>
+          {savedLists.length === 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Nenhuma carta salva ainda. Monte a carta e clique em Salvar para dar um nome e guardá-la.
+            </p>
+          ) : (
+            <ul className="mt-3 grid gap-1 sm:grid-cols-2">
+              {savedLists.map((l) => (
+                <li
+                  key={l.id}
+                  className={`flex items-center gap-2 rounded border px-2 py-1.5 text-xs ${
+                    currentId === l.id ? "border-primary bg-accent" : "border-border hover:bg-accent"
+                  }`}
+                >
+                  <span className="flex-1 truncate">
+                    {l.name}
+                    <span className="ml-2 text-muted-foreground">
+                      {new Date(l.updated_at).toLocaleDateString("pt-BR")}
+                    </span>
+                  </span>
+                  <button
+                    onClick={() => loadSaved(l)}
+                    className="rounded border border-border px-2 py-0.5 text-[10px] uppercase text-primary hover:bg-background"
+                  >
+                    Carregar
+                  </button>
+                  <IconBtn onClick={() => deleteSaved(l.id)} title="Excluir carta">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </IconBtn>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Modelos */}
@@ -625,32 +685,6 @@ function WineMenuPage() {
             </ul>
           </div>
 
-          {savedLists.length > 0 && (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Cartas salvas</div>
-              <ul className="mt-3 space-y-1">
-                {savedLists.map((l) => (
-                  <li key={l.id} className="flex items-center gap-2 rounded px-2 py-1 text-xs hover:bg-accent">
-                    <span className="flex-1 truncate">
-                      {l.name}
-                      <span className="ml-2 text-muted-foreground">
-                        {new Date(l.updated_at).toLocaleDateString("pt-BR")}
-                      </span>
-                    </span>
-                    <button
-                      onClick={() => loadSaved(l)}
-                      className="rounded border border-border px-2 py-0.5 text-[10px] uppercase text-primary hover:bg-background"
-                    >
-                      Abrir
-                    </button>
-                    <IconBtn onClick={() => deleteSaved(l.id)} title="Excluir carta">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </IconBtn>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
 
         {/* Pré-visualização */}

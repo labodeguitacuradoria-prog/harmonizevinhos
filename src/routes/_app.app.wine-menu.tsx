@@ -545,9 +545,12 @@ function WineMenuPage() {
                             </>
                           )}
 
-                          <IconBtn onClick={() => removeWine(sec.id, id)} title="Retirar da carta">
-                            <X className="h-3 w-3" />
-                          </IconBtn>
+                          {editingWineId !== id && (
+                            <IconBtn onClick={() => removeWine(sec.id, id)} title="Retirar da carta">
+                              <X className="h-3 w-3" />
+                            </IconBtn>
+                          )}
+
                         </li>
                       );
                     })}

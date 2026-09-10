@@ -151,11 +151,38 @@ export type MenuSpacing = {
 
 export const DEFAULT_SPACING: MenuSpacing = { nameGap: 1, lineGap: 1, itemGap: 8 };
 
+/* ===== Tipografia ajustável ===== */
+export type FontKey = "serif" | "sans" | "slab" | "mono";
+
+export const FONT_LIST: { key: FontKey; label: string; css: string }[] = [
+  { key: "serif", label: "Serifada", css: 'Georgia, "Times New Roman", serif' },
+  { key: "sans", label: "Sem serifa", css: '"Segoe UI", Helvetica, Arial, sans-serif' },
+  { key: "slab", label: "Slab / Display", css: '"Rockwell", "Courier New", Georgia, serif' },
+  { key: "mono", label: "Monoespaçada", css: '"Courier New", monospace' },
+];
+
+export const fontCss = (k: FontKey | undefined): string | undefined =>
+  k ? FONT_LIST.find((f) => f.key === k)?.css : undefined;
+
+export type MenuTypography = {
+  nameFont?: FontKey;
+  nameSize?: number;
+  sectionFont?: FontKey;
+  sectionSize?: number;
+  metaFont?: FontKey;
+  metaSize?: number;
+};
+
+export const DEFAULT_TYPOGRAPHY: MenuTypography = {};
+
 export type VisibleFields = {
   code: boolean;
   producer: boolean;
   vintage: boolean;
+  /** compatibilidade: região + país juntos */
   origin: boolean;
+  country: boolean;
+  region: boolean;
   grape: boolean;
   volume: boolean;
   price: boolean;
@@ -166,10 +193,22 @@ export const DEFAULT_VISIBLE_FIELDS: VisibleFields = {
   producer: true,
   vintage: true,
   origin: true,
+  country: true,
+  region: true,
   grape: false,
   volume: true,
   price: true,
 };
+
+/** Normaliza cartas antigas que só tinham o campo "origin". */
+export function normalizeFields(raw: Partial<VisibleFields> | null | undefined): VisibleFields {
+  const f = { ...DEFAULT_VISIBLE_FIELDS, ...(raw ?? {}) };
+  if (raw && raw.country === undefined && raw.region === undefined) {
+    f.country = !!raw.origin;
+    f.region = !!raw.origin;
+  }
+  return f;
+}
 
 export type MenuSection = { id: string; title: string; wineIds: string[] };
 

@@ -68,8 +68,11 @@ function AppLayout() {
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    router.invalidate();
-    navigate({ to: "/" });
+    // Redirecionamento direto para a landing page de módulos,
+    // evitando que uma sessão residual na tela inicial redirecione de volta para /app.
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
   }
 
   const restaurantNav = (rail: boolean) => {

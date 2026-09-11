@@ -80,11 +80,11 @@ export function canAccessRoute(modules: AppModule[], route: string) {
   if (ALWAYS_ALLOWED_ROUTES.includes(route)) return true;
   if (modules.includes("full")) return true;
   if (FULL_ONLY_ROUTES.includes(route)) return false;
-  // O hub de cadastros só faz sentido para quem tem módulos de gestão;
-  // usuários apenas com o módulo de impressão de carta acessam diretamente as rotas próprias.
+  // O hub de cadastros só faz sentido para quem tem módulos de gestão.
   if (route === "/app/cadastros") {
-    return modules.length > 0 && modules.some((m) => m !== "printed_menu");
+    return modules.includes("dashboard");
   }
+
   const needed = ROUTE_MODULE[route];
   if (!needed) return true;
   return modules.includes(needed);

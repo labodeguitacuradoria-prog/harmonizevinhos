@@ -94,7 +94,7 @@ function PriceAnalysisPage() {
   const [targetWineCount, setTargetWineCount] = useState<number>(50);
   const [concept, setConcept] = useState<ConceptKey>("Geral");
   const [customRatios, setCustomRatios] = useState<Ratios>({ white: 30, red: 45, sparkling: 15, rose: 10 });
-  const [showExplanation, setShowExplanation] = useState<boolean>(true);
+  const [showExplanation, setShowExplanation] = useState<boolean>(false);
   const [simPrices, setSimPrices] = useState<Record<string, number>>({});
   const [simSearch, setSimSearch] = useState("");
   const [simBracketFilter, setSimBracketFilter] = useState<string>("all");
@@ -680,146 +680,154 @@ function PriceAnalysisPage() {
             subtitle="Ajuste os preços e veja o impacto na distribuição Ideal vs Atual"
           />
 
-          {/* Live graphic monitor — stays pinned while you edit prices below */}
-          <div className="sticky top-0 z-30 mb-4 rounded-2xl border border-primary/30 bg-card/95 p-4 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)] backdrop-blur">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                Redistribuição em tempo real
-              </div>
-              <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-wide text-muted-foreground">
-                <span className="flex items-center gap-1.5"><i className="inline-block h-2.5 w-2.5 rounded-sm bg-muted-foreground/50" /> Atual</span>
-                <span className="flex items-center gap-1.5"><i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "var(--gold)" }} /> Simulado</span>
-                <span className="flex items-center gap-1.5"><i className="inline-block h-0.5 w-4 bg-rose-500" /> Ideal</span>
-              </div>
+{/* Live redistribution monitor — compact, stays pinned */}
+<div className="sticky top-0 z-30 mb-4 rounded-2xl border border-primary/30 bg-card/95 p-3 shadow-[0_8px_24px_-10px_rgba(0,0,0,0.5)] backdrop-blur">
+  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <div className="flex items-center gap-2">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-primary">Redistribuição em tempo real</div>
+      <div className="flex items-center gap-2 text-[9px] uppercase tracking-wide text-muted-foreground">
+        <span className="flex items-center gap-1"><i className="inline-block h-2 w-2 rounded-sm bg-muted-foreground/50" /> Atual</span>
+        <span className="flex items-center gap-1"><i className="inline-block h-2 w-2 rounded-sm" style={{ background: "var(--gold)" }} /> Simulado</span>
+        <span className="flex items-center gap-1"><i className="inline-block h-0.5 w-3 bg-rose-500" /> Ideal</span>
+      </div>
+    </div>
+    <button
+      onClick={() => setSimBracketFilter("all")}
+      className={`text-[9px] font-semibold uppercase tracking-wide transition ${simBracketFilter === "all" ? "text-muted-foreground/30" : "text-primary hover:text-primary/80"}`}
+      disabled={simBracketFilter === "all"}
+    >
+      Limpar filtro de faixa
+    </button>
+  </div>
+
+  <div className="grid grid-cols-5 gap-2">
+    {simulation.rows.map((r) => {
+      const maxVal = Math.max(r.actual, r.simulated, r.target, 1);
+      const selected = simBracketFilter === r.id;
+      return (
+        <button
+          key={r.id}
+          onClick={() => setSimBracketFilter(selected ? "all" : r.id)}
+          title={`Filtrar rótulos da faixa ${r.name}`}
+          className={`rounded-xl border p-2 text-left transition ${selected ? "border-primary bg-primary/10" : "border-border bg-background/40 hover:border-primary/40"}`}
+        >
+          <div className="flex items-center justify-between gap-1">
+            <div className="truncate text-[10px] font-semibold text-foreground">{r.name}</div>
+            {selected && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
+          </div>
+          <div className="text-[9px] text-muted-foreground">{fmtBRL(r.min)} {r.max === Infinity ? "+" : `– ${fmtBRL(r.max)}`}</div>
+
+          <div className="mt-1.5 space-y-1">
+            <div className="h-1 overflow-hidden rounded-full bg-background">
+              <div className="h-full rounded-full bg-rose-500" style={{ width: `${Math.min(100, (r.target / maxVal) * 100)}%` }} />
             </div>
-
-            <div className="grid grid-cols-5 gap-2">
-              {simulation.rows.map((r) => {
-                const scale = Math.max(1, ...simulation.rows.flatMap((x) => [x.actual, x.simulated, x.target]));
-                const h = (v: number) => `${Math.max(2, (v / scale) * 100)}%`;
-                const selected = simBracketFilter === r.id;
-                return (
-                  <button
-                    key={r.id}
-                    onClick={() => setSimBracketFilter(selected ? "all" : r.id)}
-                    title={`Filtrar rótulos da faixa ${r.name}`}
-                    className={`rounded-xl border p-2 text-left transition ${selected ? "border-primary bg-primary/10" : "border-border bg-background/40 hover:border-primary/40"}`}
-                  >
-                    <div className="relative h-24 rounded-md bg-background/60">
-                      <div className="absolute inset-x-1 bottom-0 flex h-full items-end justify-center gap-1.5">
-                        <div className="w-4 rounded-t bg-muted-foreground/50 transition-all" style={{ height: h(r.actual) }} />
-                        <div className="w-4 rounded-t transition-all" style={{ height: h(r.simulated), background: "var(--gold)" }} />
-                      </div>
-                      <div
-                        className="absolute inset-x-0 border-t border-rose-500"
-                        style={{ bottom: `calc(${Math.min(100, (r.target / scale) * 100)}% - 1px)` }}
-                      />
-                    </div>
-                    <div className="mt-2 truncate text-[10px] font-semibold text-foreground">{r.name}</div>
-                    <div className="text-[9px] text-muted-foreground">
-                      {fmtBRL(r.min)} {r.max === Infinity ? "+" : `– ${fmtBRL(r.max)}`}
-                    </div>
-                    <div className="mt-1 flex items-baseline gap-1 text-[10px]">
-                      <span className="font-bold text-primary">{r.simulated}</span>
-                      <span className="text-muted-foreground">/ ideal {r.target}</span>
-                    </div>
-                    <div className="text-[9px]">
-                      {r.simGap === 0 ? (
-                        <span className="font-semibold text-emerald-400">no alvo</span>
-                      ) : (
-                        <span className={r.simGap > 0 ? "text-primary" : "text-rose-400"}>
-                          {r.simGap > 0 ? `faltam ${r.simGap}` : `excesso ${Math.abs(r.simGap)}`}
-                        </span>
-                      )}
-                      {r.simulated !== r.actual && (
-                        <span className={`ml-1 font-semibold ${r.simulated > r.actual ? "text-emerald-400" : "text-rose-400"}`}>
-                          ({r.simulated > r.actual ? "+" : ""}{r.simulated - r.actual})
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="h-1 overflow-hidden rounded-full bg-background">
+              <div className="h-full rounded-full bg-muted-foreground/50" style={{ width: `${Math.min(100, (r.actual / maxVal) * 100)}%` }} />
             </div>
-
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3 text-[11px]">
-              <div className="flex flex-wrap items-center gap-4">
-                <span className="text-muted-foreground">
-                  Ticket médio atual <b className="ml-1 text-foreground">{fmtBRL(simulation.avgCurrent)}</b>
-                </span>
-                <span className="text-muted-foreground">
-                  Simulado <b className="ml-1 text-primary">{fmtBRL(simulation.avgSimulated)}</b>
-                </span>
-                <span className={`font-semibold ${simulation.avgSimulated >= simulation.avgCurrent ? "text-emerald-400" : "text-rose-400"}`}>
-                  {simulation.avgSimulated >= simulation.avgCurrent ? "+" : "−"}
-                  {fmtBRL(Math.abs(simulation.avgSimulated - simulation.avgCurrent))}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground">{Object.keys(simPrices).length} rótulo(s) simulado(s)</span>
-                <button
-                  onClick={() => setSimPrices({})}
-                  disabled={Object.keys(simPrices).length === 0}
-                  className="rounded-lg border border-border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-primary/40 hover:text-foreground disabled:opacity-40"
-                >
-                  Limpar simulação
-                </button>
-              </div>
+            <div className="h-1 overflow-hidden rounded-full bg-background">
+              <div className="h-full rounded-full" style={{ width: `${Math.min(100, (r.simulated / maxVal) * 100)}%`, background: "var(--gold)" }} />
             </div>
+          </div>
 
-            {/* Save / open simulations */}
-            <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-border pt-3">
-              <div className="grid gap-1">
-                <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {simId ? "Editando simulação salva" : "Nova simulação"}
-                </span>
-                <input
-                  value={simName}
-                  onChange={(e) => setSimName(e.target.value)}
-                  placeholder="Nome da simulação (ex.: Reajuste out/2026)"
-                  className="w-[260px] rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
-                />
-              </div>
-              <button
-                onClick={() => saveSimulation.mutate()}
-                disabled={saveSimulation.isPending || !restaurantId || Object.keys(simPrices).length === 0}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40"
-              >
-                <Save className="h-3.5 w-3.5" /> {simId ? "Salvar alterações" : "Salvar simulação"}
-              </button>
-              <button
-                onClick={newSimulation}
-                className="rounded-lg border border-border px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
-              >
-                Nova simulação
-              </button>
+          <div className="mt-1.5 flex items-baseline gap-1 text-[10px]">
+            <span className="font-bold text-primary">{r.simulated}</span>
+            <span className="text-[9px] text-muted-foreground">/ {r.target}</span>
+          </div>
+          <div className="text-[9px]">
+            {r.simGap === 0 ? (
+              <span className="font-semibold text-emerald-400">no alvo</span>
+            ) : (
+              <span className={r.simGap > 0 ? "text-primary" : "text-rose-400"}>
+                {r.simGap > 0 ? `faltam ${r.simGap}` : `excesso ${Math.abs(r.simGap)}`}
+              </span>
+            )}
+          </div>
+        </button>
+      );
+    })}
+  </div>
 
-              {savedSims.length > 0 && (
-                <div className="ml-auto grid gap-1">
-                  <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Simulações salvas</span>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={simId ?? ""}
-                      onChange={(e) => (e.target.value ? openSimulation(e.target.value) : newSimulation())}
-                      className="w-[280px] rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:border-primary focus:outline-none"
-                    >
-                      <option value="">Abrir simulação salva…</option>
-                      {savedSims.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name} · {new Date(s.updated_at).toLocaleDateString("pt-BR")}
-                        </option>
-                      ))}
-                    </select>
-                    {simId && (
-                      <button
-                        onClick={() => { if (confirm("Excluir esta simulação salva?")) deleteSimulation.mutate(simId); }}
-                        className="rounded-lg border border-rose-500/40 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-rose-400 transition hover:bg-rose-500/10"
-                      >
-                        Excluir
-                      </button>
-                    )}
-                  </div>
-                </div>
+  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2 text-[11px]">
+    <div className="flex flex-wrap items-center gap-3">
+      <span className="text-muted-foreground">
+        Ticket médio atual <b className="ml-1 text-foreground">{fmtBRL(simulation.avgCurrent)}</b>
+      </span>
+      <span className="text-muted-foreground">
+        Simulado <b className="ml-1 text-primary">{fmtBRL(simulation.avgSimulated)}</b>
+      </span>
+      <span className={`font-semibold ${simulation.avgSimulated >= simulation.avgCurrent ? "text-emerald-400" : "text-rose-400"}`}>
+        {simulation.avgSimulated >= simulation.avgCurrent ? "+" : "−"}
+        {fmtBRL(Math.abs(simulation.avgSimulated - simulation.avgCurrent))}
+      </span>
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] text-muted-foreground">{Object.keys(simPrices).length} rótulo(s) simulado(s)</span>
+      <button
+        onClick={() => setSimPrices({})}
+        disabled={Object.keys(simPrices).length === 0}
+        className="rounded-lg border border-border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-primary/40 hover:text-foreground disabled:opacity-40"
+      >
+        Limpar
+      </button>
+    </div>
+  </div>
+
+  {/* Save / open simulations */}
+  <div className="mt-2 flex flex-wrap items-end gap-2 border-t border-border pt-2">
+    <div className="grid gap-0.5">
+      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {simId ? "Editando simulação salva" : "Nova simulação"}
+      </span>
+      <input
+        value={simName}
+        onChange={(e) => setSimName(e.target.value)}
+        placeholder="Nome da simulação (ex.: Reajuste out/2026)"
+        className="w-[220px] rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+      />
+    </div>
+    <button
+      onClick={() => saveSimulation.mutate()}
+      disabled={saveSimulation.isPending || !restaurantId || Object.keys(simPrices).length === 0}
+      className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40"
+    >
+      <Save className="h-3 w-3" /> {simId ? "Salvar alterações" : "Salvar"}
+    </button>
+    <button
+      onClick={newSimulation}
+      className="rounded-lg border border-border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+    >
+      Nova
+    </button>
+
+    {savedSims.length > 0 && (
+      <div className="ml-auto grid gap-0.5">
+        <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Simulações salvas</span>
+        <div className="flex items-center gap-1.5">
+          <select
+            value={simId ?? ""}
+            onChange={(e) => (e.target.value ? openSimulation(e.target.value) : newSimulation())}
+            className="w-[220px] rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+          >
+            <option value="">Abrir simulação salva…</option>
+            {savedSims.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} · {new Date(s.updated_at).toLocaleDateString("pt-BR")}
+              </option>
+            ))}
+          </select>
+          {simId && (
+            <button
+              onClick={() => { if (confirm("Excluir esta simulação salva?")) deleteSimulation.mutate(simId); }}
+              className="rounded-lg border border-rose-500/40 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-rose-400 transition hover:bg-rose-500/10"
+            >
+              Excluir
+            </button>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+</div>
               )}
             </div>
 

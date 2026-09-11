@@ -43,9 +43,10 @@ const VALID = ["full", "dashboard", "pricing", "printed_menu", "pairing"] as con
 type ModuleKey = (typeof VALID)[number];
 
 /**
- * Aplica o pacote escolhido na tela inicial ao restaurante recém-criado no cadastro.
- * Só ajusta restaurantes do próprio usuário que ainda estão vazios (sem rótulos),
- * evitando alterar pacotes de clientes já em operação.
+ * Aplica o pacote escolhido na tela inicial.
+ * - Restaurante ainda vazio (sem rótulos): passa a ter somente o pacote escolhido.
+ * - Restaurante já em operação: o pacote escolhido é SOMADO aos que já existiam,
+ *   preservando o que o cliente já usava (ex.: carta impressa + precificação).
  */
 export const claimSignupModule = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -60,36 +61,46 @@ export const claimSignupModule = createServerFn({ method: "POST" })
     });
     if (isAdmin) return { ok: true, applied: false };
 
+    const { data: mine, error: mineError } = await context.supabase.rpc("my_restaurants", {
+      _user_id: context.userId,
+    });
+    if (mineError) throw new Error(mineError.message);
+    const ids = Array.from(
+      new Set(((mine ?? []) as { restaurant_id: string }[]).map((r) => r.restaurant_id)),
+    );
+    if (!ids.length) return { ok: true, applied: false };
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rests, error: restsError } = await supabaseAdmin
-      .from("restaurants")
-      .select("id")
-      .eq("owner_id", context.userId);
-    if (restsError) throw new Error(restsError.message);
-    if (!rests?.length) return { ok: true, applied: false };
 
     let applied = false;
-    for (const r of rests) {
+    for (const id of ids) {
       const { count } = await supabaseAdmin
         .from("wines")
         .select("id", { count: "exact", head: true })
-        .eq("restaurant_id", r.id);
-      if ((count ?? 0) > 0) continue;
+        .eq("restaurant_id", id);
+      const inUse = (count ?? 0) > 0;
 
-      const { error: deleteError } = await supabaseAdmin
-        .from("module_entitlements")
-        .delete()
-        .eq("restaurant_id", r.id);
-      if (deleteError) throw new Error(deleteError.message);
-      const { error } = await supabaseAdmin.from("module_entitlements").insert({
-        restaurant_id: r.id,
-        module: data.module,
-        enabled: true,
-        source: "trial",
-        notes: "Pacote escolhido no cadastro",
-      });
+      if (!inUse) {
+        const { error: deleteError } = await supabaseAdmin
+          .from("module_entitlements")
+          .delete()
+          .eq("restaurant_id", id);
+        if (deleteError) throw new Error(deleteError.message);
+      }
+
+      const { error } = await supabaseAdmin.from("module_entitlements").upsert(
+        {
+          restaurant_id: id,
+          module: data.module,
+          enabled: true,
+          source: "trial",
+          notes: "Pacote escolhido no cadastro",
+        },
+        { onConflict: "restaurant_id,module" },
+      );
       if (error) throw new Error(error.message);
       applied = true;
     }
     return { ok: true, applied };
   });
+

@@ -424,12 +424,14 @@ function WinesSection() {
   const toggleSelected = (id: string) =>
     setSelectedIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
-  // Usuários que contrataram apenas o módulo de Carta para impressão
-  // não precisam de dados operacionais (custo, estoque, vendas, alertas).
+  // Módulos sem gestão operacional (carta impressa, precificação, harmonização)
+  // usam a ficha simplificada: sem custo, estoque, vendas e alertas.
   const printOnly =
     !modulesLoading &&
-    modules.length === 1 &&
-    modules.includes("printed_menu");
+    modules.length > 0 &&
+    !modules.includes("full") &&
+    !modules.includes("dashboard");
+
   const bulkDelete = async () => {
     if (selectedIds.length === 0) return;
     if (!confirm(`Excluir ${selectedIds.length} rótulo(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;

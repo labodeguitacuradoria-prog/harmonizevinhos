@@ -828,11 +828,6 @@ function PriceAnalysisPage() {
     )}
   </div>
 </div>
-              )}
-            </div>
-
-          </div>
-
           {/* Per-wine simulation */}
           <div className="rounded-2xl border border-border bg-card">
             <div className="overflow-auto">

@@ -328,19 +328,45 @@ export const extractWineFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => UrlInput.parse(d))
   .handler(async ({ data }) => {
-    let res: Response;
-    try {
-      res = await fetch(data.url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36",
-          Accept: "text/html,application/xhtml+xml,application/pdf,*/*",
-        },
-      });
-    } catch {
-      throw new Error("Não foi possível acessar o link. Verifique o endereço.");
+    const BROWSER_HEADERS = {
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36",
+      Accept: "text/html,application/xhtml+xml,application/pdf,*/*",
+      "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+      Referer: new URL(data.url).origin + "/",
+    };
+
+    async function tryFetch(url: string, headers: Record<string, string>) {
+      try {
+        return await fetch(url, { headers, redirect: "follow" });
+      } catch {
+        return null;
+      }
     }
-    if (!res.ok) throw new Error(`O site respondeu com erro ${res.status}. Tente outro link.`);
+
+    // 1) direct fetch, 2) proxy leitor (contorna bloqueio 403 de sites com anti-bot)
+    let res = await tryFetch(data.url, BROWSER_HEADERS);
+    if (!res || !res.ok) {
+      const proxied = await tryFetch(
+        `https://r.jina.ai/${data.url}`,
+        { "User-Agent": BROWSER_HEADERS["User-Agent"], Accept: "text/plain,*/*" },
+      );
+      if (proxied?.ok) {
+        const text = htmlToText(await proxied.text()).slice(0, 24000);
+        if (text.length >= 80) {
+          return callModelJsonMode(
+            `Conteúdo extraído da página do vinho (URL: ${data.url}). Ignore menus e rodapés; use apenas o que descreve o vinho. Complete dados faltantes com seu conhecimento deste rótulo; use null só quando não souber.\n\n"""\n${text}\n"""`,
+          );
+        }
+      }
+      const status = res?.status;
+      throw new Error(
+        status
+          ? `O site bloqueou a leitura automática (erro ${status}). Copie o texto da página e use a aba 'Texto colado'.`
+          : "Não foi possível acessar o link. Verifique o endereço ou use a aba 'Texto colado'.",
+      );
+    }
+
 
     const contentType = res.headers.get("content-type") ?? "";
 

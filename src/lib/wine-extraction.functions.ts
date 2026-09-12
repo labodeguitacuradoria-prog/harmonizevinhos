@@ -354,9 +354,12 @@ export const extractWineFromUrl = createServerFn({ method: "POST" })
       if (proxied?.ok) {
         const text = htmlToText(await proxied.text()).slice(0, 24000);
         if (text.length >= 80) {
-          return callModelJsonMode(
-            `Conteúdo extraído da página do vinho (URL: ${data.url}). Ignore menus e rodapés; use apenas o que descreve o vinho. Complete dados faltantes com seu conhecimento deste rótulo; use null só quando não souber.\n\n"""\n${text}\n"""`,
-          );
+          return {
+            ok: true as const,
+            data: await callModelJsonMode(
+              `Conteúdo extraído da página do vinho (URL: ${data.url}). Ignore menus e rodapés; use apenas o que descreve o vinho. Complete dados faltantes com seu conhecimento deste rótulo; use null só quando não souber.\n\n"""\n${text}\n"""`,
+            ),
+          };
         }
       }
       const status = res?.status;

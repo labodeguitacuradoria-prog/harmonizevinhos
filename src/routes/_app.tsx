@@ -76,11 +76,8 @@ function AppLayout() {
       /* ignora indisponibilidade do armazenamento */
     }
 
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      // Mesmo sem conexão, encerra a sessão deste navegador.
-      await supabase.auth.signOut({ scope: "local" });
-    }
+    // A saída local é imediata e não depende de conexão com o servidor.
+    await supabase.auth.signOut({ scope: "local" });
     queryClient.clear();
     // Uma nova carga impede que listeners e permissões da conta anterior
     // disputem a navegação com a tela de escolha de pacotes.

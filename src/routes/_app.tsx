@@ -8,6 +8,7 @@ import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
 import { canAccessRoute, type AppModule } from "@/lib/modules";
 import { useServerFn } from "@tanstack/react-start";
 import { claimSignupModule } from "@/lib/modules.functions";
+import { clearActiveScope } from "@/lib/active-scope";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -67,12 +68,20 @@ function AppLayout() {
   }
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
-    // Redirecionamento direto para a landing page de módulos,
-    // evitando que uma sessão residual na tela inicial redirecione de volta para /app.
-    if (typeof window !== "undefined") {
-      window.location.href = "/";
+    clearActiveScope();
+    claimedForUser.current = null;
+    try {
+      localStorage.removeItem("signup-module");
+    } catch {
+      /* ignora indisponibilidade do armazenamento */
     }
+
+    // A saída local é imediata e não depende de conexão com o servidor.
+    await supabase.auth.signOut({ scope: "local" });
+    queryClient.clear();
+    // Uma nova carga impede que listeners e permissões da conta anterior
+    // disputem a navegação com a tela de escolha de pacotes.
+    window.location.replace("/");
   }
 
   const restaurantNav = (rail: boolean) => {

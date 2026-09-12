@@ -1,6 +1,8 @@
 import {
   DEFAULT_SPACING,
   DEFAULT_TYPOGRAPHY,
+  DEFAULT_LAYOUT,
+  DEFAULT_PAGE_MARGINS,
   TEMPLATES,
   fontCss,
   formatPrice,
@@ -9,6 +11,8 @@ import {
   wineMetaGrapeLine,
   type MenuSection,
   type MenuSpacing,
+  type MenuLayout,
+  type PageMargins,
   type MenuTypography,
   type MenuWine,
   type PaperDef,
@@ -22,6 +26,8 @@ type Props = {
   paper: PaperKey;
   paperDef?: PaperDef;
   spacing?: MenuSpacing;
+  layout?: MenuLayout;
+  margins?: PageMargins;
   typography?: MenuTypography;
   title: string;
   subtitle: string;
@@ -42,6 +48,8 @@ export function MenuPreview({
   paper,
   paperDef,
   spacing = DEFAULT_SPACING,
+  layout = DEFAULT_LAYOUT,
+  margins = DEFAULT_PAGE_MARGINS,
   typography = DEFAULT_TYPOGRAPHY,
   title,
   subtitle,
@@ -81,11 +89,11 @@ export function MenuPreview({
   return (
     <div id="print-area" className="printed-menu mx-auto w-full" style={{ maxWidth: `${p.widthMm}mm` }}>
       {/* Define o tamanho da folha na impressão de acordo com a escolha do usuário */}
-      <style>{`@media print { @page { size: ${p.cssSize}; margin: ${p.padMm}mm; } }`}</style>
+      <style>{`@media print { @page { size: ${p.cssSize}; margin: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm; } }`}</style>
       <div
         className={`printed-page bg-white text-black ${t.page}`}
         style={{
-          padding: `${p.padMm}mm`,
+          padding: `${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm`,
           minHeight: `${p.heightMm}mm`,
           width: `${p.widthMm}mm`,
           maxWidth: "100%",
@@ -118,7 +126,10 @@ export function MenuPreview({
         <div className={twoCols ? "[column-count:2] [column-gap:10mm]" : ""}>
           {visibleSections.map((sec) => (
             <section key={sec.id} className="mb-6 break-inside-avoid">
-              <div className={`${t.sectionTitle} ${t.rule} pb-1`} style={sectionStyle}>
+              <div
+                className={`${t.sectionTitle} ${t.rule} pb-1 ${layout.sectionAlign === "center" ? "text-center" : "text-left"}`}
+                style={sectionStyle}
+              >
                 {sec.title}
               </div>
               <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>
@@ -128,32 +139,44 @@ export function MenuPreview({
                   const grapeLine = wineMetaGrapeLine(w, fields);
                   return (
                     <li key={id} className="break-inside-avoid">
-                      <div className="flex items-baseline gap-2">
-                        <span className={t.itemName} style={nameStyle}>
+                      <div
+                        className={`relative flex items-baseline gap-2 ${
+                          layout.itemAlign === "center" ? "justify-center text-center" : "justify-start text-left"
+                        }`}
+                      >
+                        <span className={`${t.itemName} ${layout.itemAlign === "center" ? "max-w-[78%]" : ""}`} style={nameStyle}>
                           {fields.code && w.internal_code ? (
                             <span className="mr-2 tabular-nums opacity-70">{w.internal_code}</span>
                           ) : null}
                           {w.name}
                         </span>
-                        {t.dotted && fields.price ? (
+                        {layout.pricePosition === "far" && t.dotted && fields.price ? (
                           <span className="min-w-6 flex-1 translate-y-[-3px] border-b border-dotted border-black/50" />
-                        ) : (
+                        ) : layout.pricePosition === "far" && layout.itemAlign === "left" ? (
                           <span className="flex-1" />
-                        )}
+                        ) : null}
                         {fields.price && w.sale_price != null ? (
-                          <span className={t.itemPrice} style={nameStyle}>
+                          <span
+                            className={`${t.itemPrice} ${
+                              layout.pricePosition === "far" && layout.itemAlign === "center" ? "absolute right-0" : ""
+                            }`}
+                            style={nameStyle}
+                          >
                             {formatPrice(w.sale_price, priceDecimals)}
                           </span>
                         ) : null}
                       </div>
                       {firstLine ? (
-                        <div className={t.itemMeta} style={{ ...metaStyle, marginTop: `${spacing.nameGap}pt` }}>
+                        <div
+                          className={`${t.itemMeta} ${layout.itemAlign === "center" ? "text-center" : "text-left"}`}
+                          style={{ ...metaStyle, marginTop: `${spacing.nameGap}pt` }}
+                        >
                           {firstLine}
                         </div>
                       ) : null}
                       {grapeLine ? (
                         <div
-                          className={t.itemMeta}
+                          className={`${t.itemMeta} ${layout.itemAlign === "center" ? "text-center" : "text-left"}`}
                           style={{ ...metaStyle, marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}
                         >
                           {grapeLine}

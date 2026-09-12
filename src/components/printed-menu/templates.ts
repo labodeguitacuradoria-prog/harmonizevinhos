@@ -151,6 +151,27 @@ export type MenuSpacing = {
 
 export const DEFAULT_SPACING: MenuSpacing = { nameGap: 1, lineGap: 1, itemGap: 8 };
 
+export type MenuLayout = {
+  sectionAlign: "left" | "center";
+  itemAlign: "left" | "center";
+  pricePosition: "near" | "far";
+};
+
+export const DEFAULT_LAYOUT: MenuLayout = {
+  sectionAlign: "left",
+  itemAlign: "left",
+  pricePosition: "far",
+};
+
+export type PageMargins = {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+};
+
+export const DEFAULT_PAGE_MARGINS: PageMargins = { top: 14, right: 14, bottom: 14, left: 14 };
+
 /* ===== Tipografia ajustável ===== */
 export type FontKey = "serif" | "sans" | "slab" | "mono";
 

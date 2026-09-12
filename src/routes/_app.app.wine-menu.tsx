@@ -24,6 +24,8 @@ import ModuleGate from "@/components/ModuleGate";
 import {
   DEFAULT_SPACING,
   DEFAULT_TYPOGRAPHY,
+  DEFAULT_LAYOUT,
+  DEFAULT_PAGE_MARGINS,
   DEFAULT_VISIBLE_FIELDS,
   FONT_LIST,
   normalizeFields,
@@ -37,6 +39,8 @@ import {
   typeLabel,
   type MenuSection,
   type MenuSpacing,
+  type MenuLayout,
+  type PageMargins,
   type MenuWine,
   type PaperKey,
   type TemplateKey,
@@ -80,6 +84,8 @@ type SavedList = {
     priceDecimals?: boolean;
     spacing?: MenuSpacing;
     typography?: MenuTypography;
+    layout?: MenuLayout;
+    margins?: PageMargins;
     customPaper?: { widthMm: number; heightMm: number; padMm: number };
   };
   sections: MenuSection[];
@@ -119,6 +125,8 @@ function WineMenuPage() {
   const [customOpen, setCustomOpen] = useState(false);
   const [spacingOpen, setSpacingOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
+  const [layoutOpen, setLayoutOpen] = useState(false);
+  const [marginsOpen, setMarginsOpen] = useState(false);
 
   useEffect(() => {
     if (!savedOpen) return;
@@ -159,6 +167,17 @@ function WineMenuPage() {
     document.addEventListener("mousedown", handle);
     return () => document.removeEventListener("mousedown", handle);
   }, [fontOpen]);
+
+  useEffect(() => {
+    if (!layoutOpen && !marginsOpen) return;
+    function handle(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (layoutOpen && !target.closest("[data-layout-dropdown]")) setLayoutOpen(false);
+      if (marginsOpen && !target.closest("[data-margins-dropdown]")) setMarginsOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [layoutOpen, marginsOpen]);
 
   async function saveWineName(id: string) {
     const name = editingName.trim();
@@ -217,6 +236,8 @@ function WineMenuPage() {
   const [customPad, setCustomPad] = useState(12);
   const [spacing, setSpacing] = useState<MenuSpacing>(DEFAULT_SPACING);
   const [typography, setTypography] = useState<MenuTypography>(DEFAULT_TYPOGRAPHY);
+  const [layout, setLayout] = useState<MenuLayout>(DEFAULT_LAYOUT);
+  const [margins, setMargins] = useState<PageMargins>(DEFAULT_PAGE_MARGINS);
 
   const activePaper = useMemo(
     () => (useCustomPaper ? customPaper(customW, customH, customPad) : paperOf(paper)),
@@ -331,6 +352,8 @@ function WineMenuPage() {
           priceDecimals,
           spacing,
           typography,
+          layout,
+          margins,
           customPaper: useCustomPaper ? { widthMm: customW, heightMm: customH, padMm: customPad } : null,
         }),
       ),
@@ -372,6 +395,7 @@ function WineMenuPage() {
     setPaper((l.paper_size as PaperKey) ?? "a4");
     setSpacing({ ...DEFAULT_SPACING, ...(l.visible_fields?.spacing ?? {}) });
     setTypography({ ...(l.visible_fields?.typography ?? {}) });
+    setLayout({ ...DEFAULT_LAYOUT, ...(l.visible_fields?.layout ?? {}) });
     const cp = l.visible_fields?.customPaper;
     setUseCustomPaper(!!cp);
     if (cp) {
@@ -379,6 +403,13 @@ function WineMenuPage() {
       setCustomH(cp.heightMm);
       setCustomPad(cp.padMm ?? 12);
     }
+    const fallbackMargin = cp?.padMm ?? paperOf(l.paper_size).padMm;
+    setMargins({
+      top: l.visible_fields?.margins?.top ?? fallbackMargin,
+      right: l.visible_fields?.margins?.right ?? fallbackMargin,
+      bottom: l.visible_fields?.margins?.bottom ?? fallbackMargin,
+      left: l.visible_fields?.margins?.left ?? fallbackMargin,
+    });
     setSections(Array.isArray(l.sections) ? l.sections : []);
     setInitialized(true);
     toast.success(`Carta "${l.name}" carregada.`);
@@ -527,6 +558,7 @@ function WineMenuPage() {
                   setPaper(p.key);
                   setUseCustomPaper(false);
                   setCustomOpen(false);
+                  setMargins({ top: p.padMm, right: p.padMm, bottom: p.padMm, left: p.padMm });
                 }}
                 className={`rounded-xl border p-3 text-left transition ${
                   !useCustomPaper && paper === p.key
@@ -559,7 +591,6 @@ function WineMenuPage() {
                   <div className="grid gap-3">
                     <MmField label="Largura (mm)" value={customW} onChange={setCustomW} min={60} max={420} />
                     <MmField label="Altura (mm)" value={customH} onChange={setCustomH} min={80} max={594} />
-                    <MmField label="Margem interna (mm)" value={customPad} onChange={setCustomPad} min={0} max={40} />
                   </div>
                   <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
                     Exemplos: 100 × 210 mm (folha estreita), 150 × 300 mm (carta alta). 10 mm = 1 cm.
@@ -746,6 +777,74 @@ function WineMenuPage() {
                 </div>
               )}
             </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <div className="relative" data-layout-dropdown>
+                <button
+                  onClick={() => setLayoutOpen((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                >
+                  Alinhamento e preço
+                  <ChevronDown className={`h-3 w-3 transition-transform ${layoutOpen ? "rotate-180" : ""}`} />
+                </button>
+                {layoutOpen && (
+                  <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
+                    <CompactChoice
+                      label="Tipo de vinho"
+                      value={layout.sectionAlign}
+                      options={[{ value: "left", label: "Esquerda" }, { value: "center", label: "Centro" }]}
+                      onChange={(value) => setLayout((current) => ({ ...current, sectionAlign: value as MenuLayout["sectionAlign"] }))}
+                    />
+                    <div className="mt-3">
+                      <CompactChoice
+                        label="Nome do rótulo"
+                        value={layout.itemAlign}
+                        options={[{ value: "left", label: "Esquerda" }, { value: "center", label: "Centro" }]}
+                        onChange={(value) => setLayout((current) => ({ ...current, itemAlign: value as MenuLayout["itemAlign"] }))}
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <CompactChoice
+                        label="Preço em relação ao rótulo"
+                        value={layout.pricePosition}
+                        options={[{ value: "near", label: "Próximo" }, { value: "far", label: "Distante" }]}
+                        onChange={(value) => setLayout((current) => ({ ...current, pricePosition: value as MenuLayout["pricePosition"] }))}
+                      />
+                    </div>
+                    <button
+                      onClick={() => setLayout(DEFAULT_LAYOUT)}
+                      className="mt-3 inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Voltar ao padrão
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="relative" data-margins-dropdown>
+                <button
+                  onClick={() => setMarginsOpen((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                >
+                  Margens da página
+                  <ChevronDown className={`h-3 w-3 transition-transform ${marginsOpen ? "rotate-180" : ""}`} />
+                </button>
+                {marginsOpen && (
+                  <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
+                    <div className="grid grid-cols-2 gap-3">
+                      <MmField label="Acima (mm)" value={margins.top} onChange={(top) => setMargins((m) => ({ ...m, top }))} min={0} max={60} />
+                      <MmField label="Abaixo (mm)" value={margins.bottom} onChange={(bottom) => setMargins((m) => ({ ...m, bottom }))} min={0} max={60} />
+                      <MmField label="Esquerda (mm)" value={margins.left} onChange={(left) => setMargins((m) => ({ ...m, left }))} min={0} max={60} />
+                      <MmField label="Direita (mm)" value={margins.right} onChange={(right) => setMargins((m) => ({ ...m, right }))} min={0} max={60} />
+                    </div>
+                    <button
+                      onClick={() => setMargins({ top: activePaper.padMm, right: activePaper.padMm, bottom: activePaper.padMm, left: activePaper.padMm })}
+                      className="mt-3 inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Usar margem do papel
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
 
@@ -918,6 +1017,8 @@ function WineMenuPage() {
               paperDef={activePaper}
               spacing={spacing}
               typography={typography}
+              layout={layout}
+              margins={margins}
               logoUrl={logoUrl}
               address={address}
               addressPosition={addressPosition}
@@ -1079,6 +1180,37 @@ function FontControl({
           className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-xs tabular-nums"
         />
         <span className="text-[10px] text-muted-foreground">pt</span>
+      </div>
+    </div>
+  );
+}
+
+function CompactChoice({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <div className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="grid grid-cols-2 gap-1.5">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            className={`rounded border px-2 py-1.5 text-[10px] uppercase tracking-wide ${
+              value === option.value ? "border-primary bg-accent text-primary" : "border-border text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
     </div>
   );

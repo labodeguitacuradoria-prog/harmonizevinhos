@@ -76,14 +76,17 @@ function AppLayout() {
       /* ignora indisponibilidade do armazenamento */
     }
 
-    // Encerra a sessão no servidor e remove a cópia compartilhada pelo navegador.
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      await supabase.auth.signOut({ scope: "local" });
-    }
     queryClient.clear();
-    // Uma nova carga impede que listeners e permissões da conta anterior
-    // disputem a navegação com a tela de escolha de pacotes.
+
+    // A biblioteca de autenticação pode aguardar indefinidamente um bloqueio do
+    // navegador. A saída local é iniciada, mas nunca impede o retorno ao portal.
+    const signOut = supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+    await Promise.race([
+      signOut,
+      new Promise<void>((resolve) => window.setTimeout(resolve, 1200)),
+    ]);
+
+    // A nova carga elimina listeners, transições e permissões da conta anterior.
     window.location.replace("/");
   }
 

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Moon, Sun, ScrollText, UtensilsCrossed, DollarSign, LayoutDashboard, Wine } from "lucide-react";
@@ -72,7 +72,6 @@ const PACKS: Pack[] = [
 ];
 
 function Landing() {
-  const navigate = useNavigate();
   const { theme, toggle } = useTheme();
   const [pending, setPending] = useState<string | null>(null);
   const [selected, setSelected] = useState<AppModule | null>(null);
@@ -80,8 +79,10 @@ function Landing() {
   function go(module: AppModule, mode: "signup" | "signin") {
     setSelected(module);
     setPending(`${module}:${mode}`);
-    // Navegação imediata; o estado só serve para dar retorno visual ao clique.
-    void navigate({ to: "/auth", search: { mode, module } }).finally(() => setPending(null));
+    // Uma carga completa cria um fluxo novo, sem herdar listeners ou transições
+    // pendentes da sessão encerrada anteriormente.
+    const params = new URLSearchParams({ mode, module });
+    window.location.assign(`/auth?${params.toString()}`);
   }
 
 

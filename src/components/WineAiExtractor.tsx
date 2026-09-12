@@ -29,6 +29,7 @@ export function WineAiExtractor({ onExtracted }: Props) {
   const [tab, setTab] = useState<"file" | "text" | "url">("file");
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
+  const [urlError, setUrlError] = useState("");
   const [busy, setBusy] = useState(false);
   const extractFile = useServerFn(extractWineFromFile);
   const extractText = useServerFn(extractWineFromText);
@@ -96,9 +97,15 @@ export function WineAiExtractor({ onExtracted }: Props) {
       return;
     }
     setBusy(true);
+    setUrlError("");
     try {
       const res = await extractUrl({ data: { url: value } });
-      onExtracted(res, { sourceFileUrl: value });
+      if (!res.ok) {
+        setUrlError(res.error);
+        toast.warning("Este site não permite leitura automática.");
+        return;
+      }
+      onExtracted(res.data, { sourceFileUrl: value });
       toast.success("Link analisado! Revise os campos antes de salvar.");
     } catch (e: any) {
       toast.error(e.message || "Falha ao analisar o link.");
@@ -198,6 +205,21 @@ export function WineAiExtractor({ onExtracted }: Props) {
           <p className="text-[11px] text-[#666]">
             Cole o link da página (ou do PDF) com as informações do vinho. A IA lê o conteúdo e preenche os campos.
           </p>
+          {urlError ? (
+            <div className="rounded-md border border-[#D4AF37]/40 bg-[#D4AF37]/10 p-3 text-xs text-[#D4AF37]">
+              <p>{urlError}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setUrlError("");
+                  setTab("text");
+                }}
+                className="mt-2 font-bold underline underline-offset-2"
+              >
+                Abrir Texto colado
+              </button>
+            </div>
+          ) : null}
           <button
             type="button"
             onClick={handleUrl}

@@ -360,11 +360,12 @@ export const extractWineFromUrl = createServerFn({ method: "POST" })
         }
       }
       const status = res?.status;
-      throw new Error(
-        status
+      return {
+        ok: false as const,
+        error: status
           ? `O site bloqueou a leitura automática (erro ${status}). Copie o texto da página e use a aba 'Texto colado'.`
           : "Não foi possível acessar o link. Verifique o endereço ou use a aba 'Texto colado'.",
-      );
+      };
     }
 
 
@@ -375,21 +376,28 @@ export const extractWineFromUrl = createServerFn({ method: "POST" })
       let bin = "";
       for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]!);
       const base64 = btoa(bin);
-      return callModel([
+      return {
+        ok: true as const,
+        data: await callModel([
         {
           type: "text" as const,
           text: `Extraia todas as informações técnicas desta ficha de vinho (origem: ${data.url}).`,
         },
         { type: "file" as const, data: base64, mediaType: "application/pdf" },
-      ]);
+        ]),
+      };
     }
 
     const html = await res.text();
     const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "").trim();
     const text = htmlToText(html).slice(0, 24000);
     console.log(`[extractWineFromUrl] ${data.url} -> ${text.length} chars, title="${title}"`);
-    if (text.length < 80)
-      throw new Error("A página não retornou conteúdo legível. Copie o texto e use a aba 'Texto colado'.");
+    if (text.length < 80) {
+      return {
+        ok: false as const,
+        error: "A página não retornou conteúdo legível. Copie o texto e use a aba 'Texto colado'.",
+      };
+    }
 
     const prompt = `Conteúdo extraído da página do produtor (URL: ${data.url}${title ? `, título: ${title}` : ""}).
 O texto abaixo vem de HTML e pode conter menus, rodapés e avisos legais misturados — ignore essas partes e use apenas o que descreve o vinho (descrição, harmonização, aromas, análise sensorial, teor alcoólico, açúcar, premiações, safra, vinificação, região).
@@ -400,12 +408,17 @@ ${text}
 """`;
 
     const first = await callModelJsonMode(prompt);
-    if (first.rotulo || first.informacoes_tecnicas || (first.premiacoes?.length ?? 0) > 0) return first;
+    if (first.rotulo || first.informacoes_tecnicas || (first.premiacoes?.length ?? 0) > 0) {
+      return { ok: true as const, data: first };
+    }
 
     console.warn("[extractWineFromUrl] primeira tentativa vazia, refazendo com foco no rótulo");
-    return callModelJsonMode(
-      `O rótulo é "${title || data.url}". Preencha a ficha técnica completa deste vinho usando seu conhecimento e o resumo de página a seguir:\n\n"""\n${text.slice(0, 12000)}\n"""`
-    );
+    return {
+      ok: true as const,
+      data: await callModelJsonMode(
+        `O rótulo é "${title || data.url}". Preencha a ficha técnica completa deste vinho usando seu conhecimento e o resumo de página a seguir:\n\n"""\n${text.slice(0, 12000)}\n"""`,
+      ),
+    };
   });
 
 

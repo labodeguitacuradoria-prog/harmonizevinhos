@@ -49,6 +49,18 @@ export function setActiveGroup(id: string | null) {
   emit();
 }
 
+export function clearActiveScope() {
+  state = { activeRestaurantId: null, activeGroupId: null };
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem(KEY);
+    } catch {
+      /* ignora indisponibilidade do armazenamento */
+    }
+  }
+  emit();
+}
+
 export function ensureActiveRestaurant(fallbackId: string | null) {
   if (state.activeGroupId) return;
   if (!state.activeRestaurantId && fallbackId) {

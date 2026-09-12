@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Moon, Sun, ScrollText, UtensilsCrossed, DollarSign, LayoutDashboard, Wine } from "lucide-react";
 import type { AppModule } from "@/lib/modules";
@@ -77,23 +76,6 @@ function Landing() {
   const { theme, toggle } = useTheme();
   const [pending, setPending] = useState<string | null>(null);
   const [selected, setSelected] = useState<AppModule | null>(null);
-
-
-  useEffect(() => {
-    let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) navigate({ to: "/app", replace: true });
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
-        navigate({ to: "/app", replace: true });
-      }
-    });
-    return () => {
-      cancelled = true;
-      sub.subscription.unsubscribe();
-    };
-  }, [navigate]);
 
   function go(module: AppModule, mode: "signup" | "signin") {
     setSelected(module);

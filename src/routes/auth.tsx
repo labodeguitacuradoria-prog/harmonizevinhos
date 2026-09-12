@@ -49,7 +49,9 @@ function AuthPage() {
 
   useEffect(() => {
     try {
-      if (mode === "signup" && chosenModule) {
+      // A escolha do pacote vale tanto para uma conta nova quanto para quem
+      // entra novamente para acrescentar outro módulo à conta existente.
+      if (chosenModule) {
         localStorage.setItem("signup-module", chosenModule);
       } else {
         localStorage.removeItem("signup-module");
@@ -57,7 +59,7 @@ function AuthPage() {
     } catch {
       /* ignora */
     }
-  }, [chosenModule, mode]);
+  }, [chosenModule]);
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();

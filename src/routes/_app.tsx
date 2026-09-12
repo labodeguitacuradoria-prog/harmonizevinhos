@@ -9,6 +9,7 @@ import { canAccessRoute, type AppModule } from "@/lib/modules";
 import { useServerFn } from "@tanstack/react-start";
 import { claimSignupModule } from "@/lib/modules.functions";
 import { clearActiveScope } from "@/lib/active-scope";
+import { brokeredPreviewStorage } from "@/integrations/supabase/previewAuthStorage";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -76,14 +77,30 @@ function AppLayout() {
       /* ignora indisponibilidade do armazenamento */
     }
 
-    // Encerra a sessão no servidor e remove a cópia compartilhada pelo navegador.
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      await supabase.auth.signOut({ scope: "local" });
-    }
     queryClient.clear();
-    // Uma nova carga impede que listeners e permissões da conta anterior
-    // disputem a navegação com a tela de escolha de pacotes.
+
+    // A biblioteca de autenticação pode aguardar indefinidamente um bloqueio do
+    // navegador. A saída local é iniciada, mas nunca impede o retorno ao portal.
+    const signOut = supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+    const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+    let clearStoredSession: Promise<unknown> = Promise.resolve();
+    if (projectUrl) {
+      try {
+        const projectRef = new URL(projectUrl).hostname.split(".")[0];
+        const storage = brokeredPreviewStorage();
+        clearStoredSession = Promise.resolve(
+          storage?.removeItem(`sb-${projectRef}-auth-token`),
+        ).catch(() => undefined);
+      } catch {
+        clearStoredSession = Promise.resolve();
+      }
+    }
+    await Promise.race([
+      Promise.allSettled([signOut, clearStoredSession]),
+      new Promise<void>((resolve) => window.setTimeout(resolve, 1200)),
+    ]);
+
+    // A nova carga elimina listeners, transições e permissões da conta anterior.
     window.location.replace("/");
   }
 

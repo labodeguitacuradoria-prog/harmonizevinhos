@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { Moon, Sun, ScrollText, UtensilsCrossed, DollarSign, LayoutDashboard, Wine } from "lucide-react";
@@ -72,16 +72,13 @@ const PACKS: Pack[] = [
 ];
 
 function Landing() {
-  const navigate = useNavigate();
   const { theme, toggle } = useTheme();
   const [pending, setPending] = useState<string | null>(null);
   const [selected, setSelected] = useState<AppModule | null>(null);
 
-  function go(module: AppModule, mode: "signup" | "signin") {
+  function markSelection(module: AppModule, mode: "signup" | "signin") {
     setSelected(module);
     setPending(`${module}:${mode}`);
-    // Navegação imediata; o estado só serve para dar retorno visual ao clique.
-    void navigate({ to: "/auth", search: { mode, module } }).finally(() => setPending(null));
   }
 
 
@@ -155,30 +152,22 @@ function Landing() {
                 ))}
               </ul>
               <div className="mt-auto space-y-2 border-t border-border pt-4">
-                <button
-                  type="button"
-                  onPointerDown={() => {
-                    setSelected(p.module);
-                    setPending(`${p.module}:signup`);
-                  }}
-                  onClick={() => go(p.module, "signup")}
+                <a
+                  href={`/auth?mode=signup&module=${p.module}`}
+                  onClick={() => markSelection(p.module, "signup")}
                   aria-busy={pending === `${p.module}:signup`}
-                  className="w-full rounded-md bg-primary px-4 py-2.5 text-[12px] font-semibold text-primary-foreground transition-all duration-100 hover:opacity-90 active:scale-[0.98] active:brightness-90 disabled:cursor-wait disabled:opacity-70"
+                  className="block w-full rounded-md bg-primary px-4 py-2.5 text-center text-[12px] font-semibold text-primary-foreground transition-all duration-100 hover:opacity-90 active:scale-[0.98] active:brightness-90"
                 >
                   {pending === `${p.module}:signup` ? "Abrindo…" : "Experimente grátis"}
-                </button>
-                <button
-                  type="button"
-                  onPointerDown={() => {
-                    setSelected(p.module);
-                    setPending(`${p.module}:signin`);
-                  }}
-                  onClick={() => go(p.module, "signin")}
+                </a>
+                <a
+                  href={`/auth?mode=signin&module=${p.module}`}
+                  onClick={() => markSelection(p.module, "signin")}
                   aria-busy={pending === `${p.module}:signin`}
-                  className="w-full rounded-md border border-border px-4 py-2.5 text-[12px] font-semibold text-primary transition-all duration-100 hover:border-primary active:scale-[0.98] active:bg-accent disabled:cursor-wait disabled:opacity-70"
+                  className="block w-full rounded-md border border-border px-4 py-2.5 text-center text-[12px] font-semibold text-primary transition-all duration-100 hover:border-primary active:scale-[0.98] active:bg-accent"
                 >
                   {pending === `${p.module}:signin` ? "Abrindo…" : "Entrar"}
-                </button>
+                </a>
               </div>
             </div>
             );

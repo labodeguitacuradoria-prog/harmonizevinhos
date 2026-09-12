@@ -39,10 +39,13 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/app" });
+    // Quando esta página veio da escolha de um pacote, ela deve permanecer aberta
+    // mesmo se o navegador ainda estiver concluindo a saída da sessão anterior.
+    if (chosenModule) return;
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) navigate({ to: "/app" });
     });
-  }, [navigate]);
+  }, [chosenModule, navigate]);
 
   useEffect(() => {
     try {

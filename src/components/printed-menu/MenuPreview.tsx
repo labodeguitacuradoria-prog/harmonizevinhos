@@ -109,7 +109,7 @@ export function MenuPreview({
               }`}
             />
           ) : null}
-          <h1 className={t.headerTitle}>{title || "Carta de Vinhos"}</h1>
+          {title ? <h1 className={t.headerTitle}>{title}</h1> : null}
           {subtitle ? <div className={t.headerSubtitle}>{subtitle}</div> : null}
           {addressInHeader ? (
             <div

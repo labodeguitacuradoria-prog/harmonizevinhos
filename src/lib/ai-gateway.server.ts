@@ -8,5 +8,8 @@ export function createLovableAiGateway(apiKey: string) {
       "Lovable-API-Key": apiKey,
       "X-Lovable-AIG-SDK": "vercel-ai-sdk",
     },
-  });
+    // Habilita json_schema estrito: sem isso o modelo devolve chaves livres
+    // e a validação do esquema falha, resultando em extração vazia.
+    supportsStructuredOutputs: true,
+  } as Parameters<typeof createOpenAICompatible>[0]);
 }

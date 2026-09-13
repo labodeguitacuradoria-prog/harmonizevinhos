@@ -16,6 +16,8 @@ import {
   RotateCcw,
   Pencil,
   Check,
+  ZoomIn,
+  ZoomOut,
 
 } from "lucide-react";
 import { toast } from "sonner";
@@ -82,6 +84,7 @@ type SavedList = {
   visible_fields: VisibleFields & {
     addressPosition?: "header" | "footer";
     priceDecimals?: boolean;
+    priceCurrency?: boolean;
     spacing?: MenuSpacing;
     typography?: MenuTypography;
     layout?: MenuLayout;
@@ -127,6 +130,7 @@ function WineMenuPage() {
   const [fontOpen, setFontOpen] = useState(false);
   const [layoutOpen, setLayoutOpen] = useState(false);
   const [marginsOpen, setMarginsOpen] = useState(false);
+  const [priceFormatOpen, setPriceFormatOpen] = useState(false);
 
   useEffect(() => {
     if (!savedOpen) return;
@@ -169,15 +173,16 @@ function WineMenuPage() {
   }, [fontOpen]);
 
   useEffect(() => {
-    if (!layoutOpen && !marginsOpen) return;
+    if (!layoutOpen && !marginsOpen && !priceFormatOpen) return;
     function handle(e: MouseEvent) {
       const target = e.target as HTMLElement;
       if (layoutOpen && !target.closest("[data-layout-dropdown]")) setLayoutOpen(false);
       if (marginsOpen && !target.closest("[data-margins-dropdown]")) setMarginsOpen(false);
+      if (priceFormatOpen && !target.closest("[data-price-format-dropdown]")) setPriceFormatOpen(false);
     }
     document.addEventListener("mousedown", handle);
     return () => document.removeEventListener("mousedown", handle);
-  }, [layoutOpen, marginsOpen]);
+  }, [layoutOpen, marginsOpen, priceFormatOpen]);
 
   async function saveWineName(id: string) {
     const name = editingName.trim();
@@ -248,6 +253,8 @@ function WineMenuPage() {
   const [addressPosition, setAddressPosition] = useState<"header" | "footer">("header");
   const [fields, setFields] = useState<VisibleFields>(DEFAULT_VISIBLE_FIELDS);
   const [priceDecimals, setPriceDecimals] = useState(true);
+  const [priceCurrency, setPriceCurrency] = useState(false);
+  const [previewZoom, setPreviewZoom] = useState(0.8);
   const [sections, setSections] = useState<MenuSection[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -350,6 +357,7 @@ function WineMenuPage() {
           ...fields,
           addressPosition,
           priceDecimals,
+           priceCurrency,
           spacing,
           typography,
           layout,
@@ -390,6 +398,7 @@ function WineMenuPage() {
     setFields(normalizeFields(l.visible_fields));
     setAddressPosition(l.visible_fields?.addressPosition === "footer" ? "footer" : "header");
     setPriceDecimals(l.visible_fields?.priceDecimals !== false);
+    setPriceCurrency(l.visible_fields?.priceCurrency === true);
     setLogoUrl(l.logo_url ?? "");
     setAddress(l.address_text ?? "");
     setPaper((l.paper_size as PaperKey) ?? "a4");
@@ -675,24 +684,35 @@ function WineMenuPage() {
               ))}
             </div>
             {fields.price ? (
-              <div className="mt-4">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Formato do preço</div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {[
-                    { dec: true, label: "Com centavos (120,00)" },
-                    { dec: false, label: "Sem centavos (120)" },
-                  ].map((o) => (
-                    <button
-                      key={String(o.dec)}
-                      onClick={() => setPriceDecimals(o.dec)}
-                      className={`rounded-full border px-3 py-1.5 text-xs ${
-                        priceDecimals === o.dec ? "border-primary text-primary" : "border-border text-muted-foreground"
-                      }`}
-                    >
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
+              <div className="relative mt-4" data-price-format-dropdown>
+                <button
+                  onClick={() => setPriceFormatOpen((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                >
+                  Formato do preço
+                  <ChevronDown className={`h-3 w-3 transition-transform ${priceFormatOpen ? "rotate-180" : ""}`} />
+                </button>
+                {priceFormatOpen && (
+                  <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
+                    <CompactChoice
+                      label="Casas decimais"
+                      value={priceDecimals ? "with" : "without"}
+                      options={[{ value: "with", label: "Com centavos" }, { value: "without", label: "Sem centavos" }]}
+                      onChange={(value) => setPriceDecimals(value === "with")}
+                    />
+                    <div className="mt-3">
+                      <CompactChoice
+                        label="Símbolo da moeda"
+                        value={priceCurrency ? "with" : "without"}
+                        options={[{ value: "with", label: "Com R$" }, { value: "without", label: "Sem R$" }]}
+                        onChange={(value) => setPriceCurrency(value === "with")}
+                      />
+                    </div>
+                    <p className="mt-3 text-[10px] text-muted-foreground">
+                      Exemplo: {priceCurrency ? "R$ " : ""}{priceDecimals ? "120,00" : "120"}
+                    </p>
+                  </div>
+                )}
               </div>
             ) : null}
             <div className="relative mt-4" data-spacing-dropdown>
@@ -766,6 +786,14 @@ function WineMenuPage() {
                       defaultSize={9}
                       onFont={(f) => setTypography((t) => ({ ...t, metaFont: f }))}
                       onSize={(s) => setTypography((t) => ({ ...t, metaSize: s }))}
+                    />
+                    <FontControl
+                      label="Preço"
+                      font={typography.priceFont}
+                      size={typography.priceSize}
+                      defaultSize={11}
+                      onFont={(f) => setTypography((t) => ({ ...t, priceFont: f }))}
+                      onSize={(s) => setTypography((t) => ({ ...t, priceSize: s }))}
                     />
                     <button
                       onClick={() => setTypography({})}
@@ -1007,11 +1035,27 @@ function WineMenuPage() {
 
         {/* Pré-visualização */}
         <div className="print-root">
-          <div className="no-print mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Pré-visualização · {activePaper.code} ({activePaper.dims})
+          <div className="no-print mb-2 flex flex-wrap items-center justify-between gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <span>Pré-visualização · {activePaper.code} ({activePaper.dims})</span>
+            <div className="flex items-center gap-1 rounded border border-border bg-card p-1 tracking-normal">
+              <IconBtn onClick={() => setPreviewZoom((z) => Math.max(0.4, Number((z - 0.1).toFixed(1))))} title="Diminuir página">
+                <ZoomOut className="h-3.5 w-3.5" />
+              </IconBtn>
+              <button
+                onClick={() => setPreviewZoom(1)}
+                className="min-w-12 px-1 text-center text-[10px] tabular-nums text-primary"
+                title="Voltar ao tamanho de 100%"
+              >
+                {Math.round(previewZoom * 100)}%
+              </button>
+              <IconBtn onClick={() => setPreviewZoom((z) => Math.min(1.5, Number((z + 0.1).toFixed(1))))} title="Aumentar página">
+                <ZoomIn className="h-3.5 w-3.5" />
+              </IconBtn>
+            </div>
           </div>
           <div className="overflow-x-auto rounded-xl border border-border bg-neutral-200 p-4 print:border-0 print:bg-white print:p-0">
-            <MenuPreview
+            <div className="menu-preview-zoom" style={{ zoom: previewZoom }}>
+              <MenuPreview
               template={template}
               paper={paper}
               paperDef={activePaper}
@@ -1027,9 +1071,11 @@ function WineMenuPage() {
               footer={footer}
               fields={fields}
               priceDecimals={priceDecimals}
+              priceCurrency={priceCurrency}
               sections={sections}
               winesById={winesById}
-            />
+              />
+            </div>
           </div>
         </div>
       </div>

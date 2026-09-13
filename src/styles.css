@@ -325,6 +325,9 @@ input[type="number"]::-webkit-inner-spin-button {
     padding: 0 !important;
     box-shadow: none !important;
   }
+  .menu-preview-zoom {
+    zoom: 1 !important;
+  }
   .printed-menu section {
     break-inside: avoid;
   }

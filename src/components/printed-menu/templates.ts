@@ -192,6 +192,8 @@ export type MenuTypography = {
   sectionSize?: number;
   metaFont?: FontKey;
   metaSize?: number;
+  priceFont?: FontKey;
+  priceSize?: number;
 };
 
 export const DEFAULT_TYPOGRAPHY: MenuTypography = {};
@@ -284,10 +286,11 @@ export function autoSections(wines: MenuWine[]): MenuSection[] {
   return keys.map((k) => ({ id: `sec-${k}`, title: k, wineIds: buckets.get(k)! }));
 }
 
-export function formatPrice(v: number | null | undefined, decimals = true): string {
+export function formatPrice(v: number | null | undefined, decimals = true, currency = false): string {
   if (v == null) return "";
   const d = decimals ? 2 : 0;
-  return Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const value = Number(v).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  return currency ? `R$ ${value}` : value;
 }
 
 export function wineMetaFirstLine(w: MenuWine, f: VisibleFields): string {

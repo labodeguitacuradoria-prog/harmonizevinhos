@@ -37,6 +37,7 @@ type Props = {
   addressPosition?: "header" | "footer";
   fields: VisibleFields;
   priceDecimals?: boolean;
+  priceCurrency?: boolean;
   sections: MenuSection[];
   winesById: Record<string, MenuWine>;
 };
@@ -59,6 +60,7 @@ export function MenuPreview({
   addressPosition = "header",
   fields,
   priceDecimals = true,
+  priceCurrency = false,
   sections,
   winesById,
 }: Props) {
@@ -81,6 +83,14 @@ export function MenuPreview({
   const metaStyle = {
     fontFamily: fontCss(typography.metaFont),
     fontSize: typography.metaSize ? `${typography.metaSize}pt` : undefined,
+  };
+  const priceStyle = {
+    fontFamily: fontCss(typography.priceFont) ?? fontCss(typography.nameFont),
+    fontSize: typography.priceSize
+      ? `${typography.priceSize}pt`
+      : typography.nameSize
+        ? `${typography.nameSize}pt`
+        : undefined,
   };
 
   const addressInHeader = !!address && addressPosition === "header";
@@ -160,9 +170,9 @@ export function MenuPreview({
                             className={`${t.itemPrice} ${
                               layout.pricePosition === "far" && layout.itemAlign === "center" ? "absolute right-0" : ""
                             }`}
-                            style={nameStyle}
+                            style={priceStyle}
                           >
-                            {formatPrice(w.sale_price, priceDecimals)}
+                            {formatPrice(w.sale_price, priceDecimals, priceCurrency)}
                           </span>
                         ) : null}
                       </div>

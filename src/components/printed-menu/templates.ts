@@ -173,13 +173,14 @@ export type PageMargins = {
 export const DEFAULT_PAGE_MARGINS: PageMargins = { top: 14, right: 14, bottom: 14, left: 14 };
 
 /* ===== Tipografia ajustável ===== */
-export type FontKey = "serif" | "sans" | "slab" | "mono";
+export type FontKey = "serif" | "sans" | "slab" | "mono" | "script";
 
 export const FONT_LIST: { key: FontKey; label: string; css: string }[] = [
   { key: "serif", label: "Serifada", css: 'Georgia, "Times New Roman", serif' },
   { key: "sans", label: "Sem serifa", css: '"Segoe UI", Helvetica, Arial, sans-serif' },
   { key: "slab", label: "Slab / Display", css: '"Rockwell", "Courier New", Georgia, serif' },
   { key: "mono", label: "Monoespaçada", css: '"Courier New", monospace' },
+  { key: "script", label: "Cursiva / Script", css: '"Segoe Script", "Brush Script MT", cursive' },
 ];
 
 export const fontCss = (k: FontKey | undefined): string | undefined =>

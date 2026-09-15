@@ -155,7 +155,7 @@ export function MenuPreview({
           {visibleSections.map((sec) => (
             <section key={sec.id} className="mb-6 break-inside-avoid">
               <div
-                className={`${t.sectionTitle} ${t.rule} pb-1 ${layout.sectionAlign === "center" ? "text-center" : "text-left"}`}
+                className={`${t.sectionTitle} ${t.rule} pb-1 ${textAlign[layout.sectionAlign]}`}
                 style={sectionStyle}
               >
                 {sec.title}
@@ -168,9 +168,7 @@ export function MenuPreview({
                   return (
                     <li key={id} className="break-inside-avoid">
                       <div
-                        className={`relative flex items-baseline gap-2 ${
-                          layout.itemAlign === "center" ? "justify-center text-center" : "justify-start text-left"
-                        }`}
+                        className={`relative flex items-baseline gap-2 ${justifyAlign[layout.itemAlign]} ${textAlign[layout.itemAlign]}`}
                       >
                         <span className={`${t.itemName} ${layout.itemAlign === "center" ? "max-w-[78%]" : ""}`} style={nameStyle}>
                           {fields.code && w.internal_code ? (
@@ -180,7 +178,7 @@ export function MenuPreview({
                         </span>
                         {layout.pricePosition === "far" && t.dotted && fields.price ? (
                           <span className="min-w-6 flex-1 translate-y-[-3px] border-b border-dotted border-black/50" />
-                        ) : layout.pricePosition === "far" && layout.itemAlign === "left" ? (
+                        ) : layout.pricePosition === "far" && (layout.itemAlign === "left" || layout.itemAlign === "right") ? (
                           <span className="flex-1" />
                         ) : null}
                         {fields.price && w.sale_price != null ? (
@@ -196,7 +194,7 @@ export function MenuPreview({
                       </div>
                       {firstLine ? (
                         <div
-                          className={`${t.itemMeta} ${layout.itemAlign === "center" ? "text-center" : "text-left"}`}
+                          className={`${t.itemMeta} ${textAlign[layout.itemAlign]}`}
                           style={{ ...metaStyle, marginTop: `${spacing.nameGap}pt` }}
                         >
                           {firstLine}
@@ -204,7 +202,7 @@ export function MenuPreview({
                       ) : null}
                       {grapeLine ? (
                         <div
-                          className={`${t.itemMeta} ${layout.itemAlign === "center" ? "text-center" : "text-left"}`}
+                          className={`${t.itemMeta} ${textAlign[layout.itemAlign]}`}
                           style={{ ...metaStyle, marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}
                         >
                           {grapeLine}

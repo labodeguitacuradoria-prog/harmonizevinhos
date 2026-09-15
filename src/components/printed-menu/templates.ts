@@ -152,10 +152,10 @@ export type MenuSpacing = {
 export const DEFAULT_SPACING: MenuSpacing = { nameGap: 1, lineGap: 1, itemGap: 8 };
 
 export type MenuLayout = {
-  sectionAlign: "left" | "center";
-  itemAlign: "left" | "center";
+  sectionAlign: "left" | "center" | "right";
+  itemAlign: "left" | "center" | "right";
   pricePosition: "near" | "far";
-  headerAlign: "left" | "center";
+  headerAlign: "left" | "center" | "right";
 };
 
 export const DEFAULT_LAYOUT: MenuLayout = {

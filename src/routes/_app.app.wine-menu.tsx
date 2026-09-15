@@ -1294,3 +1294,43 @@ function CompactChoice({
     </div>
   );
 }
+
+function AlignChoice({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: MenuLayout["headerAlign"];
+  onChange: (value: MenuLayout["headerAlign"]) => void;
+}) {
+  const options = [
+    { value: "left", icon: AlignLeft, title: "Esquerda" },
+    { value: "center", icon: AlignCenter, title: "Centro" },
+    { value: "right", icon: AlignRight, title: "Direita" },
+  ] as const;
+  return (
+    <div>
+      <div className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="flex items-center gap-2">
+        {options.map((option) => {
+          const Icon = option.icon;
+          return (
+            <button
+              key={option.value}
+              onClick={() => onChange(option.value)}
+              title={option.title}
+              className={`inline-flex h-8 flex-1 items-center justify-center rounded border transition-colors ${
+                value === option.value
+                  ? "border-primary bg-accent text-primary"
+                  : "border-border text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

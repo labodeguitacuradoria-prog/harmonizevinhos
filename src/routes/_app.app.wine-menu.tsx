@@ -7,6 +7,7 @@ import {
   Printer,
   Save,
   Plus,
+  Minus,
   Copy,
   Trash2,
   ChevronUp,
@@ -18,7 +19,9 @@ import {
   Check,
   ZoomIn,
   ZoomOut,
-
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";

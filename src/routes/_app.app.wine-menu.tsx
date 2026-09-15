@@ -736,17 +736,17 @@ function WineMenuPage() {
               {spacingOpen && (
                 <div className="absolute left-0 top-full z-50 mt-1 w-80 rounded-xl border border-border bg-card p-3 shadow-lg">
                   <div className="grid gap-4">
-                    <SpaceSlider
+                    <SpaceStepper
                       label="Do rótulo para a linha de baixo"
                       value={spacing.nameGap}
                       onChange={(v) => setSpacing((s) => ({ ...s, nameGap: v }))}
                     />
-                    <SpaceSlider
+                    <SpaceStepper
                       label="Entre as linhas de informação"
                       value={spacing.lineGap}
                       onChange={(v) => setSpacing((s) => ({ ...s, lineGap: v }))}
                     />
-                    <SpaceSlider
+                    <SpaceStepper
                       label="Entre um rótulo e o próximo"
                       value={spacing.itemGap}
                       max={24}

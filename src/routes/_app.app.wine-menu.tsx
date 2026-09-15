@@ -830,27 +830,24 @@ function WineMenuPage() {
                   <ChevronDown className={`h-3 w-3 transition-transform ${layoutOpen ? "rotate-180" : ""}`} />
                 </button>
                 {layoutOpen && (
-                  <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
-                    <CompactChoice
+                <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
+                    <AlignChoice
                       label="Cabeçalho (título e subtítulo)"
                       value={layout.headerAlign}
-                      options={[{ value: "left", label: "Esquerda" }, { value: "center", label: "Centro" }]}
-                      onChange={(value) => setLayout((current) => ({ ...current, headerAlign: value as MenuLayout["headerAlign"] }))}
+                      onChange={(value) => setLayout((current) => ({ ...current, headerAlign: value }))}
                     />
                     <div className="mt-3">
-                      <CompactChoice
+                      <AlignChoice
                         label="Tipo de vinho"
                         value={layout.sectionAlign}
-                        options={[{ value: "left", label: "Esquerda" }, { value: "center", label: "Centro" }]}
-                        onChange={(value) => setLayout((current) => ({ ...current, sectionAlign: value as MenuLayout["sectionAlign"] }))}
+                        onChange={(value) => setLayout((current) => ({ ...current, sectionAlign: value }))}
                       />
                     </div>
                     <div className="mt-3">
-                      <CompactChoice
+                      <AlignChoice
                         label="Nome do rótulo"
                         value={layout.itemAlign}
-                        options={[{ value: "left", label: "Esquerda" }, { value: "center", label: "Centro" }]}
-                        onChange={(value) => setLayout((current) => ({ ...current, itemAlign: value as MenuLayout["itemAlign"] }))}
+                        onChange={(value) => setLayout((current) => ({ ...current, itemAlign: value }))}
                       />
                     </div>
                     <div className="mt-3">

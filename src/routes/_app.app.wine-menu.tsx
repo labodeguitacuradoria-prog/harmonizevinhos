@@ -817,11 +817,19 @@ function WineMenuPage() {
                 {layoutOpen && (
                   <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
                     <CompactChoice
-                      label="Tipo de vinho"
-                      value={layout.sectionAlign}
+                      label="Cabeçalho (título e subtítulo)"
+                      value={layout.headerAlign}
                       options={[{ value: "left", label: "Esquerda" }, { value: "center", label: "Centro" }]}
-                      onChange={(value) => setLayout((current) => ({ ...current, sectionAlign: value as MenuLayout["sectionAlign"] }))}
+                      onChange={(value) => setLayout((current) => ({ ...current, headerAlign: value as MenuLayout["headerAlign"] }))}
                     />
+                    <div className="mt-3">
+                      <CompactChoice
+                        label="Tipo de vinho"
+                        value={layout.sectionAlign}
+                        options={[{ value: "left", label: "Esquerda" }, { value: "center", label: "Centro" }]}
+                        onChange={(value) => setLayout((current) => ({ ...current, sectionAlign: value as MenuLayout["sectionAlign"] }))}
+                      />
+                    </div>
                     <div className="mt-3">
                       <CompactChoice
                         label="Nome do rótulo"

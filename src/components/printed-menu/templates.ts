@@ -155,12 +155,14 @@ export type MenuLayout = {
   sectionAlign: "left" | "center";
   itemAlign: "left" | "center";
   pricePosition: "near" | "far";
+  headerAlign: "left" | "center";
 };
 
 export const DEFAULT_LAYOUT: MenuLayout = {
   sectionAlign: "left",
   itemAlign: "left",
   pricePosition: "far",
+  headerAlign: "center",
 };
 
 export type PageMargins = {

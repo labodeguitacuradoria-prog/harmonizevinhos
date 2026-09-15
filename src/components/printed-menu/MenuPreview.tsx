@@ -109,28 +109,34 @@ export function MenuPreview({
           maxWidth: "100%",
         }}
       >
-        <header className={t.key === "minimal" ? "mb-10" : "mb-8"}>
+        <header
+          className={`${t.key === "minimal" ? "mb-10" : "mb-8"} ${
+            layout.headerAlign === "left" ? "text-left" : "text-center"
+          }`}
+        >
           {logoUrl ? (
             <img
               src={logoUrl}
               alt={title ? `Logo ${title}` : "Logo do restaurante"}
               className={`mb-4 h-[18mm] w-auto object-contain ${
-                t.key === "minimal" ? "" : "mx-auto"
+                t.key === "minimal" ? "" : layout.headerAlign === "center" ? "mx-auto" : ""
               }`}
             />
           ) : null}
           {title ? <h1 className={t.headerTitle}>{title}</h1> : null}
           {subtitle ? <div className={t.headerSubtitle}>{subtitle}</div> : null}
           {addressInHeader ? (
-            <div
-              className={`mt-2 whitespace-pre-line text-[8pt] leading-snug text-black/70 ${
-                t.key === "minimal" ? "" : "text-center"
-              }`}
-            >
+            <div className="mt-2 whitespace-pre-line text-[8pt] leading-snug text-black/70">
               {address}
             </div>
           ) : null}
-          {t.key === "classic" ? <div className="mx-auto mt-4 h-px w-24 bg-black/70" /> : null}
+          {t.key === "classic" ? (
+            <div
+              className={`mt-4 h-px w-24 bg-black/70 ${
+                layout.headerAlign === "left" ? "" : "mx-auto"
+              }`}
+            />
+          ) : null}
         </header>
 
         <div className={twoCols ? "[column-count:2] [column-gap:10mm]" : ""}>

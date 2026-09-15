@@ -96,6 +96,28 @@ export function MenuPreview({
   const addressInHeader = !!address && addressPosition === "header";
   const addressInFooter = !!address && addressPosition === "footer";
 
+  const textAlign = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+  } as const;
+  const justifyAlign = {
+    left: "justify-start",
+    center: "justify-center",
+    right: "justify-end",
+  } as const;
+
+  const logoPosClass =
+    t.key === "minimal"
+      ? ""
+      : layout.headerAlign === "center"
+        ? "mx-auto"
+        : layout.headerAlign === "right"
+          ? "ml-auto"
+          : "";
+  const rulePosClass =
+    layout.headerAlign === "left" ? "" : layout.headerAlign === "right" ? "ml-auto" : "mx-auto";
+
   return (
     <div id="print-area" className="printed-menu mx-auto w-full" style={{ maxWidth: `${p.widthMm}mm` }}>
       {/* Define o tamanho da folha na impressão de acordo com a escolha do usuário */}
@@ -109,18 +131,12 @@ export function MenuPreview({
           maxWidth: "100%",
         }}
       >
-        <header
-          className={`${t.key === "minimal" ? "mb-10" : "mb-8"} ${
-            layout.headerAlign === "left" ? "text-left" : "text-center"
-          }`}
-        >
+        <header className={`${t.key === "minimal" ? "mb-10" : "mb-8"} ${textAlign[layout.headerAlign]}`}>
           {logoUrl ? (
             <img
               src={logoUrl}
               alt={title ? `Logo ${title}` : "Logo do restaurante"}
-              className={`mb-4 h-[18mm] w-auto object-contain ${
-                t.key === "minimal" ? "" : layout.headerAlign === "center" ? "mx-auto" : ""
-              }`}
+              className={`mb-4 h-[18mm] w-auto object-contain ${logoPosClass}`}
             />
           ) : null}
           {title ? <h1 className={t.headerTitle}>{title}</h1> : null}
@@ -131,11 +147,7 @@ export function MenuPreview({
             </div>
           ) : null}
           {t.key === "classic" ? (
-            <div
-              className={`mt-4 h-px w-24 bg-black/70 ${
-                layout.headerAlign === "left" ? "" : "mx-auto"
-              }`}
-            />
+            <div className={`mt-4 h-px w-24 bg-black/70 ${rulePosClass}`} />
           ) : null}
         </header>
 
@@ -143,7 +155,7 @@ export function MenuPreview({
           {visibleSections.map((sec) => (
             <section key={sec.id} className="mb-6 break-inside-avoid">
               <div
-                className={`${t.sectionTitle} ${t.rule} pb-1 ${layout.sectionAlign === "center" ? "text-center" : "text-left"}`}
+                className={`${t.sectionTitle} ${t.rule} pb-1 ${textAlign[layout.sectionAlign]}`}
                 style={sectionStyle}
               >
                 {sec.title}
@@ -156,9 +168,7 @@ export function MenuPreview({
                   return (
                     <li key={id} className="break-inside-avoid">
                       <div
-                        className={`relative flex items-baseline gap-2 ${
-                          layout.itemAlign === "center" ? "justify-center text-center" : "justify-start text-left"
-                        }`}
+                        className={`relative flex items-baseline gap-2 ${justifyAlign[layout.itemAlign]} ${textAlign[layout.itemAlign]}`}
                       >
                         <span className={`${t.itemName} ${layout.itemAlign === "center" ? "max-w-[78%]" : ""}`} style={nameStyle}>
                           {fields.code && w.internal_code ? (
@@ -168,7 +178,7 @@ export function MenuPreview({
                         </span>
                         {layout.pricePosition === "far" && t.dotted && fields.price ? (
                           <span className="min-w-6 flex-1 translate-y-[-3px] border-b border-dotted border-black/50" />
-                        ) : layout.pricePosition === "far" && layout.itemAlign === "left" ? (
+                        ) : layout.pricePosition === "far" && (layout.itemAlign === "left" || layout.itemAlign === "right") ? (
                           <span className="flex-1" />
                         ) : null}
                         {fields.price && w.sale_price != null ? (
@@ -184,7 +194,7 @@ export function MenuPreview({
                       </div>
                       {firstLine ? (
                         <div
-                          className={`${t.itemMeta} ${layout.itemAlign === "center" ? "text-center" : "text-left"}`}
+                          className={`${t.itemMeta} ${textAlign[layout.itemAlign]}`}
                           style={{ ...metaStyle, marginTop: `${spacing.nameGap}pt` }}
                         >
                           {firstLine}
@@ -192,7 +202,7 @@ export function MenuPreview({
                       ) : null}
                       {grapeLine ? (
                         <div
-                          className={`${t.itemMeta} ${layout.itemAlign === "center" ? "text-center" : "text-left"}`}
+                          className={`${t.itemMeta} ${textAlign[layout.itemAlign]}`}
                           style={{ ...metaStyle, marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}
                         >
                           {grapeLine}

@@ -7,6 +7,7 @@ import {
   Printer,
   Save,
   Plus,
+  Minus,
   Copy,
   Trash2,
   ChevronUp,
@@ -18,7 +19,9 @@ import {
   Check,
   ZoomIn,
   ZoomOut,
-
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
@@ -733,17 +736,17 @@ function WineMenuPage() {
               {spacingOpen && (
                 <div className="absolute left-0 top-full z-50 mt-1 w-80 rounded-xl border border-border bg-card p-3 shadow-lg">
                   <div className="grid gap-4">
-                    <SpaceSlider
+                    <SpaceStepper
                       label="Do rótulo para a linha de baixo"
                       value={spacing.nameGap}
                       onChange={(v) => setSpacing((s) => ({ ...s, nameGap: v }))}
                     />
-                    <SpaceSlider
+                    <SpaceStepper
                       label="Entre as linhas de informação"
                       value={spacing.lineGap}
                       onChange={(v) => setSpacing((s) => ({ ...s, lineGap: v }))}
                     />
-                    <SpaceSlider
+                    <SpaceStepper
                       label="Entre um rótulo e o próximo"
                       value={spacing.itemGap}
                       max={24}
@@ -827,27 +830,24 @@ function WineMenuPage() {
                   <ChevronDown className={`h-3 w-3 transition-transform ${layoutOpen ? "rotate-180" : ""}`} />
                 </button>
                 {layoutOpen && (
-                  <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
-                    <CompactChoice
+                <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
+                    <AlignChoice
                       label="Cabeçalho (título e subtítulo)"
                       value={layout.headerAlign}
-                      options={[{ value: "left", label: "Esquerda" }, { value: "center", label: "Centro" }]}
-                      onChange={(value) => setLayout((current) => ({ ...current, headerAlign: value as MenuLayout["headerAlign"] }))}
+                      onChange={(value) => setLayout((current) => ({ ...current, headerAlign: value }))}
                     />
                     <div className="mt-3">
-                      <CompactChoice
+                      <AlignChoice
                         label="Tipo de vinho"
                         value={layout.sectionAlign}
-                        options={[{ value: "left", label: "Esquerda" }, { value: "center", label: "Centro" }]}
-                        onChange={(value) => setLayout((current) => ({ ...current, sectionAlign: value as MenuLayout["sectionAlign"] }))}
+                        onChange={(value) => setLayout((current) => ({ ...current, sectionAlign: value }))}
                       />
                     </div>
                     <div className="mt-3">
-                      <CompactChoice
+                      <AlignChoice
                         label="Nome do rótulo"
                         value={layout.itemAlign}
-                        options={[{ value: "left", label: "Esquerda" }, { value: "center", label: "Centro" }]}
-                        onChange={(value) => setLayout((current) => ({ ...current, itemAlign: value as MenuLayout["itemAlign"] }))}
+                        onChange={(value) => setLayout((current) => ({ ...current, itemAlign: value }))}
                       />
                     </div>
                     <div className="mt-3">
@@ -1178,7 +1178,7 @@ function MmField({
   );
 }
 
-function SpaceSlider({
+function SpaceStepper({
   label,
   value,
   onChange,
@@ -1189,21 +1189,31 @@ function SpaceSlider({
   onChange: (v: number) => void;
   max?: number;
 }) {
+  const step = 0.5;
+  const dec = () => onChange(Math.max(0, Number((value - step).toFixed(1))));
+  const inc = () => onChange(Math.min(max, Number((value + step).toFixed(1))));
   return (
-    <div className="grid gap-1.5">
-      <label className="flex items-center justify-between text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="grid gap-2">
+      <div className="flex items-center justify-between text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
         <span>{label}</span>
-        <span className="tabular-nums text-primary">{value}</span>
-      </label>
-      <input
-        type="range"
-        min={0}
-        max={max}
-        step={0.5}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="accent-primary"
-      />
+        <span className="tabular-nums text-primary">{value}pt</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={dec}
+          title="Diminuir"
+          className="inline-flex h-8 w-8 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary hover:text-primary"
+        >
+          <Minus className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={inc}
+          title="Aumentar"
+          className="inline-flex h-8 w-8 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary hover:text-primary"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -1280,6 +1290,46 @@ function CompactChoice({
             {option.label}
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function AlignChoice({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: MenuLayout["headerAlign"];
+  onChange: (value: MenuLayout["headerAlign"]) => void;
+}) {
+  const options = [
+    { value: "left", icon: AlignLeft, title: "Esquerda" },
+    { value: "center", icon: AlignCenter, title: "Centro" },
+    { value: "right", icon: AlignRight, title: "Direita" },
+  ] as const;
+  return (
+    <div>
+      <div className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="flex items-center gap-2">
+        {options.map((option) => {
+          const Icon = option.icon;
+          return (
+            <button
+              key={option.value}
+              onClick={() => onChange(option.value)}
+              title={option.title}
+              className={`inline-flex h-8 flex-1 items-center justify-center rounded border transition-colors ${
+                value === option.value
+                  ? "border-primary bg-accent text-primary"
+                  : "border-border text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+            </button>
+          );
+        })}
       </div>
     </div>
   );

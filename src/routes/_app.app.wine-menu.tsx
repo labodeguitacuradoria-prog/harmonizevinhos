@@ -683,11 +683,15 @@ function WineMenuPage() {
                 </label>
               ))}
             </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
             {fields.price ? (
-              <div className="relative mt-4" data-price-format-dropdown>
+              <div className="relative" data-price-format-dropdown>
                 <button
                   onClick={() => setPriceFormatOpen((v) => !v)}
-                  className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                  aria-expanded={priceFormatOpen}
+                  className={`inline-flex h-9 w-full items-center justify-between gap-1.5 rounded border px-2.5 text-[10px] uppercase tracking-wide transition-colors hover:bg-accent ${
+                    priceFormatOpen ? "border-primary bg-accent text-primary" : "border-border text-muted-foreground"
+                  }`}
                 >
                   Formato do preço
                   <ChevronDown className={`h-3 w-3 transition-transform ${priceFormatOpen ? "rotate-180" : ""}`} />
@@ -715,12 +719,15 @@ function WineMenuPage() {
                 )}
               </div>
             ) : null}
-            <div className="relative mt-4" data-spacing-dropdown>
+            <div className="relative" data-spacing-dropdown>
               <button
                 onClick={() => setSpacingOpen((v) => !v)}
-                className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                aria-expanded={spacingOpen}
+                className={`inline-flex h-9 w-full items-center justify-between gap-1.5 rounded border px-2.5 text-[10px] uppercase tracking-wide transition-colors hover:bg-accent ${
+                  spacingOpen ? "border-primary bg-accent text-primary" : "border-border text-muted-foreground"
+                }`}
               >
-                Espaçamento das linhas
+                Espaçamento
                 <ChevronDown className={`h-3 w-3 transition-transform ${spacingOpen ? "rotate-180" : ""}`} />
               </button>
               {spacingOpen && (
@@ -752,10 +759,13 @@ function WineMenuPage() {
                 </div>
               )}
             </div>
-            <div className="relative mt-3" data-font-dropdown>
+            <div className="relative" data-font-dropdown>
               <button
                 onClick={() => setFontOpen((v) => !v)}
-                className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                aria-expanded={fontOpen}
+                className={`inline-flex h-9 w-full items-center justify-between gap-1.5 rounded border px-2.5 text-[10px] uppercase tracking-wide transition-colors hover:bg-accent ${
+                  fontOpen ? "border-primary bg-accent text-primary" : "border-border text-muted-foreground"
+                }`}
               >
                 Fontes e tamanhos
                 <ChevronDown className={`h-3 w-3 transition-transform ${fontOpen ? "rotate-180" : ""}`} />
@@ -805,11 +815,13 @@ function WineMenuPage() {
                 </div>
               )}
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
               <div className="relative" data-layout-dropdown>
                 <button
                   onClick={() => setLayoutOpen((v) => !v)}
-                  className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                  aria-expanded={layoutOpen}
+                  className={`inline-flex h-9 w-full items-center justify-between gap-1.5 rounded border px-2.5 text-[10px] uppercase tracking-wide transition-colors hover:bg-accent ${
+                    layoutOpen ? "border-primary bg-accent text-primary" : "border-border text-muted-foreground"
+                  }`}
                 >
                   Alinhamento e preço
                   <ChevronDown className={`h-3 w-3 transition-transform ${layoutOpen ? "rotate-180" : ""}`} />
@@ -858,7 +870,10 @@ function WineMenuPage() {
               <div className="relative" data-margins-dropdown>
                 <button
                   onClick={() => setMarginsOpen((v) => !v)}
-                  className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                  aria-expanded={marginsOpen}
+                  className={`inline-flex h-9 w-full items-center justify-between gap-1.5 rounded border px-2.5 text-[10px] uppercase tracking-wide transition-colors hover:bg-accent ${
+                    marginsOpen ? "border-primary bg-accent text-primary" : "border-border text-muted-foreground"
+                  }`}
                 >
                   Margens da página
                   <ChevronDown className={`h-3 w-3 transition-transform ${marginsOpen ? "rotate-180" : ""}`} />

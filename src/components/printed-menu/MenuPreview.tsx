@@ -96,6 +96,28 @@ export function MenuPreview({
   const addressInHeader = !!address && addressPosition === "header";
   const addressInFooter = !!address && addressPosition === "footer";
 
+  const textAlign = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+  } as const;
+  const justifyAlign = {
+    left: "justify-start",
+    center: "justify-center",
+    right: "justify-end",
+  } as const;
+
+  const logoPosClass =
+    t.key === "minimal"
+      ? ""
+      : layout.headerAlign === "center"
+        ? "mx-auto"
+        : layout.headerAlign === "right"
+          ? "ml-auto"
+          : "";
+  const rulePosClass =
+    layout.headerAlign === "left" ? "" : layout.headerAlign === "right" ? "ml-auto" : "mx-auto";
+
   return (
     <div id="print-area" className="printed-menu mx-auto w-full" style={{ maxWidth: `${p.widthMm}mm` }}>
       {/* Define o tamanho da folha na impressão de acordo com a escolha do usuário */}
@@ -109,18 +131,12 @@ export function MenuPreview({
           maxWidth: "100%",
         }}
       >
-        <header
-          className={`${t.key === "minimal" ? "mb-10" : "mb-8"} ${
-            layout.headerAlign === "left" ? "text-left" : "text-center"
-          }`}
-        >
+        <header className={`${t.key === "minimal" ? "mb-10" : "mb-8"} ${textAlign[layout.headerAlign]}`}>
           {logoUrl ? (
             <img
               src={logoUrl}
               alt={title ? `Logo ${title}` : "Logo do restaurante"}
-              className={`mb-4 h-[18mm] w-auto object-contain ${
-                t.key === "minimal" ? "" : layout.headerAlign === "center" ? "mx-auto" : ""
-              }`}
+              className={`mb-4 h-[18mm] w-auto object-contain ${logoPosClass}`}
             />
           ) : null}
           {title ? <h1 className={t.headerTitle}>{title}</h1> : null}
@@ -131,11 +147,7 @@ export function MenuPreview({
             </div>
           ) : null}
           {t.key === "classic" ? (
-            <div
-              className={`mt-4 h-px w-24 bg-black/70 ${
-                layout.headerAlign === "left" ? "" : "mx-auto"
-              }`}
-            />
+            <div className={`mt-4 h-px w-24 bg-black/70 ${rulePosClass}`} />
           ) : null}
         </header>
 

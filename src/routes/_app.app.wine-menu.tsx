@@ -1178,7 +1178,7 @@ function MmField({
   );
 }
 
-function SpaceSlider({
+function SpaceStepper({
   label,
   value,
   onChange,
@@ -1189,21 +1189,31 @@ function SpaceSlider({
   onChange: (v: number) => void;
   max?: number;
 }) {
+  const step = 0.5;
+  const dec = () => onChange(Math.max(0, Number((value - step).toFixed(1))));
+  const inc = () => onChange(Math.min(max, Number((value + step).toFixed(1))));
   return (
-    <div className="grid gap-1.5">
-      <label className="flex items-center justify-between text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="grid gap-2">
+      <div className="flex items-center justify-between text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
         <span>{label}</span>
-        <span className="tabular-nums text-primary">{value}</span>
-      </label>
-      <input
-        type="range"
-        min={0}
-        max={max}
-        step={0.5}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="accent-primary"
-      />
+        <span className="tabular-nums text-primary">{value}pt</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={dec}
+          title="Diminuir"
+          className="inline-flex h-8 w-8 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary hover:text-primary"
+        >
+          <Minus className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={inc}
+          title="Aumentar"
+          className="inline-flex h-8 w-8 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary hover:text-primary"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 }

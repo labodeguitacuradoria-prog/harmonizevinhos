@@ -512,8 +512,8 @@ function CountSessionView({ session }: { session: Session }) {
 
       {/* History header (desktop only) */}
       {history.length > 0 && (
-        <div className="hidden md:flex shrink-0 items-center gap-2 border-b border-border bg-muted/30 px-6 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-          <span className="flex-1">Rótulo</span>
+        <div className="hidden shrink-0 grid-cols-[minmax(0,1fr)_auto_1.5rem_1.5rem_7rem] items-center gap-2 border-b border-border bg-muted/30 px-9 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground md:grid">
+          <span>Rótulo</span>
           <span className="flex gap-1">
             {history.map((s) => (
               <span
@@ -529,8 +529,10 @@ function CountSessionView({ session }: { session: Session }) {
                 )}
               </span>
             ))}
-            <span className="w-[126px] text-center">Contagem</span>
           </span>
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span className="text-center">Contagem</span>
         </div>
       )}
 
@@ -559,7 +561,7 @@ function CountSessionView({ session }: { session: Session }) {
                   ref={(el) => {
                     cardRefs.current[item.wine_id] = el;
                   }}
-                  className={`flex items-center gap-2 rounded-lg border bg-card px-3 py-2 transition-all ${
+                  className={`flex items-center gap-2 rounded-lg border bg-card px-3 py-2 transition-all md:grid md:grid-cols-[minmax(0,1fr)_auto_1.5rem_1.5rem_7rem] ${
                     flagged
                       ? "border-amber-500/60 bg-amber-500/[0.04]"
                       : done
@@ -613,24 +615,26 @@ function CountSessionView({ session }: { session: Session }) {
                     </div>
                   )}
 
-                  {/* Image icon (optional) */}
-                  {item.wine.image_url && (
+                  {/* Fixed image column keeps history and count columns aligned */}
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+                    {item.wine.image_url && (
                     <button
                       type="button"
                       onClick={() => setZoomImg(item.wine.image_url!)}
-                      className="shrink-0 rounded p-1 text-primary hover:bg-accent hover:text-foreground"
+                      className="rounded p-1 text-primary hover:bg-accent hover:text-foreground"
                       title="Ver rótulo"
                       aria-label="Ver rótulo"
                     >
                       <ImageIcon className="h-4 w-4" />
                     </button>
-                  )}
+                    )}
+                  </div>
 
                   {/* Flag button */}
                   <button
                     type="button"
                     onClick={() => setFlagFor(item)}
-                    className={`shrink-0 rounded p-1 hover:bg-accent ${
+                    className={`h-6 w-6 shrink-0 rounded p-1 hover:bg-accent ${
                       flagged
                         ? "text-amber-500"
                         : "text-muted-foreground hover:text-foreground"
@@ -642,7 +646,7 @@ function CountSessionView({ session }: { session: Session }) {
                   </button>
 
                   {/* Discrete controls */}
-                  <div className="flex shrink-0 items-center gap-1">
+                  <div className="flex w-28 shrink-0 items-center justify-between gap-1">
                     <button
                       type="button"
                       onClick={() =>

@@ -38,17 +38,20 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
 
   const userAgent = getRequestHeader("user-agent") ?? "";
   const detected = helpers.detectDeviceKind(userAgent);
-  if (kind) {
-    const requested = kind === "celular" ? "mobile" : "desktop";
-    if (requested !== link.device_kind) throw new helpers.AccessLinkError("invalid", "Link inválido.");
-  }
-  if (detected !== link.device_kind) {
-    throw new helpers.AccessLinkError(
-      "device_kind",
-      link.device_kind === "mobile"
-        ? "Este link é de uso exclusivo no celular. Abra-o no celular indicado."
-        : "Este link é de uso exclusivo no computador. Abra-o no computador indicado.",
-    );
+  // Fichas de treinamento podem ser abertas em qualquer aparelho.
+  if (link.scope !== "training") {
+    if (kind) {
+      const requested = kind === "celular" ? "mobile" : "desktop";
+      if (requested !== link.device_kind) throw new helpers.AccessLinkError("invalid", "Link inválido.");
+    }
+    if (detected !== link.device_kind) {
+      throw new helpers.AccessLinkError(
+        "device_kind",
+        link.device_kind === "mobile"
+          ? "Este link é de uso exclusivo no celular. Abra-o no celular indicado."
+          : "Este link é de uso exclusivo no computador. Abra-o no computador indicado.",
+      );
+    }
   }
 
   const cookieName = helpers.cookieNameFor(link.id);

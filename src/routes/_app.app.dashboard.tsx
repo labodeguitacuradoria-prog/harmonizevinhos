@@ -575,6 +575,14 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
 
   const activeLabelsCount = wines.filter((w) => w.active_on_menu !== false).length;
 
+  const stockMonthLabel = (() => {
+    const d = stockData.lastDate;
+    if (!d) return "Sem contagem";
+    const [y, m] = d.split("-").map(Number);
+    if (!y || !m) return "Sem contagem";
+    return monthLabel(y, m - 1);
+  })();
+
   const TABS: Array<{
     key: TabKey;
     label: string;

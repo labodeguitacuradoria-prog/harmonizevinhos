@@ -26,6 +26,7 @@ import {
   closeGuestCount,
 } from "@/lib/guest-access.functions";
 import { DashboardPage } from "@/routes/_app.app.dashboard";
+import StaffTraining from "@/components/training/StaffTraining";
 
 
 export const Route = createFileRoute("/acesso/$kind/$token")({
@@ -46,8 +47,10 @@ export const Route = createFileRoute("/acesso/$kind/$token")({
 function GuestAccessPage() {
   const { kind, token } = Route.useParams();
   const isStock = kind === "contagem" || kind === "estoque";
+  const isTraining = kind === "treinamento" || kind === "fichas";
   const deviceKind = kind === "desktop" ? "desktop" : "celular";
 
+  if (isTraining) return <StaffTraining token={token} />;
   if (isStock) return <GuestStock token={token} />;
   return <GuestDashboard token={token} kind={deviceKind as "celular" | "desktop"} />;
 }

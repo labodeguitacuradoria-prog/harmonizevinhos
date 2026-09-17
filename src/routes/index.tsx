@@ -62,6 +62,14 @@ const PACKS: Pack[] = [
     bullets: ["Faixas de preço e margens", "Simulações de preço", "Sugestões de rótulos por faixa"],
   },
   {
+    module: "training",
+    title: "Treinamento do Staff",
+    icon: <GraduationCap className="h-5 w-5" />,
+    description:
+      "Fichas rápidas de cada rótulo para a equipe estudar pelo celular, com linguagem de salão e desafio para fixar.",
+    bullets: ["Uma tela por rótulo", "Frase pronta para a mesa", "Desafio com pontuação"],
+  },
+  {
     module: "full",
     title: "Gestão Completa dos Vinhos",
     icon: <LayoutDashboard className="h-5 w-5" />,

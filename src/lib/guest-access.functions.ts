@@ -699,10 +699,14 @@ export const getGuestDashboardData = createServerFn({ method: "POST" })
 
 /** Fichas rápidas publicadas, para o link de treinamento do staff. */
 export const getGuestTrainingCards = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => TokenSchema.parse(d))
+  .inputValidator((d: unknown) => d as { token?: string; kind?: string })
   .handler(async ({ data }) => {
     try {
-      const { link, restaurantName } = await resolveAccess(data.token, data.kind);
+      const parsed = TokenSchema.safeParse(data);
+      if (!parsed.success) {
+        return fail({ code: "invalid", message: "Link inválido ou incompleto." });
+      }
+      const { link, restaurantName } = await resolveAccess(parsed.data.token, parsed.data.kind);
       if (link.scope !== "training") {
         return fail({ code: "scope", message: "Link sem permissão para as fichas de treinamento." });
       }

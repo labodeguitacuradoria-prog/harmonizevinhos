@@ -12,7 +12,7 @@ Um novo módulo que transforma a carta de vinhos em fichas de bolso, uma tela po
 
 ## Como é a ficha (uma tela de celular)
 
-- Foto do rótulo, nome, tipo, país e safra.
+- Topo: foto do rótulo, nome, estilo, país e preço de venda.
 - **De onde vem**: 2 a 3 frases sobre a vinícola / região, em linguagem simples.
 - **Por que esse nome**: explicação do nome do rótulo, incluindo nuances de tradução (ex.: por que "Solitude" não é "solidão").
 - **Como é na boca**: uma frase sem jargão (leve/encorpado, seco/adocicado).

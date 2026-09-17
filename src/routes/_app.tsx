@@ -113,6 +113,7 @@ function AppLayout() {
       { to: "/app/cadastros", icon: <FolderCog className="h-4 w-4" />, label: "Cadastros" },
       { to: "/app/wines", icon: <Package className="h-4 w-4" />, label: "Produtos" },
       { to: "/app/wine-menu", icon: <ScrollText className="h-4 w-4" />, label: "Carta" },
+      { to: "/app/training", icon: <GraduationCap className="h-4 w-4" />, label: "Treinamento" },
       { to: "/app/orders", icon: <ShoppingCart className="h-4 w-4" />, label: "Pedidos" },
       { to: "/app/estoque", icon: <ClipboardList className="h-4 w-4" />, label: "Estoque" },
       { to: "/app/sales", icon: <BarChart3 className="h-4 w-4" />, label: "Vendas" },

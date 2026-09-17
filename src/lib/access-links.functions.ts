@@ -13,7 +13,7 @@ async function assertCanManage(context: any, restaurantId: string) {
 const CreateSchema = z.object({
   restaurant_id: z.string().uuid(),
   label: z.string().trim().min(1).max(120),
-  scope: z.enum(["dashboard", "stock_count"]),
+  scope: z.enum(["dashboard", "stock_count", "training"]),
   device_kind: z.enum(["mobile", "desktop"]),
   single_device: z.boolean(),
   days: z.number().int().min(0).max(3650),

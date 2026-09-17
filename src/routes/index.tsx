@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTheme } from "@/hooks/use-theme";
-import { Moon, Sun, ScrollText, UtensilsCrossed, DollarSign, LayoutDashboard, Wine } from "lucide-react";
+import { Moon, Sun, ScrollText, UtensilsCrossed, DollarSign, LayoutDashboard, GraduationCap, Wine } from "lucide-react";
 import type { AppModule } from "@/lib/modules";
 
 export const Route = createFileRoute("/")({
@@ -60,6 +60,14 @@ const PACKS: Pack[] = [
     description:
       "Veja faixas de preço, margens e onde sua carta está desequilibrada, com sugestões de ajuste.",
     bullets: ["Faixas de preço e margens", "Simulações de preço", "Sugestões de rótulos por faixa"],
+  },
+  {
+    module: "training",
+    title: "Treinamento do Staff",
+    icon: <GraduationCap className="h-5 w-5" />,
+    description:
+      "Fichas rápidas de cada rótulo para a equipe estudar pelo celular, com linguagem de salão e desafio para fixar.",
+    bullets: ["Uma tela por rótulo", "Frase pronta para a mesa", "Desafio com pontuação"],
   },
   {
     module: "full",

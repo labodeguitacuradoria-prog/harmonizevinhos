@@ -1422,6 +1422,51 @@ export type Database = {
           },
         ]
       }
+      training_quiz_attempts: {
+        Row: {
+          created_at: string
+          finished_at: string
+          id: string
+          link_id: string | null
+          restaurant_id: string
+          score: number
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          finished_at?: string
+          id?: string
+          link_id?: string | null
+          restaurant_id: string
+          score?: number
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          finished_at?: string
+          id?: string
+          link_id?: string | null
+          restaurant_id?: string
+          score?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_quiz_attempts_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "access_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_quiz_attempts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1630,6 +1675,81 @@ export type Database = {
             columns: ["source_restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wine_story_cards: {
+        Row: {
+          created_at: string
+          do_not_confuse: string | null
+          fun_fact: string | null
+          generated_by_ai: boolean
+          grapes_line: string | null
+          id: string
+          making_line: string | null
+          model_notes: string | null
+          mouthfeel: string | null
+          name_meaning: string | null
+          origin_story: string | null
+          pairings: string[]
+          restaurant_id: string
+          sales_pitch: string | null
+          status: string
+          updated_at: string
+          wine_id: string
+        }
+        Insert: {
+          created_at?: string
+          do_not_confuse?: string | null
+          fun_fact?: string | null
+          generated_by_ai?: boolean
+          grapes_line?: string | null
+          id?: string
+          making_line?: string | null
+          model_notes?: string | null
+          mouthfeel?: string | null
+          name_meaning?: string | null
+          origin_story?: string | null
+          pairings?: string[]
+          restaurant_id: string
+          sales_pitch?: string | null
+          status?: string
+          updated_at?: string
+          wine_id: string
+        }
+        Update: {
+          created_at?: string
+          do_not_confuse?: string | null
+          fun_fact?: string | null
+          generated_by_ai?: boolean
+          grapes_line?: string | null
+          id?: string
+          making_line?: string | null
+          model_notes?: string | null
+          mouthfeel?: string | null
+          name_meaning?: string | null
+          origin_story?: string | null
+          pairings?: string[]
+          restaurant_id?: string
+          sales_pitch?: string | null
+          status?: string
+          updated_at?: string
+          wine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wine_story_cards_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wine_story_cards_wine_id_fkey"
+            columns: ["wine_id"]
+            isOneToOne: true
+            referencedRelation: "wines"
             referencedColumns: ["id"]
           },
         ]
@@ -1889,8 +2009,14 @@ export type Database = {
     }
     Enums: {
       access_link_device_kind: "mobile" | "desktop"
-      access_link_scope: "dashboard" | "stock_count"
-      app_module: "full" | "dashboard" | "pricing" | "printed_menu" | "pairing"
+      access_link_scope: "dashboard" | "stock_count" | "training"
+      app_module:
+        | "full"
+        | "dashboard"
+        | "pricing"
+        | "printed_menu"
+        | "pairing"
+        | "training"
       app_role:
         | "admin"
         | "restaurant"
@@ -2050,8 +2176,15 @@ export const Constants = {
   public: {
     Enums: {
       access_link_device_kind: ["mobile", "desktop"],
-      access_link_scope: ["dashboard", "stock_count"],
-      app_module: ["full", "dashboard", "pricing", "printed_menu", "pairing"],
+      access_link_scope: ["dashboard", "stock_count", "training"],
+      app_module: [
+        "full",
+        "dashboard",
+        "pricing",
+        "printed_menu",
+        "pairing",
+        "training",
+      ],
       app_role: [
         "admin",
         "restaurant",

@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type Input = {
   restaurant_id: string;
-  module: "full" | "dashboard" | "pricing" | "printed_menu" | "pairing";
+  module: "full" | "dashboard" | "pricing" | "printed_menu" | "pairing" | "training";
   enabled: boolean;
   notes?: string | null;
 };
@@ -39,7 +39,7 @@ export const setModuleEntitlement = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const VALID = ["full", "dashboard", "pricing", "printed_menu", "pairing"] as const;
+const VALID = ["full", "dashboard", "pricing", "printed_menu", "pairing", "training"] as const;
 type ModuleKey = (typeof VALID)[number];
 
 /**

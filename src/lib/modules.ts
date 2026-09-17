@@ -1,4 +1,4 @@
-export type AppModule = "full" | "dashboard" | "pricing" | "printed_menu" | "pairing";
+export type AppModule = "full" | "dashboard" | "pricing" | "printed_menu" | "pairing" | "training";
 
 export const MODULES: {
   key: AppModule;
@@ -38,6 +38,13 @@ export const MODULES: {
     description: "Estúdio de harmonização usando os rótulos da carta do restaurante.",
     route: "/app/pairings",
   },
+  {
+    key: "training",
+    label: "Treinamento do staff",
+    description:
+      "Fichas rápidas de cada rótulo para a equipe estudar pelo celular, com desafio opcional.",
+    route: "/app/training",
+  },
 ];
 
 export const MODULE_LABEL: Record<AppModule, string> = MODULES.reduce(
@@ -69,6 +76,7 @@ const ROUTE_MODULE: Record<string, AppModule> = {
   "/app/price-analysis": "pricing",
   "/app/wine-menu": "printed_menu",
   "/app/pairings": "pairing",
+  "/app/training": "training",
 };
 
 export function hasModule(modules: AppModule[], module: AppModule) {

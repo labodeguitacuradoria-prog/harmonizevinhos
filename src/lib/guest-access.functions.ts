@@ -11,7 +11,7 @@ type Resolved = {
     id: string;
     restaurant_id: string;
     label: string;
-    scope: "dashboard" | "stock_count";
+    scope: "dashboard" | "stock_count" | "training";
     device_kind: "mobile" | "desktop";
     single_device: boolean;
   };
@@ -160,7 +160,7 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
       id: link.id,
       restaurant_id: link.restaurant_id,
       label: link.label,
-      scope: link.scope as "dashboard" | "stock_count",
+      scope: link.scope as "dashboard" | "stock_count" | "training",
       device_kind: link.device_kind as "mobile" | "desktop",
       single_device: link.single_device,
     },
@@ -692,6 +692,99 @@ export const getGuestDashboardData = createServerFn({ method: "POST" })
           target_value: Number(t.target_value),
         })),
       };
+    } catch (e) {
+      return fail(e);
+    }
+  });
+
+/** Fichas rápidas publicadas, para o link de treinamento do staff. */
+export const getGuestTrainingCards = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => TokenSchema.parse(d))
+  .handler(async ({ data }) => {
+    try {
+      const { link, restaurantName } = await resolveAccess(data.token, data.kind);
+      if (link.scope !== "training") {
+        return fail({ code: "scope", message: "Link sem permissão para as fichas de treinamento." });
+      }
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      const { data: cards } = await supabaseAdmin
+        .from("wine_story_cards")
+        .select(
+          "wine_id, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse",
+        )
+        .eq("restaurant_id", link.restaurant_id)
+        .eq("status", "published");
+
+      const ids = (cards ?? []).map((c) => c.wine_id);
+      if (!ids.length) {
+        return { ok: true as const, restaurantName, linkId: link.id, cards: [] };
+      }
+
+      const { data: wines } = await supabaseAdmin
+        .from("wines")
+        .select("id, name, style, wine_type, country, sale_price, image_url, vintage, producer, volume")
+        .eq("restaurant_id", link.restaurant_id)
+        .in("id", ids);
+
+      const byId = new Map((wines ?? []).map((w) => [w.id, w]));
+      const list = (cards ?? [])
+        .map((c) => {
+          const w = byId.get(c.wine_id);
+          if (!w) return null;
+          return {
+            wine_id: c.wine_id,
+            name: w.name as string,
+            style: (w.style as string | null) ?? null,
+            wine_type: (w.wine_type as string | null) ?? null,
+            country: (w.country as string | null) ?? null,
+            producer: (w.producer as string | null) ?? null,
+            vintage: (w.vintage as number | null) ?? null,
+            volume: (w.volume as string | null) ?? null,
+            image_url: (w.image_url as string | null) ?? null,
+            sale_price: Number(w.sale_price ?? 0),
+            grapes_line: c.grapes_line,
+            making_line: c.making_line,
+            origin_story: c.origin_story,
+            name_meaning: c.name_meaning,
+            mouthfeel: c.mouthfeel,
+            pairings: (c.pairings ?? []) as string[],
+            sales_pitch: c.sales_pitch,
+            fun_fact: c.fun_fact,
+            do_not_confuse: c.do_not_confuse,
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => (a as { name: string }).name.localeCompare((b as { name: string }).name));
+
+      return { ok: true as const, restaurantName, linkId: link.id, cards: list };
+    } catch (e) {
+      return fail(e);
+    }
+  });
+
+/** Guarda a pontuação de um desafio feito pelo staff (sem dados pessoais). */
+export const saveGuestQuizAttempt = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    TokenSchema.extend({
+      score: z.number().int().min(0).max(100),
+      total: z.number().int().min(1).max(100),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { link } = await resolveAccess(data.token, data.kind);
+      if (link.scope !== "training") {
+        return fail({ code: "scope", message: "Link sem permissão para o desafio." });
+      }
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("training_quiz_attempts").insert({
+        restaurant_id: link.restaurant_id,
+        link_id: link.id,
+        score: data.score,
+        total: data.total,
+      });
+      return { ok: true as const };
     } catch (e) {
       return fail(e);
     }

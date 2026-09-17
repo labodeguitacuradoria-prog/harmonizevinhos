@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X, KeyRound } from "lucide-react";
+import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X, KeyRound, GraduationCap } from "lucide-react";
 import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
 import { canAccessRoute, type AppModule } from "@/lib/modules";
 import { useServerFn } from "@tanstack/react-start";
@@ -113,6 +113,7 @@ function AppLayout() {
       { to: "/app/cadastros", icon: <FolderCog className="h-4 w-4" />, label: "Cadastros" },
       { to: "/app/wines", icon: <Package className="h-4 w-4" />, label: "Produtos" },
       { to: "/app/wine-menu", icon: <ScrollText className="h-4 w-4" />, label: "Carta" },
+      { to: "/app/training", icon: <GraduationCap className="h-4 w-4" />, label: "Treinamento" },
       { to: "/app/orders", icon: <ShoppingCart className="h-4 w-4" />, label: "Pedidos" },
       { to: "/app/estoque", icon: <ClipboardList className="h-4 w-4" />, label: "Estoque" },
       { to: "/app/sales", icon: <BarChart3 className="h-4 w-4" />, label: "Vendas" },

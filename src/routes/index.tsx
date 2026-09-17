@@ -33,6 +33,7 @@ type Pack = {
   description: string;
   bullets: string[];
   highlight?: boolean;
+  available?: boolean;
 };
 
 const PACKS: Pack[] = [
@@ -46,12 +47,21 @@ const PACKS: Pack[] = [
     highlight: true,
   },
   {
+    module: "full",
+    title: "Gestão Completa dos Vinhos",
+    icon: <LayoutDashboard className="h-5 w-5" />,
+    description:
+      "Tudo em um só lugar: painel de controle, estoque, vendas, pedidos, fornecedores, carta e harmonização.",
+    bullets: ["Faturamento, CMV e estoque", "Contagens e pedidos", "Fornecedores e equipe"],
+  },
+  {
     module: "pairing",
     title: "Harmonização",
     icon: <UtensilsCrossed className="h-5 w-5" />,
     description:
       "Sugestões de harmonização entre os pratos do seu menu e os vinhos da sua própria carta.",
     bullets: ["Prato a prato", "Sugestões por rótulo", "Apoio ao salão e ao cliente"],
+    available: false,
   },
   {
     module: "pricing",
@@ -60,6 +70,7 @@ const PACKS: Pack[] = [
     description:
       "Veja faixas de preço, margens e onde sua carta está desequilibrada, com sugestões de ajuste.",
     bullets: ["Faixas de preço e margens", "Simulações de preço", "Sugestões de rótulos por faixa"],
+    available: false,
   },
   {
     module: "training",
@@ -68,14 +79,7 @@ const PACKS: Pack[] = [
     description:
       "Fichas rápidas de cada rótulo para a equipe estudar pelo celular, com linguagem de salão e desafio para fixar.",
     bullets: ["Uma tela por rótulo", "Frase pronta para a mesa", "Desafio com pontuação"],
-  },
-  {
-    module: "full",
-    title: "Gestão Completa dos Vinhos",
-    icon: <LayoutDashboard className="h-5 w-5" />,
-    description:
-      "Tudo em um só lugar: painel de controle, estoque, vendas, pedidos, fornecedores, carta e harmonização.",
-    bullets: ["Faturamento, CMV e estoque", "Contagens e pedidos", "Fornecedores e equipe"],
+    available: false,
   },
 ];
 
@@ -121,6 +125,7 @@ function Landing() {
         <div className="mt-8 grid items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {PACKS.map((p) => {
             const active = selected ? selected === p.module : !!p.highlight;
+            const available = p.available !== false;
             return (
             <div
               key={p.module}
@@ -144,6 +149,11 @@ function Landing() {
                   Escolhido
                 </span>
               )}
+              {!available && (
+                <span className="absolute -top-2.5 right-4 rounded-full border border-border bg-card px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Em desenvolvimento
+                </span>
+              )}
               <div className="flex items-center gap-2 text-primary">
                 {p.icon}
                 <h2 className="text-sm font-semibold leading-snug text-foreground">{p.title}</h2>
@@ -159,23 +169,47 @@ function Landing() {
                   </li>
                 ))}
               </ul>
+              {!available && (
+                <p className="mt-4 rounded-md border border-border bg-background px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
+                  Este módulo ainda está em desenvolvimento e será liberado em breve.
+                </p>
+              )}
               <div className="mt-auto space-y-2 border-t border-border pt-4">
-                <a
-                  href={`/auth?mode=signup&module=${p.module}`}
-                  onClick={() => markSelection(p.module, "signup")}
-                  aria-busy={pending === `${p.module}:signup`}
-                  className="block w-full rounded-md bg-primary px-4 py-2.5 text-center text-[12px] font-semibold text-primary-foreground transition-all duration-100 hover:opacity-90 active:scale-[0.98] active:brightness-90"
-                >
-                  {pending === `${p.module}:signup` ? "Abrindo…" : "Experimente grátis"}
-                </a>
-                <a
-                  href={`/auth?mode=signin&module=${p.module}`}
-                  onClick={() => markSelection(p.module, "signin")}
-                  aria-busy={pending === `${p.module}:signin`}
-                  className="block w-full rounded-md border border-border px-4 py-2.5 text-center text-[12px] font-semibold text-primary transition-all duration-100 hover:border-primary active:scale-[0.98] active:bg-accent"
-                >
-                  {pending === `${p.module}:signin` ? "Abrindo…" : "Entrar"}
-                </a>
+                {available ? (
+                  <>
+                    <a
+                      href={`/auth?mode=signup&module=${p.module}`}
+                      onClick={() => markSelection(p.module, "signup")}
+                      aria-busy={pending === `${p.module}:signup`}
+                      className="block w-full rounded-md bg-primary px-4 py-2.5 text-center text-[12px] font-semibold text-primary-foreground transition-all duration-100 hover:opacity-90 active:scale-[0.98] active:brightness-90"
+                    >
+                      {pending === `${p.module}:signup` ? "Abrindo…" : "Experimente grátis"}
+                    </a>
+                    <a
+                      href={`/auth?mode=signin&module=${p.module}`}
+                      onClick={() => markSelection(p.module, "signin")}
+                      aria-busy={pending === `${p.module}:signin`}
+                      className="block w-full rounded-md border border-border px-4 py-2.5 text-center text-[12px] font-semibold text-primary transition-all duration-100 hover:border-primary active:scale-[0.98] active:bg-accent"
+                    >
+                      {pending === `${p.module}:signin` ? "Abrindo…" : "Entrar"}
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <span
+                      aria-disabled="true"
+                      className="block w-full cursor-not-allowed rounded-md bg-muted px-4 py-2.5 text-center text-[12px] font-semibold text-muted-foreground opacity-70"
+                    >
+                      Experimente grátis
+                    </span>
+                    <span
+                      aria-disabled="true"
+                      className="block w-full cursor-not-allowed rounded-md border border-border px-4 py-2.5 text-center text-[12px] font-semibold text-muted-foreground opacity-70"
+                    >
+                      Entrar
+                    </span>
+                  </>
+                )}
               </div>
             </div>
             );

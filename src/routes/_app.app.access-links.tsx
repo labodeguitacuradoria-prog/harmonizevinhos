@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_app/app/access-links")({
 type LinkRow = {
   id: string;
   label: string;
-  scope: "dashboard" | "stock_count";
+  scope: "dashboard" | "stock_count" | "training";
   device_kind: "mobile" | "desktop";
   single_device: boolean;
   expires_at: string | null;
@@ -40,7 +40,9 @@ type LinkRow = {
 };
 
 function scopeLabel(s: LinkRow["scope"]) {
-  return s === "dashboard" ? "Painel de controle (leitura)" : "Contagem de estoque";
+  if (s === "dashboard") return "Painel de controle (leitura)";
+  if (s === "training") return "Fichas de treinamento do staff";
+  return "Contagem de estoque";
 }
 
 function AccessLinksPage() {
@@ -48,7 +50,7 @@ function AccessLinksPage() {
   const qc = useQueryClient();
 
   const [label, setLabel] = useState("");
-  const [scope, setScope] = useState<"dashboard" | "stock_count">("dashboard");
+  const [scope, setScope] = useState<"dashboard" | "stock_count" | "training">("dashboard");
   const [deviceKind, setDeviceKind] = useState<"mobile" | "desktop">("mobile");
   const [singleDevice, setSingleDevice] = useState(true);
   const [days, setDays] = useState(0);
@@ -116,7 +118,14 @@ function AccessLinksPage() {
           days,
         },
       });
-      const kindSeg = scope === "stock_count" ? "contagem" : deviceKind === "mobile" ? "celular" : "desktop";
+      const kindSeg =
+        scope === "stock_count"
+          ? "contagem"
+          : scope === "training"
+            ? "treinamento"
+            : deviceKind === "mobile"
+              ? "celular"
+              : "desktop";
       const url = `${publicOrigin()}/acesso/${kindSeg}/${res.token}`;
       setFresh({ url, text: buildText(url, deviceKind, singleDevice, scopeLabel(scope)) });
       setLabel("");
@@ -167,6 +176,7 @@ function AccessLinksPage() {
             >
               <option value="dashboard">Painel de controle (somente leitura)</option>
               <option value="stock_count">Contagem de estoque</option>
+              <option value="training">Fichas de treinamento do staff</option>
             </select>
           </label>
           <label className="text-xs text-muted-foreground">

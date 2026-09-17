@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import {
+  openAccessLink,
   getGuestDashboardData,
   getGuestStockSession,
   saveGuestCount,
@@ -46,12 +47,17 @@ export const Route = createFileRoute("/acesso/$kind/$token")({
 
 function GuestAccessPage() {
   const { kind, token } = Route.useParams();
-  const isStock = kind === "contagem" || kind === "estoque";
-  const isTraining = kind === "treinamento" || kind === "fichas";
   const deviceKind = kind === "desktop" ? "desktop" : "celular";
+  const { data, isLoading } = useQuery({
+    queryKey: ["guest-access", token],
+    retry: false,
+    queryFn: () => openAccessLink({ data: { token, kind: deviceKind } }),
+  });
 
-  if (isTraining) return <StaffTraining token={token} />;
-  if (isStock) return <GuestStock token={token} />;
+  if (isLoading) return <Loading />;
+  if (!data || !data.ok) return <Blocked message={data?.message ?? "Link inválido."} />;
+  if (data.scope === "training") return <StaffTraining token={token} />;
+  if (data.scope === "stock_count") return <GuestStock token={token} />;
   return <GuestDashboard token={token} kind={deviceKind as "celular" | "desktop"} />;
 }
 

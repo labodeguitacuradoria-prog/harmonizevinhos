@@ -39,7 +39,7 @@ export default function StaffTraining({ token }: { token: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ["guest-training", token],
     retry: false,
-    queryFn: () => getGuestTrainingCards({ data: { token, kind: "celular" } }),
+    queryFn: () => getGuestTrainingCards({ data: { token } }),
   });
 
   const cards = (data && data.ok ? (data.cards as Card[]) : []) ?? [];
@@ -298,7 +298,7 @@ function Quiz({ token, cards, onExit }: { token: string; cards: Card[]; onExit: 
   if (done && !saved && questions.length) {
     setSaved(true);
     saveGuestQuizAttempt({
-      data: { token, kind: "celular", score, total: questions.length },
+      data: { token, score, total: questions.length },
     }).catch(() => undefined);
   }
 

@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 
-export type LinkScope = "dashboard" | "stock_count";
+export type LinkScope = "dashboard" | "stock_count" | "training";
 export type DeviceKind = "mobile" | "desktop";
 
 export function generateToken() {

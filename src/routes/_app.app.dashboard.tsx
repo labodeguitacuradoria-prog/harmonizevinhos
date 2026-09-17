@@ -607,8 +607,8 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
       key: "estoque",
       label: "Estoque Gfas",
       primary: `${agg.stockBottles}`,
-      sub: `R$ ${fmtBRL(agg.stockValue)}`,
-      info: "Total de garrafas em adega e o valor correspondente (preço de venda) segundo a última contagem fechada.",
+      sub: stockMonthLabel,
+      info: "Total de garrafas em adega segundo a última contagem fechada. O mês indicado é o da contagem utilizada.",
     },
     {
       key: "preco",

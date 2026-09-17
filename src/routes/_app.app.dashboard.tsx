@@ -2330,6 +2330,19 @@ function EstoquePanel({
             </tr>
           )}
         </tbody>
+        {rows.length > 0 && (
+          <tfoot>
+            <tr className="border-t border-border font-semibold">
+              <td className="py-2 uppercase tracking-wider text-[10px] text-muted-foreground">Total</td>
+              <td className="py-2 text-right">
+                {rows.reduce((a, [, v]) => a + v.bottles, 0)}
+              </td>
+              <td className="py-2 text-right text-primary">
+                R$ {fmtBRL(rows.reduce((a, [, v]) => a + v.value, 0))}
+              </td>
+            </tr>
+          </tfoot>
+        )}
       </table>
     </div>
   );

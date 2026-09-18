@@ -7,8 +7,8 @@ type Props = {
 };
 
 const SAMPLE_SIZE = 420;
-const OUTPUT_WIDTH = 400;
-const OUTPUT_HEIGHT = 1000;
+const OUTPUT_WIDTH = 720;
+const OUTPUT_HEIGHT = 1800;
 const normalizedCache = new Map<string, string>();
 const normalizationJobs = new Map<string, Promise<string>>();
 
@@ -115,21 +115,33 @@ function normalizeImage(image: HTMLImageElement) {
 
   outputContext.fillStyle = "#ffffff";
   outputContext.fillRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
-  const fitScale = Math.min((OUTPUT_WIDTH * 0.96) / sw, (OUTPUT_HEIGHT * 0.985) / sh);
-  const drawWidth = sw * fitScale;
-  const drawHeight = sh * fitScale;
+  outputContext.imageSmoothingEnabled = true;
+  outputContext.imageSmoothingQuality = "high";
+
+  // Recorta a partir da imagem original (resolução total), não da amostra reduzida.
+  const ratioX = image.naturalWidth / width;
+  const ratioY = image.naturalHeight / height;
+  const fx = Math.max(0, Math.floor(sx * ratioX));
+  const fy = Math.max(0, Math.floor(sy * ratioY));
+  const fw = Math.min(image.naturalWidth - fx, Math.ceil(sw * ratioX));
+  const fh = Math.min(image.naturalHeight - fy, Math.ceil(sh * ratioY));
+  if (fw <= 0 || fh <= 0) return null;
+
+  const fitScale = Math.min((OUTPUT_WIDTH * 0.96) / fw, (OUTPUT_HEIGHT * 0.985) / fh);
+  const drawWidth = fw * fitScale;
+  const drawHeight = fh * fitScale;
   outputContext.drawImage(
-    source,
-    sx,
-    sy,
-    sw,
-    sh,
+    image,
+    fx,
+    fy,
+    fw,
+    fh,
     (OUTPUT_WIDTH - drawWidth) / 2,
     (OUTPUT_HEIGHT - drawHeight) / 2,
     drawWidth,
     drawHeight,
   );
-  return output.toDataURL("image/png");
+  return output.toDataURL("image/jpeg", 0.94);
 }
 
 function loadNormalizedImage(src: string): Promise<string> {

@@ -7,7 +7,12 @@ import { preloadNormalizedImages } from "@/components/training/NormalizedBottleI
 import { Button } from "@/components/ui/button";
 import { getGuestTrainingCards, saveGuestQuizAttempt } from "@/lib/guest-access.functions";
 
-type Card = StoryCardData & { wine_id: string; video_urls?: string[]; video_status?: string | null };
+type Card = StoryCardData & {
+  wine_id: string;
+  video_urls?: string[];
+  video_captions?: string[];
+  video_status?: string | null;
+};
 
 const TYPE_TABS: { key: string; label: string; re: RegExp | null }[] = [
   { key: "all", label: "Todos", re: null },
@@ -261,13 +266,28 @@ export default function StaffTraining({ token }: { token: string }) {
         </div>
       )}
       {showVideo && open?.video_urls?.length ? (
-        <VideoViewer title={open.name} urls={open.video_urls} onClose={() => setShowVideo(false)} />
+        <VideoViewer
+          title={open.name}
+          urls={open.video_urls}
+          captions={open.video_captions ?? []}
+          onClose={() => setShowVideo(false)}
+        />
       ) : null}
     </div>
   );
 }
 
-function VideoViewer({ title, urls, onClose }: { title: string; urls: string[]; onClose: () => void }) {
+function VideoViewer({
+  title,
+  urls,
+  captions,
+  onClose,
+}: {
+  title: string;
+  urls: string[];
+  captions: string[];
+  onClose: () => void;
+}) {
   const [part, setPart] = useState(0);
   const current = urls[part];
   if (!current) return null;
@@ -278,16 +298,23 @@ function VideoViewer({ title, urls, onClose }: { title: string; urls: string[]; 
           <h2 className="truncate text-sm font-semibold text-foreground">{title}</h2>
           <Button variant="outline" size="icon" onClick={onClose} aria-label="Fechar vídeo"><X /></Button>
         </div>
-        <video
-          key={current}
-          src={current}
-          controls
-          autoPlay
-          playsInline
-          onEnded={() => part < urls.length - 1 ? setPart((value) => value + 1) : undefined}
-          className="aspect-[9/16] w-full bg-card object-contain"
-        />
-        <div className="mt-2 text-center text-xs text-muted-foreground">Trecho {part + 1} de {urls.length}</div>
+        <div className="relative">
+          <video
+            key={current}
+            src={current}
+            controls
+            autoPlay
+            playsInline
+            onEnded={() => part < urls.length - 1 ? setPart((value) => value + 1) : undefined}
+            className="aspect-[9/16] w-full bg-card object-contain"
+          />
+          {captions[part] ? (
+            <p className="pointer-events-none absolute inset-x-2 bottom-12 rounded bg-black/60 px-2 py-1 text-center text-sm text-white">
+              {captions[part]}
+            </p>
+          ) : null}
+        </div>
+        <div className="mt-2 text-center text-xs text-muted-foreground">Cena {part + 1} de {urls.length}</div>
       </div>
     </div>
   );

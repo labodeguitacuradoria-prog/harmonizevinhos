@@ -718,7 +718,7 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
       const { data: cards } = await supabaseAdmin
         .from("wine_story_cards")
         .select(
-          "wine_id, compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, video_paths, video_published, video_status",
+          "wine_id, compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, video_paths, video_published, video_status, video_script",
         )
         .eq("restaurant_id", link.restaurant_id)
         .eq("status", "published");
@@ -765,6 +765,13 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
             fun_fact: c.fun_fact,
             do_not_confuse: c.do_not_confuse,
             video_status: c.video_status,
+            video_captions: c.video_published
+              ? (
+                  ((c.video_script as { scenes?: { caption?: string }[] } | null)?.scenes ?? []) as {
+                    caption?: string;
+                  }[]
+                ).map((s) => s.caption ?? "")
+              : [],
             video_urls: c.video_published
               ? ((c.video_paths ?? []) as string[]).map(
                   (path) => `/api/public/training-video?token=${encodeURIComponent(parsed.data.token)}&path=${encodeURIComponent(path)}`,

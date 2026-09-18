@@ -181,7 +181,7 @@ Cerca de 30 segundos em {sceneCount} cenas de 4 segundos. Escolha e ordene as fo
           <Clapperboard className="h-3.5 w-3.5" />
           {running ? "Criando vídeo..." : "Criar vídeo"}
         </button>
-        {videoStatus === "ready" ? (
+        {videoStatus === "draft" || videoStatus === "published" ? (
           <>
             <button
               onClick={() => setWatching(true)}

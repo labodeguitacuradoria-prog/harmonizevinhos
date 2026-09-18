@@ -10,11 +10,17 @@ const SAMPLE_SIZE = 420;
 const OUTPUT_WIDTH = 480;
 const OUTPUT_HEIGHT = 800;
 
-function dominantEdgeColor(data: Uint8ClampedArray, width: number, height: number) {
+function analyzeEdge(data: Uint8ClampedArray, width: number, height: number) {
   const buckets = new Map<string, { count: number; r: number; g: number; b: number }>();
+  let transparent = 0;
+  let sampled = 0;
   const add = (x: number, y: number) => {
     const index = (y * width + x) * 4;
-    if (data[index + 3] < 24) return;
+    sampled += 1;
+    if (data[index + 3] < 24) {
+      transparent += 1;
+      return;
+    }
     const r = data[index];
     const g = data[index + 1];
     const b = data[index + 2];
@@ -37,9 +43,11 @@ function dominantEdgeColor(data: Uint8ClampedArray, width: number, height: numbe
     add(width - 1, y);
   }
 
+  if (transparent > sampled * 0.55) return { transparent: true as const };
   const winner = [...buckets.values()].sort((a, b) => b.count - a.count)[0];
-  if (!winner) return null;
+  if (!winner) return { transparent: true as const };
   return {
+    transparent: false as const,
     r: winner.r / winner.count,
     g: winner.g / winner.count,
     b: winner.b / winner.count,
@@ -58,8 +66,7 @@ function normalizeImage(image: HTMLImageElement) {
   context.drawImage(image, 0, 0, width, height);
 
   const pixels = context.getImageData(0, 0, width, height).data;
-  const background = dominantEdgeColor(pixels, width, height);
-  if (!background) return null;
+  const edge = analyzeEdge(pixels, width, height);
 
   let left = width;
   let right = -1;
@@ -73,10 +80,12 @@ function normalizeImage(image: HTMLImageElement) {
       const index = (y * width + x) * 4;
       const alpha = pixels[index + 3];
       if (alpha < 24) continue;
-      const dr = pixels[index] - background.r;
-      const dg = pixels[index + 1] - background.g;
-      const db = pixels[index + 2] - background.b;
-      if (dr * dr + dg * dg + db * db <= colorTolerance) continue;
+      if (!edge.transparent) {
+        const dr = pixels[index] - edge.r;
+        const dg = pixels[index + 1] - edge.g;
+        const db = pixels[index + 2] - edge.b;
+        if (dr * dr + dg * dg + db * db <= colorTolerance) continue;
+      }
       foregroundPixels += 1;
       left = Math.min(left, x);
       right = Math.max(right, x);
@@ -89,11 +98,8 @@ function normalizeImage(image: HTMLImageElement) {
 
   const contentWidth = right - left + 1;
   const contentHeight = bottom - top + 1;
-  const fillsOriginal = contentWidth > width * 0.86 && contentHeight > height * 0.86;
-  if (fillsOriginal) return null;
-
-  const marginX = Math.max(2, Math.round(contentWidth * 0.06));
-  const marginY = Math.max(2, Math.round(contentHeight * 0.035));
+  const marginX = Math.max(2, Math.round(contentWidth * 0.04));
+  const marginY = Math.max(2, Math.round(contentHeight * 0.025));
   const sx = Math.max(0, left - marginX);
   const sy = Math.max(0, top - marginY);
   const sw = Math.min(width - sx, contentWidth + marginX * 2);
@@ -105,7 +111,9 @@ function normalizeImage(image: HTMLImageElement) {
   const outputContext = output.getContext("2d");
   if (!outputContext) return null;
 
-  const fitScale = Math.min((OUTPUT_WIDTH * 0.86) / sw, (OUTPUT_HEIGHT * 0.92) / sh);
+  outputContext.fillStyle = "#ffffff";
+  outputContext.fillRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
+  const fitScale = Math.min((OUTPUT_WIDTH * 0.82) / sw, (OUTPUT_HEIGHT * 0.94) / sh);
   const drawWidth = sw * fitScale;
   const drawHeight = sh * fitScale;
   outputContext.drawImage(

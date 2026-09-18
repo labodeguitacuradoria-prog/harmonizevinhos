@@ -46,6 +46,7 @@ import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.ind
 import { Route as AppSupplierProductsRouteImport } from './routes/_app.supplier.products'
 import { Route as AcessoKindTokenRouteImport } from './routes/acesso.$kind.$token'
 import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
+import { Route as ApiPublicTrainingImageRouteImport } from './routes/api.public.training-image'
 import { Route as ApiPublicTrainingVideoRouteImport } from './routes/api.public.training-video'
 
 const IndexRoute = IndexRouteImport.update({
@@ -233,6 +234,11 @@ const ApiPublicCatalogFileRoute = ApiPublicCatalogFileRouteImport.update({
   path: '/api/public/catalog-file',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTrainingImageRoute = ApiPublicTrainingImageRouteImport.update({
+  id: '/api/public/training-image',
+  path: '/api/public/training-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTrainingVideoRoute = ApiPublicTrainingVideoRouteImport.update({
   id: '/api/public/training-video',
   path: '/api/public/training-video',
@@ -273,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/supplier/products': typeof AppSupplierProductsRoute
   '/acesso/$kind/$token': typeof AcessoKindTokenRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
+  '/api/public/training-image': typeof ApiPublicTrainingImageRoute
   '/api/public/training-video': typeof ApiPublicTrainingVideoRoute
   '/admin/': typeof AppAdminIndexRoute
   '/app/': typeof AppAppIndexRoute
@@ -312,6 +319,7 @@ export interface FileRoutesByTo {
   '/supplier/products': typeof AppSupplierProductsRoute
   '/acesso/$kind/$token': typeof AcessoKindTokenRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
+  '/api/public/training-image': typeof ApiPublicTrainingImageRoute
   '/api/public/training-video': typeof ApiPublicTrainingVideoRoute
   '/admin': typeof AppAdminIndexRoute
   '/app': typeof AppAppIndexRoute
@@ -353,6 +361,7 @@ export interface FileRoutesById {
   '/_app/supplier/products': typeof AppSupplierProductsRoute
   '/acesso/$kind/$token': typeof AcessoKindTokenRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
+  '/api/public/training-image': typeof ApiPublicTrainingImageRoute
   '/api/public/training-video': typeof ApiPublicTrainingVideoRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/app/': typeof AppAppIndexRoute
@@ -394,6 +403,7 @@ export interface FileRouteTypes {
     | '/supplier/products'
     | '/acesso/$kind/$token'
     | '/api/public/catalog-file'
+    | '/api/public/training-image'
     | '/api/public/training-video'
     | '/admin/'
     | '/app/'
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/supplier/products'
     | '/acesso/$kind/$token'
     | '/api/public/catalog-file'
+    | '/api/public/training-image'
     | '/api/public/training-video'
     | '/admin'
     | '/app'
@@ -473,6 +484,7 @@ export interface FileRouteTypes {
     | '/_app/supplier/products'
     | '/acesso/$kind/$token'
     | '/api/public/catalog-file'
+    | '/api/public/training-image'
     | '/api/public/training-video'
     | '/_app/admin/'
     | '/_app/app/'
@@ -489,6 +501,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   AcessoKindTokenRoute: typeof AcessoKindTokenRoute
   ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
+  ApiPublicTrainingImageRoute: typeof ApiPublicTrainingImageRoute
   ApiPublicTrainingVideoRoute: typeof ApiPublicTrainingVideoRoute
 }
 
@@ -753,6 +766,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCatalogFileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/training-image': {
+      id: '/api/public/training-image'
+      path: '/api/public/training-image'
+      fullPath: '/api/public/training-image'
+      preLoaderRoute: typeof ApiPublicTrainingImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/training-video': {
       id: '/api/public/training-video'
       path: '/api/public/training-video'
@@ -837,6 +857,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   AcessoKindTokenRoute: AcessoKindTokenRoute,
   ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,
+  ApiPublicTrainingImageRoute: ApiPublicTrainingImageRoute,
   ApiPublicTrainingVideoRoute: ApiPublicTrainingVideoRoute,
 }
 export const routeTree = rootRouteImport

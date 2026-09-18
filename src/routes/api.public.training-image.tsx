@@ -56,8 +56,7 @@ export const Route = createFileRoute("/api/public/training-image")({
           const response = await fetch(imageUrl, {
             headers: {
               Accept: "image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8",
-              "User-Agent": "Mozilla/5.0 (compatible; LaBodeguitaTraining/1.0)",
-              Referer: `${imageUrl.origin}/`,
+              "User-Agent": "Mozilla/5.0",
               "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
             },
             redirect: "follow",

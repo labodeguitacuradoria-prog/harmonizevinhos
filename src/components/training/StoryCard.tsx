@@ -137,13 +137,13 @@ export default function StoryCard({ card }: { card: StoryCardData }) {
 
   return (
     <article className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border-[6px] border-training-ink bg-training-paper p-2 text-training-ink shadow-xl">
-      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,50%)_minmax(0,50%)] gap-2">
+      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,46%)_minmax(0,54%)] gap-2">
         <div className="relative flex min-h-0 flex-col justify-end overflow-hidden rounded-xl border-2 border-training-line bg-white">
           {card.image_url ? (
             <img
               src={card.image_url}
               alt={card.name}
-              className="h-full w-full object-contain object-bottom"
+              className="h-full w-full object-cover object-bottom"
             />
           ) : (
             <div className="flex h-full items-center justify-center">
@@ -151,23 +151,23 @@ export default function StoryCard({ card }: { card: StoryCardData }) {
             </div>
           )}
         </div>
-        <div className="flex min-w-0 flex-col">
-          <div className="border-b border-training-line pb-2">
+        <div className="flex min-w-0 flex-col overflow-hidden">
+          <div className="border-b border-training-line pb-1.5">
             {card.internal_code ? (
-              <div className="text-[10px] font-semibold tracking-wide text-training-wine">[{card.internal_code}]</div>
+              <div className="text-[9px] font-semibold tracking-wide text-training-wine">[{card.internal_code}]</div>
             ) : null}
-            <h2 className="text-[clamp(0.9rem,4vw,1.15rem)] font-bold leading-tight text-training-wine">
+            <h2 className="text-[clamp(0.85rem,3.8vw,1.05rem)] font-bold leading-tight text-training-wine">
               {card.name}
             </h2>
-            {card.style ? <div className="mt-1 text-[10px] font-bold uppercase tracking-wide">{card.style}</div> : null}
-            {place ? <div className="mt-0.5 text-[10px] leading-snug text-training-muted">{place}</div> : null}
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-2 text-[10px]">
+            {card.style ? <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wide">{card.style}</div> : null}
+            {place ? <div className="text-[9px] leading-snug text-training-muted">{place}</div> : null}
+            <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2 text-[9px]">
               {card.volume ? <span>{card.volume}</span> : null}
-              {price ? <strong className="text-sm text-training-wine">{price}</strong> : null}
+              {price ? <strong className="text-xs text-training-wine">{price}</strong> : null}
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-hidden pt-2">
-            <p className="line-clamp-[8] text-[clamp(0.9rem,4vw,1.1rem)] leading-[1.35]">
+          <div className="min-h-0 flex-1 overflow-y-auto pt-1.5">
+            <p className="text-[clamp(0.78rem,3.4vw,0.95rem)] leading-[1.3]">
               {summary || "Resumo em preparação."}
             </p>
           </div>

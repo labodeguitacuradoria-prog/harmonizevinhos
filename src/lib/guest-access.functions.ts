@@ -18,7 +18,7 @@ type Resolved = {
   restaurantName: string;
 };
 
-export async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promise<Resolved> {
+async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promise<Resolved> {
   const helpers = await import("@/lib/access-links.server");
   const { getCookie, setCookie, getRequestHeader } = await import("@tanstack/react-start/server");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

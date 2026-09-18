@@ -162,7 +162,7 @@ export const startTrainingVideo = createServerFn({ method: "POST" })
           wine_id: data.wine_id,
           restaurant_id: data.restaurant_id,
           video_script: { scenes } satisfies VideoScript,
-          video_status: "queued",
+          video_status: "creating",
           video_job_ids: [],
           video_paths: [],
           video_error: null,
@@ -222,7 +222,7 @@ export const advanceTrainingVideo = createServerFn({ method: "POST" })
     if (index >= scenes.length) {
       await supabaseAdmin
         .from("wine_story_cards")
-        .update({ video_status: "ready", video_updated_at: new Date().toISOString() })
+        .update({ video_status: "draft", video_updated_at: new Date().toISOString() })
         .eq("wine_id", data.wine_id);
       return { status: "ready" as const, total: scenes.length, done: scenes.length };
     }
@@ -234,7 +234,7 @@ export const advanceTrainingVideo = createServerFn({ method: "POST" })
       await supabaseAdmin
         .from("wine_story_cards")
         .update({
-          video_status: "error",
+          video_status: "failed",
           video_error: message.slice(0, 500),
           video_updated_at: new Date().toISOString(),
         })
@@ -278,7 +278,7 @@ export const advanceTrainingVideo = createServerFn({ method: "POST" })
         .from("wine_story_cards")
         .update({
           video_job_ids: jobIds,
-          video_status: "generating",
+          video_status: "processing",
           video_updated_at: new Date().toISOString(),
         })
         .eq("wine_id", data.wine_id);
@@ -325,7 +325,7 @@ export const advanceTrainingVideo = createServerFn({ method: "POST" })
       .from("wine_story_cards")
       .update({
         video_paths: paths,
-        video_status: finished ? "ready" : "generating",
+        video_status: finished ? "draft" : "processing",
         video_updated_at: new Date().toISOString(),
       })
       .eq("wine_id", data.wine_id);

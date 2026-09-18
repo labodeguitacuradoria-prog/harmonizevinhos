@@ -7,8 +7,10 @@ type Props = {
 };
 
 const SAMPLE_SIZE = 420;
-const OUTPUT_WIDTH = 480;
-const OUTPUT_HEIGHT = 800;
+const OUTPUT_WIDTH = 400;
+const OUTPUT_HEIGHT = 1000;
+const normalizedCache = new Map<string, string>();
+const normalizationJobs = new Map<string, Promise<string>>();
 
 function analyzeEdge(data: Uint8ClampedArray, width: number, height: number) {
   const buckets = new Map<string, { count: number; r: number; g: number; b: number }>();
@@ -98,8 +100,8 @@ function normalizeImage(image: HTMLImageElement) {
 
   const contentWidth = right - left + 1;
   const contentHeight = bottom - top + 1;
-  const marginX = Math.max(2, Math.round(contentWidth * 0.04));
-  const marginY = Math.max(2, Math.round(contentHeight * 0.025));
+  const marginX = Math.max(1, Math.round(contentWidth * 0.025));
+  const marginY = Math.max(1, Math.round(contentHeight * 0.012));
   const sx = Math.max(0, left - marginX);
   const sy = Math.max(0, top - marginY);
   const sw = Math.min(width - sx, contentWidth + marginX * 2);
@@ -113,7 +115,7 @@ function normalizeImage(image: HTMLImageElement) {
 
   outputContext.fillStyle = "#ffffff";
   outputContext.fillRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
-  const fitScale = Math.min((OUTPUT_WIDTH * 0.82) / sw, (OUTPUT_HEIGHT * 0.94) / sh);
+  const fitScale = Math.min((OUTPUT_WIDTH * 0.96) / sw, (OUTPUT_HEIGHT * 0.985) / sh);
   const drawWidth = sw * fitScale;
   const drawHeight = sh * fitScale;
   outputContext.drawImage(
@@ -130,27 +132,55 @@ function normalizeImage(image: HTMLImageElement) {
   return output.toDataURL("image/png");
 }
 
-export default function NormalizedBottleImage({ src, alt, className }: Props) {
-  const [displaySrc, setDisplaySrc] = useState(src);
+function loadNormalizedImage(src: string): Promise<string> {
+  const cached = normalizedCache.get(src);
+  if (cached) return Promise.resolve(cached);
+  const running = normalizationJobs.get(src);
+  if (running) return running;
 
-  useEffect(() => {
-    let active = true;
-    setDisplaySrc(src);
+  const job = new Promise<string>((resolve) => {
     const image = new Image();
     image.crossOrigin = "anonymous";
     image.onload = () => {
       try {
-        const normalized = normalizeImage(image);
-        if (active && normalized) setDisplaySrc(normalized);
+        resolve(normalizeImage(image) ?? src);
       } catch {
-        // URLs without image-analysis permission continue using the original image.
+        resolve(src);
       }
     };
+    image.onerror = () => resolve(src);
     image.src = src;
+  }).then((result) => {
+    normalizedCache.set(src, result);
+    normalizationJobs.delete(src);
+    return result;
+  });
+
+  normalizationJobs.set(src, job);
+  return job;
+}
+
+export function preloadNormalizedImages(sources: Array<string | null | undefined>) {
+  return Promise.all(sources.filter((source): source is string => Boolean(source)).map(loadNormalizedImage));
+}
+
+export default function NormalizedBottleImage({ src, alt, className }: Props) {
+  const [displaySrc, setDisplaySrc] = useState(() => normalizedCache.get(src) ?? null);
+
+  useEffect(() => {
+    let active = true;
+    setDisplaySrc(normalizedCache.get(src) ?? null);
+    void loadNormalizedImage(src).then((normalized) => {
+      if (active) setDisplaySrc(normalized);
+    });
     return () => {
       active = false;
     };
   }, [src]);
+
+  if (!displaySrc) {
+    return <div className={`${className ?? ""} animate-pulse bg-training-line/30`} aria-label={`Preparando imagem de ${alt}`} />;
+  }
 
   return <img src={displaySrc} alt={alt} className={className} />;
 }

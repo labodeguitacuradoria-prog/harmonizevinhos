@@ -27,7 +27,6 @@ export const Route = createFileRoute("/api/public/training-image")({
           .select("restaurant_id, scope, expires_at, revoked_at")
           .eq("token_hash", hashToken(token))
           .maybeSingle();
-
         const expired = link?.expires_at && new Date(link.expires_at).getTime() < Date.now();
         if (!link || link.scope !== "training" || link.revoked_at || expired) {
           return new Response("not found", { status: 404 });
@@ -39,23 +38,23 @@ export const Route = createFileRoute("/api/public/training-image")({
           .eq("restaurant_id", link.restaurant_id)
           .eq("wine_id", wineId)
           .eq("status", "published")
+          .limit(1)
           .maybeSingle();
-        if (!card) return new Response("not found", { status: 404 });
+        if (!card) return new Response("card not found", { status: 404 });
 
         const { data: wine } = await supabaseAdmin
           .from("wines")
           .select("image_url")
           .eq("id", wineId)
-          .eq("restaurant_id", link.restaurant_id)
           .maybeSingle();
-        if (!wine?.image_url) return new Response("not found", { status: 404 });
+        if (!wine?.image_url) return new Response("wine image not found", { status: 404 });
 
         const storagePath = storagePathFromUrl(wine.image_url);
         let body: Blob;
         let contentType = "image/jpeg";
         if (storagePath && !storagePath.includes("..")) {
           const { data, error } = await supabaseAdmin.storage.from("product-media").download(storagePath);
-          if (error || !data) return new Response("not found", { status: 404 });
+          if (error || !data) return new Response("stored image not found", { status: 404 });
           body = data;
           contentType = data.type || contentType;
         } else {
@@ -67,10 +66,14 @@ export const Route = createFileRoute("/api/public/training-image")({
           }
           if (imageUrl.protocol !== "https:") return new Response("invalid image", { status: 400 });
           const response = await fetch(imageUrl, {
-            headers: { Accept: "image/avif,image/webp,image/png,image/jpeg" },
+            headers: {
+              Accept: "image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8",
+              "User-Agent": "Mozilla/5.0",
+              "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+            },
             redirect: "follow",
           });
-          if (!response.ok) return new Response("not found", { status: 404 });
+          if (!response.ok) return Response.redirect(wine.image_url, 302);
           const fetchedType = response.headers.get("content-type") ?? "";
           if (!fetchedType.startsWith("image/")) return new Response("invalid image", { status: 415 });
           body = await response.blob();

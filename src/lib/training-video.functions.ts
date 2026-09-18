@@ -366,7 +366,7 @@ export const getTrainingVideoPreview = createServerFn({ method: "POST" })
       .eq("restaurant_id", data.restaurant_id)
       .eq("wine_id", data.wine_id)
       .maybeSingle();
-    const paths = ((card?.video_paths ?? []) as string[]) ?? [];
+    const paths = (card?.video_paths ?? []) as string[];
     const captions = (((card?.video_script as VideoScript | null)?.scenes ?? []) as SceneScript[]).map(
       (s) => s.caption,
     );

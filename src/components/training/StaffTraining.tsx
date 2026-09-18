@@ -7,7 +7,12 @@ import { preloadNormalizedImages } from "@/components/training/NormalizedBottleI
 import { Button } from "@/components/ui/button";
 import { getGuestTrainingCards, saveGuestQuizAttempt } from "@/lib/guest-access.functions";
 
-type Card = StoryCardData & { wine_id: string; video_urls?: string[]; video_status?: string | null };
+type Card = StoryCardData & {
+  wine_id: string;
+  video_urls?: string[];
+  video_captions?: string[];
+  video_status?: string | null;
+};
 
 const TYPE_TABS: { key: string; label: string; re: RegExp | null }[] = [
   { key: "all", label: "Todos", re: null },

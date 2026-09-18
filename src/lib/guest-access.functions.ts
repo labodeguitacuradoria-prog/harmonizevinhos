@@ -751,7 +751,7 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
             vintage: (w.vintage as number | null) ?? null,
             volume: (w.volume as string | null) ?? null,
             image_url: w.image_url
-              ? `/api/public/catalog-file?u=${encodeURIComponent(w.image_url as string)}`
+              ? `/api/public/training-image?token=${encodeURIComponent(parsed.data.token)}&wine=${encodeURIComponent(c.wine_id)}`
               : null,
             sale_price: Number(w.sale_price ?? 0),
             compact_summary: c.compact_summary,

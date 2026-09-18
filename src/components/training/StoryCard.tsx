@@ -143,7 +143,7 @@ export default function StoryCard({ card }: { card: StoryCardData }) {
             <img
               src={card.image_url}
               alt={card.name}
-              className="h-full w-full object-cover object-bottom"
+              className="h-full w-full object-contain object-center"
             />
           ) : (
             <div className="flex h-full items-center justify-center">

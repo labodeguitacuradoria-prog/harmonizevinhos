@@ -46,7 +46,6 @@ export const Route = createFileRoute("/api/public/training-image")({
           .from("wines")
           .select("image_url")
           .eq("id", wineId)
-          .eq("restaurant_id", link.restaurant_id)
           .maybeSingle();
         if (!wine?.image_url) return new Response("not found", { status: 404 });
 

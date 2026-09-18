@@ -152,14 +152,22 @@ export default function StaffTraining({ token }: { token: string }) {
           <div className="mt-3 flex items-center justify-between gap-2 pb-6">
             <button
               disabled={openIndex === 0}
-              onClick={() => setOpenIndex((i) => Math.max(0, (i ?? 0) - 1))}
+              onClick={() => {
+                setOpenIndex((i) => Math.max(0, (i ?? 0) - 1));
+                setShowDetails(false);
+                setShowVideo(false);
+              }}
               className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs text-primary disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" /> Anterior
             </button>
             <button
               disabled={openIndex === filtered.length - 1}
-              onClick={() => setOpenIndex((i) => Math.min(filtered.length - 1, (i ?? 0) + 1))}
+              onClick={() => {
+                setOpenIndex((i) => Math.min(filtered.length - 1, (i ?? 0) + 1));
+                setShowDetails(false);
+                setShowVideo(false);
+              }}
               className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs text-primary disabled:opacity-40"
             >
               Próximo <ChevronRight className="h-4 w-4" />

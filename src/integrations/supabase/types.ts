@@ -1681,6 +1681,7 @@ export type Database = {
       }
       wine_story_cards: {
         Row: {
+          compact_summary: string | null
           created_at: string
           do_not_confuse: string | null
           fun_fact: string | null
@@ -1697,9 +1698,17 @@ export type Database = {
           sales_pitch: string | null
           status: string
           updated_at: string
+          video_error: string | null
+          video_job_ids: string[]
+          video_paths: string[]
+          video_published: boolean
+          video_script: Json | null
+          video_status: string
+          video_updated_at: string | null
           wine_id: string
         }
         Insert: {
+          compact_summary?: string | null
           created_at?: string
           do_not_confuse?: string | null
           fun_fact?: string | null
@@ -1716,9 +1725,17 @@ export type Database = {
           sales_pitch?: string | null
           status?: string
           updated_at?: string
+          video_error?: string | null
+          video_job_ids?: string[]
+          video_paths?: string[]
+          video_published?: boolean
+          video_script?: Json | null
+          video_status?: string
+          video_updated_at?: string | null
           wine_id: string
         }
         Update: {
+          compact_summary?: string | null
           created_at?: string
           do_not_confuse?: string | null
           fun_fact?: string | null
@@ -1735,6 +1752,13 @@ export type Database = {
           sales_pitch?: string | null
           status?: string
           updated_at?: string
+          video_error?: string | null
+          video_job_ids?: string[]
+          video_paths?: string[]
+          video_published?: boolean
+          video_script?: Json | null
+          video_status?: string
+          video_updated_at?: string | null
           wine_id?: string
         }
         Relationships: [

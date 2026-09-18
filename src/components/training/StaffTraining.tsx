@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sun, Moon, X, ChevronLeft, ChevronRight, Trophy, Check, Wine as WineIcon, Search } from "lucide-react";
+import { Sun, Moon, X, ChevronLeft, ChevronRight, Trophy, Check, Wine as WineIcon, Search, BookOpen, PlayCircle } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
-import StoryCard, { type StoryCardData } from "@/components/training/StoryCard";
+import StoryCard, { DetailedStoryCard, type StoryCardData } from "@/components/training/StoryCard";
+import { Button } from "@/components/ui/button";
 import { getGuestTrainingCards, saveGuestQuizAttempt } from "@/lib/guest-access.functions";
 
-type Card = StoryCardData & { wine_id: string };
+type Card = StoryCardData & { wine_id: string; video_urls?: string[]; video_status?: string | null };
 
 const TYPE_TABS: { key: string; label: string; re: RegExp | null }[] = [
   { key: "all", label: "Todos", re: null },
@@ -35,6 +36,8 @@ export default function StaffTraining({ token }: { token: string }) {
     typeof window === "undefined" ? [] : loadStudied(),
   );
   const [quiz, setQuiz] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["guest-training", token],
@@ -135,18 +138,36 @@ export default function StaffTraining({ token }: { token: string }) {
               <Check className="h-3.5 w-3.5" /> Estudado
             </button>
           </div>
-          <StoryCard card={open} />
+          {showDetails ? <DetailedStoryCard card={open} /> : <StoryCard card={open} />}
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowDetails((value) => !value)}>
+              <BookOpen /> {showDetails ? "Ver ficha rápida" : "Ver mais informações"}
+            </Button>
+            {open.video_urls?.length ? (
+              <Button size="sm" onClick={() => setShowVideo(true)}>
+                <PlayCircle /> Assistir em 30 segundos
+              </Button>
+            ) : <div />}
+          </div>
           <div className="mt-3 flex items-center justify-between gap-2 pb-6">
             <button
               disabled={openIndex === 0}
-              onClick={() => setOpenIndex((i) => Math.max(0, (i ?? 0) - 1))}
+              onClick={() => {
+                setOpenIndex((i) => Math.max(0, (i ?? 0) - 1));
+                setShowDetails(false);
+                setShowVideo(false);
+              }}
               className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs text-primary disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" /> Anterior
             </button>
             <button
               disabled={openIndex === filtered.length - 1}
-              onClick={() => setOpenIndex((i) => Math.min(filtered.length - 1, (i ?? 0) + 1))}
+              onClick={() => {
+                setOpenIndex((i) => Math.min(filtered.length - 1, (i ?? 0) + 1));
+                setShowDetails(false);
+                setShowVideo(false);
+              }}
               className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs text-primary disabled:opacity-40"
             >
               Próximo <ChevronRight className="h-4 w-4" />
@@ -194,7 +215,7 @@ export default function StaffTraining({ token }: { token: string }) {
             {filtered.map((c, i) => (
               <li key={c.wine_id}>
                 <button
-                  onClick={() => setOpenIndex(i)}
+                  onClick={() => { setOpenIndex(i); setShowDetails(false); setShowVideo(false); }}
                   className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-2 text-left"
                 >
                   <div className="flex h-16 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-background">
@@ -226,6 +247,35 @@ export default function StaffTraining({ token }: { token: string }) {
           </ul>
         </div>
       )}
+      {showVideo && open?.video_urls?.length ? (
+        <VideoViewer title={open.name} urls={open.video_urls} onClose={() => setShowVideo(false)} />
+      ) : null}
+    </div>
+  );
+}
+
+function VideoViewer({ title, urls, onClose }: { title: string; urls: string[]; onClose: () => void }) {
+  const [part, setPart] = useState(0);
+  const current = urls[part];
+  if (!current) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-3">
+      <div className="w-full max-w-sm">
+        <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+          <h2 className="truncate text-sm font-semibold text-foreground">{title}</h2>
+          <Button variant="outline" size="icon" onClick={onClose} aria-label="Fechar vídeo"><X /></Button>
+        </div>
+        <video
+          key={current}
+          src={current}
+          controls
+          autoPlay
+          playsInline
+          onEnded={() => part < urls.length - 1 ? setPart((value) => value + 1) : undefined}
+          className="aspect-[9/16] w-full bg-card object-contain"
+        />
+        <div className="mt-2 text-center text-xs text-muted-foreground">Trecho {part + 1} de {urls.length}</div>
+      </div>
     </div>
   );
 }

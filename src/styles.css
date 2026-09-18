@@ -54,6 +54,11 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-gold: var(--gold);
   --color-wine: var(--wine);
+  --color-training-paper: var(--training-paper);
+  --color-training-ink: var(--training-ink);
+  --color-training-wine: var(--training-wine);
+  --color-training-muted: var(--training-muted);
+  --color-training-line: var(--training-line);
 }
 
 @utility line-clamp-2 {
@@ -72,6 +77,11 @@
   --card-raw: #141414;
   --surface-2: #1a1a1a;
   --text-kpi: #888888;
+  --training-paper: oklch(0.99 0.004 95);
+  --training-ink: oklch(0.18 0 0);
+  --training-wine: oklch(0.38 0.14 24);
+  --training-muted: oklch(0.55 0 0);
+  --training-line: oklch(0.45 0 0);
 
   /* Menu lateral — item ativo e acabamento em fio dourado */
   --gradient-nav-active: linear-gradient(

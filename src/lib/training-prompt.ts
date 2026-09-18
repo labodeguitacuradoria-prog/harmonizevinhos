@@ -18,6 +18,8 @@ Regras obrigatórias:
 - Uvas: escreva as castas de forma legível. Se não houver informação, escreva "Não informado".
 - Como é feito: se for espumante, diga o método (Tradicional/Champenoise, Charmat, Ancestral, Asti) em linguagem simples. Se for vinho tranquilo, diga se passou por madeira e, quando passou, o tipo de barrica e o tempo de estágio; se não passou, escreva "Sem passagem por madeira".`;
 
+export const COMPACT_SUMMARY_RULE = `- "Resumo para apresentar ao cliente": escreva um único parágrafo de 45 a 70 palavras, sem lista e sem jargão. Priorize o motivo do nome, uma curiosidade memorável e uma frase natural que o staff possa dizer à mesa. Não repita preço, volume, país ou região, pois estes dados já aparecem no cabeçalho.`;
+
 export function buildTrainingUserPrompt(w: {
   name: string;
   producer?: string | null;

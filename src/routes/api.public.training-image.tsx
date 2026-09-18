@@ -20,10 +20,22 @@ export const Route = createFileRoute("/api/public/training-image")({
         const wineId = url.searchParams.get("wine")?.trim() ?? "";
         if (token.length < 10 || !wineId) return new Response("invalid", { status: 400 });
 
+        const { hashToken } = await import("@/lib/access-links.server");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: link } = await supabaseAdmin
+          .from("access_links")
+          .select("restaurant_id, scope, expires_at, revoked_at")
+          .eq("token_hash", hashToken(token))
+          .maybeSingle();
+        const expired = link?.expires_at && new Date(link.expires_at).getTime() < Date.now();
+        if (!link || link.scope !== "training" || link.revoked_at || expired) {
+          return new Response("not found", { status: 404 });
+        }
+
         const { data: card } = await supabaseAdmin
           .from("wine_story_cards")
           .select("wine_id")
+          .eq("restaurant_id", link.restaurant_id)
           .eq("wine_id", wineId)
           .eq("status", "published")
           .limit(1)
@@ -61,7 +73,7 @@ export const Route = createFileRoute("/api/public/training-image")({
             },
             redirect: "follow",
           });
-          if (!response.ok) return new Response(`remote image unavailable (${response.status})`, { status: 404 });
+          if (!response.ok) return Response.redirect(wine.image_url, 302);
           const fetchedType = response.headers.get("content-type") ?? "";
           if (!fetchedType.startsWith("image/")) return new Response("invalid image", { status: 415 });
           body = await response.blob();

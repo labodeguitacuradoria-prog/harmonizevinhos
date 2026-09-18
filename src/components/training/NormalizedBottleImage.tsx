@@ -7,8 +7,8 @@ type Props = {
 };
 
 const SAMPLE_SIZE = 420;
-const OUTPUT_WIDTH = 400;
-const OUTPUT_HEIGHT = 1000;
+const OUTPUT_WIDTH = 720;
+const OUTPUT_HEIGHT = 1800;
 const normalizedCache = new Map<string, string>();
 const normalizationJobs = new Map<string, Promise<string>>();
 

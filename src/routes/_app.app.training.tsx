@@ -424,7 +424,7 @@ function TrainingPage() {
                 <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-primary">
                   Como a equipe vê
                 </div>
-                <div className="mx-auto max-w-[360px]">
+                <div className="mx-auto h-[min(680px,70vh)] max-w-[360px]">
                   <StoryCard card={{ ...editingWine, ...draft }} />
                 </div>
               </div>

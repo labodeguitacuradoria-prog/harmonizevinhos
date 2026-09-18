@@ -89,11 +89,8 @@ function normalizeImage(image: HTMLImageElement) {
 
   const contentWidth = right - left + 1;
   const contentHeight = bottom - top + 1;
-  const fillsOriginal = contentWidth > width * 0.86 && contentHeight > height * 0.86;
-  if (fillsOriginal) return null;
-
-  const marginX = Math.max(2, Math.round(contentWidth * 0.06));
-  const marginY = Math.max(2, Math.round(contentHeight * 0.035));
+  const marginX = Math.max(2, Math.round(contentWidth * 0.04));
+  const marginY = Math.max(2, Math.round(contentHeight * 0.025));
   const sx = Math.max(0, left - marginX);
   const sy = Math.max(0, top - marginY);
   const sw = Math.min(width - sx, contentWidth + marginX * 2);
@@ -105,7 +102,9 @@ function normalizeImage(image: HTMLImageElement) {
   const outputContext = output.getContext("2d");
   if (!outputContext) return null;
 
-  const fitScale = Math.min((OUTPUT_WIDTH * 0.86) / sw, (OUTPUT_HEIGHT * 0.92) / sh);
+  outputContext.fillStyle = "#ffffff";
+  outputContext.fillRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
+  const fitScale = Math.min((OUTPUT_WIDTH * 0.82) / sw, (OUTPUT_HEIGHT * 0.94) / sh);
   const drawWidth = sw * fitScale;
   const drawHeight = sh * fitScale;
   outputContext.drawImage(

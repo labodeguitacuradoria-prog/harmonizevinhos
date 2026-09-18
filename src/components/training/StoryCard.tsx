@@ -1,4 +1,5 @@
 import { Grape, Hammer, MapPin, BookOpen, Sparkles, Utensils, MessageSquareQuote, AlertTriangle, Wine as WineIcon } from "lucide-react";
+import NormalizedBottleImage from "@/components/training/NormalizedBottleImage";
 
 export type StoryCardData = {
   name: string;
@@ -63,7 +64,11 @@ export function DetailedStoryCard({ card }: { card: StoryCardData }) {
         <div className="flex gap-3">
           <div className="flex h-24 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-background">
             {card.image_url ? (
-              <img src={card.image_url} alt={card.name} className="h-full w-full object-contain" />
+              <NormalizedBottleImage
+                src={card.image_url}
+                alt={card.name}
+                className="h-full w-full object-contain object-center"
+              />
             ) : (
               <WineIcon className="h-6 w-6 text-muted-foreground" />
             )}
@@ -140,7 +145,7 @@ export default function StoryCard({ card }: { card: StoryCardData }) {
       <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,46%)_minmax(0,54%)] gap-2">
         <div className="relative flex min-h-0 flex-col justify-end overflow-hidden rounded-xl border-2 border-training-line bg-white">
           {card.image_url ? (
-            <img
+            <NormalizedBottleImage
               src={card.image_url}
               alt={card.name}
               className="h-full w-full object-contain object-center"

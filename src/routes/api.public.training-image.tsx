@@ -66,7 +66,10 @@ export const Route = createFileRoute("/api/public/training-image")({
           }
           if (imageUrl.protocol !== "https:") return new Response("invalid image", { status: 400 });
           const response = await fetch(imageUrl, {
-            headers: { Accept: "image/avif,image/webp,image/png,image/jpeg" },
+            headers: {
+              Accept: "image/avif,image/webp,image/png,image/jpeg,*/*;q=0.8",
+              "User-Agent": "Mozilla/5.0 (compatible; LaBodeguitaTraining/1.0)",
+            },
             redirect: "follow",
           });
           if (!response.ok) return new Response("not found", { status: 404 });

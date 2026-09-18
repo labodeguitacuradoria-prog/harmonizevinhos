@@ -119,8 +119,8 @@ export default function StaffTraining({ token }: { token: string }) {
       </header>
 
       {open ? (
-        <div className="p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="flex h-[calc(100dvh-3.25rem)] flex-col gap-2 p-3">
+          <div className="flex shrink-0 items-center justify-between gap-2">
             <button
               onClick={() => setOpenIndex(null)}
               className="rounded-md border border-border px-3 py-1.5 text-xs text-primary"
@@ -138,8 +138,16 @@ export default function StaffTraining({ token }: { token: string }) {
               <Check className="h-3.5 w-3.5" /> Estudado
             </button>
           </div>
-          {showDetails ? <DetailedStoryCard card={open} /> : <StoryCard card={open} />}
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="min-h-0 flex-1">
+            {showDetails ? (
+              <div className="h-full overflow-y-auto rounded-xl">
+                <DetailedStoryCard card={open} />
+              </div>
+            ) : (
+              <StoryCard card={open} />
+            )}
+          </div>
+          <div className="grid shrink-0 grid-cols-2 gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowDetails((value) => !value)}>
               <BookOpen /> {showDetails ? "Ver ficha rápida" : "Ver mais informações"}
             </Button>
@@ -149,7 +157,7 @@ export default function StaffTraining({ token }: { token: string }) {
               </Button>
             ) : <div />}
           </div>
-          <div className="mt-3 flex items-center justify-between gap-2 pb-6">
+          <div className="flex shrink-0 items-center justify-between gap-2 pb-1">
             <button
               disabled={openIndex === 0}
               onClick={() => {

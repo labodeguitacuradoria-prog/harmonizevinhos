@@ -44,8 +44,8 @@ export default function VideoStudio({
     setProgress(null);
   }, [data?.images, wineId]);
 
-  const sceneCount = Math.min(7, Math.max(3, chosen.length || 3));
-  const generatedScenes = Math.max(0, sceneCount - chosen.length);
+  const sceneCount = 7;
+  const generatedScenes = Math.max(0, sceneCount - Math.min(chosen.length, sceneCount));
 
   function toggle(url: string) {
     setChosen((list) => (list.includes(url) ? list.filter((u) => u !== url) : [...list, url]));
@@ -119,8 +119,8 @@ export default function VideoStudio({
         <Clapperboard className="h-3.5 w-3.5" /> Vídeo de 30 segundos
       </div>
       <p className="text-xs text-muted-foreground">
-        {sceneCount} cenas de 4 segundos. Escolha e ordene as fotos do rótulo; as cenas que
-        faltarem são criadas pela inteligência artificial.
+Cerca de 30 segundos em {sceneCount} cenas de 4 segundos. Escolha e ordene as fotos do rótulo;
+        as cenas que faltarem são criadas pela inteligência artificial.
       </p>
 
       {isLoading ? (

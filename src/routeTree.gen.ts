@@ -46,6 +46,7 @@ import { Route as AppSupplierIndexRouteImport } from './routes/_app.supplier.ind
 import { Route as AppSupplierProductsRouteImport } from './routes/_app.supplier.products'
 import { Route as AcessoKindTokenRouteImport } from './routes/acesso.$kind.$token'
 import { Route as ApiPublicCatalogFileRouteImport } from './routes/api.public.catalog-file'
+import { Route as ApiPublicTrainingVideoRouteImport } from './routes/api.public.training-video'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -232,6 +233,11 @@ const ApiPublicCatalogFileRoute = ApiPublicCatalogFileRouteImport.update({
   path: '/api/public/catalog-file',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTrainingVideoRoute = ApiPublicTrainingVideoRouteImport.update({
+  id: '/api/public/training-video',
+  path: '/api/public/training-video',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -267,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/supplier/products': typeof AppSupplierProductsRoute
   '/acesso/$kind/$token': typeof AcessoKindTokenRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
+  '/api/public/training-video': typeof ApiPublicTrainingVideoRoute
   '/admin/': typeof AppAdminIndexRoute
   '/app/': typeof AppAppIndexRoute
   '/supplier/': typeof AppSupplierIndexRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/supplier/products': typeof AppSupplierProductsRoute
   '/acesso/$kind/$token': typeof AcessoKindTokenRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
+  '/api/public/training-video': typeof ApiPublicTrainingVideoRoute
   '/admin': typeof AppAdminIndexRoute
   '/app': typeof AppAppIndexRoute
   '/supplier': typeof AppSupplierIndexRoute
@@ -345,6 +353,7 @@ export interface FileRoutesById {
   '/_app/supplier/products': typeof AppSupplierProductsRoute
   '/acesso/$kind/$token': typeof AcessoKindTokenRoute
   '/api/public/catalog-file': typeof ApiPublicCatalogFileRoute
+  '/api/public/training-video': typeof ApiPublicTrainingVideoRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/app/': typeof AppAppIndexRoute
   '/_app/supplier/': typeof AppSupplierIndexRoute
@@ -385,6 +394,7 @@ export interface FileRouteTypes {
     | '/supplier/products'
     | '/acesso/$kind/$token'
     | '/api/public/catalog-file'
+    | '/api/public/training-video'
     | '/admin/'
     | '/app/'
     | '/supplier/'
@@ -423,6 +433,7 @@ export interface FileRouteTypes {
     | '/supplier/products'
     | '/acesso/$kind/$token'
     | '/api/public/catalog-file'
+    | '/api/public/training-video'
     | '/admin'
     | '/app'
     | '/supplier'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/_app/supplier/products'
     | '/acesso/$kind/$token'
     | '/api/public/catalog-file'
+    | '/api/public/training-video'
     | '/_app/admin/'
     | '/_app/app/'
     | '/_app/supplier/'
@@ -477,6 +489,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   AcessoKindTokenRoute: typeof AcessoKindTokenRoute
   ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
+  ApiPublicTrainingVideoRoute: typeof ApiPublicTrainingVideoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -740,6 +753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCatalogFileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/training-video': {
+      id: '/api/public/training-video'
+      path: '/api/public/training-video'
+      fullPath: '/api/public/training-video'
+      preLoaderRoute: typeof ApiPublicTrainingVideoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -817,6 +837,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   AcessoKindTokenRoute: AcessoKindTokenRoute,
   ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,
+  ApiPublicTrainingVideoRoute: ApiPublicTrainingVideoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

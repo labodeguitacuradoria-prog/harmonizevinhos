@@ -20,18 +20,16 @@ export const Route = createFileRoute("/api/public/training-image")({
         const wineId = url.searchParams.get("wine")?.trim() ?? "";
         if (token.length < 10 || !wineId) return new Response("invalid", { status: 400 });
 
-        const { hashToken } = await import("@/lib/access-links.server");
+        const { resolveAccess } = await import("@/lib/guest-access.functions");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: link } = await supabaseAdmin
-          .from("access_links")
-          .select("restaurant_id, scope, expires_at, revoked_at")
-          .eq("token_hash", hashToken(token))
-          .maybeSingle();
-
-        const expired = link?.expires_at && new Date(link.expires_at).getTime() < Date.now();
-        if (!link || link.scope !== "training" || link.revoked_at || expired) {
+        let resolved;
+        try {
+          resolved = await resolveAccess(token);
+        } catch {
           return new Response("not found", { status: 404 });
         }
+        const { link } = resolved;
+        if (link.scope !== "training") return new Response("not found", { status: 404 });
 
         const { data: card } = await supabaseAdmin
           .from("wine_story_cards")

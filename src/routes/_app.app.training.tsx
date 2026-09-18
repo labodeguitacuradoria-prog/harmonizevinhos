@@ -428,6 +428,17 @@ function TrainingPage() {
                   <StoryCard card={{ ...editingWine, ...draft }} />
                 </div>
               </div>
+
+              <VideoStudio
+                restaurantId={restaurantId!}
+                wineId={editingWine.id}
+                wineName={editingWine.name}
+                videoStatus={byWine.get(editingWine.id)?.video_status}
+                videoPublished={byWine.get(editingWine.id)?.video_published}
+                onChanged={() => {
+                  void qc.invalidateQueries({ queryKey: ["training-cards", restaurantId] });
+                }}
+              />
             </div>
           ) : (
             <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">

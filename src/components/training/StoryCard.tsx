@@ -142,7 +142,7 @@ export default function StoryCard({ card }: { card: StoryCardData }) {
 
   return (
     <article className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border-[6px] border-training-ink bg-training-paper p-2 text-training-ink shadow-xl">
-      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,46%)_minmax(0,54%)] gap-2">
+      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,52%)_minmax(0,48%)] gap-2">
         <div className="relative flex min-h-0 flex-col justify-end overflow-hidden rounded-xl border-2 border-training-line bg-white">
           {card.image_url ? (
             <NormalizedBottleImage

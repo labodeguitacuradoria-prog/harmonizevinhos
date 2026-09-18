@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sun, Moon, X, ChevronLeft, ChevronRight, Trophy, Check, Wine as WineIcon, Search, BookOpen, PlayCircle } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import StoryCard, { DetailedStoryCard, type StoryCardData } from "@/components/training/StoryCard";
+import { preloadNormalizedImages } from "@/components/training/NormalizedBottleImage";
 import { Button } from "@/components/ui/button";
 import { getGuestTrainingCards, saveGuestQuizAttempt } from "@/lib/guest-access.functions";
 
@@ -46,6 +47,10 @@ export default function StaffTraining({ token }: { token: string }) {
   });
 
   const cards = (data && data.ok ? (data.cards as Card[]) : []) ?? [];
+
+  useEffect(() => {
+    if (cards.length) void preloadNormalizedImages(cards.map((card) => card.image_url));
+  }, [cards]);
 
   const filtered = useMemo(() => {
     const re = TYPE_TABS.find((t) => t.key === tab)?.re ?? null;

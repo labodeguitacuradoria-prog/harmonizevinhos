@@ -136,31 +136,37 @@ export default function StoryCard({ card }: { card: StoryCardData }) {
   const summary = card.compact_summary || card.sales_pitch || card.fun_fact || card.name_meaning;
 
   return (
-    <article className="flex h-[calc(100dvh-9.5rem)] min-h-[430px] max-h-[720px] flex-col overflow-hidden border border-training-ink bg-training-paper p-3 text-training-ink shadow-sm">
-      <div className="grid min-h-0 flex-1 grid-cols-[38%_minmax(0,1fr)] gap-3">
-        <div className="flex min-h-0 items-end justify-center overflow-hidden bg-training-paper">
+    <article className="flex h-[calc(100dvh-9.5rem)] min-h-[430px] max-h-[720px] flex-col overflow-hidden rounded-xl border-[6px] border-training-ink bg-training-paper p-2 text-training-ink shadow-lg">
+      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,52%)_minmax(0,48%)] gap-2">
+        <div className="relative flex min-h-0 flex-col justify-end overflow-hidden rounded-lg border-2 border-training-line bg-white">
           {card.image_url ? (
-            <img src={card.image_url} alt={card.name} className="h-full w-full object-contain object-bottom" />
+            <img
+              src={card.image_url}
+              alt={card.name}
+              className="h-full w-full object-contain object-bottom p-1"
+            />
           ) : (
-            <WineIcon className="h-16 w-16 text-training-muted" />
+            <div className="flex h-full items-center justify-center">
+              <WineIcon className="h-20 w-20 text-training-muted" />
+            </div>
           )}
         </div>
-        <div className="flex min-w-0 flex-col">
+        <div className="flex min-w-0 flex-col justify-between">
           <div className="border-b border-training-line pb-2">
             {card.internal_code ? (
-              <div className="text-xs font-semibold text-training-wine">[{card.internal_code}]</div>
+              <div className="text-[11px] font-semibold tracking-wide text-training-wine">[{card.internal_code}]</div>
             ) : null}
-            <h2 className="mt-1 text-[clamp(1.05rem,5vw,1.35rem)] font-bold leading-tight text-training-wine">
+            <h2 className="mt-0.5 text-[clamp(0.95rem,4.2vw,1.25rem)] font-bold leading-tight text-training-wine">
               {card.name}
             </h2>
-            {card.style ? <div className="mt-2 text-sm font-bold uppercase">{card.style}</div> : null}
-            {place ? <div className="mt-1 text-sm leading-snug">{place}</div> : null}
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-2 text-sm">
+            {card.style ? <div className="mt-1.5 text-[11px] font-bold uppercase tracking-wide">{card.style}</div> : null}
+            {place ? <div className="mt-0.5 text-[11px] leading-snug text-training-muted">{place}</div> : null}
+            <div className="mt-1 flex flex-wrap items-baseline gap-x-2 text-[11px]">
               {card.volume ? <span>{card.volume}</span> : null}
-              {price ? <strong className="text-base text-training-wine">{price}</strong> : null}
+              {price ? <strong className="text-sm text-training-wine">{price}</strong> : null}
             </div>
           </div>
-          <p className="mt-3 line-clamp-[10] text-[clamp(1rem,4.5vw,1.2rem)] leading-[1.38]">
+          <p className="mt-2 line-clamp-[7] flex-1 text-[clamp(0.95rem,4.2vw,1.15rem)] leading-[1.35]">
             {summary || "Resumo em preparação."}
           </p>
         </div>

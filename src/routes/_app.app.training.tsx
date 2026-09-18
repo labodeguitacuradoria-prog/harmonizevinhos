@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { GraduationCap, Sparkles, Save, Eye, KeyRound, Trophy, Wine as WineIcon } from "lucide-react";
+import { GraduationCap, Sparkles, Save, Eye, KeyRound, Trophy, Wine as WineIcon, ChevronDown } from "lucide-react";
 import ModuleGate from "@/components/ModuleGate";
 import StoryCard from "@/components/training/StoryCard";
 import { useAuth } from "@/hooks/use-auth";
@@ -41,9 +41,11 @@ export const Route = createFileRoute("/_app/app/training")({
 type WineRow = {
   id: string;
   name: string;
+  internal_code: string | null;
   style: string | null;
   wine_type: string | null;
   country: string | null;
+  region: string | null;
   producer: string | null;
   vintage: number | null;
   volume: string | null;
@@ -54,6 +56,7 @@ type WineRow = {
 type CardRow = {
   wine_id: string;
   status: string;
+  compact_summary: string | null;
   grapes_line: string | null;
   making_line: string | null;
   origin_story: string | null;
@@ -63,9 +66,12 @@ type CardRow = {
   sales_pitch: string | null;
   fun_fact: string | null;
   do_not_confuse: string | null;
+  video_status: string;
+  video_published: boolean;
 };
 
 const EMPTY = {
+  compact_summary: "",
   grapes_line: "",
   making_line: "",
   origin_story: "",
@@ -91,7 +97,7 @@ function TrainingPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("wines")
-        .select("id, name, style, wine_type, country, producer, vintage, volume, image_url, sale_price")
+        .select("id, name, internal_code, style, wine_type, region, country, producer, vintage, volume, image_url, sale_price")
         .eq("restaurant_id", restaurantId!)
         .eq("active_on_menu", true)
         .order("name");
@@ -107,7 +113,7 @@ function TrainingPage() {
       const { data, error } = await supabase
         .from("wine_story_cards")
         .select(
-          "wine_id, status, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse",
+          "wine_id, status, compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, video_status, video_published",
         )
         .eq("restaurant_id", restaurantId!);
       if (error) throw new Error(error.message);
@@ -137,6 +143,7 @@ function TrainingPage() {
     const c = byWine.get(wineId);
     setEditing(wineId);
     setDraft({
+      compact_summary: c?.compact_summary ?? "",
       grapes_line: c?.grapes_line ?? "",
       making_line: c?.making_line ?? "",
       origin_story: c?.origin_story ?? "",
@@ -163,12 +170,13 @@ function TrainingPage() {
         const { data } = await supabase
           .from("wine_story_cards")
           .select(
-            "wine_id, status, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse",
+            "wine_id, status, compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, video_status, video_published",
           )
           .eq("wine_id", editing)
           .maybeSingle();
         if (data) {
           setDraft({
+            compact_summary: data.compact_summary ?? "",
             grapes_line: data.grapes_line ?? "",
             making_line: data.making_line ?? "",
             origin_story: data.origin_story ?? "",
@@ -322,6 +330,7 @@ function TrainingPage() {
                     >
                       {state}
                     </span>
+                    {c?.video_published ? <span className="text-[10px] text-primary">Vídeo</span> : null}
                   </li>
                 );
               })}
@@ -336,6 +345,21 @@ function TrainingPage() {
                 Ficha de {editingWine.name}
               </div>
               <div className="mt-3 space-y-2">
+                <label className="block text-[11px] font-semibold text-primary">
+                  Resumo para apresentar ao cliente
+                  <textarea
+                    value={draft.compact_summary}
+                    onChange={(e) => setDraft((d) => ({ ...d, compact_summary: e.target.value }))}
+                    rows={4}
+                    maxLength={900}
+                    className="mt-1 w-full rounded-md border border-primary/50 bg-background p-2 text-base leading-relaxed text-foreground"
+                  />
+                </label>
+                <details className="rounded-md border border-border p-2">
+                  <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Informações complementares <ChevronDown className="h-4 w-4" />
+                  </summary>
+                  <div className="mt-3 space-y-2">
                 {(
                   [
                     ["grapes_line", "Uvas"],
@@ -369,6 +393,8 @@ function TrainingPage() {
                     className="mt-1 w-full rounded-md border border-border bg-background p-2 text-sm text-foreground"
                   />
                 </label>
+                  </div>
+                </details>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button

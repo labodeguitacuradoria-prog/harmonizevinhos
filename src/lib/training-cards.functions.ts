@@ -2,9 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { streamText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { TRAINING_SYSTEM_PROMPT, buildTrainingUserPrompt } from "./training-prompt";
+import { TRAINING_SYSTEM_PROMPT, COMPACT_SUMMARY_RULE, buildTrainingUserPrompt } from "./training-prompt";
 
 const CardSchema = z.object({
+  compact_summary: z.string(),
   grapes_line: z.string(),
   making_line: z.string(),
   origin_story: z.string(),
@@ -79,7 +80,7 @@ export const generateTrainingCards = createServerFn({ method: "POST" })
 
         const result = streamText({
           model: lovable.responses("openai/gpt-6-astra"),
-          system: TRAINING_SYSTEM_PROMPT,
+          system: `${TRAINING_SYSTEM_PROMPT}\n${COMPACT_SUMMARY_RULE}`,
           prompt: buildTrainingUserPrompt({ ...w, otherLabels }),
           output: Output.object({ schema: CardSchema }),
           providerOptions: {
@@ -102,6 +103,7 @@ export const generateTrainingCards = createServerFn({ method: "POST" })
               wine_id: w.id,
               restaurant_id: data.restaurant_id,
               status: "draft",
+              compact_summary: fields.compact_summary,
               grapes_line: fields.grapes_line,
               making_line: fields.making_line,
               origin_story: fields.origin_story,
@@ -131,6 +133,7 @@ const SaveSchema = z.object({
   restaurant_id: z.string().uuid(),
   wine_id: z.string().uuid(),
   status: z.enum(["draft", "published"]),
+  compact_summary: z.string().max(900),
   grapes_line: z.string().max(400),
   making_line: z.string().max(600),
   origin_story: z.string().max(2000),

@@ -718,7 +718,7 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
       const { data: cards } = await supabaseAdmin
         .from("wine_story_cards")
         .select(
-          "wine_id, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse",
+          "wine_id, compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, video_paths, video_published, video_status",
         )
         .eq("restaurant_id", link.restaurant_id)
         .eq("status", "published");
@@ -730,7 +730,7 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
 
       const { data: wines } = await supabaseAdmin
         .from("wines")
-        .select("id, name, style, wine_type, country, sale_price, image_url, vintage, producer, volume")
+        .select("id, name, internal_code, style, wine_type, region, country, sale_price, image_url, vintage, producer, volume")
         .eq("restaurant_id", link.restaurant_id)
         .in("id", ids);
 
@@ -742,14 +742,17 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
           return {
             wine_id: c.wine_id,
             name: w.name as string,
+            internal_code: (w.internal_code as string | null) ?? null,
             style: (w.style as string | null) ?? null,
             wine_type: (w.wine_type as string | null) ?? null,
             country: (w.country as string | null) ?? null,
+            region: (w.region as string | null) ?? null,
             producer: (w.producer as string | null) ?? null,
             vintage: (w.vintage as number | null) ?? null,
             volume: (w.volume as string | null) ?? null,
             image_url: (w.image_url as string | null) ?? null,
             sale_price: Number(w.sale_price ?? 0),
+            compact_summary: c.compact_summary,
             grapes_line: c.grapes_line,
             making_line: c.making_line,
             origin_story: c.origin_story,
@@ -759,6 +762,12 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
             sales_pitch: c.sales_pitch,
             fun_fact: c.fun_fact,
             do_not_confuse: c.do_not_confuse,
+            video_status: c.video_status,
+            video_urls: c.video_published
+              ? ((c.video_paths ?? []) as string[]).map(
+                  (path) => `/api/public/training-video?token=${encodeURIComponent(parsed.data.token)}&path=${encodeURIComponent(path)}`,
+                )
+              : [],
           };
         })
         .filter(Boolean)

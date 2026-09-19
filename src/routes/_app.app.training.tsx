@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { GraduationCap, Sparkles, Save, Eye, KeyRound, Trophy, Wine as WineIcon, ChevronDown } from "lucide-react";
 import ModuleGate from "@/components/ModuleGate";
 import StoryCard from "@/components/training/StoryCard";
-import VideoStudio from "@/components/training/VideoStudio";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -430,16 +429,6 @@ function TrainingPage() {
                 </div>
               </div>
 
-              <VideoStudio
-                restaurantId={restaurantId!}
-                wineId={editingWine.id}
-                wineName={editingWine.name}
-                videoStatus={byWine.get(editingWine.id)?.video_status}
-                videoPublished={byWine.get(editingWine.id)?.video_published}
-                onChanged={() => {
-                  void qc.invalidateQueries({ queryKey: ["training-cards", restaurantId] });
-                }}
-              />
             </div>
           ) : (
             <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">

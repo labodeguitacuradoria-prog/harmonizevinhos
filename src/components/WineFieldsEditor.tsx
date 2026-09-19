@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Trash2, Plus, Sparkles, FileText, ExternalLink, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
+import SlideshowCreator from "@/components/SlideshowCreator";
 import { WineAiExtractor } from "@/components/WineAiExtractor";
 import { NumberInput } from "@/components/NumberInput";
 import type { ExtractedWine } from "@/lib/wine-extraction.functions";
@@ -577,6 +578,13 @@ export function WineFieldsEditor({
       <div>
         <FieldLabel hint="Vídeos do YouTube, Vimeo ou outras plataformas. Renomeie o título para identificar.">Vídeos</FieldLabel>
         <div className="mt-2 space-y-2">
+          <SlideshowCreator
+            mainImage={item.image_url ?? null}
+            gallery={item.gallery_urls ?? []}
+            wineName={item.name ?? null}
+            folder={`${mediaFolder}/videos`}
+            onCreated={(v) => set("videos", [...videos, v])}
+          />
           {videos.map((v, i) => (
             <div key={i} className="grid gap-2 rounded-md border border-border bg-muted/30 p-3 md:grid-cols-[1fr_2fr_auto]">
               <input value={v.title} onChange={(e) => setVideo(i, { title: e.target.value })} placeholder="Título do vídeo"

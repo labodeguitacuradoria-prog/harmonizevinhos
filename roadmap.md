@@ -5,5 +5,6 @@
    - Usar imagens da galeria do rótulo como material.
    - Armazenar vídeos gerados no campo `videos` (`{title, url}`) do vinho.
    - Manter também vídeos externos (YouTube/Vimeo) na mesma lista.
+   - **Status: plano rejeitado — aguardando ajustes com o usuário.**
 
 ## Backlog

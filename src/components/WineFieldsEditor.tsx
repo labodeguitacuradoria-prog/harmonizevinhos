@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Trash2, Plus, Sparkles, FileText, ExternalLink, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
+import SlideshowCreator from "@/components/SlideshowCreator";
 import { WineAiExtractor } from "@/components/WineAiExtractor";
 import { NumberInput } from "@/components/NumberInput";
 import type { ExtractedWine } from "@/lib/wine-extraction.functions";

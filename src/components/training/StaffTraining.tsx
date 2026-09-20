@@ -166,6 +166,10 @@ export default function StaffTraining({ token }: { token: string }) {
               <Button size="sm" onClick={() => setShowVideo(true)}>
                 <PlayCircle /> Assistir em 30 segundos
               </Button>
+            ) : open.video_links?.length ? (
+              <Button size="sm" onClick={() => setShowLinks(true)}>
+                <PlayCircle /> Vídeos do rótulo
+              </Button>
             ) : <div />}
           </div>
           <div className="flex shrink-0 items-center justify-between gap-2 pb-1">

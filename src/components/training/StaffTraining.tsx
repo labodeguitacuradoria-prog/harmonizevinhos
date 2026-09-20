@@ -180,6 +180,7 @@ export default function StaffTraining({ token }: { token: string }) {
                 setOpenIndex((i) => Math.max(0, (i ?? 0) - 1));
                 setShowDetails(false);
                 setShowVideo(false);
+                setShowLinks(false);
               }}
               className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs text-primary disabled:opacity-40"
             >
@@ -191,6 +192,7 @@ export default function StaffTraining({ token }: { token: string }) {
                 setOpenIndex((i) => Math.min(filtered.length - 1, (i ?? 0) + 1));
                 setShowDetails(false);
                 setShowVideo(false);
+                setShowLinks(false);
               }}
               className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs text-primary disabled:opacity-40"
             >
@@ -239,7 +241,8 @@ export default function StaffTraining({ token }: { token: string }) {
             {filtered.map((c, i) => (
               <li key={c.wine_id}>
                 <button
-                  onClick={() => { setOpenIndex(i); setShowDetails(false); setShowVideo(false); }}
+                  onClick={() => { setOpenIndex(i); setShowDetails(false); setShowVideo(false);
+                setShowLinks(false); }}
                   className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-2 text-left"
                 >
                   <div className="flex h-16 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-background">

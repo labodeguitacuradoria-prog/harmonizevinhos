@@ -730,7 +730,7 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
 
       const { data: wines } = await supabaseAdmin
         .from("wines")
-        .select("id, name, internal_code, style, wine_type, region, country, sale_price, image_url, vintage, producer, volume")
+        .select("id, name, internal_code, style, wine_type, region, country, sale_price, image_url, vintage, producer, volume, videos")
         .eq("restaurant_id", link.restaurant_id)
         .in("id", ids);
 

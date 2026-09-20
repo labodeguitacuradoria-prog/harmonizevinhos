@@ -762,6 +762,7 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
           item={item as WineFields}
           onChange={(next) => onChange(next as Partial<WineCatalog>)}
           mediaFolder="catalog"
+          showSlideshow
         />
 
         <div className="mt-6 flex justify-end gap-3 border-t border-border pt-4">

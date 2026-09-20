@@ -12,6 +12,7 @@ type Card = StoryCardData & {
   video_urls?: string[];
   video_captions?: string[];
   video_status?: string | null;
+  video_links?: { title: string; url: string }[];
 };
 
 const TYPE_TABS: { key: string; label: string; re: RegExp | null }[] = [

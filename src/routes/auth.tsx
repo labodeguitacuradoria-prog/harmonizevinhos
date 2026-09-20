@@ -144,8 +144,9 @@ function AuthPage() {
         )}
 
         <button
+          type="button"
           onClick={handleGoogle}
-          disabled={loading}
+          disabled={googleBusy}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent disabled:opacity-50"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">

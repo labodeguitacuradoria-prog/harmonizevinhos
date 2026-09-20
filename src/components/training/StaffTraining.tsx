@@ -45,6 +45,7 @@ export default function StaffTraining({ token }: { token: string }) {
   const [quiz, setQuiz] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [showLinks, setShowLinks] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["guest-training", token],

@@ -86,18 +86,24 @@ function AuthPage() {
   }
 
   async function handleGoogle() {
-    setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-      extraParams: { prompt: "select_account" },
-    });
-    if (result.error) {
-      toast.error("Não foi possível entrar com Google");
-      setLoading(false);
-      return;
+    if (googleBusy) return;
+    setGoogleBusy(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+        extraParams: { prompt: "select_account" },
+      });
+      if (result.error) {
+        toast.error("Não foi possível entrar com Google. Tente novamente.");
+        return;
+      }
+      if (result.redirected) return;
+      navigate({ to: "/app" });
+    } catch {
+      toast.error("Não foi possível entrar com Google. Tente novamente.");
+    } finally {
+      setGoogleBusy(false);
     }
-    if (result.redirected) return;
-    navigate({ to: "/app" });
   }
 
   return (

@@ -37,6 +37,22 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  // Ao voltar para esta tela (inclusive pelo histórico), nenhum estado antigo
+  // pode deixar os botões travados.
+  useEffect(() => {
+    const reset = () => {
+      setLoading(false);
+      setGoogleBusy(false);
+    };
+    window.addEventListener("pageshow", reset);
+    window.addEventListener("focus", reset);
+    return () => {
+      window.removeEventListener("pageshow", reset);
+      window.removeEventListener("focus", reset);
+    };
+  }, []);
 
   useEffect(() => {
     // Quando esta página veio da escolha de um pacote, ela deve permanecer aberta
@@ -86,18 +102,24 @@ function AuthPage() {
   }
 
   async function handleGoogle() {
-    setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-      extraParams: { prompt: "select_account" },
-    });
-    if (result.error) {
-      toast.error("Não foi possível entrar com Google");
-      setLoading(false);
-      return;
+    if (googleBusy) return;
+    setGoogleBusy(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+        extraParams: { prompt: "select_account" },
+      });
+      if (result.error) {
+        toast.error("Não foi possível entrar com Google. Tente novamente.");
+        return;
+      }
+      if (result.redirected) return;
+      navigate({ to: "/app" });
+    } catch {
+      toast.error("Não foi possível entrar com Google. Tente novamente.");
+    } finally {
+      setGoogleBusy(false);
     }
-    if (result.redirected) return;
-    navigate({ to: "/app" });
   }
 
   return (
@@ -122,8 +144,9 @@ function AuthPage() {
         )}
 
         <button
+          type="button"
           onClick={handleGoogle}
-          disabled={loading}
+          disabled={googleBusy}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent disabled:opacity-50"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">

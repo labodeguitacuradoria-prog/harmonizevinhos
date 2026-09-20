@@ -271,6 +271,7 @@ export function WineFieldsEditor({
   mediaFolder = "catalog",
   showExtractor = true,
   showSuggestedPrice = true,
+  showSlideshow = false,
   generalTop,
   generalExtras,
   generalPricing,

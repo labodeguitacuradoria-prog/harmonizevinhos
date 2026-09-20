@@ -271,6 +271,7 @@ export function WineFieldsEditor({
   mediaFolder = "catalog",
   showExtractor = true,
   showSuggestedPrice = true,
+  showSlideshow = false,
   generalTop,
   generalExtras,
   generalPricing,
@@ -282,6 +283,8 @@ export function WineFieldsEditor({
   showExtractor?: boolean;
   /** Preço sugerido ao consumidor é exclusivo do catálogo global. */
   showSuggestedPrice?: boolean;
+  /** Criação de vídeo com a galeria: exclusiva do cadastro global. */
+  showSlideshow?: boolean;
   /** Bloco acima da grade (ex: busca no catálogo global). */
   generalTop?: React.ReactNode;
   /** Campos exclusivos do restaurante (código interno, status...). */
@@ -576,22 +579,34 @@ export function WineFieldsEditor({
         </div>
       </div>
       <div>
-        <FieldLabel hint="Vídeos do YouTube, Vimeo ou outras plataformas. Renomeie o título para identificar.">Vídeos</FieldLabel>
+        <FieldLabel hint="Vídeos por link (YouTube, Vimeo) ou arquivo enviado do seu computador.">Vídeos</FieldLabel>
         <div className="mt-2 space-y-2">
-          <SlideshowCreator
-            mainImage={item.image_url ?? null}
-            gallery={item.gallery_urls ?? []}
-            wineName={item.name ?? null}
-            folder={`${mediaFolder}/videos`}
-            onCreated={(v) => set("videos", [...videos, v])}
-          />
+          {showSlideshow && (
+            <SlideshowCreator
+              mainImage={item.image_url ?? null}
+              gallery={item.gallery_urls ?? []}
+              wineName={item.name ?? null}
+              folder={`${mediaFolder}/videos`}
+              onCreated={(v) => set("videos", [...videos, v])}
+            />
+          )}
           {videos.map((v, i) => (
-            <div key={i} className="grid gap-2 rounded-md border border-border bg-muted/30 p-3 md:grid-cols-[1fr_2fr_auto]">
-              <input value={v.title} onChange={(e) => setVideo(i, { title: e.target.value })} placeholder="Título do vídeo"
-                className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
-              <input value={v.url} onChange={(e) => setVideo(i, { url: e.target.value })} placeholder="https://youtube.com/..."
-                className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
-              <button type="button" onClick={() => removeVideo(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
+            <div key={i} className="space-y-2 rounded-md border border-border bg-muted/30 p-3">
+              <div className="grid gap-2 md:grid-cols-[1fr_2fr_auto]">
+                <input value={v.title} onChange={(e) => setVideo(i, { title: e.target.value })} placeholder="Título do vídeo"
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                <input value={v.url} onChange={(e) => setVideo(i, { url: e.target.value })} placeholder="https://youtube.com/..."
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                <button type="button" onClick={() => removeVideo(i)} className="rounded p-2 hover:bg-accent"><Trash2 className="h-4 w-4 text-destructive" /></button>
+              </div>
+              <MediaUploader
+                label="Ou envie o arquivo do vídeo"
+                value={/\.(mp4|webm|mov|m4v)(\?|$)/i.test(v.url ?? "") ? v.url : null}
+                onChange={(url) => setVideo(i, { url: url ?? "" })}
+                accept="video/*"
+                kind="file"
+                folder={`${mediaFolder}/videos`}
+              />
             </div>
           ))}
           <button type="button" onClick={addVideo} className="flex items-center gap-1 text-sm text-primary hover:underline"><Plus className="h-3 w-3" /> Adicionar vídeo</button>

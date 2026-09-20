@@ -22,6 +22,13 @@
       "when": 1789821797098,
       "tag": "0002_allow_wine_media_uploads",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789910014667,
+      "tag": "0003_scope_product_media_access_by_restaurant",
+      "breakpoints": true
     }
   ]
 }

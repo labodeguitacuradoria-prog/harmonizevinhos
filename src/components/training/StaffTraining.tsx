@@ -12,6 +12,7 @@ type Card = StoryCardData & {
   video_urls?: string[];
   video_captions?: string[];
   video_status?: string | null;
+  video_links?: { title: string; url: string }[];
 };
 
 const TYPE_TABS: { key: string; label: string; re: RegExp | null }[] = [
@@ -44,6 +45,7 @@ export default function StaffTraining({ token }: { token: string }) {
   const [quiz, setQuiz] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [showLinks, setShowLinks] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["guest-training", token],
@@ -165,6 +167,10 @@ export default function StaffTraining({ token }: { token: string }) {
               <Button size="sm" onClick={() => setShowVideo(true)}>
                 <PlayCircle /> Assistir em 30 segundos
               </Button>
+            ) : open.video_links?.length ? (
+              <Button size="sm" onClick={() => setShowLinks(true)}>
+                <PlayCircle /> Vídeos do rótulo
+              </Button>
             ) : <div />}
           </div>
           <div className="flex shrink-0 items-center justify-between gap-2 pb-1">
@@ -174,6 +180,7 @@ export default function StaffTraining({ token }: { token: string }) {
                 setOpenIndex((i) => Math.max(0, (i ?? 0) - 1));
                 setShowDetails(false);
                 setShowVideo(false);
+                setShowLinks(false);
               }}
               className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs text-primary disabled:opacity-40"
             >
@@ -185,6 +192,7 @@ export default function StaffTraining({ token }: { token: string }) {
                 setOpenIndex((i) => Math.min(filtered.length - 1, (i ?? 0) + 1));
                 setShowDetails(false);
                 setShowVideo(false);
+                setShowLinks(false);
               }}
               className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-xs text-primary disabled:opacity-40"
             >
@@ -233,7 +241,8 @@ export default function StaffTraining({ token }: { token: string }) {
             {filtered.map((c, i) => (
               <li key={c.wine_id}>
                 <button
-                  onClick={() => { setOpenIndex(i); setShowDetails(false); setShowVideo(false); }}
+                  onClick={() => { setOpenIndex(i); setShowDetails(false); setShowVideo(false);
+                setShowLinks(false); }}
                   className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-2 text-left"
                 >
                   <div className="flex h-16 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-background">
@@ -272,6 +281,30 @@ export default function StaffTraining({ token }: { token: string }) {
           captions={open.video_captions ?? []}
           onClose={() => setShowVideo(false)}
         />
+      ) : null}
+      {showLinks && open?.video_links?.length ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-3">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-4">
+            <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+              <h2 className="truncate text-sm font-semibold text-foreground">Vídeos — {open.name}</h2>
+              <Button variant="outline" size="icon" onClick={() => setShowLinks(false)} aria-label="Fechar"><X /></Button>
+            </div>
+            <ul className="space-y-2">
+              {open.video_links.map((v) => (
+                <li key={v.url}>
+                  <a
+                    href={v.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm text-primary"
+                  >
+                    <PlayCircle className="h-4 w-4 shrink-0" /> <span className="truncate">{v.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       ) : null}
     </div>
   );

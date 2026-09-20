@@ -37,6 +37,22 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  // Ao voltar para esta tela (inclusive pelo histórico), nenhum estado antigo
+  // pode deixar os botões travados.
+  useEffect(() => {
+    const reset = () => {
+      setLoading(false);
+      setGoogleBusy(false);
+    };
+    window.addEventListener("pageshow", reset);
+    window.addEventListener("focus", reset);
+    return () => {
+      window.removeEventListener("pageshow", reset);
+      window.removeEventListener("focus", reset);
+    };
+  }, []);
 
   useEffect(() => {
     // Quando esta página veio da escolha de um pacote, ela deve permanecer aberta

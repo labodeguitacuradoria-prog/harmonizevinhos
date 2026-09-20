@@ -283,6 +283,8 @@ export function WineFieldsEditor({
   showExtractor?: boolean;
   /** Preço sugerido ao consumidor é exclusivo do catálogo global. */
   showSuggestedPrice?: boolean;
+  /** Criação de vídeo com a galeria: exclusiva do cadastro global. */
+  showSlideshow?: boolean;
   /** Bloco acima da grade (ex: busca no catálogo global). */
   generalTop?: React.ReactNode;
   /** Campos exclusivos do restaurante (código interno, status...). */

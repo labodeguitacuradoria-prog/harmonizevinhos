@@ -282,6 +282,30 @@ export default function StaffTraining({ token }: { token: string }) {
           onClose={() => setShowVideo(false)}
         />
       ) : null}
+      {showLinks && open?.video_links?.length ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-3">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-4">
+            <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+              <h2 className="truncate text-sm font-semibold text-foreground">Vídeos — {open.name}</h2>
+              <Button variant="outline" size="icon" onClick={() => setShowLinks(false)} aria-label="Fechar"><X /></Button>
+            </div>
+            <ul className="space-y-2">
+              {open.video_links.map((v) => (
+                <li key={v.url}>
+                  <a
+                    href={v.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm text-primary"
+                  >
+                    <PlayCircle className="h-4 w-4 shrink-0" /> <span className="truncate">{v.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

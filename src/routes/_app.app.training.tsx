@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -285,12 +285,11 @@ function TrainingPage() {
         <h1 className="page-title flex items-center gap-2 text-primary">
           <GraduationCap className="h-5 w-5" /> Treinamento do staff
         </h1>
-        <Link
-          to="/app/access-links"
-          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs text-primary hover:bg-accent"
-        >
-          <KeyRound className="h-3.5 w-3.5" /> Criar link para a equipe
-        </Link>
+        <Button asChild variant="outline" size="sm" className="text-primary">
+          <Link to="/app/access-links">
+            <KeyRound className="h-3.5 w-3.5" /> Criar link para a equipe
+          </Link>
+        </Button>
       </header>
 
       <div className="text-sm text-muted-foreground">
@@ -332,26 +331,24 @@ function TrainingPage() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
               Rótulos da carta
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-6 w-6 rounded-full text-primary"
-                      aria-label="Informações sobre as fichas"
-                    >
-                      <Info className="h-3.5 w-3.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs leading-relaxed" side="right">
-                    Uma ficha de bolso por rótulo: uvas, como é feito, de onde vem, o significado do nome,
-                    com o que combina e a frase pronta para dizer na mesa. Gere com a ajuda da inteligência
-                    artificial, ajuste o texto e publique.
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-6 w-6 rounded-full text-primary"
+                    aria-label="Informações sobre as fichas"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="max-w-xs text-xs leading-relaxed">
+                  Uma ficha de bolso por rótulo: uvas, como é feito, de onde vem, o significado do nome,
+                  com o que combina e a frase pronta para dizer na mesa. Gere com a ajuda da inteligência
+                  artificial, ajuste o texto e publique.
+                </PopoverContent>
+              </Popover>
             </div>
             <span className="text-[11px] text-muted-foreground">
               {filteredWines.length} de {wines.length}

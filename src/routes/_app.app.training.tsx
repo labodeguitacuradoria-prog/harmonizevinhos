@@ -110,6 +110,7 @@ function TrainingPage() {
     queryKey: ["training-wines", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
+      if (!restaurantId) return [];
       const { data, error } = await supabase
         .from("wines")
         .select("id, name, internal_code, style, wine_type, region, country, producer, vintage, volume, image_url, sale_price")
@@ -125,6 +126,7 @@ function TrainingPage() {
     queryKey: ["training-cards", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
+      if (!restaurantId) return [];
       const { data, error } = await supabase
         .from("wine_story_cards")
         .select(
@@ -140,6 +142,7 @@ function TrainingPage() {
     queryKey: ["training-attempts", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
+      if (!restaurantId) return [];
       const { data } = await supabase
         .from("training_quiz_attempts")
         .select("id, score, total, finished_at")

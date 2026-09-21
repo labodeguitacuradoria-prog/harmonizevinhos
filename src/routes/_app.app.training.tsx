@@ -2,9 +2,19 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { GraduationCap, Sparkles, Save, Eye, KeyRound, Trophy, Wine as WineIcon, ChevronDown } from "lucide-react";
+import { GraduationCap, Sparkles, Save, Eye, KeyRound, Trophy, ChevronDown, Info, Search } from "lucide-react";
 import ModuleGate from "@/components/ModuleGate";
 import StoryCard from "@/components/training/StoryCard";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -70,6 +80,8 @@ type CardRow = {
   video_published: boolean;
 };
 
+type StatusFilter = "all" | "published" | "draft" | "missing";
+
 const EMPTY = {
   compact_summary: "",
   grapes_line: "",
@@ -90,6 +102,9 @@ function TrainingPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState({ ...EMPTY });
   const [busy, setBusy] = useState(false);
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [nameFilter, setNameFilter] = useState("");
 
   const { data: wines = [], isLoading } = useQuery({
     queryKey: ["training-wines", restaurantId],
@@ -98,7 +113,7 @@ function TrainingPage() {
       const { data, error } = await supabase
         .from("wines")
         .select("id, name, internal_code, style, wine_type, region, country, producer, vintage, volume, image_url, sale_price")
-        .eq("restaurant_id", restaurantId!)
+        .eq("restaurant_id", restaurantId)
         .eq("active_on_menu", true)
         .order("name");
       if (error) throw new Error(error.message);
@@ -115,7 +130,7 @@ function TrainingPage() {
         .select(
           "wine_id, status, compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, video_status, video_published",
         )
-        .eq("restaurant_id", restaurantId!);
+        .eq("restaurant_id", restaurantId);
       if (error) throw new Error(error.message);
       return (data ?? []) as CardRow[];
     },
@@ -128,7 +143,7 @@ function TrainingPage() {
       const { data } = await supabase
         .from("training_quiz_attempts")
         .select("id, score, total, finished_at")
-        .eq("restaurant_id", restaurantId!)
+        .eq("restaurant_id", restaurantId)
         .order("finished_at", { ascending: false })
         .limit(10);
       return data ?? [];
@@ -138,6 +153,33 @@ function TrainingPage() {
   const byWine = useMemo(() => new Map(cards.map((c) => [c.wine_id, c])), [cards]);
   const published = cards.filter((c) => c.status === "published").length;
   const editingWine = wines.find((w) => w.id === editing) ?? null;
+  const typeOptions = useMemo(() => {
+    const names = new Set(wines.map((w) => w.style || w.wine_type).filter(Boolean) as string[]);
+    return Array.from(names).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [wines]);
+  const filteredWines = useMemo(() => {
+    const query = nameFilter.trim().toLocaleLowerCase("pt-BR");
+    return wines.filter((w) => {
+      const card = byWine.get(w.id);
+      const type = w.style || w.wine_type || "";
+      const matchesType = typeFilter === "all" || type === typeFilter;
+      const matchesName =
+        !query ||
+        [w.name, w.internal_code, w.country, w.volume]
+          .filter(Boolean)
+          .join(" ")
+          .toLocaleLowerCase("pt-BR")
+          .includes(query);
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "missing" && !card) ||
+        (statusFilter === "published" && card?.status === "published") ||
+        (statusFilter === "draft" && card?.status !== "published" && !!card);
+      return matchesType && matchesName && matchesStatus;
+    });
+  }, [byWine, nameFilter, statusFilter, typeFilter, wines]);
+  const allFilteredSelected =
+    filteredWines.length > 0 && filteredWines.every((w) => selected.includes(w.id));
 
   function openEditor(wineId: string) {
     const c = byWine.get(wineId);
@@ -248,53 +290,123 @@ function TrainingPage() {
         </Link>
       </header>
 
-      <p className="max-w-3xl text-sm text-muted-foreground">
-        Uma ficha de bolso por rótulo: uvas, como é feito, de onde vem, o significado do nome, com o
-        que combina e a frase pronta para dizer na mesa. Gere com a ajuda da inteligência
-        artificial, ajuste o texto e publique. Só ficha publicada aparece para a equipe.{" "}
-        <span className="text-primary">{published}</span> de {wines.length} publicadas.
-      </p>
+      <div className="text-sm text-muted-foreground">
+        <span className="text-primary">{published}</span> de {wines.length} fichas publicadas.
+      </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <button
+        <Button
           onClick={() => handleGenerate(selected)}
           disabled={busy || !selected.length}
-          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+          size="sm"
         >
           <Sparkles className="h-3.5 w-3.5" />
           {busy ? "Gerando..." : `Gerar fichas (${selected.length})`}
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={publishSelected}
           disabled={busy || !selected.length}
-          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs text-primary hover:bg-accent disabled:opacity-60"
+          variant="outline"
+          size="sm"
+          className="text-primary"
         >
           <Eye className="h-3.5 w-3.5" /> Publicar selecionadas
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() =>
-            setSelected(selected.length === wines.length ? [] : wines.map((w) => w.id))
+            setSelected(allFilteredSelected ? [] : filteredWines.map((w) => w.id))
           }
-          className="rounded-md border border-border px-3 py-2 text-xs text-muted-foreground hover:bg-accent"
+          variant="outline"
+          size="sm"
+          className="text-muted-foreground"
         >
-          {selected.length === wines.length ? "Limpar seleção" : "Selecionar todos"}
-        </button>
+          {allFilteredSelected ? "Limpar seleção" : "Selecionar filtrados"}
+        </Button>
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <div className="rounded-xl border border-border bg-card p-3">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
-            Rótulos da carta
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+              Rótulos da carta
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-6 w-6 rounded-full text-primary"
+                      aria-label="Informações sobre as fichas"
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs leading-relaxed" side="right">
+                    Uma ficha de bolso por rótulo: uvas, como é feito, de onde vem, o significado do nome,
+                    com o que combina e a frase pronta para dizer na mesa. Gere com a ajuda da inteligência
+                    artificial, ajuste o texto e publique.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <span className="text-[11px] text-muted-foreground">
+              {filteredWines.length} de {wines.length}
+            </span>
+          </div>
+
+          <div className="mt-3 grid gap-2 md:grid-cols-[1fr_0.85fr_0.8fr]">
+            <label className="relative block text-[11px] uppercase tracking-wider text-muted-foreground">
+              Nome
+              <Search className="pointer-events-none absolute bottom-2.5 left-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+                placeholder="Buscar rótulo ou código"
+                className="mt-1 pl-8 text-sm"
+              />
+            </label>
+            <label className="block text-[11px] uppercase tracking-wider text-muted-foreground">
+              Tipo
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {typeOptions.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+            <label className="block text-[11px] uppercase tracking-wider text-muted-foreground">
+              Status
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="published">Publicada</SelectItem>
+                  <SelectItem value="draft">Rascunho</SelectItem>
+                  <SelectItem value="missing">Sem ficha</SelectItem>
+                </SelectContent>
+              </Select>
+            </label>
           </div>
           {isLoading ? (
             <div className="p-4 text-sm text-muted-foreground">Carregando...</div>
           ) : (
-            <ul className="mt-2 max-h-[60vh] divide-y divide-border overflow-y-auto">
-              {wines.map((w) => {
+            <ul className="mt-3 divide-y divide-border">
+              {filteredWines.map((w) => {
                 const c = byWine.get(w.id);
                 const state = !c ? "Sem ficha" : c.status === "published" ? "Publicada" : "Rascunho";
+                const details = [w.style || w.wine_type, w.country, w.volume].filter(Boolean).join(" · ");
                 return (
-                  <li key={w.id} className="flex items-center gap-2 py-2">
+                  <li key={w.id} className="flex items-center gap-3 py-2.5">
                     <input
                       type="checkbox"
                       checked={selected.includes(w.id)}
@@ -305,20 +417,20 @@ function TrainingPage() {
                       }
                       className="h-4 w-4 accent-[var(--gold)]"
                     />
-                    <div className="flex h-10 w-8 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-background">
-                      {w.image_url ? (
-                        <img src={w.image_url} alt={w.name} className="h-full w-full object-contain" />
-                      ) : (
-                        <WineIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                      )}
-                    </div>
                     <button
                       onClick={() => openEditor(w.id)}
                       className="min-w-0 flex-1 text-left text-sm text-foreground hover:text-primary"
                     >
-                      <span className="line-clamp-1">{w.name}</span>
+                      <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+                        {w.internal_code ? (
+                          <span className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-primary">
+                            {w.internal_code}
+                          </span>
+                        ) : null}
+                        <span className="min-w-0 flex-1 font-medium">{w.name}</span>
+                      </span>
                       <span className="block text-[11px] text-muted-foreground">
-                        {[w.style || w.wine_type, w.country].filter(Boolean).join(" · ")}
+                        {details || "Sem tipo, país ou volume informados"}
                       </span>
                     </button>
                     <span
@@ -334,6 +446,11 @@ function TrainingPage() {
                   </li>
                 );
               })}
+              {filteredWines.length === 0 ? (
+                <li className="py-5 text-center text-sm text-muted-foreground">
+                  Nenhum rótulo encontrado com estes filtros.
+                </li>
+              ) : null}
             </ul>
           )}
         </div>

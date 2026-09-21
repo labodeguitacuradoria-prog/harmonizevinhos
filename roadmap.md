@@ -1,10 +1,10 @@
 # Roadmap — La Bodeguita Vinhos
 
 ## Em andamento
-1. Mover criação de vídeo de 30s do módulo Treinamento para a aba Mídia do rótulo
-   - Usar imagens da galeria do rótulo como material.
-   - Armazenar vídeos gerados no campo `videos` (`{title, url}`) do vinho.
-   - Manter também vídeos externos (YouTube/Vimeo) na mesma lista.
-   - **Status: plano rejeitado — aguardando ajustes com o usuário.**
+1. Ajustar a tela de Treinamento do staff
+   - Lista de rótulos sem miniatura, com código, nome e identificação abaixo.
+   - Filtros no cabeçalho por tipo, nome e status.
+   - Remover a rolagem interna da lista.
+   - Trocar o texto explicativo por um botão de informação ao lado do título.
 
 ## Backlog

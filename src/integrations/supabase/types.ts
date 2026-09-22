@@ -937,6 +937,8 @@ export type Database = {
           city: string | null
           cnpj: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           delivery_instructions: string | null
           group_id: string | null
           id: string
@@ -959,6 +961,8 @@ export type Database = {
           city?: string | null
           cnpj?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           delivery_instructions?: string | null
           group_id?: string | null
           id?: string
@@ -981,6 +985,8 @@ export type Database = {
           city?: string | null
           cnpj?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           delivery_instructions?: string | null
           group_id?: string | null
           id?: string

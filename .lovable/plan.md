@@ -1,20 +1,25 @@
-# Reformular Restaurantes cadastrados
+# Tabela e lixeira de restaurantes
 
-## Resultado
-- Substituir os cartões por uma tabela compacta e fácil de comparar.
-- Manter o cabeçalho da tabela visível enquanto a lista de restaurantes desliza.
-- Adicionar filtros no topo por texto, cidade, rede e pacote/módulo, com opção de limpar.
-- Preservar os atalhos atuais para painel, produtos, pedidos e cadastro, reunidos em ações compactas.
-- Manter a liberação de módulos diretamente na linha do restaurante.
+## Tela Restaurantes cadastrados
+- Substituir os cartões por uma tabela compacta, mantendo os principais dados, indicadores, módulos e atalhos de cada restaurante.
+- Criar um cabeçalho de filtros por nome/dados cadastrais, cidade, rede e pacote/módulo, com ação para limpar filtros.
+- Manter os títulos das colunas visíveis enquanto a lista desliza.
+- Oferecer ações compactas para abrir painel, produtos, pedidos e cadastro.
 
-## Exclusão completa
-- Adicionar uma ação de lixeira exclusiva do administrador geral.
-- Exigir duas confirmações consecutivas, ambas citando o nome do restaurante e deixando claro que a operação é irreversível.
-- Excluir os dados pertencentes ao restaurante, seus vínculos e arquivos próprios; não excluir a conta do usuário que criou o restaurante.
-- Atualizar imediatamente a tabela e limpar o restaurante ativo caso ele tenha sido excluído.
+## Mover para a lixeira
+- A lixeira será uma área própria dentro da tela do administrador geral.
+- O botão de excluir da tabela terá duas confirmações consecutivas e moverá o restaurante para a lixeira, sem apagar dados nesse momento.
+- Restaurantes na lixeira deixarão de aparecer para seus usuários e não poderão ser usados até serem recuperados.
+- A conta do usuário que criou o restaurante será preservada.
 
-## Detalhes técnicos
-- Executar a exclusão no servidor, depois de validar novamente que o solicitante é administrador geral.
-- Usar as relações em cascata do banco para os registros dependentes e tratar separadamente arquivos armazenados por pasta do restaurante.
-- Exibir mensagens claras de sucesso ou erro e bloquear cliques repetidos durante a operação.
-- Conferir o resultado na visualização do administrador em tela grande e pequena.
+## Recuperar ou excluir definitivamente
+- Na lixeira, o administrador poderá recuperar um restaurante e escolher qual usuário será o novo administrador responsável.
+- A recuperação reativa o restaurante e cria/ajusta o vínculo administrativo do usuário escolhido, sem excluir outros usuários existentes.
+- A exclusão definitiva também terá duas confirmações e removerá o restaurante, seus dados dependentes e arquivos próprios.
+- Mesmo na exclusão definitiva, nenhuma conta de usuário será apagada; contas continuam sendo gerenciadas somente na tela de acessos.
+
+## Segurança e funcionamento
+- Todas as ações serão executadas no servidor e validarão novamente o papel de administrador geral.
+- A base receberá o estado de lixeira e impedirá que usuários comuns acessem restaurantes arquivados.
+- A tabela será atualizada imediatamente após mover, recuperar ou excluir.
+- O resultado será conferido nas versões de computador e celular.

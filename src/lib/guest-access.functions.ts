@@ -154,9 +154,13 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
 
   const { data: rest } = await supabaseAdmin
     .from("restaurants")
-    .select("name")
+    .select("name, deleted_at")
     .eq("id", link.restaurant_id)
     .maybeSingle();
+
+  if (!rest || rest.deleted_at) {
+    throw new helpers.AccessLinkError("revoked", "Este acesso não está disponível.");
+  }
 
   return {
     link: {
@@ -167,7 +171,7 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
       device_kind: link.device_kind as "mobile" | "desktop",
       single_device: link.single_device,
     },
-    restaurantName: rest?.name ?? "Restaurante",
+    restaurantName: rest.name,
   };
 }
 

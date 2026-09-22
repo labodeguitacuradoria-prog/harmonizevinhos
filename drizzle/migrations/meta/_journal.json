@@ -29,6 +29,13 @@
       "when": 1789910014667,
       "tag": "0003_scope_product_media_access_by_restaurant",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790076661820,
+      "tag": "0004_add_restaurant_trash_state",
+      "breakpoints": true
     }
   ]
 }

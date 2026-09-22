@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Building2,
+  ChevronDown,
   ClipboardList,
   LayoutDashboard,
   Package,
@@ -16,8 +17,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { clearActiveScope, getActiveScope, setActiveRestaurant } from "@/lib/active-scope";
-import { setModuleEntitlement } from "@/lib/modules.functions";
-import { MODULES, MODULE_LABEL, type AppModule } from "@/lib/modules";
+import { MODULES, type AppModule } from "@/lib/modules";
 import {
   permanentlyDeleteRestaurant,
   restoreRestaurant,
@@ -40,6 +40,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/admin/restaurants")({
@@ -82,7 +90,9 @@ function AdminRestaurants() {
   const [q, setQ] = useState("");
   const [city, setCity] = useState("all");
   const [group, setGroup] = useState("all");
-  const [module, setModule] = useState("all");
+  const [selectedModules, setSelectedModules] = useState<Set<AppModule>>(
+    () => new Set(MODULES.map((item) => item.key)),
+  );
   const [pending, setPending] = useState<PendingAction>(null);
   const [restoreRow, setRestoreRow] = useState<Row | null>(null);
   const [restoreOwner, setRestoreOwner] = useState("");
@@ -146,10 +156,13 @@ function AdminRestaurants() {
       if (term && ![row.name, row.city, row.cnpj, row.legal_name, data?.owners.get(row.owner_id)].some((value) => (value ?? "").toLowerCase().includes(term))) return false;
       if (city !== "all" && row.city !== city) return false;
       if (group !== "all" && (group === "none" ? row.group_id !== null : row.group_id !== group)) return false;
-      if (module !== "all" && !data?.modules.get(row.id)?.has(module as AppModule)) return false;
+      if (selectedModules.size < MODULES.length) {
+        const rowModules = data?.modules.get(row.id) ?? new Set<AppModule>();
+        if (![...selectedModules].some((item) => rowModules.has(item))) return false;
+      }
       return true;
     });
-  }, [sourceRows, q, city, group, module, data?.owners, data?.modules]);
+  }, [sourceRows, q, city, group, selectedModules, data?.owners, data?.modules]);
 
   const refresh = async () => {
     await qc.invalidateQueries({ queryKey: ["admin-restaurants"] });
@@ -191,7 +204,7 @@ function AdminRestaurants() {
     setQ("");
     setCity("all");
     setGroup("all");
-    setModule("all");
+    setSelectedModules(new Set(MODULES.map((item) => item.key)));
   }
 
   return (
@@ -215,14 +228,13 @@ function AdminRestaurants() {
       </div>
 
       <div className="sticky top-0 z-20 mt-4 border-y border-border bg-background py-3">
-        <div className="grid gap-2 lg:grid-cols-[minmax(220px,1fr)_180px_180px_200px_auto]">
+        <div className="grid gap-2 lg:grid-cols-[minmax(220px,1fr)_180px_180px_auto]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Nome, CNPJ, razão social ou responsável" className="pl-9" />
           </div>
           <FilterSelect value={city} onChange={setCity} placeholder="Todas as cidades" options={cities.map((value) => [value, value])} />
           <FilterSelect value={group} onChange={setGroup} placeholder="Todas as redes" options={[["none", "Sem rede"], ...groups]} />
-          <FilterSelect value={module} onChange={setModule} placeholder="Todos os pacotes" options={MODULES.map((item) => [item.key, item.label])} />
           <Button variant="outline" size="sm" onClick={clearFilters} title="Limpar filtros" aria-label="Limpar filtros"><X /></Button>
         </div>
         <div className="mt-2 text-[11px] uppercase text-muted-foreground">{filteredRows.length} {filteredRows.length === 1 ? "restaurante" : "restaurantes"}</div>
@@ -236,7 +248,42 @@ function AdminRestaurants() {
               <th className="px-3 py-3 text-left">Cidade / Rede</th>
               <th className="px-3 py-3 text-left">Responsável</th>
               <th className="px-3 py-3 text-center">Indicadores</th>
-              <th className="px-3 py-3 text-left">Pacotes</th>
+              <th className="w-36 px-3 py-2 text-left">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] uppercase" aria-label="Filtrar por pacotes">
+                      Pacotes
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    <DropdownMenuLabel>Pacotes analisados</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {MODULES.map((item) => (
+                      <DropdownMenuCheckboxItem
+                        key={item.key}
+                        checked={selectedModules.has(item.key)}
+                        onSelect={(event) => event.preventDefault()}
+                        onCheckedChange={(checked) => {
+                          setSelectedModules((current) => {
+                            const next = new Set(current);
+                            if (checked) next.add(item.key);
+                            else next.delete(item.key);
+                            return next;
+                          });
+                        }}
+                      >
+                        {item.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <div className="flex gap-1 p-1">
+                      <Button size="sm" variant="outline" className="h-7 flex-1 text-xs" onClick={() => setSelectedModules(new Set())}>Limpar</Button>
+                      <Button size="sm" className="h-7 flex-1 text-xs" onClick={() => setSelectedModules(new Set(MODULES.map((item) => item.key)))}>Todos</Button>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </th>
               {view === "trash" && <th className="px-3 py-3 text-left">Excluído em</th>}
               <th className="px-3 py-3 text-right">Ações</th>
             </tr>
@@ -245,28 +292,26 @@ function AdminRestaurants() {
             {isLoading && <EmptyRow colSpan={view === "trash" ? 7 : 6} text="Carregando..." />}
             {!isLoading && filteredRows.length === 0 && <EmptyRow colSpan={view === "trash" ? 7 : 6} text={view === "trash" ? "A lixeira está vazia." : "Nenhum restaurante encontrado."} />}
             {!isLoading && filteredRows.map((row) => (
-              <tr key={row.id} className="border-t border-border align-top hover:bg-accent/30">
-                <td className="px-3 py-3">
+              <tr key={row.id} className="border-t border-border align-middle hover:bg-accent/30">
+                <td className="px-3 py-2">
                   <div className="font-semibold text-foreground">{row.name}</div>
-                  <div className="mt-1 max-w-60 text-xs text-muted-foreground">{[row.legal_name, row.cnpj].filter(Boolean).join(" · ") || "Sem dados cadastrais"}</div>
+                  <div className="max-w-60 truncate text-[11px] text-muted-foreground">{[row.legal_name, row.cnpj].filter(Boolean).join(" · ") || "Sem dados cadastrais"}</div>
                 </td>
-                <td className="px-3 py-3 text-xs">
+                <td className="px-3 py-2 text-xs">
                   <div>{row.city ?? "—"}</div>
-                  <div className="mt-1 text-muted-foreground">{row.group_id ? data?.groups.get(row.group_id) ?? "Rede" : "Sem rede"}</div>
+                  <div className="text-[11px] text-muted-foreground">{row.group_id ? data?.groups.get(row.group_id) ?? "Rede" : "Sem rede"}</div>
                 </td>
-                <td className="px-3 py-3 text-xs text-muted-foreground">{data?.owners.get(row.owner_id) ?? "—"}</td>
-                <td className="px-3 py-3">
+                <td className="px-3 py-2 text-xs text-muted-foreground">{data?.owners.get(row.owner_id) ?? "—"}</td>
+                <td className="px-3 py-2">
                   <div className="flex justify-center gap-3 text-center text-xs">
                     <Count label="Rótulos" value={data?.wineCount.get(row.id) ?? 0} />
                     <Count label="Pedidos" value={data?.orderCount.get(row.id) ?? 0} />
                     <Count label="Acessos" value={data?.userCount.get(row.id) ?? 0} />
                   </div>
                 </td>
-                <td className="max-w-80 px-3 py-3">
-                  {view === "active" ? <ModuleToggles restaurantId={row.id} active={data?.modules.get(row.id) ?? new Set<AppModule>()} /> : <ModuleSummary active={data?.modules.get(row.id) ?? new Set<AppModule>()} />}
-                </td>
-                {view === "trash" && <td className="px-3 py-3 text-xs text-muted-foreground">{row.deleted_at ? new Date(row.deleted_at).toLocaleString("pt-BR") : "—"}</td>}
-                <td className="px-3 py-3">
+                <td className="px-3 py-2 text-center text-xs text-muted-foreground">—</td>
+                {view === "trash" && <td className="px-3 py-2 text-xs text-muted-foreground">{row.deleted_at ? new Date(row.deleted_at).toLocaleString("pt-BR") : "—"}</td>}
+                <td className="px-3 py-2">
                   <div className="flex justify-end gap-1">
                     {view === "active" ? (
                       <>
@@ -274,7 +319,9 @@ function AdminRestaurants() {
                         <Action icon={<Package />} label="Produtos" onClick={() => openAs(row.id, "/app/wines")} />
                         <Action icon={<ClipboardList />} label="Pedidos" onClick={() => openAs(row.id, "/app/orders")} />
                         <Action icon={<Settings />} label="Cadastro" onClick={() => openAs(row.id, "/app/restaurant-profile")} />
-                        <Action destructive icon={<Trash2 />} label="Mover para a lixeira" onClick={() => setPending({ kind: "trash", row, stage: 1 })} />
+                        <Button size="sm" variant="outline" className="h-8 gap-1.5 border-destructive/60 px-2 text-xs text-destructive hover:text-destructive" onClick={() => setPending({ kind: "trash", row, stage: 1 })}>
+                          <Trash2 className="h-3.5 w-3.5" /> Excluir
+                        </Button>
                       </>
                     ) : (
                       <>
@@ -370,35 +417,4 @@ function EmptyRow({ colSpan, text }: { colSpan: number; text: string }) {
 
 function Count({ label, value }: { label: string; value: number }) {
   return <div className="min-w-12"><b className="block text-primary">{value}</b><span className="text-[9px] uppercase text-muted-foreground">{label}</span></div>;
-}
-
-function ModuleSummary({ active }: { active: Set<AppModule> }) {
-  const values = active.has("full") ? ["full" as AppModule] : Array.from(active);
-  return values.length ? <div className="flex flex-wrap gap-1">{values.map((key) => <span key={key} className="rounded border border-primary/40 px-1.5 py-0.5 text-[9px] uppercase text-primary">{MODULE_LABEL[key]}</span>)}</div> : <span className="text-xs text-muted-foreground">Sem pacote</span>;
-}
-
-function ModuleToggles({ restaurantId, active }: { restaurantId: string; active: Set<AppModule> }) {
-  const qc = useQueryClient();
-  const setModule = useServerFn(setModuleEntitlement);
-  const mutation = useMutation({
-    mutationFn: (variables: { module: AppModule; enabled: boolean }) => setModule({ data: { restaurant_id: restaurantId, ...variables } }),
-    onSuccess: () => {
-      toast.success("Pacotes atualizados.");
-      qc.invalidateQueries({ queryKey: ["admin-restaurants"] });
-      qc.invalidateQueries({ queryKey: ["module-entitlements"] });
-    },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Falha ao atualizar pacotes."),
-  });
-  return (
-    <div className="flex flex-wrap gap-1">
-      {MODULES.map((item) => {
-        const enabled = active.has(item.key);
-        return (
-          <Button key={item.key} size="sm" variant={enabled ? "default" : "outline"} disabled={mutation.isPending} title={item.description} className="h-6 px-2 text-[9px] uppercase" onClick={() => mutation.mutate({ module: item.key, enabled: !enabled })}>
-            {item.label}
-          </Button>
-        );
-      })}
-    </div>
-  );
 }

@@ -255,6 +255,74 @@ export type Database = {
           },
         ]
       }
+      global_wine_story_cards: {
+        Row: {
+          catalog_id: string
+          compact_summary: string | null
+          created_at: string
+          do_not_confuse: string | null
+          fun_fact: string | null
+          generated_by_ai: boolean
+          grapes_line: string | null
+          id: string
+          making_line: string | null
+          model_notes: string | null
+          mouthfeel: string | null
+          name_meaning: string | null
+          origin_story: string | null
+          pairings: string[]
+          sales_pitch: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          catalog_id: string
+          compact_summary?: string | null
+          created_at?: string
+          do_not_confuse?: string | null
+          fun_fact?: string | null
+          generated_by_ai?: boolean
+          grapes_line?: string | null
+          id?: string
+          making_line?: string | null
+          model_notes?: string | null
+          mouthfeel?: string | null
+          name_meaning?: string | null
+          origin_story?: string | null
+          pairings?: string[]
+          sales_pitch?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          catalog_id?: string
+          compact_summary?: string | null
+          created_at?: string
+          do_not_confuse?: string | null
+          fun_fact?: string | null
+          generated_by_ai?: boolean
+          grapes_line?: string | null
+          id?: string
+          making_line?: string | null
+          model_notes?: string | null
+          mouthfeel?: string | null
+          name_meaning?: string | null
+          origin_story?: string | null
+          pairings?: string[]
+          sales_pitch?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "global_wine_story_cards_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: true
+            referencedRelation: "wine_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           created_at: string
@@ -889,6 +957,48 @@ export type Database = {
           },
         ]
       }
+      restaurant_training_videos: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          restaurant_id: string
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          restaurant_id: string
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          restaurant_id?: string
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_training_videos_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_training_videos_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "training_library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_wine_lists: {
         Row: {
           created_at: string
@@ -1427,6 +1537,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      training_library_videos: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          recommended_for_all: boolean
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          recommended_for_all?: boolean
+          sort_order?: number
+          status?: string
+          title: string
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          recommended_for_all?: boolean
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: []
       }
       training_quiz_attempts: {
         Row: {

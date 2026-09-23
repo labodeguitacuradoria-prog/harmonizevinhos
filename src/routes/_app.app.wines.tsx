@@ -10,6 +10,7 @@ import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { WineOverview } from "@/components/WineOverview";
 import { WineListImportDialog } from "@/components/WineListImportDialog";
 import { WineFieldsEditor, WineFormTabs, type WineFields } from "@/components/WineFieldsEditor";
+import { importGlobalTrainingCard } from "@/lib/global-training.functions";
 
 function isGlassVol(v: string | null | undefined) {
   if (!v) return false;
@@ -1059,6 +1060,8 @@ function WineForm({
   const [scanOpen, setScanOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [catalogChoice, setCatalogChoice] = useState<CatalogPick | null>(null);
+  const [importOptions, setImportOptions] = useState({ data: true, media: true, videos: true, training: true });
 
   const [item, setItem] = useState<WineFields>(() => ({
     name: wine?.name ?? "",
@@ -1171,11 +1174,15 @@ function WineForm({
       active_on_menu: activeOnMenu,
       count_in_stock: countInStock,
     };
-    const { error } = isEdit
-      ? await supabase.from("wines").update(payload as any).eq("id", wine!.id)
-      : await supabase.from("wines").insert(payload as any);
+    const result = isEdit
+      ? await supabase.from("wines").update(payload as any).eq("id", wine!.id).select("id").single()
+      : await supabase.from("wines").insert(payload as any).select("id").single();
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (result.error) return toast.error(result.error.message);
+    if (importOptions.training && item.catalog_id && result.data?.id) {
+      try { const imported = await importGlobalTrainingCard({ data: { restaurant_id: restaurantId, wine_id: result.data.id, catalog_id: String(item.catalog_id) } }); if (imported.imported) toast.success("Ficha de treinamento global importada como rascunho."); }
+      catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível importar a ficha global."); }
+    }
     toast.success(isEdit ? "Vinho atualizado" : "Vinho cadastrado");
     onSaved();
   }
@@ -1209,7 +1216,7 @@ function WineForm({
           mediaFolder="wines"
           showSuggestedPrice={false}
           generalTop={
-            <CatalogSearch onPick={(c) => setItem((prev) => mergeCatalogIntoWine(prev, c))} />
+            <CatalogSearch onPick={(c) => setCatalogChoice(c)} />
           }
           generalPricing={
             <>
@@ -1264,6 +1271,17 @@ function WineForm({
             </div>
           }
         />
+
+        {catalogChoice ? (
+          <div className="rounded-md border border-primary/50 bg-card p-4">
+            <div className="font-semibold text-foreground">Importar conteúdo de {catalogChoice.name}?</div>
+            <p className="mt-1 text-xs text-muted-foreground">A importação cria uma cópia que poderá ser personalizada neste restaurante.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {([["data", "Dados técnicos do vinho"], ["media", "Imagem principal e galeria"], ["videos", "Vídeos do rótulo"], ["training", "Ficha de treinamento"]] as const).map(([key, label]) => <label key={key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={importOptions[key]} onChange={e => setImportOptions(v => ({ ...v, [key]: e.target.checked }))} /> {label}</label>)}
+            </div>
+            <div className="mt-4 flex justify-end gap-2"><button type="button" className="rounded-md border border-input px-3 py-2 text-sm" onClick={() => setCatalogChoice(null)}>Cancelar</button><button type="button" className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground" onClick={() => { const chosen = { ...catalogChoice }; if (!importOptions.media) { delete chosen.image_url; delete chosen.gallery_urls; delete chosen.tech_sheet_url; } if (!importOptions.videos) { delete chosen.videos; delete chosen.video_url; } const technical = mergeCatalogIntoWine(item as any, chosen); setItem(importOptions.data ? technical : ({ ...item, catalog_id: catalogChoice.id, ...(importOptions.media ? { image_url: catalogChoice.image_url, gallery_urls: catalogChoice.gallery_urls, tech_sheet_url: catalogChoice.tech_sheet_url } : {}), ...(importOptions.videos ? { videos: catalogChoice.videos } : {}) } as WineFields)); setCatalogChoice(null); }}>Importar para este restaurante</button></div>
+          </div>
+        ) : null}
 
         {scanOpen && (
           <BarcodeScanner

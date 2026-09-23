@@ -1062,6 +1062,7 @@ function WineForm({
   const [deleting, setDeleting] = useState(false);
   const [catalogChoice, setCatalogChoice] = useState<CatalogPick | null>(null);
   const [importOptions, setImportOptions] = useState({ data: true, media: true, videos: true, training: true });
+  const [importTrainingRequested, setImportTrainingRequested] = useState(false);
 
   const [item, setItem] = useState<WineFields>(() => ({
     name: wine?.name ?? "",
@@ -1179,7 +1180,7 @@ function WineForm({
       : await supabase.from("wines").insert(payload as any).select("id").single();
     setSaving(false);
     if (result.error) return toast.error(result.error.message);
-    if (importOptions.training && item.catalog_id && result.data?.id) {
+    if (importTrainingRequested && item.catalog_id && result.data?.id) {
       try { const imported = await importGlobalTrainingCard({ data: { restaurant_id: restaurantId, wine_id: result.data.id, catalog_id: String(item.catalog_id) } }); if (imported.imported) toast.success("Ficha de treinamento global importada como rascunho."); }
       catch (error) { toast.error(error instanceof Error ? error.message : "Não foi possível importar a ficha global."); }
     }
@@ -1279,7 +1280,7 @@ function WineForm({
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {([["data", "Dados técnicos do vinho"], ["media", "Imagem principal e galeria"], ["videos", "Vídeos do rótulo"], ["training", "Ficha de treinamento"]] as const).map(([key, label]) => <label key={key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={importOptions[key]} onChange={e => setImportOptions(v => ({ ...v, [key]: e.target.checked }))} /> {label}</label>)}
             </div>
-            <div className="mt-4 flex justify-end gap-2"><button type="button" className="rounded-md border border-input px-3 py-2 text-sm" onClick={() => setCatalogChoice(null)}>Cancelar</button><button type="button" className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground" onClick={() => { const chosen = { ...catalogChoice }; if (!importOptions.media) { delete chosen.image_url; delete chosen.gallery_urls; delete chosen.tech_sheet_url; } if (!importOptions.videos) { delete chosen.videos; delete chosen.video_url; } const technical = mergeCatalogIntoWine(item as any, chosen); setItem(importOptions.data ? technical : ({ ...item, catalog_id: catalogChoice.id, ...(importOptions.media ? { image_url: catalogChoice.image_url, gallery_urls: catalogChoice.gallery_urls, tech_sheet_url: catalogChoice.tech_sheet_url } : {}), ...(importOptions.videos ? { videos: catalogChoice.videos } : {}) } as WineFields)); setCatalogChoice(null); }}>Importar para este restaurante</button></div>
+            <div className="mt-4 flex justify-end gap-2"><button type="button" className="rounded-md border border-input px-3 py-2 text-sm" onClick={() => setCatalogChoice(null)}>Cancelar</button><button type="button" className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground" onClick={() => { const chosen = { ...catalogChoice }; if (!importOptions.media) { delete chosen.image_url; delete chosen.gallery_urls; delete chosen.tech_sheet_url; } if (!importOptions.videos) { delete chosen.videos; delete chosen.video_url; } const technical = mergeCatalogIntoWine(item as any, chosen); setItem(importOptions.data ? technical : ({ ...item, catalog_id: catalogChoice.id, ...(importOptions.media ? { image_url: catalogChoice.image_url, gallery_urls: catalogChoice.gallery_urls, tech_sheet_url: catalogChoice.tech_sheet_url } : {}), ...(importOptions.videos ? { videos: catalogChoice.videos } : {}) } as WineFields)); setImportTrainingRequested(importOptions.training); setCatalogChoice(null); }}>Importar para este restaurante</button></div>
           </div>
         ) : null}
 

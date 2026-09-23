@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import TrainingLibraryManager from "@/components/training/TrainingLibraryManager";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -579,6 +580,9 @@ function TrainingPage() {
             )}
           </div>
         </div>
+      </div>
+      <div className="mt-5">
+        <TrainingLibraryManager restaurantId={restaurantId} />
       </div>
     </div>
   );

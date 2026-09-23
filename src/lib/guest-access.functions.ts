@@ -729,7 +729,9 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
 
       const ids = (cards ?? []).map((c) => c.wine_id);
       if (!ids.length) {
-        return { ok: true as const, restaurantName, linkId: link.id, cards: [] };
+        const { data: choices } = await supabaseAdmin.from("restaurant_training_videos").select("training_library_videos(id, title, category, description, video_url, sort_order)").eq("restaurant_id", link.restaurant_id).eq("enabled", true);
+        const fundamentals = (choices ?? []).map((choice: any) => choice.training_library_videos).filter(Boolean).sort((a: any, b: any) => a.sort_order - b.sort_order);
+        return { ok: true as const, restaurantName, linkId: link.id, cards: [], fundamentals };
       }
 
       const { data: wines } = await supabaseAdmin
@@ -789,7 +791,9 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
         .filter(Boolean)
         .sort((a, b) => (a as { name: string }).name.localeCompare((b as { name: string }).name));
 
-      return { ok: true as const, restaurantName, linkId: link.id, cards: list };
+      const { data: choices } = await supabaseAdmin.from("restaurant_training_videos").select("training_library_videos(id, title, category, description, video_url, sort_order)").eq("restaurant_id", link.restaurant_id).eq("enabled", true);
+      const fundamentals = (choices ?? []).map((choice: any) => choice.training_library_videos).filter(Boolean).sort((a: any, b: any) => a.sort_order - b.sort_order);
+      return { ok: true as const, restaurantName, linkId: link.id, cards: list, fundamentals };
     } catch (e) {
       return fail(e);
     }

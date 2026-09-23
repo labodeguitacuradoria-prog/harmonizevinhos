@@ -46,6 +46,7 @@ export default function StaffTraining({ token }: { token: string }) {
   const [showDetails, setShowDetails] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
+  const [mainView, setMainView] = useState<"labels" | "fundamentals">("labels");
 
   const { data, isLoading } = useQuery({
     queryKey: ["guest-training", token],
@@ -54,6 +55,12 @@ export default function StaffTraining({ token }: { token: string }) {
   });
 
   const cards = (data && data.ok ? (data.cards as Card[]) : []) ?? [];
+  const fundamentals =
+    (data && data.ok
+      ? ((data as typeof data & {
+          fundamentals?: { id: string; title: string; category: string; description?: string | null; video_url: string }[];
+        }).fundamentals ?? [])
+      : []);
 
   useEffect(() => {
     if (cards.length) void preloadNormalizedImages(cards.map((card) => card.image_url));
@@ -202,6 +209,32 @@ export default function StaffTraining({ token }: { token: string }) {
         </div>
       ) : (
         <div className="p-3">
+          <div className="mb-3 grid grid-cols-2 rounded-md border border-border bg-card p-1">
+            <button
+              onClick={() => setMainView("labels")}
+              className={`rounded px-3 py-2 text-xs font-semibold ${mainView === "labels" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              Rótulos da carta
+            </button>
+            <button
+              onClick={() => setMainView("fundamentals")}
+              className={`rounded px-3 py-2 text-xs font-semibold ${mainView === "fundamentals" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              Fundamentos
+            </button>
+          </div>
+          {mainView === "fundamentals" ? (
+            <div className="space-y-2">
+              {fundamentals.map((video) => (
+                <a key={video.id} href={video.video_url} target="_blank" rel="noreferrer" className="block rounded-md border border-border bg-card p-3">
+                  <div className="flex items-center gap-2 font-semibold text-foreground"><PlayCircle className="h-4 w-4 text-primary" /> {video.title}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">{video.category}{video.description ? ` · ${video.description}` : ""}</div>
+                </a>
+              ))}
+              {fundamentals.length === 0 ? <div className="rounded-md border border-border bg-card p-5 text-center text-sm text-muted-foreground">Nenhum fundamento foi selecionado pelo restaurante.</div> : null}
+            </div>
+          ) : (
+            <>
           <div className="flex items-center gap-2">
             <div className="relative min-w-0 flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -272,6 +305,8 @@ export default function StaffTraining({ token }: { token: string }) {
               </li>
             ) : null}
           </ul>
+            </>
+          )}
         </div>
       )}
       {showVideo && open?.video_urls?.length ? (

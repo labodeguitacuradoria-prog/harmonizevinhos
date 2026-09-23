@@ -13,6 +13,8 @@ import {
   toProxiedFileUrl,
   type WineFields,
 } from "@/components/WineFieldsEditor";
+import GlobalTrainingCardEditor from "@/components/training/GlobalTrainingCardEditor";
+import TrainingLibraryManager from "@/components/training/TrainingLibraryManager";
 
 export { classifySparklingSugar, toProxiedFileUrl };
 
@@ -84,7 +86,7 @@ function CatalogAdmin() {
   const [loading, setLoading] = useState(true);
   const [statusTab, setStatusTab] = useState<CatalogStatus | "duplicates">("pending");
   const [editing, setEditing] = useState<Partial<WineCatalog> | null>(null);
-  const [initialTab, setInitialTab] = useState<"geral" | "carac" | "midia">("geral");
+  const [initialTab, setInitialTab] = useState<"geral" | "carac" | "midia" | "training">("geral");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -423,6 +425,8 @@ function CatalogAdmin() {
         )}
       </header>
 
+      {isAdmin ? <TrainingLibraryManager admin /> : null}
+
       <div className="flex flex-wrap items-center gap-2 border-b border-border">
         <TabButton active={statusTab === "pending"} onClick={() => setStatusTab("pending")} icon={<Clock className="h-4 w-4" />}>
           Pendentes <span className="ml-1 rounded-full bg-amber-500/20 px-2 text-xs text-amber-500">{counts.pending}</span>
@@ -740,12 +744,12 @@ function TabButton({ active, onClick, icon, children }: { active: boolean; onCli
 
 function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: {
   item: Partial<WineCatalog>;
-  initialTab?: "geral" | "carac" | "midia";
+  initialTab?: "geral" | "carac" | "midia" | "training";
   onChange: (i: Partial<WineCatalog>) => void;
   onClose: () => void;
   onSave: () => void;
 }) {
-  const [tab, setTab] = useState<"geral" | "carac" | "midia">(initialTab);
+  const [tab, setTab] = useState<"geral" | "carac" | "midia" | "training">(initialTab);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
@@ -755,15 +759,25 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><XIcon className="h-5 w-5" /></button>
         </div>
 
-        <WineFormTabs tab={tab} onChange={setTab} />
+        <div className="mb-4 flex gap-1 overflow-x-auto border-b border-border">
+          {(["geral", "carac", "midia", "training"] as const).map((value) => (
+            <button key={value} type="button" onClick={() => setTab(value)} className={`whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium ${tab === value ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}>
+              {value === "geral" ? "Geral" : value === "carac" ? "Características" : value === "midia" ? "Mídia" : "Ficha de Treinamento"}
+            </button>
+          ))}
+        </div>
 
-        <WineFieldsEditor
-          tab={tab}
-          item={item as WineFields}
-          onChange={(next) => onChange(next as Partial<WineCatalog>)}
-          mediaFolder="catalog"
-          showSlideshow
-        />
+        {tab === "training" ? (
+          <GlobalTrainingCardEditor wine={{ ...(item as WineFields), id: item.id, name: item.name ?? "Rótulo sem nome" }} />
+        ) : (
+          <WineFieldsEditor
+            tab={tab}
+            item={item as WineFields}
+            onChange={(next) => onChange(next as Partial<WineCatalog>)}
+            mediaFolder="catalog"
+            showSlideshow
+          />
+        )}
 
         <div className="mt-6 flex justify-end gap-3 border-t border-border pt-4">
           <button onClick={onClose} className="rounded-md border border-input px-4 py-2 text-sm">Cancelar</button>

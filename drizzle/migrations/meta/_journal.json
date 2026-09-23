@@ -36,6 +36,13 @@
       "when": 1790076661820,
       "tag": "0004_add_restaurant_trash_state",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790171031175,
+      "tag": "0005_global_training_cards_and_video_library",
+      "breakpoints": true
     }
   ]
 }

@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { enrichWineFromWeb } from "@/lib/wine-enrich.functions";
-import { Database, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink, ChevronDown, ChevronUp, Wand2, Loader2, ImageOff, ImageIcon } from "lucide-react";
+import { Database, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink, ChevronDown, ChevronUp, Wand2, Loader2, ImageOff, ImageIcon, GraduationCap } from "lucide-react";
 
 import {
   WineFieldsEditor,
@@ -408,7 +408,7 @@ function CatalogAdmin() {
   }
 
 
-  function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" = "geral") {
+  function openEdit(item: Partial<WineCatalog>, tab: "geral" | "carac" | "midia" | "training" = "geral") {
     setInitialTab(tab);
     setEditing(item);
   }
@@ -576,6 +576,7 @@ function CatalogAdmin() {
               <th className="px-4 py-3">País</th>
               <th className="px-4 py-3 whitespace-nowrap">Preço de mercado</th>
               <th className="px-4 py-3 text-center" title="Indica se o rótulo possui imagem cadastrada">Img</th>
+              <th className="px-4 py-3 text-center" title="Ficha de treinamento: publicada, rascunho ou sem ficha">Ficha</th>
               {statusTab === "approved" && (
                 <th className="px-4 py-3 w-40">
                   <div className="space-y-1">
@@ -594,13 +595,14 @@ function CatalogAdmin() {
           </thead>
           <tbody className="divide-y divide-border">
             {filtered.map(item => {
-              const checks = auditWine(item);
+              const cs = cardStatus[item.id];
+              const checks = [...auditWine(item), { key: "training_card", label: cs === "draft" ? "Ficha de treinamento (rascunho)" : "Ficha de treinamento", tab: "training" as const, ok: cs === "published" }];
               const done = checks.filter(c => c.ok).length;
               const pct = checks.length ? Math.round((done / checks.length) * 100) : 0;
               const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
               const missing = checks.filter(c => !c.ok);
               const isExpanded = expandedId === item.id;
-              const colCount = (statusTab === "approved" ? 9 : 8) + (showSelect ? 1 : 0);
+              const colCount = (statusTab === "approved" ? 10 : 9) + (showSelect ? 1 : 0);
               return (
               <React.Fragment key={item.id}>
               <tr className="hover:bg-accent/50">
@@ -635,6 +637,12 @@ function CatalogAdmin() {
                       <ImageOff className="h-4 w-4" />
                     </span>
                   )}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <button onClick={() => openEdit(item, "training")} title={cs === "published" ? "Ficha de treinamento publicada" : cs === "draft" ? "Ficha em rascunho" : "Sem ficha de treinamento"}
+                    className={`inline-flex items-center justify-center rounded p-0.5 hover:bg-accent ${cs === "published" ? "text-emerald-500" : cs === "draft" ? "text-amber-500" : "text-rose-500/80"}`}>
+                    <GraduationCap className="h-4 w-4" />
+                  </button>
                 </td>
                 {statusTab === "approved" && (
                   <td className="px-4 py-3">
@@ -690,14 +698,14 @@ function CatalogAdmin() {
                 <tr className="bg-[#0b0b0b]">
                   <td colSpan={colCount} className="px-4 py-3">
                     <div className="grid gap-2 md:grid-cols-3">
-                      {(["geral", "carac", "midia"] as const).map(t => {
+                      {(["geral", "carac", "midia", "training"] as const).map(t => {
                         const inTab = missing.filter(m => m.tab === t);
                         if (inTab.length === 0) return null;
                         return (
                           <div key={t} className="rounded-md border border-[#2a2a2a] bg-[#141414] p-3">
                             <div className="mb-1.5 flex items-center justify-between">
                               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                                {t === "geral" ? "Geral" : t === "carac" ? "Características" : "Mídia"} ({inTab.length})
+                                {t === "geral" ? "Geral" : t === "carac" ? "Características" : t === "midia" ? "Mídia" : "Treinamento"} ({inTab.length})
                               </span>
                               <button onClick={() => openEdit(item, t)}
                                 className="flex items-center gap-1 rounded border border-[#D4AF37]/40 px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#D4AF37] hover:bg-[#1a1a1a]">
@@ -734,7 +742,7 @@ function CatalogAdmin() {
 
 
       {editing && (
-        <EditorModal item={editing} initialTab={initialTab} onChange={setEditing} onClose={() => setEditing(null)} onSave={handleSave} />
+        <EditorModal item={editing} initialTab={initialTab} onChange={setEditing} onClose={() => { setEditing(null); fetchCatalog(); }} onSave={handleSave} />
       )}
     </div>
   );

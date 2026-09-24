@@ -16,6 +16,7 @@ const FieldsSchema = z.object({
   fun_fact: z.string().max(800),
   do_not_confuse: z.string().max(800),
 });
+const ImageSchema = z.object({ image_url: z.string().max(2000).nullable().optional() });
 
 async function assertAdmin(context: any) {
   const { data: ok } = await context.supabase.rpc("is_admin", { _user_id: context.userId });
@@ -59,7 +60,7 @@ export const generateGlobalTrainingCard = createServerFn({ method: "POST" })
 
 export const saveGlobalTrainingCard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ catalog_id: z.string().uuid(), status: z.enum(["draft", "published"]) }).merge(FieldsSchema).parse(d))
+  .inputValidator((d: unknown) => z.object({ catalog_id: z.string().uuid(), status: z.enum(["draft", "published"]) }).merge(FieldsSchema).merge(ImageSchema).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -77,7 +78,7 @@ export const importGlobalTrainingCard = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: wine } = await supabaseAdmin.from("wines").select("id").eq("id", data.wine_id).eq("restaurant_id", data.restaurant_id).maybeSingle();
     if (!wine) throw new Error("Rótulo do restaurante não encontrado.");
-    const { data: card } = await supabaseAdmin.from("global_wine_story_cards").select("compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse").eq("catalog_id", data.catalog_id).eq("status", "published").maybeSingle();
+    const { data: card } = await supabaseAdmin.from("global_wine_story_cards").select("compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, image_url").eq("catalog_id", data.catalog_id).eq("status", "published").maybeSingle();
     if (!card) return { imported: false };
     const { error } = await supabaseAdmin.from("wine_story_cards").upsert({
       wine_id: data.wine_id,

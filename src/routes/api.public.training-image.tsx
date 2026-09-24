@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 function storagePathFromUrl(raw: string) {
   try {
-    const parsed = new URL(raw);
+    const parsed = new URL(raw, "http://localhost");
+    const proxiedPath = parsed.searchParams.get("path");
+    if (proxiedPath) return proxiedPath;
     const marker = "/product-media/";
     const index = parsed.pathname.indexOf(marker);
     return index >= 0 ? decodeURIComponent(parsed.pathname.substring(index + marker.length)) : null;
@@ -34,7 +36,7 @@ export const Route = createFileRoute("/api/public/training-image")({
 
         const { data: card } = await supabaseAdmin
           .from("wine_story_cards")
-          .select("wine_id")
+          .select("wine_id, image_url")
           .eq("restaurant_id", link.restaurant_id)
           .eq("wine_id", wineId)
           .eq("status", "published")
@@ -47,9 +49,10 @@ export const Route = createFileRoute("/api/public/training-image")({
           .select("image_url")
           .eq("id", wineId)
           .maybeSingle();
-        if (!wine?.image_url) return new Response("wine image not found", { status: 404 });
+        const sourceImage = card.image_url || wine?.image_url;
+        if (!sourceImage) return new Response("wine image not found", { status: 404 });
 
-        const storagePath = storagePathFromUrl(wine.image_url);
+        const storagePath = storagePathFromUrl(sourceImage);
         let body: Blob;
         let contentType = "image/jpeg";
         if (storagePath && !storagePath.includes("..")) {
@@ -60,7 +63,7 @@ export const Route = createFileRoute("/api/public/training-image")({
         } else {
           let imageUrl: URL;
           try {
-            imageUrl = new URL(wine.image_url);
+            imageUrl = new URL(sourceImage);
           } catch {
             return new Response("invalid image", { status: 400 });
           }
@@ -73,7 +76,7 @@ export const Route = createFileRoute("/api/public/training-image")({
             },
             redirect: "follow",
           });
-          if (!response.ok) return Response.redirect(wine.image_url, 302);
+          if (!response.ok) return Response.redirect(sourceImage, 302);
           const fetchedType = response.headers.get("content-type") ?? "";
           if (!fetchedType.startsWith("image/")) return new Response("invalid image", { status: 415 });
           body = await response.blob();

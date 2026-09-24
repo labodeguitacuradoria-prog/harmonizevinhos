@@ -144,7 +144,7 @@ function normalizeImage(image: HTMLImageElement) {
   return output.toDataURL("image/jpeg", 0.94);
 }
 
-function loadNormalizedImage(src: string): Promise<string> {
+export function loadNormalizedImage(src: string): Promise<string> {
   const cached = normalizedCache.get(src);
   if (cached) return Promise.resolve(cached);
   const running = normalizationJobs.get(src);
@@ -170,6 +170,13 @@ function loadNormalizedImage(src: string): Promise<string> {
 
   normalizationJobs.set(src, job);
   return job;
+}
+
+export async function normalizedBottleBlob(src: string): Promise<Blob | null> {
+  const normalized = await loadNormalizedImage(src);
+  if (!normalized.startsWith("data:image/")) return null;
+  const response = await fetch(normalized);
+  return response.blob();
 }
 
 export function preloadNormalizedImages(sources: Array<string | null | undefined>) {

@@ -44,7 +44,7 @@ export default function GlobalTrainingCardEditor({ wine }: { wine: StoryCardData
   async function generate() {
     if (!catalogId) return toast.error("Salve o rótulo antes de criar a ficha.");
     setBusy(true);
-    try { setDraft(await generateGlobalTrainingCard({ data: { catalog_id: catalogId } })); setStatus("draft"); toast.success("Ficha global criada como rascunho."); }
+    try { setDraft(await generateGlobalTrainingCard({ data: { catalog_id: catalogId } })); setStatus("draft"); setSaved(true); toast.success("Ficha global criada como rascunho."); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Falha ao gerar ficha."); }
     finally { setBusy(false); }
   }
@@ -52,7 +52,7 @@ export default function GlobalTrainingCardEditor({ wine }: { wine: StoryCardData
   async function save(nextStatus: "draft" | "published") {
     if (!catalogId) return toast.error("Salve o rótulo antes de criar a ficha.");
     setBusy(true);
-    try { await saveGlobalTrainingCard({ data: { catalog_id: catalogId, status: nextStatus, ...draft } }); setStatus(nextStatus); toast.success(nextStatus === "published" ? "Ficha global publicada." : "Rascunho salvo."); }
+    try { await saveGlobalTrainingCard({ data: { catalog_id: catalogId, status: nextStatus, ...draft } }); setStatus(nextStatus); setSaved(true); toast.success(nextStatus === "published" ? "Ficha global publicada." : "Rascunho salvo."); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Falha ao salvar ficha."); }
     finally { setBusy(false); }
   }

@@ -1,4 +1,5 @@
 import { List } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
 type TrainingTextareaProps = {
@@ -56,7 +57,7 @@ export function TrainingRichText({ text, italic = false }: { text?: string | nul
   if (!text?.trim()) return null;
 
   const lines = text.split(/\r?\n/);
-  const content: React.ReactNode[] = [];
+  const content: ReactNode[] = [];
   let bullets: string[] = [];
 
   function flushBullets() {

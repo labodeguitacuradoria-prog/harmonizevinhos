@@ -98,21 +98,11 @@ export function DetailedStoryCard({ card }: { card: StoryCardData }) {
         </div>
       </header>
 
-      <Block icon={<Grape className="h-3.5 w-3.5" />} title="Uvas">
-        <TrainingRichText text={card.grapes_line} />
-      </Block>
-      <Block icon={<Hammer className="h-3.5 w-3.5" />} title="Como é feito">
-        <TrainingRichText text={card.making_line} />
-      </Block>
-      <Block icon={<MapPin className="h-3.5 w-3.5" />} title="De onde vem">
-        <TrainingRichText text={card.origin_story} />
-      </Block>
-      <Block icon={<BookOpen className="h-3.5 w-3.5" />} title="Por que esse nome">
-        <TrainingRichText text={card.name_meaning} />
-      </Block>
-      <Block icon={<Sparkles className="h-3.5 w-3.5" />} title="Como é na boca">
-        <TrainingRichText text={card.mouthfeel} />
-      </Block>
+      {card.grapes_line ? <Block icon={<Grape className="h-3.5 w-3.5" />} title="Uvas"><TrainingRichText text={card.grapes_line} /></Block> : null}
+      {card.making_line ? <Block icon={<Hammer className="h-3.5 w-3.5" />} title="Como é feito"><TrainingRichText text={card.making_line} /></Block> : null}
+      {card.origin_story ? <Block icon={<MapPin className="h-3.5 w-3.5" />} title="De onde vem"><TrainingRichText text={card.origin_story} /></Block> : null}
+      {card.name_meaning ? <Block icon={<BookOpen className="h-3.5 w-3.5" />} title="Por que esse nome"><TrainingRichText text={card.name_meaning} /></Block> : null}
+      {card.mouthfeel ? <Block icon={<Sparkles className="h-3.5 w-3.5" />} title="Como é na boca"><TrainingRichText text={card.mouthfeel} /></Block> : null}
       {card.pairings?.length ? (
         <Block icon={<Utensils className="h-3.5 w-3.5" />} title="Combina com">
           <ul className="list-inside list-disc space-y-0.5">
@@ -122,15 +112,9 @@ export function DetailedStoryCard({ card }: { card: StoryCardData }) {
           </ul>
         </Block>
       ) : null}
-      <Block icon={<MessageSquareQuote className="h-3.5 w-3.5" />} title="Fale assim na mesa">
-        <TrainingRichText text={card.sales_pitch} italic />
-      </Block>
-      <Block icon={<Sparkles className="h-3.5 w-3.5" />} title="Curiosidade">
-        <TrainingRichText text={card.fun_fact} />
-      </Block>
-      <Block icon={<AlertTriangle className="h-3.5 w-3.5" />} title="Não confunda">
-        <TrainingRichText text={card.do_not_confuse} />
-      </Block>
+      {card.sales_pitch ? <Block icon={<MessageSquareQuote className="h-3.5 w-3.5" />} title="Fale assim na mesa"><TrainingRichText text={card.sales_pitch} italic /></Block> : null}
+      {card.fun_fact ? <Block icon={<Sparkles className="h-3.5 w-3.5" />} title="Curiosidade"><TrainingRichText text={card.fun_fact} /></Block> : null}
+      {card.do_not_confuse ? <Block icon={<AlertTriangle className="h-3.5 w-3.5" />} title="Não confunda"><TrainingRichText text={card.do_not_confuse} /></Block> : null}
     </div>
   );
 }

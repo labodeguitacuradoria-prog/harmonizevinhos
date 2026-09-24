@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { GraduationCap, Sparkles, Save, Eye, KeyRound, Trophy, ChevronDown, Info, Search } from "lucide-react";
+import { TrainingTextarea } from "@/components/training/TrainingRichText";
 import ModuleGate from "@/components/ModuleGate";
 import StoryCard from "@/components/training/StoryCard";
 import { Button } from "@/components/ui/button";
@@ -465,12 +466,12 @@ function TrainingPage() {
               <div className="mt-3 space-y-2">
                 <label className="block text-[11px] font-semibold text-primary">
                   Resumo para apresentar ao cliente
-                  <textarea
+                  <TrainingTextarea
                     value={draft.compact_summary}
-                    onChange={(e) => setDraft((d) => ({ ...d, compact_summary: e.target.value }))}
+                    onChange={(value) => setDraft((d) => ({ ...d, compact_summary: value }))}
                     rows={4}
                     maxLength={900}
-                    className="mt-1 w-full rounded-md border border-primary/50 bg-background p-2 text-base leading-relaxed text-foreground"
+                    className="w-full rounded-md border border-primary/50 bg-background p-2 text-base leading-relaxed text-foreground"
                   />
                 </label>
                 <details className="rounded-md border border-border p-2">
@@ -492,11 +493,11 @@ function TrainingPage() {
                 ).map(([key, label]) => (
                   <label key={key} className="block text-[11px] text-muted-foreground">
                     {label}
-                    <textarea
+                    <TrainingTextarea
                       value={draft[key]}
-                      onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
+                      onChange={(value) => setDraft((d) => ({ ...d, [key]: value }))}
                       rows={key === "origin_story" || key === "name_meaning" ? 3 : 2}
-                      className="mt-1 w-full rounded-md border border-border bg-background p-2 text-sm text-foreground"
+                      className="w-full rounded-md border border-border bg-background p-2 text-sm text-foreground"
                     />
                   </label>
                 ))}

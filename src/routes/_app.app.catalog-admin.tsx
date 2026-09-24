@@ -808,7 +808,7 @@ function EditorModal({ item, initialTab = "geral", onChange, onClose, onSave }: 
 // Completeness panel — highlights labels missing key information
 // ============================================================
 
-type FieldCheck = { key: string; label: string; tab: "geral" | "carac" | "midia"; ok: boolean };
+type FieldCheck = { key: string; label: string; tab: "geral" | "carac" | "midia" | "training"; ok: boolean };
 
 const EUROPEAN_COUNTRIES = ["frança","franca","france","itália","italia","italy","espanha","spain","españa","portugal","alemanha","germany","deutschland","áustria","austria","grécia","grecia","greece","hungria","hungary","suíça","suica","switzerland","romênia","romenia","romania","bulgária","bulgaria","croácia","croacia","croatia","eslovênia","eslovenia","slovenia","reino unido","uk","inglaterra","england","luxemburgo","luxembourg","holanda","netherlands","bélgica","belgica","belgium","república tcheca","chéquia","czechia","eslováquia","slovakia","moldávia","moldova","geórgia","georgia"];
 function isEuropeanCountry(c: string | null | undefined): boolean {

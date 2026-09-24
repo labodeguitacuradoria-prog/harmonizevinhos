@@ -58,7 +58,7 @@ export default function GlobalTrainingCardEditor({ wine }: { wine: StoryCardData
     setBusy(true);
     try {
       let imageUrl = savedImageUrl;
-      if (!imageUrl && wine.image_url) {
+      if (wine.image_url) {
         const blob = await normalizedBottleBlob(wine.image_url);
         if (!blob) throw new Error("Não foi possível padronizar a imagem deste rótulo. Verifique a imagem principal e tente novamente.");
         const path = `catalog/training-images/${catalogId}.jpg`;

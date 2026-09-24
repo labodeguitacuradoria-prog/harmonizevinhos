@@ -88,6 +88,7 @@ function CatalogAdmin() {
   const [editing, setEditing] = useState<Partial<WineCatalog> | null>(null);
   const [initialTab, setInitialTab] = useState<"geral" | "carac" | "midia" | "training">("geral");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [cardStatus, setCardStatus] = useState<Record<string, string>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
   const [enrichBusy, setEnrichBusy] = useState(false);
@@ -108,7 +109,13 @@ function CatalogAdmin() {
 
   async function fetchCatalog() {
     setLoading(true);
-    const { data } = await supabase.from("wine_catalog").select("*").order("created_at", { ascending: false });
+    const [{ data }, { data: cards }] = await Promise.all([
+      supabase.from("wine_catalog").select("*").order("created_at", { ascending: false }),
+      supabase.from("global_wine_story_cards").select("catalog_id, status"),
+    ]);
+    const map: Record<string, string> = {};
+    (cards ?? []).forEach((c: any) => { map[c.catalog_id] = c.status; });
+    setCardStatus(map);
     if (data) setItems(data as any);
     setLoading(false);
   }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Eye, Save, Sparkles } from "lucide-react";
+import { Eye, FileText, Save, Sparkles } from "lucide-react";
+import { prefillTrainingFromWine } from "@/lib/training-prefill";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateGlobalTrainingCard, saveGlobalTrainingCard } from "@/lib/global-training.functions";
@@ -14,19 +15,36 @@ export default function GlobalTrainingCardEditor({ wine }: { wine: StoryCardData
   const [busy, setBusy] = useState(false);
   const catalogId = wine.id;
 
+  const [saved, setSaved] = useState(false);
   useEffect(() => {
-    if (!catalogId) return;
+    if (!catalogId) { setDraft(prefillTrainingFromWine(wine)); return; }
     void supabase.from("global_wine_story_cards").select("*").eq("catalog_id", catalogId).maybeSingle().then(({ data }) => {
-      if (!data) return;
+      if (!data) { setDraft(prefillTrainingFromWine(wine)); setSaved(false); return; }
+      setSaved(true);
       setDraft({ compact_summary: data.compact_summary ?? "", grapes_line: data.grapes_line ?? "", making_line: data.making_line ?? "", origin_story: data.origin_story ?? "", name_meaning: data.name_meaning ?? "", mouthfeel: data.mouthfeel ?? "", pairings: data.pairings ?? [], sales_pitch: data.sales_pitch ?? "", fun_fact: data.fun_fact ?? "", do_not_confuse: data.do_not_confuse ?? "" });
       setStatus(data.status as "draft" | "published");
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catalogId]);
+
+  function fillFromRecord() {
+    const pre = prefillTrainingFromWine(wine);
+    setDraft((d) => {
+      const out: any = { ...d };
+      for (const [k, v] of Object.entries(pre)) {
+        const cur = (d as any)[k];
+        const empty = Array.isArray(cur) ? cur.length === 0 : !String(cur ?? "").trim();
+        if (empty) out[k] = v;
+      }
+      return out;
+    });
+    toast.success("Campos vazios preenchidos com os dados do cadastro.");
+  }
 
   async function generate() {
     if (!catalogId) return toast.error("Salve o rótulo antes de criar a ficha.");
     setBusy(true);
-    try { setDraft(await generateGlobalTrainingCard({ data: { catalog_id: catalogId } })); setStatus("draft"); toast.success("Ficha global criada como rascunho."); }
+    try { setDraft(await generateGlobalTrainingCard({ data: { catalog_id: catalogId } })); setStatus("draft"); setSaved(true); toast.success("Ficha global criada como rascunho."); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Falha ao gerar ficha."); }
     finally { setBusy(false); }
   }
@@ -34,7 +52,7 @@ export default function GlobalTrainingCardEditor({ wine }: { wine: StoryCardData
   async function save(nextStatus: "draft" | "published") {
     if (!catalogId) return toast.error("Salve o rótulo antes de criar a ficha.");
     setBusy(true);
-    try { await saveGlobalTrainingCard({ data: { catalog_id: catalogId, status: nextStatus, ...draft } }); setStatus(nextStatus); toast.success(nextStatus === "published" ? "Ficha global publicada." : "Rascunho salvo."); }
+    try { await saveGlobalTrainingCard({ data: { catalog_id: catalogId, status: nextStatus, ...draft } }); setStatus(nextStatus); setSaved(true); toast.success(nextStatus === "published" ? "Ficha global publicada." : "Rascunho salvo."); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Falha ao salvar ficha."); }
     finally { setBusy(false); }
   }
@@ -42,7 +60,7 @@ export default function GlobalTrainingCardEditor({ wine }: { wine: StoryCardData
   const fields = [["grapes_line", "Uvas"], ["making_line", "Como é feito"], ["origin_story", "De onde vem"], ["name_meaning", "Por que esse nome"], ["mouthfeel", "Como é na boca"], ["sales_pitch", "Fale assim na mesa"], ["fun_fact", "Curiosidade"], ["do_not_confuse", "Não confunda"]] as const;
   return <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
     <div className="space-y-3">
-      <div className="flex items-center justify-between"><span className="text-xs font-bold uppercase text-primary">Ficha global · {status === "published" ? "Publicada" : "Rascunho"}</span><Button type="button" size="sm" variant="outline" onClick={generate} disabled={busy}><Sparkles /> Gerar com IA</Button></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-bold uppercase text-primary">Ficha global · {!saved ? "Não salva (pré-preenchida com o cadastro)" : status === "published" ? "Publicada" : "Rascunho"}</span><div className="flex gap-2"><Button type="button" size="sm" variant="outline" onClick={fillFromRecord} disabled={busy}><FileText /> Usar dados do cadastro</Button><Button type="button" size="sm" variant="outline" onClick={generate} disabled={busy}><Sparkles /> Aprimorar com IA</Button></div></div>
       <label className="block text-xs font-semibold text-primary">Resumo para apresentar ao cliente<textarea value={draft.compact_summary} onChange={(e) => setDraft(d => ({ ...d, compact_summary: e.target.value }))} rows={4} className="mt-1 w-full rounded-md border border-primary/50 bg-background p-2 text-base text-foreground" /></label>
       <div className="grid gap-2 md:grid-cols-2">{fields.map(([key, label]) => <label key={key} className="text-xs text-muted-foreground">{label}<textarea value={draft[key]} onChange={(e) => setDraft(d => ({ ...d, [key]: e.target.value }))} rows={2} className="mt-1 w-full rounded-md border border-border bg-background p-2 text-sm text-foreground" /></label>)}</div>
       <label className="block text-xs text-muted-foreground">Combina com (um prato por linha)<textarea value={draft.pairings.join("\n")} onChange={(e) => setDraft(d => ({ ...d, pairings: e.target.value.split("\n").filter(Boolean).slice(0, 5) }))} rows={3} className="mt-1 w-full rounded-md border border-border bg-background p-2 text-sm text-foreground" /></label>

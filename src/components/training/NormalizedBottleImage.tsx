@@ -12,6 +12,15 @@ const OUTPUT_HEIGHT = 1800;
 const normalizedCache = new Map<string, string>();
 const normalizationJobs = new Map<string, Promise<string>>();
 
+function isPersistedTrainingImage(src: string) {
+  try {
+    const url = new URL(src, window.location.origin);
+    return url.pathname.includes("training-images/") || url.searchParams.get("path")?.includes("training-images/") === true;
+  } catch {
+    return src.includes("training-images/");
+  }
+}
+
 function analyzeEdge(data: Uint8ClampedArray, width: number, height: number) {
   const buckets = new Map<string, { count: number; r: number; g: number; b: number }>();
   let transparent = 0;
@@ -145,6 +154,7 @@ function normalizeImage(image: HTMLImageElement) {
 }
 
 export function loadNormalizedImage(src: string): Promise<string> {
+  if (isPersistedTrainingImage(src)) return Promise.resolve(src);
   const cached = normalizedCache.get(src);
   if (cached) return Promise.resolve(cached);
   const running = normalizationJobs.get(src);

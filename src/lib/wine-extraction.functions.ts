@@ -21,10 +21,7 @@ Instruções específicas:
    - Acidez Total ("acidezVal") em g/l
    - pH ("ph")
 8. Para espumantes, identifique o método de produção ("metodoProducao"): "Tradicional", "Charmat" ou "Asti". Se não for espumante, deixe null.
-9. Na propriedade "informacoes_tecnicas", redija um texto altamente didático em português, estruturado nas 5 seções abaixo, cada uma separada por quebras de linha duplas:
-
-**COMENTÁRIOS DO PRODUTOR E MÉTODOS DE PRODUÇÃO/MATURAÇÃO**
-[introdução sobre história, produtor, terroir e técnicas de vinificação/barrica]
+9. Na propriedade "informacoes_tecnicas", redija um texto altamente didático em português. Comece diretamente com um parágrafo sobre história, produtor, terroir e técnicas de vinificação/barrica, SEM adicionar título antes desse parágrafo. Depois, use as 4 seções abaixo, cada uma separada por quebras de linha duplas:
 
 **ANÁLISE VISUAL**
 [cor, intensidade, halo de evolução, brilho, limpidez]
@@ -48,7 +45,7 @@ Instruções específicas:
    - "docura" (1=Seco, 10=Doce — coerente com açúcar residual)
    - "estagioBarrica" (1=Sem madeira, 10=Muito amadeirado — coerente com meses em barrica)
    - "intensidadeAromatica" (1=Delicado, 10=Exuberante)
-14. Na propriedade "informacoes_tecnicas", redija texto didático estruturado em 5 blocos separados por \\n\\n: **COMENTÁRIOS DO PRODUTOR E MÉTODOS**, **ANÁLISE VISUAL**, **ANÁLISE OLFATIVA**, **ANÁLISE GUSTATIVA**, **HARMONIZAÇÃO**.
+14. Na propriedade "informacoes_tecnicas", redija texto didático estruturado em 5 blocos separados por \\n\\n: um parágrafo introdutório SEM título, **ANÁLISE VISUAL**, **ANÁLISE OLFATIVA**, **ANÁLISE GUSTATIVA**, **HARMONIZAÇÃO**.
 15. Na propriedade "texto_original", transcreva textualmente o conteúdo relevante do material original.
 16. **PREMIAÇÕES** — extraia em "premiacoes" (array de strings, até 10 itens) todos os prêmios/pontuações citados no material. Ex: "92 pts Wine Spectator 2022", "Medalha de Ouro Decanter 2021". Se nenhum, retorne [].
 17. **IMAGEM DO RÓTULO** — se o material contiver uma URL absoluta (http/https) apontando para uma imagem/foto do rótulo/garrafa, retorne-a em "imagemUrl"; caso contrário null. Não invente URL.
@@ -246,7 +243,10 @@ function coerceExtracted(p: any): ExtractedWine {
     ph: num(p.ph),
     metodoProducao: str(p.metodoProducao),
     pesos,
-    informacoes_tecnicas: str(p.informacoes_tecnicas),
+    informacoes_tecnicas: str(p.informacoes_tecnicas)?.replace(
+      /^\s*\*{0,2}COMENT(?:Á|A)RIOS? DO PRODUTOR E M(?:É|E)TODOS(?: DE PRODUÇÃO\/MATURAÇÃO)?\*{0,2}\s*/i,
+      "",
+    ) || null,
     texto_original: str(p.texto_original),
     premiacoes: Array.isArray(p.premiacoes) ? p.premiacoes.map(str).filter(Boolean) as string[] : null,
     imagemUrl: str(p.imagemUrl),

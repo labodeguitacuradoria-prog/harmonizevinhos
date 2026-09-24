@@ -43,6 +43,13 @@
       "when": 1790171031175,
       "tag": "0005_global_training_cards_and_video_library",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790254451131,
+      "tag": "0006_store_normalized_training_card_images",
+      "breakpoints": true
     }
   ]
 }

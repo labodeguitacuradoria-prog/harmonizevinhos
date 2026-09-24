@@ -78,6 +78,7 @@ type CardRow = {
   sales_pitch: string | null;
   fun_fact: string | null;
   do_not_confuse: string | null;
+  image_url: string | null;
   video_status: string;
   video_published: boolean;
 };
@@ -132,7 +133,7 @@ function TrainingPage() {
       const { data, error } = await supabase
         .from("wine_story_cards")
         .select(
-          "wine_id, status, compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, video_status, video_published",
+          "wine_id, status, compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, image_url, video_status, video_published",
         )
         .eq("restaurant_id", restaurantId);
       if (error) throw new Error(error.message);
@@ -217,7 +218,7 @@ function TrainingPage() {
         const { data } = await supabase
           .from("wine_story_cards")
           .select(
-            "wine_id, status, compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, video_status, video_published",
+            "wine_id, status, compact_summary, grapes_line, making_line, origin_story, name_meaning, mouthfeel, pairings, sales_pitch, fun_fact, do_not_confuse, image_url, video_status, video_published",
           )
           .eq("wine_id", editing)
           .maybeSingle();
@@ -544,7 +545,7 @@ function TrainingPage() {
                   Como a equipe vê
                 </div>
                 <div className="mx-auto h-[min(680px,70vh)] max-w-[360px]">
-                  <StoryCard card={{ ...editingWine, ...draft }} />
+                  <StoryCard card={{ ...editingWine, ...draft, image_url: byWine.get(editingWine.id)?.image_url || editingWine.image_url }} />
                 </div>
               </div>
 

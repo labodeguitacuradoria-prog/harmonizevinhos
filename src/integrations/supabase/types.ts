@@ -265,6 +265,7 @@ export type Database = {
           generated_by_ai: boolean
           grapes_line: string | null
           id: string
+          image_url: string | null
           making_line: string | null
           model_notes: string | null
           mouthfeel: string | null
@@ -284,6 +285,7 @@ export type Database = {
           generated_by_ai?: boolean
           grapes_line?: string | null
           id?: string
+          image_url?: string | null
           making_line?: string | null
           model_notes?: string | null
           mouthfeel?: string | null
@@ -303,6 +305,7 @@ export type Database = {
           generated_by_ai?: boolean
           grapes_line?: string | null
           id?: string
+          image_url?: string | null
           making_line?: string | null
           model_notes?: string | null
           mouthfeel?: string | null
@@ -1846,6 +1849,7 @@ export type Database = {
           generated_by_ai: boolean
           grapes_line: string | null
           id: string
+          image_url: string | null
           making_line: string | null
           model_notes: string | null
           mouthfeel: string | null
@@ -1873,6 +1877,7 @@ export type Database = {
           generated_by_ai?: boolean
           grapes_line?: string | null
           id?: string
+          image_url?: string | null
           making_line?: string | null
           model_notes?: string | null
           mouthfeel?: string | null
@@ -1900,6 +1905,7 @@ export type Database = {
           generated_by_ai?: boolean
           grapes_line?: string | null
           id?: string
+          image_url?: string | null
           making_line?: string | null
           model_notes?: string | null
           mouthfeel?: string | null

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateGlobalTrainingCard, saveGlobalTrainingCard } from "@/lib/global-training.functions";
 import StoryCard, { type StoryCardData } from "./StoryCard";
+import { normalizedBottleBlob } from "./NormalizedBottleImage";
 import { TrainingTextarea } from "./TrainingRichText";
 import { Button } from "@/components/ui/button";
 
@@ -17,11 +18,13 @@ export default function GlobalTrainingCardEditor({ wine }: { wine: StoryCardData
   const catalogId = wine.id;
 
   const [saved, setSaved] = useState(false);
+  const [savedImageUrl, setSavedImageUrl] = useState<string | null>(null);
   useEffect(() => {
     if (!catalogId) { setDraft(prefillTrainingFromWine(wine)); return; }
     void supabase.from("global_wine_story_cards").select("*").eq("catalog_id", catalogId).maybeSingle().then(({ data }) => {
-      if (!data) { setDraft(prefillTrainingFromWine(wine)); setSaved(false); return; }
+      if (!data) { setDraft(prefillTrainingFromWine(wine)); setSaved(false); setSavedImageUrl(null); return; }
       setSaved(true);
+      setSavedImageUrl(data.image_url ?? null);
       setDraft({ compact_summary: data.compact_summary ?? "", grapes_line: data.grapes_line ?? "", making_line: data.making_line ?? "", origin_story: data.origin_story ?? "", name_meaning: data.name_meaning ?? "", mouthfeel: data.mouthfeel ?? "", pairings: data.pairings ?? [], sales_pitch: data.sales_pitch ?? "", fun_fact: data.fun_fact ?? "", do_not_confuse: data.do_not_confuse ?? "" });
       setStatus(data.status as "draft" | "published");
     });
@@ -53,7 +56,20 @@ export default function GlobalTrainingCardEditor({ wine }: { wine: StoryCardData
   async function save(nextStatus: "draft" | "published") {
     if (!catalogId) return toast.error("Salve o rótulo antes de criar a ficha.");
     setBusy(true);
-    try { await saveGlobalTrainingCard({ data: { catalog_id: catalogId, status: nextStatus, ...draft } }); setStatus(nextStatus); setSaved(true); toast.success(nextStatus === "published" ? "Ficha global publicada." : "Rascunho salvo."); }
+    try {
+      let imageUrl = savedImageUrl;
+      if (wine.image_url) {
+        const blob = await normalizedBottleBlob(wine.image_url);
+        if (!blob) throw new Error("Não foi possível padronizar a imagem deste rótulo. Verifique a imagem principal e tente novamente.");
+        const path = `catalog/training-images/${catalogId}.jpg`;
+        const { error: uploadError } = await supabase.storage.from("product-media").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000", upsert: true });
+        if (uploadError) throw uploadError;
+        imageUrl = `/api/public/catalog-file?path=${encodeURIComponent(path)}`;
+      }
+      await saveGlobalTrainingCard({ data: { catalog_id: catalogId, status: nextStatus, image_url: imageUrl, ...draft } });
+      setSavedImageUrl(imageUrl);
+      setStatus(nextStatus); setSaved(true); toast.success(nextStatus === "published" ? "Ficha global publicada com a imagem padronizada." : "Rascunho e imagem padronizada salvos.");
+    }
     catch (e) { toast.error(e instanceof Error ? e.message : "Falha ao salvar ficha."); }
     finally { setBusy(false); }
   }
@@ -67,6 +83,6 @@ export default function GlobalTrainingCardEditor({ wine }: { wine: StoryCardData
       <label className="block text-xs text-muted-foreground">Combina com (um prato por linha)<textarea value={draft.pairings.join("\n")} onChange={(e) => setDraft(d => ({ ...d, pairings: e.target.value.split("\n").filter(Boolean).slice(0, 5) }))} rows={3} className="mt-1 w-full rounded-md border border-border bg-background p-2 text-sm text-foreground" /></label>
       <div className="flex gap-2"><Button type="button" variant="outline" onClick={() => save("draft")} disabled={busy}><Save /> Salvar rascunho global</Button><Button type="button" onClick={() => save("published")} disabled={busy}><Eye /> Publicar ficha global</Button></div>
     </div>
-    <div><div className="mb-2 text-xs font-bold uppercase text-primary">Como o staff verá</div><div className="h-[620px]"><StoryCard card={{ ...wine, ...draft }} /></div></div>
+    <div><div className="mb-2 text-xs font-bold uppercase text-primary">Como o staff verá</div><div className="h-[620px]"><StoryCard card={{ ...wine, ...draft, image_url: savedImageUrl || wine.image_url }} /></div></div>
   </div>;
 }

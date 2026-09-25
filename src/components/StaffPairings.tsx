@@ -94,6 +94,7 @@ export function StaffPairings({ token }: { token: string }) {
 
               {isOpen && (
                 <div className="space-y-3 border-t border-border p-4 pt-3">
+                  {dish.description && <p className="text-xs leading-relaxed text-muted-foreground">{dish.description}</p>}
                   {pairing?.profile && <p className="text-xs leading-relaxed text-muted-foreground">{pairing.profile}</p>}
                   {pairing?.gap && pairing.gap_note && (
                     <div className="rounded-lg border border-secondary bg-secondary/10 p-3 text-xs text-foreground/90">

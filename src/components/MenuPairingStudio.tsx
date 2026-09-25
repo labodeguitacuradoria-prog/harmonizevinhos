@@ -523,23 +523,23 @@ export function MenuPairingStudio() {
             </Button>
           )}
         </div>
-+        {publishedDate && (
-+          <p className="mt-3 text-[11px] text-muted-foreground">Última publicação para o staff: {publishedDate}</p>
-+        )}
-+        {staffLink && (
-+          <div className="mt-4 rounded-lg border border-primary/40 bg-background p-3">
-+            <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Link mobile do staff</div>
-+            <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-foreground">{staffLink.text}</pre>
-+            <div className="mt-3 flex flex-wrap gap-2">
-+              <Button type="button" variant="outline" size="sm" onClick={() => copy(staffLink.text)}>
-+                <Copy className="h-3.5 w-3.5" /> Copiar texto
-+              </Button>
-+              <Button type="button" variant="outline" size="sm" onClick={() => copy(staffLink.url)}>
-+                <Copy className="h-3.5 w-3.5" /> Copiar link
-+              </Button>
-+            </div>
-+          </div>
-+        )}
+        {publishedDate && (
+          <p className="mt-3 text-[11px] text-muted-foreground">Última publicação para o staff: {publishedDate}</p>
+        )}
+        {staffLink && (
+          <div className="mt-4 rounded-lg border border-primary/40 bg-background p-3">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Link mobile do staff</div>
+            <pre className="mt-2 whitespace-pre-wrap break-all text-xs text-foreground">{staffLink.text}</pre>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => copy(staffLink.text)}>
+                <Copy className="h-3.5 w-3.5" /> Copiar texto
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => copy(staffLink.url)}>
+                <Copy className="h-3.5 w-3.5" /> Copiar link
+              </Button>
+            </div>
+          </div>
+        )}
       </section>
 
       {busy === "pair" && (

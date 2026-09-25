@@ -169,6 +169,11 @@ export function MenuPairingStudio() {
       .map(([label, wines]) => ({ label, wines }));
   }, [wineOptions]);
 
+  const { data: savedGuide } = useQuery({
+    queryKey: ["menu-pairing-guide", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      if (!restaurantId) return null;
       return getGuide({ data: { restaurantId } });
     },
   });

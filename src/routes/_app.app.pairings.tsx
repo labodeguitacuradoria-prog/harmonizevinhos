@@ -1,21 +1,23 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { UtensilsCrossed, ExternalLink } from "lucide-react";
 import { PairingStudio } from "@/components/PairingStudio";
+import { MenuPairingStudio } from "@/components/MenuPairingStudio";
 import ModuleGate from "@/components/ModuleGate";
 
 export const Route = createFileRoute("/_app/app/pairings")({
   head: () => ({
     meta: [
-      { title: "Harmonizações — Sommelier IA" },
+      { title: "Harmonizações — Cardápio x Carta de Vinhos" },
       {
         name: "description",
         content:
-          "Descreva o prato e receba a decomposição sensorial e sugestões de harmonização de vinhos nacionais e internacionais.",
+          "Cruze o cardápio do restaurante com a carta de vinhos e receba as melhores harmonizações, frases de mesa e alertas de gaps.",
       },
-      { property: "og:title", content: "Harmonizações — Sommelier IA" },
+      { property: "og:title", content: "Harmonizações — Cardápio x Carta de Vinhos" },
       {
         property: "og:description",
-        content: "Decomposição sensorial de pratos e sugestões de harmonização por IA.",
+        content: "Harmonização do cardápio usando somente os vinhos da carta do restaurante.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -29,6 +31,7 @@ export const Route = createFileRoute("/_app/app/pairings")({
 });
 
 function PairingsPage() {
+  const [tab, setTab] = useState<"menu" | "open">("menu");
   return (
     <div className="mx-auto w-full max-w-6xl p-6">
       <header className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
@@ -45,7 +48,26 @@ function PairingsPage() {
         </a>
       </header>
 
-      <PairingStudio />
+      <div className="mb-5 flex gap-2">
+        {([
+          ["menu", "Cardápio x Carta"],
+          ["open", "Sugestão aberta"],
+        ] as const).map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => setTab(k)}
+            className={`rounded-lg border px-4 py-2 text-[11px] font-bold uppercase transition ${
+              tab === k
+                ? "border-primary bg-card text-primary"
+                : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "menu" ? <MenuPairingStudio /> : <PairingStudio />}
     </div>
   );
 }

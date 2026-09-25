@@ -142,7 +142,7 @@ export function MenuPairingStudio() {
 
   function wineGroupLabel(raw: string | null): string {
     const t = (raw ?? "").trim().toLowerCase();
-    if (/espuma|sparkl|champ|cava|prosecc|frizz|moscat"/i.test(t) && !/tinto/.test(t)) return "Espumantes";
+    if (/espuma|sparkl|champ|cava|prosecc|frizz|moscat/i.test(t) && !/tinto/.test(t)) return "Espumantes";
     if (/branc|white|chard|sauvignon|riesling|pinot gris|grüner|glera|albari|gewürz|chenin|viogn|gree?n?g?o|arneis|verdejo|verdelho/i.test(t))
       return "Brancos";
     if (/rosé|rosado|clarete|blush/i.test(t)) return "Rosés";
@@ -737,10 +737,14 @@ export function MenuPairingStudio() {
                           onChange={(e) => selectWine(j, e.target.value)}
                           className="mt-1 h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
                         >
-                          {wineOptions.map((w) => (
-                            <option key={w.id} value={w.id}>
-                              {[w.internal_code, w.name, w.country, w.volume].filter(Boolean).join(" · ")}
-                            </option>
+                          {groupedWineOptions.map((g) => (
+                            <optgroup key={g.label} label={g.label}>
+                              {g.wines.map((w) => (
+                                <option key={w.id} value={w.id}>
+                                  {[w.internal_code, w.name, w.country, w.volume].filter(Boolean).join(" · ")}
+                                </option>
+                              ))}
+                            </optgroup>
                           ))}
                         </select>
                       </label>

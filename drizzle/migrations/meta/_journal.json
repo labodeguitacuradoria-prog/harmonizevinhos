@@ -50,6 +50,13 @@
       "when": 1790254451131,
       "tag": "0006_store_normalized_training_card_images",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790354183311,
+      "tag": "0007_restaurant_menu_pairing_guides",
+      "breakpoints": true
     }
   ]
 }

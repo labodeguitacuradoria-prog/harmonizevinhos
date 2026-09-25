@@ -918,6 +918,50 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_menu_pairing_guides: {
+        Row: {
+          created_at: string
+          dishes: Json
+          id: string
+          published_at: string | null
+          restaurant_id: string
+          results: Json
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          dishes?: Json
+          id?: string
+          published_at?: string | null
+          restaurant_id: string
+          results?: Json
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          dishes?: Json
+          id?: string
+          published_at?: string | null
+          restaurant_id?: string
+          results?: Json
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_menu_pairing_guides_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_supplier_access: {
         Row: {
           created_at: string
@@ -2197,7 +2241,7 @@ export type Database = {
     }
     Enums: {
       access_link_device_kind: "mobile" | "desktop"
-      access_link_scope: "dashboard" | "stock_count" | "training"
+      access_link_scope: "dashboard" | "stock_count" | "training" | "pairings"
       app_module:
         | "full"
         | "dashboard"
@@ -2364,7 +2408,7 @@ export const Constants = {
   public: {
     Enums: {
       access_link_device_kind: ["mobile", "desktop"],
-      access_link_scope: ["dashboard", "stock_count", "training"],
+      access_link_scope: ["dashboard", "stock_count", "training", "pairings"],
       app_module: [
         "full",
         "dashboard",

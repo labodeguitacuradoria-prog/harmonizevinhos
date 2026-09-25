@@ -101,26 +101,41 @@ export function StaffPairings({ token }: { token: string }) {
                     </div>
                   )}
                   {pairing?.picks?.length ? (
-                    <ol className="space-y-3">
-                      {pairing.picks.map((p, j) => (
-                        <li key={`${p.wine_id}-${j}`} className="rounded-lg border border-border bg-background p-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="text-sm font-semibold text-foreground">
-                                {p.wine?.internal_code && <span className="mr-1 text-muted-foreground">{p.wine.internal_code}</span>}
-                                {p.wine?.name ?? "Rótulo da carta"}
+                    <ol className="space-y-2">
+                      {pairing.picks.map((p, j) => {
+                        const pickKey = `${dish.name}-${j}`;
+                        const pickOpen = openPick === pickKey;
+                        return (
+                          <li key={`${p.wine_id}-${j}`} className="rounded-lg border border-border bg-background">
+                            <button
+                              type="button"
+                              onClick={() => setOpenPick(pickOpen ? null : pickKey)}
+                              className="flex w-full items-start justify-between gap-2 p-3 text-left"
+                            >
+                              <div className="min-w-0">
+                                <div className="text-sm font-semibold text-foreground">
+                                  {p.wine?.internal_code && <span className="mr-1 text-muted-foreground">{p.wine.internal_code}</span>}
+                                  {p.wine?.name ?? "Rótulo da carta"}
+                                </div>
+                                <div className="mt-0.5 text-[10px] uppercase text-muted-foreground">
+                                  {[p.wine?.wine_type, p.wine?.country, p.wine?.volume].filter(Boolean).join(" · ")}
+                                  {p.wine ? ` · ${brl(Number(p.wine.sale_price ?? 0))}` : ""}
+                                </div>
                               </div>
-                              <div className="mt-0.5 text-[10px] uppercase text-muted-foreground">
-                                {[p.wine?.wine_type, p.wine?.country, p.wine?.volume].filter(Boolean).join(" · ")}
-                                {p.wine ? ` · ${brl(Number(p.wine.sale_price ?? 0))}` : ""}
+                              <div className="flex shrink-0 items-center gap-2">
+                                <span className="rounded border border-primary/60 px-1.5 text-[11px] font-bold text-primary">{p.score}/10</span>
+                                <ChevronDown className={`h-3.5 w-3.5 text-primary transition ${pickOpen ? "rotate-180" : ""}`} />
                               </div>
-                            </div>
-                            <span className="shrink-0 rounded border border-primary/60 px-1.5 text-[11px] font-bold text-primary">{p.score}/10</span>
-                          </div>
-                          {p.reason && <p className="mt-2 text-xs leading-relaxed text-foreground/80">{p.reason}</p>}
-                          {p.table_phrase && <p className="mt-2 text-sm font-medium leading-relaxed text-primary/90">“{p.table_phrase}”</p>}
-                        </li>
-                      ))}
+                            </button>
+                            {pickOpen && (
+                              <div className="space-y-2 border-t border-border px-3 py-3">
+                                {p.reason && <p className="text-xs leading-relaxed text-foreground/80">{p.reason}</p>}
+                                {p.table_phrase && <p className="text-sm font-medium leading-relaxed text-primary/90">“{p.table_phrase}”</p>}
+                              </div>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ol>
                   ) : (
                     <p className="text-sm text-muted-foreground">Nenhum rótulo da carta indicado.</p>

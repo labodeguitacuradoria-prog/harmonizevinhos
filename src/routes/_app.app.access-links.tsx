@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_app/app/access-links")({
 type LinkRow = {
   id: string;
   label: string;
-  scope: "dashboard" | "stock_count" | "training";
+  scope: "dashboard" | "stock_count" | "training" | "pairings";
   device_kind: "mobile" | "desktop";
   single_device: boolean;
   expires_at: string | null;
@@ -42,6 +42,7 @@ type LinkRow = {
 function scopeLabel(s: LinkRow["scope"]) {
   if (s === "dashboard") return "Painel de controle (leitura)";
   if (s === "training") return "Fichas de treinamento do staff";
+  if (s === "pairings") return "Harmonizações para atendimento";
   return "Contagem de estoque";
 }
 
@@ -50,7 +51,7 @@ function AccessLinksPage() {
   const qc = useQueryClient();
 
   const [label, setLabel] = useState("");
-  const [scope, setScope] = useState<"dashboard" | "stock_count" | "training">("dashboard");
+  const [scope, setScope] = useState<"dashboard" | "stock_count" | "training" | "pairings">("dashboard");
   const [deviceKind, setDeviceKind] = useState<"mobile" | "desktop">("mobile");
   const [singleDevice, setSingleDevice] = useState(true);
   const [days, setDays] = useState(0);
@@ -64,7 +65,7 @@ function AccessLinksPage() {
       const { data, error } = await supabase
         .from("access_links")
         .select("id, label, scope, device_kind, single_device, expires_at, revoked_at, last_access_at, created_at")
-        .eq("restaurant_id", restaurantId!)
+          .eq("restaurant_id", restaurantId)
         .order("created_at", { ascending: false });
       if (error) throw new Error(error.message);
       return (data ?? []) as LinkRow[];
@@ -121,6 +122,8 @@ function AccessLinksPage() {
       const kindSeg =
         scope === "stock_count"
           ? "contagem"
+          : scope === "pairings"
+            ? "harmonizacoes"
           : scope === "training"
             ? "treinamento"
             : deviceKind === "mobile"
@@ -150,8 +153,8 @@ function AccessLinksPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Links de acesso rápido</h1>
       </div>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Crie um link para o chef ver o painel sem e-mail nem senha, ou para a equipe
-        registrar a contagem de estoque. O link pode ficar travado no primeiro
+        Crie um link para o chef ver o painel sem e-mail nem senha, para a equipe
+        consultar harmonizações no atendimento ou registrar a contagem de estoque. O link pode ficar travado no primeiro
         aparelho que abri-lo — em qualquer outro aparelho ele não funciona.
       </p>
 
@@ -171,10 +174,15 @@ function AccessLinksPage() {
             O que o link abre
             <select
               value={scope}
-              onChange={(e) => setScope(e.target.value as any)}
+              onChange={(e) => {
+                const next = e.target.value as "dashboard" | "stock_count" | "training" | "pairings";
+                setScope(next);
+                if (next === "pairings") setDeviceKind("mobile");
+              }}
               className="mt-1 h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
             >
               <option value="dashboard">Painel de controle (somente leitura)</option>
+              <option value="pairings">Harmonizações para atendimento</option>
               <option value="stock_count">Contagem de estoque</option>
               <option value="training">Fichas de treinamento do staff</option>
             </select>

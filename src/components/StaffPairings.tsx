@@ -17,6 +17,7 @@ export function StaffPairings({ token }: { token: string }) {
   const { theme, toggle } = useTheme();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(0);
+  const [openPick, setOpenPick] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["guest-menu-pairings", token],
     retry: false,

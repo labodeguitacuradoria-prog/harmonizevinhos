@@ -5,6 +5,14 @@ import { AlertTriangle, FileUp, Link2, Loader2, Sparkles, Trash2, Wine } from "l
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   extractMenuDishes,
   pairMenuWithWineList,
@@ -31,6 +39,7 @@ export function MenuPairingStudio() {
   const [dishes, setDishes] = useState<MenuDish[]>([]);
   const [results, setResults] = useState<DishPairing[]>([]);
   const [busy, setBusy] = useState<null | "extract" | "pair">(null);
+  const [openPairingIndex, setOpenPairingIndex] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const extract = useServerFn(extractMenuDishes);
   const pair = useServerFn(pairMenuWithWineList);
@@ -39,10 +48,11 @@ export function MenuPairingStudio() {
     queryKey: ["menu-pairing-wines", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
+      if (!restaurantId) return 0;
       const { count } = await supabase
         .from("wines")
         .select("id", { count: "exact", head: true })
-        .eq("restaurant_id", restaurantId!)
+        .eq("restaurant_id", restaurantId)
         .eq("active_on_menu", true);
       return count ?? 0;
     },
@@ -124,12 +134,13 @@ export function MenuPairingStudio() {
   }
 
   async function run() {
-    if (!dishes.length) return;
+    if (!dishes.length || !restaurantId) return;
     setBusy("pair");
+    setOpenPairingIndex(null);
     try {
       const out: DishPairing[] = [];
       for (let i = 0; i < dishes.length; i += 12) {
-        const r = await pair({ data: { restaurantId: restaurantId!, dishes: dishes.slice(i, i + 12) } });
+        const r = await pair({ data: { restaurantId, dishes: dishes.slice(i, i + 12) } });
         out.push(...r);
       }
       setResults(out);
@@ -140,7 +151,24 @@ export function MenuPairingStudio() {
     }
   }
 
+  function removeDish(index: number) {
+    const dish = dishes[index];
+    setDishes((x) => x.filter((_, j) => j !== index));
+    setResults((x) => x.filter((r, j) => j !== index && (!dish || r.dish !== dish.name)));
+    if (openPairingIndex === index) setOpenPairingIndex(null);
+  }
+
+  function findPairing(dish: MenuDish, index: number) {
+    const byPosition = results[index];
+    if (byPosition?.dish.trim().toLocaleLowerCase("pt-BR") === dish.name.trim().toLocaleLowerCase("pt-BR")) {
+      return byPosition;
+    }
+    return results.find((r) => r.dish.trim().toLocaleLowerCase("pt-BR") === dish.name.trim().toLocaleLowerCase("pt-BR")) ?? null;
+  }
+
   const gaps = results.filter((r) => r.gap);
+  const openDish = openPairingIndex === null ? null : dishes[openPairingIndex] ?? null;
+  const openPairing = openDish && openPairingIndex !== null ? findPairing(openDish, openPairingIndex) : null;
 
   if (!isLoading && wineCount === 0)
     return (
@@ -227,13 +255,29 @@ export function MenuPairingStudio() {
                     <div className="truncate text-[11px] text-muted-foreground">{d.description}</div>
                   )}
                 </div>
-                <button
-                  aria-label="Remover prato"
-                  onClick={() => setDishes((x) => x.filter((_, j) => j !== i))}
-                  className="text-muted-foreground hover:text-primary"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Ver harmonização de ${d.name}`}
+                    disabled={!findPairing(d, i)}
+                    onClick={() => setOpenPairingIndex(i)}
+                    className="h-7 w-7 text-muted-foreground hover:text-primary disabled:opacity-30"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Remover prato"
+                    onClick={() => removeDish(i)}
+                    className="h-7 w-7 text-muted-foreground hover:text-primary"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
@@ -286,7 +330,7 @@ export function MenuPairingStudio() {
           </div>
 
           {!!gaps.length && (
-            <section className="rounded-xl border border-[#800020] bg-[#800020]/10 p-5">
+            <section className="rounded-xl border border-secondary bg-secondary/10 p-5">
               <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
                 <AlertTriangle className="h-4 w-4" /> Alertas de gaps
               </div>
@@ -299,49 +343,55 @@ export function MenuPairingStudio() {
               </ul>
             </section>
           )}
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {results.map((r, i) => (
-              <section
-                key={i}
-                className={`rounded-xl border bg-card p-5 ${r.gap ? "border-[#800020]" : "border-border"}`}
-              >
-                <div className="text-sm font-bold text-primary">{r.dish}</div>
-                <div className="mb-3 text-[11px] text-muted-foreground">{r.profile}</div>
-                {r.picks.length ? (
-                  <ol className="space-y-3">
-                    {r.picks.map((p, j) => (
-                      <li key={j} className="rounded-md border border-border p-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="text-sm">
-                              {p.wine?.internal_code && (
-                                <span className="mr-1 text-muted-foreground">{p.wine.internal_code}</span>
-                              )}
-                              {p.wine?.name}
-                            </div>
-                            <div className="text-[10px] uppercase text-muted-foreground">
-                              {[p.wine?.wine_type, p.wine?.country, p.wine?.volume].filter(Boolean).join(" · ")}
-                              {p.wine ? ` · ${brl(p.wine.sale_price)}` : ""}
-                            </div>
-                          </div>
-                          <span className="shrink-0 rounded border border-primary/60 px-1.5 text-[11px] font-bold text-primary">
-                            {p.score}/10
-                          </span>
-                        </div>
-                        <p className="mt-1.5 text-[12px] text-foreground/80">{p.reason}</p>
-                        <p className="mt-1 text-[12px] italic text-primary/90">“{p.table_phrase}”</p>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p className="text-[12px] text-muted-foreground">Nenhum rótulo da carta indicado.</p>
-                )}
-              </section>
-            ))}
-          </div>
         </>
       )}
+
+      <Dialog open={openPairingIndex !== null} onOpenChange={(open) => !open && setOpenPairingIndex(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-border bg-card p-0 sm:max-w-2xl">
+          <DialogHeader className="border-b border-border p-5 pr-12">
+            <DialogTitle className="text-primary">{openPairing?.dish ?? openDish?.name ?? "Harmonização"}</DialogTitle>
+            <DialogDescription>{openPairing?.profile ?? "Harmonização deste prato."}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 p-5">
+            {openPairing?.gap && (
+              <div className="rounded-lg border border-secondary bg-secondary/10 p-3 text-sm">
+                <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                  <AlertTriangle className="h-4 w-4" /> Gap na carta
+                </div>
+                <p className="text-muted-foreground">{openPairing.gap_note}</p>
+              </div>
+            )}
+
+            {openPairing?.picks.length ? (
+              <ol className="space-y-3">
+                {openPairing.picks.map((p, j) => (
+                  <li key={j} className="rounded-md border border-border p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-sm">
+                          {p.wine?.internal_code && <span className="mr-1 text-muted-foreground">{p.wine.internal_code}</span>}
+                          {p.wine?.name}
+                        </div>
+                        <div className="text-[10px] uppercase text-muted-foreground">
+                          {[p.wine?.wine_type, p.wine?.country, p.wine?.volume].filter(Boolean).join(" · ")}
+                          {p.wine ? ` · ${brl(p.wine.sale_price)}` : ""}
+                        </div>
+                      </div>
+                      <span className="shrink-0 rounded border border-primary/60 px-1.5 text-[11px] font-bold text-primary">
+                        {p.score}/10
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-[12px] text-foreground/80">{p.reason}</p>
+                    <p className="mt-1 text-[12px] italic text-primary/90">“{p.table_phrase}”</p>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhum rótulo da carta indicado.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

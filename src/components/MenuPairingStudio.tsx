@@ -138,11 +138,37 @@ export function MenuPairingStudio() {
     },
   });
 
-  const { data: savedGuide } = useQuery({
-    queryKey: ["menu-pairing-guide", restaurantId],
-    enabled: !!restaurantId,
-    queryFn: async () => {
-      if (!restaurantId) return null;
+  const WINE_GROUP_ORDER = ["Espumantes", "Brancos", "Rosés", "Tintos", "Fortificados"] as const;
+
+  function wineGroupLabel(raw: string | null): string {
+    const t = (raw ?? "").trim().toLowerCase();
+    if (/espuma|sparkl|champ|cava|prosecc|frizz|moscat"/i.test(t) && !/tinto/.test(t)) return "Espumantes";
+    if (/branc|white|chard|sauvignon|riesling|pinot gris|grüner|glera|albari|gewürz|chenin|viogn|gree?n?g?o|arneis|verdejo|verdelho/i.test(t))
+      return "Brancos";
+    if (/rosé|rosado|clarete|blush/i.test(t)) return "Rosés";
+    if (/tinto|red|tannat|cabernet|merlot|malbec|syrah|shiraz|pinot noir|grenache|garnacha|tempranill|nebbiolo|sangiovese|barbera|zinfandel|petit verdot|carmén?è?re|alicante|bordeaux|blend/i.test(t))
+      return "Tintos";
+    if (/fortific|port|jerez|sherry|madeira|vermouth|oporto|moscatel de setúbal|pedro ximénez/i.test(t)) return "Fortificados";
+    return raw?.trim() ? raw.trim() : "Outros";
+  }
+
+  const groupedWineOptions = useMemo(() => {
+    const groups = new Map<string, WineLite[]>();
+    for (const w of wineOptions) {
+      const label = wineGroupLabel(w.wine_type);
+      const arr = groups.get(label) ?? [];
+      arr.push(w);
+      groups.set(label, arr);
+    }
+    return [...groups.entries()]
+      .sort(([a], [b]) => {
+        const ia = WINE_GROUP_ORDER.indexOf(a as (typeof WINE_GROUP_ORDER)[number]);
+        const ib = WINE_GROUP_ORDER.indexOf(b as (typeof WINE_GROUP_ORDER)[number]);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);
+      })
+      .map(([label, wines]) => ({ label, wines }));
+  }, [wineOptions]);
+
       return getGuide({ data: { restaurantId } });
     },
   });

@@ -178,8 +178,21 @@ export function MenuPairingStudio() {
     },
   });
 
+  const hydratedKey = useRef<string | null>(null);
   useEffect(() => {
-    if (!storeKey) return;
+    if (!storeKey || savedGuide === undefined) return;
+    if (hydratedKey.current === storeKey) return;
+    hydratedKey.current = storeKey;
+    try {
+      const local = JSON.parse(localStorage.getItem(storeKey) || "null");
+      if (local?.dishes?.length || local?.results?.length) {
+        setDishes(local.dishes ?? []);
+        setResults(local.results ?? []);
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
     if (savedGuide?.dishes?.length || savedGuide?.results?.length) {
       setDishes(savedGuide.dishes ?? []);
       setResults(savedGuide.results ?? []);
@@ -265,15 +278,23 @@ export function MenuPairingStudio() {
 
   async function run() {
     if (!dishes.length || !restaurantId) return;
+    const norm = (s: string) => s.trim().toLocaleLowerCase("pt-BR");
+    const done = new Set(results.map((r) => norm(r.dish)));
+    const pending = dishes.filter((d) => !done.has(norm(d.name)));
+    if (!pending.length) {
+      toast.info("Todos os pratos já estão harmonizados. Suas alterações foram mantidas.");
+      return;
+    }
     setBusy("pair");
     setOpenPairingIndex(null);
     try {
       const out: DishPairing[] = [];
-      for (let i = 0; i < dishes.length; i += 12) {
-        const r = await pair({ data: { restaurantId, dishes: dishes.slice(i, i + 12) } });
+      for (let i = 0; i < pending.length; i += 12) {
+        const r = await pair({ data: { restaurantId, dishes: pending.slice(i, i + 12) } });
         out.push(...r);
       }
-      setResults(out);
+      setResults((cur) => [...cur, ...out.filter((r) => !cur.some((c) => norm(c.dish) === norm(r.dish)))]);
+      toast.success(`${pending.length} novo(s) prato(s) harmonizado(s); as harmonizações anteriores foram mantidas.`);
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível harmonizar.");
     } finally {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, FileUp, Loader2, Sparkles, Trash2, Wine } from "lucide-react";
+import { AlertTriangle, FileUp, Link2, Loader2, Sparkles, Trash2, Wine } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -27,6 +27,7 @@ export function MenuPairingStudio() {
   const { restaurantId, activeGroupId } = useAuth();
   const storeKey = restaurantId ? `menu-pairing:${restaurantId}` : null;
   const [text, setText] = useState("");
+  const [url, setUrl] = useState("");
   const [dishes, setDishes] = useState<MenuDish[]>([]);
   const [results, setResults] = useState<DishPairing[]>([]);
   const [busy, setBusy] = useState<null | "extract" | "pair">(null);
@@ -100,6 +101,25 @@ export function MenuPairingStudio() {
     } finally {
       setBusy(null);
       if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function onUrl() {
+    const u = url.trim();
+    if (!u) return;
+    setBusy("extract");
+    try {
+      const found = await extract({ data: { url: /^https?:\/\//i.test(u) ? u : `https://${u}` } });
+      if (!found?.length) toast.error("Nenhum prato encontrado neste link.");
+      else {
+        setDishes((d) => [...d, ...found]);
+        setUrl("");
+        toast.success(`${found.length} pratos lidos do link.`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível ler o link.");
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -177,6 +197,24 @@ export function MenuPairingStudio() {
             className="hidden"
             onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
           />
+        </div>
+
+        <div className="mt-3 flex gap-2">
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onUrl()}
+            placeholder="Ou cole o link do cardápio (site, PDF ou imagem)"
+            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:border-primary focus:outline-none"
+          />
+          <button
+            onClick={onUrl}
+            disabled={!url.trim() || !!busy}
+            className="flex shrink-0 items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-[11px] uppercase text-primary hover:border-primary disabled:opacity-40"
+          >
+            {busy === "extract" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
+            Ler link
+          </button>
         </div>
 
         {!!dishes.length && (

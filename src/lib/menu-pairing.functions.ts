@@ -119,6 +119,28 @@ export type WineLite = {
   internal_code: string | null;
 };
 
+const WineLiteSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  producer: z.string().nullable(),
+  wine_type: z.string().nullable(),
+  country: z.string().nullable(),
+  volume: z.string().nullable(),
+  sale_price: z.number(),
+  internal_code: z.string().nullable(),
+});
+
+const EditablePickSchema = PickSchema.extend({ wine: WineLiteSchema.nullable() });
+const EditableResultSchema = ResultSchema.extend({ picks: z.array(EditablePickSchema).max(3) });
+
+async function assertCanManage(context: any, restaurantId: string) {
+  const { data: ok } = await context.supabase.rpc("can_manage_restaurant", {
+    _user_id: context.userId,
+    _restaurant_id: restaurantId,
+  });
+  if (!ok) throw new Error("Sem permissão para gerenciar este restaurante.");
+}
+
 const PAIR_SYSTEM = `Você é o sommelier do restaurante. Harmonize cada prato EXCLUSIVAMENTE com os vinhos da carta fornecida (identificados por "id").
 Para cada prato:
 - "profile": uma frase curta com o perfil sensorial do prato (intensidade, gordura, acidez, doçura, sal/umami, picância).
@@ -198,7 +220,8 @@ export const pairMenuWithWineList = createServerFn({ method: "POST" })
         .filter((p) => byId.has(p.wine_id))
         .slice(0, 3)
         .map((p) => {
-          const w = byId.get(p.wine_id)!;
+          const w = byId.get(p.wine_id);
+          if (!w) return null;
           return {
             ...p,
             wine: {
@@ -212,8 +235,59 @@ export const pairMenuWithWineList = createServerFn({ method: "POST" })
               internal_code: w.internal_code,
             } as WineLite,
           };
-        });
+        })
+        .filter((p): p is z.infer<typeof PickSchema> & { wine: WineLite } => Boolean(p));
       const gap = r.gap || !picks.length || picks.every((p) => p.score < 7);
       return { ...r, picks, gap, gap_note: gap ? r.gap_note ?? "Nenhum rótulo da carta atende bem este prato." : null };
     }) as DishPairing[];
+  });
+
+export const getMenuPairingGuide = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ restaurantId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertCanManage(context, data.restaurantId);
+    const { data: guide, error } = await context.supabase
+      .from("restaurant_menu_pairing_guides")
+      .select("title, dishes, results, published_at, updated_at")
+      .eq("restaurant_id", data.restaurantId)
+      .maybeSingle();
+    if (error) throw new Error("Não foi possível carregar as harmonizações salvas.");
+    return {
+      ok: true as const,
+      title: guide?.title ?? "Harmonizações do cardápio",
+      dishes: Array.isArray(guide?.dishes) ? (guide.dishes as MenuDish[]) : [],
+      results: Array.isArray(guide?.results) ? (guide.results as DishPairing[]) : [],
+      published_at: guide?.published_at ?? null,
+      updated_at: guide?.updated_at ?? null,
+    };
+  });
+
+export const saveMenuPairingGuide = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        restaurantId: z.string().uuid(),
+        title: z.string().trim().min(1).max(120).default("Harmonizações do cardápio"),
+        dishes: z.array(DishSchema).max(80),
+        results: z.array(EditableResultSchema).max(80),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCanManage(context, data.restaurantId);
+    const { error } = await context.supabase.from("restaurant_menu_pairing_guides").upsert(
+      {
+        restaurant_id: data.restaurantId,
+        title: data.title,
+        dishes: data.dishes,
+        results: data.results,
+        published_at: new Date().toISOString(),
+        updated_by: context.userId,
+      },
+      { onConflict: "restaurant_id" },
+    );
+    if (error) throw new Error("Não foi possível salvar as harmonizações para o staff.");
+    return { ok: true as const };
   });

@@ -11,7 +11,7 @@ type Resolved = {
     id: string;
     restaurant_id: string;
     label: string;
-    scope: "dashboard" | "stock_count" | "training";
+    scope: "dashboard" | "stock_count" | "training" | "pairings";
     device_kind: "mobile" | "desktop";
     single_device: boolean;
   };
@@ -167,7 +167,7 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
       id: link.id,
       restaurant_id: link.restaurant_id,
       label: link.label,
-      scope: link.scope as "dashboard" | "stock_count" | "training",
+      scope: link.scope as "dashboard" | "stock_count" | "training" | "pairings",
       device_kind: link.device_kind as "mobile" | "desktop",
       single_device: link.single_device,
     },
@@ -794,6 +794,41 @@ export const getGuestTrainingCards = createServerFn({ method: "POST" })
       const { data: choices } = await supabaseAdmin.from("restaurant_training_videos").select("training_library_videos(id, title, category, description, video_url, sort_order)").eq("restaurant_id", link.restaurant_id).eq("enabled", true);
       const fundamentals = (choices ?? []).map((choice: any) => choice.training_library_videos).filter(Boolean).sort((a: any, b: any) => a.sort_order - b.sort_order);
       return { ok: true as const, restaurantName, linkId: link.id, cards: list, fundamentals };
+    } catch (e) {
+      return fail(e);
+    }
+  });
+
+/** Harmonizações publicadas para o link mobile do staff. */
+export const getGuestMenuPairings = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => d as { token?: string; kind?: string })
+  .handler(async ({ data }) => {
+    try {
+      const parsed = TokenSchema.safeParse(data);
+      if (!parsed.success) {
+        return fail({ code: "invalid", message: "Link inválido ou incompleto." });
+      }
+      const { link, restaurantName } = await resolveAccess(parsed.data.token, parsed.data.kind);
+      if (link.scope !== "pairings") {
+        return fail({ code: "scope", message: "Link sem permissão para as harmonizações." });
+      }
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: guide } = await supabaseAdmin
+        .from("restaurant_menu_pairing_guides")
+        .select("title, dishes, results, published_at, updated_at")
+        .eq("restaurant_id", link.restaurant_id)
+        .maybeSingle();
+
+      return {
+        ok: true as const,
+        restaurantName,
+        linkId: link.id,
+        title: guide?.title ?? "Harmonizações do cardápio",
+        dishes: Array.isArray(guide?.dishes) ? guide.dishes : [],
+        results: Array.isArray(guide?.results) ? guide.results : [],
+        published_at: guide?.published_at ?? null,
+        updated_at: guide?.updated_at ?? null,
+      };
     } catch (e) {
       return fail(e);
     }

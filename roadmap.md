@@ -2,6 +2,4 @@
 
 ## Em andamento
 
-- Nenhuma tarefa aberta.
-
 ## Backlog

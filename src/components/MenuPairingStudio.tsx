@@ -89,6 +89,7 @@ export function MenuPairingStudio() {
   const [results, setResults] = useState<DishPairing[]>([]);
   const [busy, setBusy] = useState<BusyState>(null);
   const [openPairingIndex, setOpenPairingIndex] = useState<number | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingPairing, setEditingPairing] = useState<DishPairing | null>(null);
   const [staffLink, setStaffLink] = useState<{ url: string; text: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -303,6 +304,10 @@ export function MenuPairingStudio() {
     setDishes((x) => x.filter((_, j) => j !== index));
     setResults((x) => x.filter((r, j) => j !== index && (!dish || r.dish !== dish.name)));
     if (openPairingIndex === index) setOpenPairingIndex(null);
+    if (editingIndex === index) {
+      setEditingIndex(null);
+      setEditingPairing(null);
+    }
   }
 
   function findPairing(dish: MenuDish, index: number) {
@@ -314,26 +319,29 @@ export function MenuPairingStudio() {
   }
 
   function openEdit(dish: MenuDish, index: number) {
-    setOpenPairingIndex(index);
+    setOpenPairingIndex(null);
+    setEditingIndex(index);
     setEditingPairing(findPairing(dish, index) ?? emptyPairing(dish));
   }
 
   function applyManualPairing() {
-    if (openPairingIndex === null || !editingPairing) return;
+    if (editingIndex === null || !editingPairing) return;
+    const editingDish = dishes[editingIndex];
     const cleaned: DishPairing = {
       ...editingPairing,
-      dish: editingPairing.dish.trim() || openDish?.name || "Prato",
+      dish: editingPairing.dish.trim() || editingDish?.name || "Prato",
       profile: editingPairing.profile.trim(),
       gap_note: editingPairing.gap ? editingPairing.gap_note?.trim() || "A carta precisa de um estilo mais adequado para este prato." : null,
       picks: editingPairing.picks.filter((p) => p.wine_id && p.wine),
     };
     setResults((current) => {
       const next = [...current];
-      const idx = next.findIndex((r, j) => j === openPairingIndex || normalizeKey(r.dish) === normalizeKey(cleaned.dish));
+      const idx = next.findIndex((r, j) => j === editingIndex || normalizeKey(r.dish) === normalizeKey(cleaned.dish));
       if (idx >= 0) next[idx] = cleaned;
-      else next[openPairingIndex] = cleaned;
+      else next[editingIndex] = cleaned;
       return next;
     });
+    setEditingIndex(null);
     setEditingPairing(null);
     toast.success("Harmonização ajustada.");
   }
@@ -636,7 +644,15 @@ export function MenuPairingStudio() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!editingPairing} onOpenChange={(open) => !open && setEditingPairing(null)}>
+      <Dialog
+        open={!!editingPairing}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingIndex(null);
+            setEditingPairing(null);
+          }
+        }}
+      >
         <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-card p-0 sm:max-w-3xl">
           <DialogHeader className="border-b border-border p-5 pr-12">
             <DialogTitle className="text-primary">Alterar harmonização</DialogTitle>
@@ -752,7 +768,14 @@ export function MenuPairingStudio() {
                 )}
               </div>
               <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
-                <Button type="button" variant="outline" onClick={() => setEditingPairing(null)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setEditingIndex(null);
+                    setEditingPairing(null);
+                  }}
+                >
                   Cancelar
                 </Button>
                 <Button type="button" onClick={applyManualPairing}>

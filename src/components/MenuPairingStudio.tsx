@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { AlertTriangle, FileUp, Loader2, Sparkles, Trash2, Wine } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -130,12 +129,12 @@ export function MenuPairingStudio() {
         <p className="mb-4 text-muted-foreground">
           Esta harmonização usa somente os vinhos ativos da carta do restaurante. Importe a carta para começar.
         </p>
-        <Link
-          to="/app/wines"
+        <a
+          href="/app/wines"
           className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase text-primary-foreground"
         >
           <Wine className="h-3 w-3" /> Importar carta de vinhos
-        </Link>
+        </a>
       </div>
     );
 

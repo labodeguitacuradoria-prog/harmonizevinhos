@@ -72,7 +72,7 @@ const ResultSchema = z.object({
   gap: z.boolean(),
   gap_note: z.string().nullable(),
 });
-export type DishPairing = z.infer<typeof ResultSchema> & {
+export type DishPairing = Omit<z.infer<typeof ResultSchema>, "picks"> & {
   picks: (z.infer<typeof PickSchema> & { wine: WineLite | null })[];
 };
 export type WineLite = {

@@ -62,10 +62,11 @@ function AccessLinksPage() {
     queryKey: ["access-links", restaurantId],
     enabled: !!restaurantId,
     queryFn: async () => {
+      if (!restaurantId) return [];
       const { data, error } = await supabase
         .from("access_links")
         .select("id, label, scope, device_kind, single_device, expires_at, revoked_at, last_access_at, created_at")
-          .eq("restaurant_id", restaurantId)
+        .eq("restaurant_id", restaurantId)
         .order("created_at", { ascending: false });
       if (error) throw new Error(error.message);
       return (data ?? []) as LinkRow[];

@@ -29,6 +29,7 @@ export const extractMenuDishes = createServerFn({ method: "POST" })
         text: z.string().max(40000).optional(),
         fileBase64: z.string().optional(),
         mimeType: z.string().optional(),
+        url: z.string().url().max(2000).optional(),
       })
       .parse(d),
   )
@@ -44,6 +45,38 @@ export const extractMenuDishes = createServerFn({ method: "POST" })
           ? { type: "image", image: `data:${data.mimeType};base64,${b64}` }
           : { type: "file", data: b64, mediaType: data.mimeType },
       );
+    } else if (data.url) {
+      if (!/^https?:\/\//i.test(data.url)) throw new Error("Informe um link começando com http ou https.");
+      let page = "";
+      try {
+        const r = await fetch(`https://r.jina.ai/${data.url}`, { headers: { Accept: "text/plain" } });
+        if (r.ok) page = await r.text();
+      } catch {
+        /* tenta direto */
+      }
+      if (page.trim().length < 50) {
+        try {
+          const r = await fetch(data.url, { headers: { "User-Agent": "Mozilla/5.0" } });
+          const ct = r.headers.get("content-type") || "";
+          if (r.ok && /pdf|image/.test(ct)) {
+            const b64 = Buffer.from(await r.arrayBuffer()).toString("base64");
+            content.push(
+              ct.startsWith("image/")
+                ? { type: "image", image: `data:${ct};base64,${b64}` }
+                : { type: "file", data: b64, mediaType: "application/pdf" },
+            );
+          } else if (r.ok) {
+            page = (await r.text())
+              .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ")
+              .replace(/<[^>]+>/g, " ")
+              .replace(/\s+/g, " ");
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+      if (page.trim()) content.push({ type: "text", text: `"""\n${page.slice(0, 40000)}\n"""` });
+      else if (content.length === 1) throw new Error("Não foi possível abrir este link. Verifique se ele é público.");
     } else if (data.text?.trim()) {
       content.push({ type: "text", text: `"""\n${data.text}\n"""` });
     } else throw new Error("Envie o cardápio em arquivo ou texto.");

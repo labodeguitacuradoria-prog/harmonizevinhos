@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { KeyRound } from "lucide-react";
+import { authErrorPt } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/reset-password")({
   component: ResetPassword,
@@ -33,12 +34,12 @@ function ResetPassword() {
   const [done, setDone] = useState(false);
 
   const submit = async () => {
-    if (password.length < 8) return setErr("A senha deve ter ao menos 8 caracteres.");
+    if (password.length < 6) return setErr("A senha deve ter ao menos 6 caracteres.");
     if (password !== confirm) return setErr("As senhas não coincidem.");
     setSaving(true);
     const { error } = await supabase.auth.updateUser({ password });
     setSaving(false);
-    if (error) return setErr(error.message);
+    if (error) return setErr(authErrorPt(error));
     setErr(null);
     setDone(true);
     setTimeout(() => navigate({ to: "/app" }), 1200);

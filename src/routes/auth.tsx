@@ -129,6 +129,7 @@ function AuthPage() {
     if (googleBusy) return;
     setGoogleBusy(true);
     try {
+      try { sessionStorage.setItem("oauth-pending", "1"); } catch { /* ignora */ }
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
         extraParams: { prompt: "select_account" },

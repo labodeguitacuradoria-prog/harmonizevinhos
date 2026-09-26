@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/use-theme";
 import { Moon, Sun, ScrollText, UtensilsCrossed, DollarSign, LayoutDashboard, GraduationCap, Wine } from "lucide-react";
 import type { AppModule } from "@/lib/modules";
@@ -84,6 +85,21 @@ const PACKS: Pack[] = [
 ];
 
 function Landing() {
+  const navigateHome = useNavigate();
+  // Retorno do login com Google: entra direto no painel.
+  useEffect(() => {
+    let pending = false;
+    try { pending = sessionStorage.getItem("oauth-pending") === "1"; } catch { /* ignora */ }
+    if (!pending) return;
+    const go = () => {
+      try { sessionStorage.removeItem("oauth-pending"); } catch { /* ignora */ }
+      navigateHome({ to: "/app" });
+    };
+    supabase.auth.getSession().then(({ data }) => { if (data.session) go(); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => { if (session) go(); });
+    return () => sub.subscription.unsubscribe();
+  }, [navigateHome]);
+
   const { theme, toggle } = useTheme();
   const [pending, setPending] = useState<string | null>(null);
   const [selected, setSelected] = useState<AppModule | null>(null);

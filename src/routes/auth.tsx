@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Wine } from "lucide-react";
 import { toast } from "sonner";
+import { authErrorPt } from "@/lib/auth-errors";
 
 const search = z.object({
   mode: z.enum(["signin", "signup"]).optional(),
@@ -77,8 +78,31 @@ function AuthPage() {
     }
   }, [chosenModule]);
 
+  async function handleForgot() {
+    if (!email.includes("@")) {
+      toast.error("Digite seu e-mail no campo acima para receber o link.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Enviamos um e-mail com o link para criar uma nova senha.");
+    } catch (err) {
+      toast.error(authErrorPt(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
+    if (password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -95,7 +119,7 @@ function AuthPage() {
       }
       navigate({ to: "/app" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao autenticar");
+      toast.error(authErrorPt(err));
     } finally {
       setLoading(false);
     }
@@ -175,6 +199,14 @@ function AuthPage() {
             required
             minLength={6}
           />
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Mínimo de 6 caracteres, de qualquer tipo.</span>
+            {mode === "signin" && (
+              <button type="button" onClick={handleForgot} className="font-medium text-primary hover:underline">
+                Esqueci minha senha
+              </button>
+            )}
+          </div>
           <button
             type="submit"
             disabled={loading}

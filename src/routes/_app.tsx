@@ -45,7 +45,7 @@ function AppLayout() {
     claimModule({ data: { module: chosen } })
       .then(async (res: any) => {
         // Sem restaurante ainda: guarda o pacote para aplicar ao criar o primeiro.
-        if (res?.applied === false && !memberships.length) return;
+        if (res?.applied === false) return;
         try {
           localStorage.removeItem("signup-module");
         } catch {

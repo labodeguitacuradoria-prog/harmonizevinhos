@@ -9,7 +9,7 @@ import { authErrorPt } from "@/lib/auth-errors";
 
 const search = z.object({
   mode: z.enum(["signin", "signup"]).optional(),
-  module: z.enum(["full", "dashboard", "pricing", "printed_menu", "pairing"]).optional(),
+  module: z.enum(["full", "dashboard", "pricing", "printed_menu", "pairing", "training"]).optional(),
 });
 
 const MODULE_TITLE: Record<string, string> = {
@@ -18,6 +18,7 @@ const MODULE_TITLE: Record<string, string> = {
   pricing: "Precificação",
   printed_menu: "Impressão de Cartas de Vinhos",
   pairing: "Harmonização",
+  training: "Treinamento do Staff",
 };
 
 export const Route = createFileRoute("/auth")({

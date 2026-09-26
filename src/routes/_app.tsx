@@ -43,7 +43,9 @@ function AppLayout() {
     if (!chosen) return;
     claimedForUser.current = user.id;
     claimModule({ data: { module: chosen } })
-      .then(async () => {
+      .then(async (res: any) => {
+        // Sem restaurante ainda: guarda o pacote para aplicar ao criar o primeiro.
+        if (res?.applied === false) return;
         try {
           localStorage.removeItem("signup-module");
         } catch {

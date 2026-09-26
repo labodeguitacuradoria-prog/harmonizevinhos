@@ -62,7 +62,7 @@ const PACKS: Pack[] = [
     description:
       "Sugestões de harmonização entre os pratos do seu menu e os vinhos da sua própria carta.",
     bullets: ["Prato a prato", "Sugestões por rótulo", "Apoio ao salão e ao cliente"],
-    available: false,
+    available: true,
   },
   {
     module: "pricing",
@@ -71,7 +71,7 @@ const PACKS: Pack[] = [
     description:
       "Veja faixas de preço, margens e onde sua carta está desequilibrada, com sugestões de ajuste.",
     bullets: ["Faixas de preço e margens", "Simulações de preço", "Sugestões de rótulos por faixa"],
-    available: false,
+    available: true,
   },
   {
     module: "training",
@@ -80,7 +80,7 @@ const PACKS: Pack[] = [
     description:
       "Fichas rápidas de cada rótulo para a equipe estudar pelo celular, com linguagem de salão e desafio para fixar.",
     bullets: ["Uma tela por rótulo", "Frase pronta para a mesa", "Desafio com pontuação"],
-    available: false,
+    available: true,
   },
 ];
 

@@ -57,6 +57,13 @@
       "when": 1790354183311,
       "tag": "0007_restaurant_menu_pairing_guides",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790423837206,
+      "tag": "0008_stop_auto_restaurant_on_signup",
+      "breakpoints": true
     }
   ]
 }

@@ -6,6 +6,7 @@ import { setActiveGroup, setActiveRestaurant } from "@/lib/active-scope";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { createRestaurantWithAccess } from "@/lib/access.functions";
+import { claimSignupModule } from "@/lib/modules.functions";
 import AccessMapDialog from "@/components/AccessMapDialog";
 import { Building2, Layers, Plus, Users, X, ArrowRight, Moon, Sun } from "lucide-react";
 import { useEntitlements } from "@/hooks/use-entitlements";
@@ -213,6 +214,7 @@ function NewRestaurantDialog({ open, onClose }: { open: boolean; onClose: () => 
   const { groups } = useAuth();
   const qc = useQueryClient();
   const createFn = useServerFn(createRestaurantWithAccess);
+  const claimFn = useServerFn(claimSignupModule);
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [groupChoice, setGroupChoice] = useState<string>("none"); // 'none' | 'new' | groupId
@@ -229,12 +231,26 @@ function NewRestaurantDialog({ open, onClose }: { open: boolean; onClose: () => 
       };
       return createFn({ data: payload });
     },
-    onSuccess: (res: any) => {
+    onSuccess: async (res: any) => {
       setName("");
       setCity("");
       setGroupChoice("none");
       setNewGroup("");
       setErr(null);
+      let chosen: string | null = null;
+      try {
+        chosen = localStorage.getItem("signup-module");
+      } catch {
+        chosen = null;
+      }
+      if (chosen) {
+        try {
+          await claimFn({ data: { module: chosen } });
+          localStorage.removeItem("signup-module");
+        } catch {
+          /* mantém pacote padrão */
+        }
+      }
       qc.invalidateQueries();
       if (res?.id) setActiveRestaurant(res.id);
       onClose();

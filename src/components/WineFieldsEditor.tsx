@@ -145,18 +145,24 @@ export function TextArea({ label, hint, value, onChange, placeholder, className 
 }
 
 export function Select({ label, hint, value, onChange, options, className }: { label: string; hint: string; value: string; onChange: (v: string) => void; options: string[]; className?: string }) {
-  const custom = !!value && !options.includes(value);
+  const [customMode, setCustomMode] = useState(false);
+  const normalized = value.trim();
+  const custom = customMode || (normalized !== "" && !options.includes(normalized));
   return (
     <div className={`grid gap-1.5 ${className ?? ""}`}>
       <FieldLabel hint={hint}>{label}</FieldLabel>
-      <select value={custom ? "__custom" : value} onChange={(e) => onChange(e.target.value === "__custom" ? (value || " ") : e.target.value)}
+      <select value={custom ? "__custom" : normalized} onChange={(e) => {
+        if (e.target.value === "__custom") { setCustomMode(true); return; }
+        setCustomMode(false);
+        onChange(e.target.value);
+      }}
         className="rounded-md border border-input bg-background px-3 py-2 text-sm">
         <option value="">Selecione...</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
         <option value="__custom">Outro (digitar)</option>
       </select>
       {custom && (
-        <input value={value.trim()} onChange={(e) => onChange(e.target.value)} placeholder="Digite o valor"
+        <input value={value} onChange={(e) => onChange(e.target.value.replace(/^\s+/, ""))} placeholder="Digite o valor (pode ter mais de uma palavra)"
           className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
       )}
     </div>

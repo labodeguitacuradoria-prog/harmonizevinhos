@@ -21,7 +21,19 @@ import {
   type VisibleFields,
 } from "./templates";
 
+export type CustomDesign = {
+  exclusive?: boolean;
+  requestId?: string | null;
+  bgColor?: string;
+  textColor?: string;
+  accentColor?: string;
+  backgroundImage?: string;
+  coverImage?: string;
+  coverText?: string;
+};
+
 type Props = {
+  customDesign?: CustomDesign | null;
   template: TemplateKey;
   paper: PaperKey;
   paperDef?: PaperDef;
@@ -63,7 +75,9 @@ export function MenuPreview({
   priceCurrency = false,
   sections,
   winesById,
+  customDesign,
 }: Props) {
+  const cd = customDesign?.exclusive ? customDesign : null;
   const t = TEMPLATES[template];
   const p = paperDef ?? paperOf(paper);
   const twoCols = t.columns === 2 && p.widthMm >= 148;
@@ -122,9 +136,37 @@ export function MenuPreview({
     <div id="print-area" className="printed-menu mx-auto w-full" style={{ maxWidth: `${p.widthMm}mm` }}>
       {/* Define o tamanho da folha na impressão de acordo com a escolha do usuário */}
       <style>{`@media print { @page { size: ${p.cssSize}; margin: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm; } }`}</style>
+      {cd?.coverImage || cd?.coverText ? (
+        <div
+          className="printed-page relative flex items-center justify-center overflow-hidden"
+          style={{
+            width: `${p.widthMm}mm`, maxWidth: "100%", minHeight: `${p.heightMm}mm`,
+            background: cd.bgColor || "#fff", color: cd.textColor || "#000",
+            breakAfter: "page",
+          }}
+        >
+          {cd.coverImage ? <img src={cd.coverImage} alt="Capa" className="absolute inset-0 h-full w-full object-cover" /> : null}
+          {cd.coverText ? (
+            <div className="relative whitespace-pre-line px-[15mm] text-center text-[22pt] uppercase tracking-[0.2em]" style={{ color: cd.accentColor || undefined }}>
+              {cd.coverText}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <div
-        className={`printed-page bg-white text-black ${t.page}`}
+        className={`printed-page ${cd ? "" : "bg-white text-black"} ${t.page}`}
         style={{
+          ...(cd
+            ? {
+                backgroundColor: cd.bgColor || "#fff",
+                color: cd.textColor || "#000",
+                backgroundImage: cd.backgroundImage ? `url(${cd.backgroundImage})` : undefined,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                WebkitPrintColorAdjust: "exact",
+                printColorAdjust: "exact",
+              }
+            : {}),
           padding: `${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm`,
           minHeight: `${p.heightMm}mm`,
           width: `${p.widthMm}mm`,
@@ -139,7 +181,7 @@ export function MenuPreview({
               className={`mb-4 h-[18mm] w-auto object-contain ${logoPosClass}`}
             />
           ) : null}
-          {title ? <h1 className={t.headerTitle}>{title}</h1> : null}
+          {title ? <h1 className={t.headerTitle} style={cd?.accentColor ? { color: cd.accentColor } : undefined}>{title}</h1> : null}
           {subtitle ? <div className={t.headerSubtitle}>{subtitle}</div> : null}
           {addressInHeader ? (
             <div className="mt-2 whitespace-pre-line text-[8pt] leading-snug text-black/70">
@@ -156,7 +198,7 @@ export function MenuPreview({
             <section key={sec.id} className="mb-6 break-inside-avoid">
               <div
                 className={`${t.sectionTitle} ${t.rule} pb-1 ${textAlign[layout.sectionAlign]}`}
-                style={sectionStyle}
+                style={{ ...sectionStyle, ...(cd?.accentColor ? { color: cd.accentColor, borderColor: cd.accentColor } : {}) }}
               >
                 {sec.title}
               </div>

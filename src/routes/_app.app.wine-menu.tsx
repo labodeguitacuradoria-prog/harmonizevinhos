@@ -348,16 +348,36 @@ function WineMenuPage() {
   }
 
   function addSection(sub: boolean) {
-    const sec = { id: newId(), title: sub ? "Nova subseção" : "Nova seção", wineIds: [], sub };
     setSections((p) => {
       const idx = targetSectionId ? p.findIndex((s) => s.id === targetSectionId) : -1;
+      const parentLevel = idx >= 0 ? sectionLevel(p[idx]) : 1;
+      const level = sub ? Math.min(parentLevel + 1, 5) : 1;
+      const sec = {
+        id: newId(),
+        title: sub ? `Nova seção de ${level}º nível` : "Nova seção",
+        wineIds: [] as string[],
+        sub: level > 1,
+        level,
+      };
+      setTimeout(() => setTargetSectionId(sec.id), 0);
       if (!sub || idx < 0) return [...p, sec];
       let end = idx + 1;
-      while (end < p.length && p[end].sub) end++;
+      while (end < p.length && sectionLevel(p[end]) > parentLevel) end++;
       return [...p.slice(0, end), sec, ...p.slice(end)];
     });
-    setTargetSectionId(sec.id);
   }
+
+  /** Promove (-1) ou rebaixa (+1) o nível hierárquico da seção. */
+  function changeLevel(sectionId: string, dir: -1 | 1) {
+    setSections((p) =>
+      p.map((s) => {
+        if (s.id !== sectionId) return s;
+        const level = Math.min(Math.max(sectionLevel(s) + dir, 1), 5);
+        return { ...s, level, sub: level > 1 };
+      }),
+    );
+  }
+
 
   function removeWine(sectionId: string, wineId: string) {
     setSections((prev) =>

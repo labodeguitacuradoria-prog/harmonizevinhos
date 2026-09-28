@@ -104,6 +104,8 @@ export function useAuth(): UserContext {
 
   useEffect(() => {
     if (!data) return;
+    // Administrador geral pode abrir qualquer restaurante: não descarta o escopo escolhido.
+    if (data.role === "admin") return;
     const ms = data.memberships ?? [];
     const gs = data.groups ?? [];
     if (!ms.length && !gs.length) return;

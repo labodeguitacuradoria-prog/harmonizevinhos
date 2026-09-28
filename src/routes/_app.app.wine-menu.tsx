@@ -42,7 +42,6 @@ import {
   autoSections,
   sectionKey,
   sectionLevel,
-  levelLabel,
   customPaper,
   isGlassVol,
   paperOf,

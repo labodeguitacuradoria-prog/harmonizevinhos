@@ -359,13 +359,13 @@ function WineMenuPage() {
     });
   }
 
-  async function save(asNew = false) {
-    if (!restaurantId) return;
+  async function save(asNew = false): Promise<boolean> {
+    if (!restaurantId) return false;
     let name = listName.trim();
     if (!currentId || asNew || !name) {
       const suggested = asNew ? `${name || "Carta de Vinhos"} (cópia)` : name || "Carta de Vinhos";
       const typed = window.prompt("Dê um nome para esta carta:", suggested);
-      if (typed === null) return;
+      if (typed === null) return false;
       name = typed.trim() || suggested;
       setListName(name);
     }
@@ -408,7 +408,7 @@ function WineMenuPage() {
     if (error) {
       console.error("[wine-menu] save error", error);
       toast.error(`Não foi possível salvar: ${error.message}`);
-      return;
+      return false;
     }
     toast.success(asNew ? "Carta duplicada." : "Carta salva.");
     queryClient.invalidateQueries({ queryKey: ["printed-wine-lists", restaurantId] });
@@ -1180,6 +1180,7 @@ function WineMenuPage() {
           <div className="overflow-x-auto rounded-xl border border-border bg-neutral-200 p-4 print:border-0 print:bg-white print:p-0">
             <div className="menu-preview-zoom" style={{ zoom: previewZoom }}>
               <MenuPreview
+              customDesign={customDesign}
               template={template}
               paper={paper}
               paperDef={activePaper}

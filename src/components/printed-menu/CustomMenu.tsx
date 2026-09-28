@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,6 +14,65 @@ export const CUSTOM_STATUS_LABEL: Record<string, string> = {
   delivered: "Disponibilizada",
   cancelled: "Cancelada",
 };
+
+const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+function expandHexColor(color: string) {
+  if (/^#[0-9a-fA-F]{3}$/.test(color)) {
+    return `#${color.slice(1).split("").map((character) => `${character}${character}`).join("")}`;
+  }
+  return color;
+}
+
+function HexColorField({
+  label,
+  value,
+  defaultValue,
+  onChange,
+}: {
+  label: string;
+  value?: string;
+  defaultValue: string;
+  onChange: (color: string) => void;
+}) {
+  const appliedColor = HEX_COLOR_PATTERN.test(value ?? "") ? (value ?? defaultValue) : defaultValue;
+  const [draft, setDraft] = useState(appliedColor);
+
+  useEffect(() => {
+    setDraft(appliedColor);
+  }, [appliedColor]);
+
+  const updateDraft = (nextValue: string) => {
+    setDraft(nextValue);
+    if (HEX_COLOR_PATTERN.test(nextValue)) onChange(nextValue.toLowerCase());
+  };
+
+  return (
+    <label className="grid grid-cols-[1fr_auto_7.5rem] items-center gap-2 text-xs">
+      <span>{label}</span>
+      <input
+        type="color"
+        value={expandHexColor(appliedColor)}
+        onChange={(event) => updateDraft(event.target.value)}
+        className="h-8 w-9 cursor-pointer rounded border border-input bg-background p-0.5"
+        aria-label={`Selecionar cor: ${label}`}
+      />
+      <input
+        type="text"
+        value={draft}
+        onChange={(event) => updateDraft(event.target.value)}
+        onBlur={() => {
+          if (!HEX_COLOR_PATTERN.test(draft)) setDraft(appliedColor);
+        }}
+        placeholder="#fffdf8"
+        maxLength={7}
+        spellCheck={false}
+        className="h-8 min-w-0 rounded-md border border-input bg-background px-2 font-mono text-xs uppercase"
+        aria-label={`Código hexadecimal: ${label}`}
+      />
+    </label>
+  );
+}
 
 export async function openBriefFile(path: string, name?: string) {
   const { data, error } = await supabase.storage.from("custom-menu-briefs").createSignedUrl(path, 600);
@@ -187,11 +246,13 @@ export function CustomDesignPanel({
   canDeliver: boolean;
 }) {
   const set = (patch: Partial<CustomDesign>) => onChange({ ...value, ...patch });
-  const color = (label: string, key: "bgColor" | "textColor" | "accentColor", def: string) => (
-    <label className="flex items-center justify-between gap-2 text-xs">
-      {label}
-      <input type="color" value={value[key] || def} onChange={(e) => set({ [key]: e.target.value })} />
-    </label>
+  const color = (label: string, key: "bgColor" | "textColor" | "accentColor", defaultValue: string) => (
+    <HexColorField
+      label={label}
+      value={value[key]}
+      defaultValue={defaultValue}
+      onChange={(nextColor) => set({ [key]: nextColor })}
+    />
   );
   return (
     <div className="mt-6 rounded-xl border border-primary/60 bg-card p-4">

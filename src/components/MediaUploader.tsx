@@ -37,11 +37,37 @@ export function MediaUploader({
     return data?.signedUrl ?? null;
   }
 
+  async function pdfToPng(file: File): Promise<Blob> {
+    const pdfjs = await import("pdfjs-dist");
+    const worker = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
+    pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+    const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+    const page = await doc.getPage(1);
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: Math.min(4, 2400 / Math.max(base.width, base.height)) });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport, canvas } as never).promise;
+    return await new Promise<Blob>((res, rej) =>
+      canvas.toBlob((b) => (b ? res(b) : rej(new Error("Falha ao converter o PDF."))), "image/png"),
+    );
+  }
+
   async function handleFile(file: File) {
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() ?? "bin";
-      const url = await uploadBlob(file, ext);
+      const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+      let url: string | null;
+      if (kind === "image" && isPdf) {
+        url = await uploadBlob(await pdfToPng(file), "png");
+      } else {
+        const ext = file.name.split(".").pop() ?? "bin";
+        url = await uploadBlob(file, ext);
+      }
       if (url) onChange(url);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha no envio.");

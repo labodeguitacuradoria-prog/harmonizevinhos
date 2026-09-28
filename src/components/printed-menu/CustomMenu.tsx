@@ -42,7 +42,7 @@ function HexColorField({
     setDraft(appliedColor);
   }, [appliedColor]);
 
-  const commitColor = (nextValue: string) => {
+  const commitColor = (nextValue: string, confirm = false) => {
     const normalized = nextValue.trim().toLowerCase();
     if (!HEX_COLOR_PATTERN.test(normalized)) {
       toast.error("Use um código como #fffdf8.");
@@ -50,6 +50,7 @@ function HexColorField({
     }
     setDraft(normalized);
     onChange(normalized);
+    if (confirm) toast.success(`Cor aplicada: ${normalized}`);
     return true;
   };
 
@@ -60,7 +61,7 @@ function HexColorField({
   };
 
   return (
-    <label className="grid grid-cols-[1fr_auto_7.5rem] items-center gap-2 text-xs">
+    <div className="grid grid-cols-[1fr_auto_6.5rem_auto] items-center gap-2 text-xs">
       <span>{label}</span>
       <input
         type="color"
@@ -76,7 +77,7 @@ function HexColorField({
         onKeyDown={(event) => {
           if (event.key !== "Enter") return;
           event.preventDefault();
-          commitColor(draft);
+          commitColor(draft, true);
         }}
         onBlur={() => {
           if (!commitColor(draft)) setDraft(appliedColor);
@@ -87,7 +88,14 @@ function HexColorField({
         className="h-8 min-w-0 rounded-md border border-input bg-background px-2 font-mono text-xs"
         aria-label={`Código hexadecimal: ${label}`}
       />
-    </label>
+      <button
+        type="button"
+        onClick={() => commitColor(draft, true)}
+        className="h-8 rounded-md border border-primary/50 px-2 text-[10px] font-bold uppercase text-primary hover:bg-primary/10"
+      >
+        Aplicar
+      </button>
+    </div>
   );
 }
 

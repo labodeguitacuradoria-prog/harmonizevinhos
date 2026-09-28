@@ -236,7 +236,7 @@ export function normalizeFields(raw: Partial<VisibleFields> | null | undefined):
   return f;
 }
 
-export type MenuSection = { id: string; title: string; wineIds: string[] };
+export type MenuSection = { id: string; title: string; wineIds: string[]; sub?: boolean };
 
 export type MenuWine = {
   id: string;

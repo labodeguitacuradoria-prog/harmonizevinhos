@@ -103,6 +103,16 @@ export function MenuPreview({
     fontFamily: fontCss(typography.sectionFont),
     fontSize: typography.sectionSize ? `${typography.sectionSize}pt` : undefined,
   };
+  /** Estilo dos títulos de 2º nível ou mais profundos. */
+  const subSectionStyle = (level: number) => {
+    const scale = Math.pow(0.92, Math.max(0, level - 2));
+    const basePt = typography.subSectionSize ?? (typography.sectionSize ? typography.sectionSize * 0.8 : 9);
+    return {
+      fontFamily: fontCss(typography.subSectionFont) ?? fontCss(typography.sectionFont),
+      fontSize: `${Number((basePt * scale).toFixed(2))}pt`,
+    };
+  };
+
   const metaStyle = {
     fontFamily: fontCss(typography.metaFont),
     fontSize: typography.metaSize ? `${typography.metaSize}pt` : undefined,

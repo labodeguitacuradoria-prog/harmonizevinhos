@@ -1172,7 +1172,7 @@ function WineMenuPage() {
                                 >
                                   {sections.map((s2) => (
                                     <option key={s2.id} value={s2.id}>
-                                      {s2.sub ? "↳ " : ""}{s2.title || "(sem título)"}
+                                      {sectionOptionLabel(s2)}
                                     </option>
                                   ))}
                                 </select>

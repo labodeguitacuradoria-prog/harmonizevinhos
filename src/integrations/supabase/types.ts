@@ -155,6 +155,63 @@ export type Database = {
           },
         ]
       }
+      custom_menu_requests: {
+        Row: {
+          admin_notes: string | null
+          attachments: Json
+          brief_text: string | null
+          created_at: string
+          created_by: string | null
+          delivered_list_id: string | null
+          id: string
+          restaurant_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          attachments?: Json
+          brief_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_list_id?: string | null
+          id?: string
+          restaurant_id: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          attachments?: Json
+          brief_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_list_id?: string | null
+          id?: string
+          restaurant_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_menu_requests_delivered_list_id_fkey"
+            columns: ["delivered_list_id"]
+            isOneToOne: false
+            referencedRelation: "printed_wine_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_menu_requests_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboard_targets: {
         Row: {
           created_at: string

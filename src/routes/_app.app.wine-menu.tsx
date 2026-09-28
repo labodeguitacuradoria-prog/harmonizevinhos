@@ -41,6 +41,8 @@ import {
   TEMPLATE_LIST,
   autoSections,
   sectionKey,
+  sectionLevel,
+  levelLabel,
   customPaper,
   isGlassVol,
   paperOf,

@@ -15,10 +15,25 @@ export const CUSTOM_STATUS_LABEL: Record<string, string> = {
   cancelled: "Cancelada",
 };
 
-export async function openBriefFile(path: string) {
+export async function openBriefFile(path: string, name?: string) {
   const { data, error } = await supabase.storage.from("custom-menu-briefs").createSignedUrl(path, 600);
   if (error || !data) return toast.error("Não foi possível abrir o arquivo.");
-  window.open(data.signedUrl, "_blank");
+  try {
+    const res = await fetch(data.signedUrl);
+    if (!res.ok) throw new Error("download");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name ?? path.split("/").pop() ?? "arquivo";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch {
+    // fallback: tenta abrir direto no URL assinado
+    window.open(data.signedUrl, "_blank");
+  }
 }
 
 /** Pedido de carta personalizada pelo restaurante. Nenhum campo é obrigatório. */

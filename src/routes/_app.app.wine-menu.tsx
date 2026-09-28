@@ -122,6 +122,13 @@ function newId() {
   return `sec-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/** Nome da seção nas listas de seleção, com o nível hierárquico. */
+function sectionOptionLabel(s: MenuSection) {
+  const lvl = sectionLevel(s);
+  return `${"↳ ".repeat(Math.max(0, lvl - 1))}${lvl}º · ${s.title || "(sem título)"}`;
+}
+
+
 function WineMenuPage() {
   const { restaurantId, memberships, role } = useAuth();
   const isAdmin = role === "admin";
@@ -1224,7 +1231,7 @@ function WineMenuPage() {
                 <option value="">Automático (pelo tipo/estilo)</option>
                 {sections.map((s2) => (
                   <option key={s2.id} value={s2.id}>
-                    {s2.sub ? "↳ " : ""}{s2.title || "(sem título)"}
+                    {sectionOptionLabel(s2)}
                   </option>
                 ))}
               </select>

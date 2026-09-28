@@ -1200,7 +1200,6 @@ function WineMenuPage() {
                     )}
                   </ul>
                 </div>
-                </div>
                 );
               })}
               {sections.length === 0 && (

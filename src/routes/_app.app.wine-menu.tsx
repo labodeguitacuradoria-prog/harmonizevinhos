@@ -1078,14 +1078,19 @@ function WineMenuPage() {
             </div>
 
             <div className="mt-3 space-y-3">
-              {sections.map((sec, si) => (
+              {sections.map((sec, si) => {
+                const lvl = sectionLevel(sec);
+                return (
                 <div
                   key={sec.id}
                   onClick={() => setTargetSectionId(sec.id)}
-                  className={`rounded-lg border bg-background p-3 ${sec.sub ? "ml-6" : ""} ${targetSectionId === sec.id ? "border-primary" : "border-border"}`}
+                  style={{ marginLeft: `${(lvl - 1) * 1.5}rem` }}
+                  className={`rounded-lg border bg-background p-3 ${targetSectionId === sec.id ? "border-primary" : "border-border"}`}
                 >
                   <div className="flex items-center gap-2">
-                    {sec.sub ? <span className="text-[10px] uppercase text-muted-foreground">↳ Sub</span> : null}
+                    <span className="whitespace-nowrap text-[10px] uppercase text-muted-foreground">
+                      {lvl > 1 ? "↳ " : ""}{lvl}º nível
+                    </span>
                     <input
                       value={sec.title}
                       onChange={(e) =>
@@ -1093,11 +1098,11 @@ function WineMenuPage() {
                       }
                       className="flex-1 rounded border border-input bg-card px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary"
                     />
-                    <IconBtn
-                      onClick={() => setSections((p) => p.map((s) => (s.id === sec.id ? { ...s, sub: !s.sub } : s)))}
-                      title={sec.sub ? "Transformar em seção" : "Transformar em subseção"}
-                    >
-                      <span className="text-[10px] font-bold">{sec.sub ? "←" : "→"}</span>
+                    <IconBtn onClick={() => changeLevel(sec.id, -1)} title="Subir um nível">
+                      <span className="text-[10px] font-bold">←</span>
+                    </IconBtn>
+                    <IconBtn onClick={() => changeLevel(sec.id, 1)} title="Descer um nível">
+                      <span className="text-[10px] font-bold">→</span>
                     </IconBtn>
                     <IconBtn onClick={() => moveSection(si, -1)} title="Subir seção">
                       <ChevronUp className="h-3.5 w-3.5" />
@@ -1112,6 +1117,7 @@ function WineMenuPage() {
                       <Trash2 className="h-3.5 w-3.5" />
                     </IconBtn>
                   </div>
+
                   <ul className="mt-2 space-y-1">
                     {sec.wineIds.map((id, wi) => {
                       const w = winesById[id];

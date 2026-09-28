@@ -9,6 +9,7 @@ import {
   paperOf,
   wineMetaFirstLine,
   wineMetaGrapeLine,
+  sectionLevel,
   type MenuSection,
   type MenuSpacing,
   type MenuLayout,
@@ -85,11 +86,14 @@ export function MenuPreview({
   const cleaned = sections.map((s) => ({ ...s, wineIds: s.wineIds.filter((id) => winesById[id]) }));
   const visibleSections = cleaned.filter((s, i) => {
     if (s.wineIds.length > 0) return true;
-    if (s.sub) return false;
-    // Seção principal vazia continua visível quando tem subseções com rótulos
-    for (let j = i + 1; j < cleaned.length && cleaned[j].sub; j++) if (cleaned[j].wineIds.length) return true;
+    const lvl = sectionLevel(s);
+    // Cabeçalho pai continua visível quando alguma seção filha tem rótulos
+    for (let j = i + 1; j < cleaned.length && sectionLevel(cleaned[j]) > lvl; j++) {
+      if (cleaned[j].wineIds.length) return true;
+    }
     return false;
   });
+
 
   const nameStyle = {
     fontFamily: fontCss(typography.nameFont),

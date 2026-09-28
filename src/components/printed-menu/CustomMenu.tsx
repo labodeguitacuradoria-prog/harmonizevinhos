@@ -42,9 +42,21 @@ function HexColorField({
     setDraft(appliedColor);
   }, [appliedColor]);
 
+  const commitColor = (nextValue: string) => {
+    const normalized = nextValue.trim().toLowerCase();
+    if (!HEX_COLOR_PATTERN.test(normalized)) {
+      toast.error("Use um código como #fffdf8.");
+      return false;
+    }
+    setDraft(normalized);
+    onChange(normalized);
+    return true;
+  };
+
   const updateDraft = (nextValue: string) => {
-    setDraft(nextValue);
-    if (HEX_COLOR_PATTERN.test(nextValue)) onChange(nextValue.toLowerCase());
+    const normalized = nextValue.toLowerCase();
+    setDraft(normalized);
+    if (HEX_COLOR_PATTERN.test(normalized)) onChange(normalized);
   };
 
   return (
@@ -53,7 +65,7 @@ function HexColorField({
       <input
         type="color"
         value={expandHexColor(appliedColor)}
-        onChange={(event) => updateDraft(event.target.value)}
+        onChange={(event) => commitColor(event.target.value)}
         className="h-8 w-9 cursor-pointer rounded border border-input bg-background p-0.5"
         aria-label={`Selecionar cor: ${label}`}
       />
@@ -61,13 +73,18 @@ function HexColorField({
         type="text"
         value={draft}
         onChange={(event) => updateDraft(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          commitColor(draft);
+        }}
         onBlur={() => {
-          if (!HEX_COLOR_PATTERN.test(draft)) setDraft(appliedColor);
+          if (!commitColor(draft)) setDraft(appliedColor);
         }}
         placeholder="#fffdf8"
         maxLength={7}
         spellCheck={false}
-        className="h-8 min-w-0 rounded-md border border-input bg-background px-2 font-mono text-xs uppercase"
+        className="h-8 min-w-0 rounded-md border border-input bg-background px-2 font-mono text-xs"
         aria-label={`Código hexadecimal: ${label}`}
       />
     </label>

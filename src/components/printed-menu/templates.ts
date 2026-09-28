@@ -249,6 +249,7 @@ export type MenuWine = {
   country: string | null;
   grape: string | null;
   wine_type: string | null;
+  style?: string | null;
   volume: string | null;
   sale_price: number | null;
   active_on_menu: boolean | null;
@@ -273,17 +274,27 @@ export const isGlassVol = (v: string | null | undefined) => !!v && /taça|taca|g
 const SECTION_ORDER = ["Espumante", "Branco", "Rosé", "Tinto", "Fortificado", "Outros", "Vinhos em taça"];
 
 // Agrupamento automático por tipo, com "Vinhos em taça" separado.
-export function autoSections(wines: MenuWine[]): MenuSection[] {
+export type GroupMode = "type" | "style";
+
+export function sectionKey(w: MenuWine, mode: GroupMode = "type"): string {
+  if (isGlassVol(w.volume)) return "Vinhos em taça";
+  if (mode === "style" && w.style && w.style.trim()) return w.style.trim();
+  return typeLabel(w.wine_type);
+}
+
+export function autoSections(wines: MenuWine[], mode: GroupMode = "type"): MenuSection[] {
   const buckets = new Map<string, string[]>();
+  const typeOf = new Map<string, string>();
   for (const w of wines) {
-    const key = isGlassVol(w.volume) ? "Vinhos em taça" : typeLabel(w.wine_type);
+    const key = sectionKey(w, mode);
+    if (!typeOf.has(key)) typeOf.set(key, isGlassVol(w.volume) ? "Vinhos em taça" : typeLabel(w.wine_type));
     const arr = buckets.get(key) ?? [];
     arr.push(w.id);
     buckets.set(key, arr);
   }
   const keys = Array.from(buckets.keys()).sort((a, b) => {
-    const ia = SECTION_ORDER.indexOf(a);
-    const ib = SECTION_ORDER.indexOf(b);
+    const ia = SECTION_ORDER.indexOf(typeOf.get(a) ?? a);
+    const ib = SECTION_ORDER.indexOf(typeOf.get(b) ?? b);
     return (ia === -1 ? 50 : ia) - (ib === -1 ? 50 : ib) || a.localeCompare(b);
   });
   return keys.map((k) => ({ id: `sec-${k}`, title: k, wineIds: buckets.get(k)! }));

@@ -1067,7 +1067,7 @@ function WineMenuPage() {
                 </button>
                 <button
                   onClick={() => addSection(true)}
-                  title="Cria uma subseção abaixo da seção selecionada"
+                  title="Cria uma seção do nível seguinte dentro da seção selecionada"
                   className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
                 >
                   <Plus className="h-3 w-3" /> Subseção

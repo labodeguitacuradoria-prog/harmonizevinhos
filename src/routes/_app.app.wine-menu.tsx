@@ -26,6 +26,8 @@ import {
 import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
 import ModuleGate from "@/components/ModuleGate";
+import type { CustomDesign } from "@/components/printed-menu/MenuPreview";
+import { CustomMenuRequestDialog, CustomDesignPanel } from "@/components/printed-menu/CustomMenu";
 import {
   DEFAULT_SPACING,
   DEFAULT_TYPOGRAPHY,
@@ -94,6 +96,7 @@ type SavedList = {
     layout?: MenuLayout;
     margins?: PageMargins;
     customPaper?: { widthMm: number; heightMm: number; padMm: number };
+    customDesign?: CustomDesign | null;
   };
   sections: MenuSection[];
   logo_url: string | null;
@@ -118,7 +121,16 @@ function newId() {
 }
 
 function WineMenuPage() {
-  const { restaurantId, memberships } = useAuth();
+  const { restaurantId, memberships, role } = useAuth();
+  const isAdmin = role === "admin";
+  const [customDesign, setCustomDesign] = useState<CustomDesign>({});
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [newMenuOpen, setNewMenuOpen] = useState(false);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("request");
+    if (id) setRequestId(id);
+  }, []);
   const queryClient = useQueryClient();
 
   const restaurantName = useMemo(
@@ -376,6 +388,7 @@ function WineMenuPage() {
           layout,
           margins,
           customPaper: useCustomPaper ? { widthMm: customW, heightMm: customH, padMm: customPad } : null,
+          customDesign: customDesign.exclusive ? { ...customDesign, requestId: customDesign.requestId ?? requestId } : null,
         }),
       ),
       sections: JSON.parse(JSON.stringify(sections)),
@@ -399,6 +412,29 @@ function WineMenuPage() {
     }
     toast.success(asNew ? "Carta duplicada." : "Carta salva.");
     queryClient.invalidateQueries({ queryKey: ["printed-wine-lists", restaurantId] });
+    return true;
+  }
+
+  async function deliver() {
+    if (!customDesign.exclusive) return toast.error("Ative o design exclusivo antes de disponibilizar.");
+    const ok = await save(false);
+    if (!ok) return;
+    const { data } = await supabase
+      .from("printed_wine_lists")
+      .select("id")
+      .eq("restaurant_id", restaurantId!)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single();
+    const rid = customDesign.requestId ?? requestId;
+    if (rid && data) {
+      const { error } = await supabase
+        .from("custom_menu_requests")
+        .update({ status: "delivered", delivered_list_id: data.id })
+        .eq("id", rid);
+      if (error) return toast.error(`Não foi possível disponibilizar: ${error.message}`);
+    }
+    toast.success("Carta disponibilizada! O restaurante já a encontra em Cartas salvas.");
   }
 
   function loadSaved(l: SavedList) {
@@ -413,6 +449,7 @@ function WineMenuPage() {
     setPriceDecimals(l.visible_fields?.priceDecimals !== false);
     setPriceCurrency(l.visible_fields?.priceCurrency === true);
     setLogoUrl(l.logo_url ?? "");
+    setCustomDesign(l.visible_fields?.customDesign ?? {});
     setAddress(l.address_text ?? "");
     setPaper((l.paper_size as PaperKey) ?? "a4");
     setSpacing({ ...DEFAULT_SPACING, ...(l.visible_fields?.spacing ?? {}) });
@@ -465,16 +502,41 @@ function WineMenuPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => {
-                  setCurrentId(null);
-                  setListName("");
-                  toast.info("Nova carta: ao salvar, você escolhe o nome.");
-                }}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-accent"
-              >
-                Nova carta
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setNewMenuOpen((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                >
+                  Nova carta <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+                {newMenuOpen && (
+                  <div className="absolute left-0 top-full z-50 mt-1 w-64 rounded-xl border border-border bg-card p-1 shadow-lg">
+                    <button
+                      onClick={() => {
+                        setCurrentId(null);
+                        setListName("");
+                        setCustomDesign({});
+                        setNewMenuOpen(false);
+                        toast.info("Nova carta: ao salvar, você escolhe o nome.");
+                      }}
+                      className="block w-full rounded px-3 py-2 text-left text-xs hover:bg-accent"
+                    >
+                      <b>Carta com modelo pronto</b>
+                      <div className="text-[10px] text-muted-foreground">Clássico, Duas colunas, Minimalista, Casual, Moderno</div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setNewMenuOpen(false);
+                        setRequestOpen(true);
+                      }}
+                      className="block w-full rounded px-3 py-2 text-left text-xs hover:bg-accent"
+                    >
+                      <b className="text-primary">Carta personalizada ✦</b>
+                      <div className="text-[10px] text-muted-foreground">Nossa equipe desenha uma carta exclusiva</div>
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => save(false)}
                 disabled={saving}
@@ -534,7 +596,12 @@ function WineMenuPage() {
                               }}
                               className="flex-1 text-left"
                             >
-                              <div className="text-xs">{l.name}</div>
+                              <div className="text-xs">
+                                {l.name}
+                                {l.visible_fields?.customDesign?.exclusive ? (
+                                  <span className="ml-1.5 rounded bg-primary/15 px-1 text-[9px] font-bold uppercase text-primary">Exclusiva</span>
+                                ) : null}
+                              </div>
                               <div className="text-[10px] text-muted-foreground">
                                 {new Date(l.updated_at).toLocaleDateString("pt-BR")}
                               </div>
@@ -552,6 +619,19 @@ function WineMenuPage() {
             </div>
           </div>
         </div>
+
+        {requestOpen && restaurantId && (
+          <CustomMenuRequestDialog restaurantId={restaurantId} onClose={() => setRequestOpen(false)} />
+        )}
+        {isAdmin && restaurantId && (
+          <CustomDesignPanel
+            value={customDesign}
+            onChange={setCustomDesign}
+            restaurantId={restaurantId}
+            onDeliver={deliver}
+            canDeliver={!!(customDesign.requestId ?? requestId)}
+          />
+        )}
 
         {/* Modelos */}
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

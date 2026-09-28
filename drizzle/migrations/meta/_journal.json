@@ -64,6 +64,13 @@
       "when": 1790423837206,
       "tag": "0008_stop_auto_restaurant_on_signup",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790616809852,
+      "tag": "0009_custom_menu_requests",
+      "breakpoints": true
     }
   ]
 }

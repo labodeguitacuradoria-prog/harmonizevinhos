@@ -303,6 +303,8 @@ function WineMenuPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantName]);
 
+  const [targetSectionId, setTargetSectionId] = useState<string | null>(null);
+  const targetExists = !!targetSectionId && sections.some((s) => s.id === targetSectionId);
   const usedIds = useMemo(() => new Set(sections.flatMap((s) => s.wineIds)), [sections]);
 
   const available = useMemo(() => {
@@ -318,7 +320,7 @@ function WineMenuPage() {
 
   const totalItems = usedIds.size;
 
-  function addWine(wineId: string, sectionId?: string) {
+  function addWine(wineId: string, sectionId?: string | null) {
     setSections((prev) => {
       const w = winesById[wineId];
       const targetTitle = w ? sectionKey(w as any, groupMode) : "Outros";
@@ -328,6 +330,31 @@ function WineMenuPage() {
       }
       return prev.map((s) => (s.id === target!.id ? { ...s, wineIds: [...s.wineIds, wineId] } : s));
     });
+  }
+
+  function moveWineTo(fromId: string, wineId: string, toId: string) {
+    if (fromId === toId) return;
+    setSections((prev) =>
+      prev.map((s) =>
+        s.id === fromId
+          ? { ...s, wineIds: s.wineIds.filter((id) => id !== wineId) }
+          : s.id === toId
+            ? { ...s, wineIds: [...s.wineIds, wineId] }
+            : s,
+      ),
+    );
+  }
+
+  function addSection(sub: boolean) {
+    const sec = { id: newId(), title: sub ? "Nova subseção" : "Nova seção", wineIds: [], sub };
+    setSections((p) => {
+      const idx = targetSectionId ? p.findIndex((s) => s.id === targetSectionId) : -1;
+      if (!sub || idx < 0) return [...p, sec];
+      let end = idx + 1;
+      while (end < p.length && p[end].sub) end++;
+      return [...p.slice(0, end), sec, ...p.slice(end)];
+    });
+    setTargetSectionId(sec.id);
   }
 
   function removeWine(sectionId: string, wineId: string) {
@@ -996,10 +1023,17 @@ function WineMenuPage() {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setSections((p) => [...p, { id: newId(), title: "Nova seção", wineIds: [] }])}
+                  onClick={() => addSection(false)}
                   className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
                 >
                   <Plus className="h-3 w-3" /> Seção
+                </button>
+                <button
+                  onClick={() => addSection(true)}
+                  title="Cria uma subseção abaixo da seção selecionada"
+                  className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+                >
+                  <Plus className="h-3 w-3" /> Subseção
                 </button>
                 <div className="inline-flex overflow-hidden rounded border border-border text-[10px] uppercase" title="Classificar vinhos por">
                   {(["type", "style"] as const).map((m) => (
@@ -1023,8 +1057,13 @@ function WineMenuPage() {
 
             <div className="mt-3 space-y-3">
               {sections.map((sec, si) => (
-                <div key={sec.id} className="rounded-lg border border-border bg-background p-3">
+                <div
+                  key={sec.id}
+                  onClick={() => setTargetSectionId(sec.id)}
+                  className={`rounded-lg border bg-background p-3 ${sec.sub ? "ml-6" : ""} ${targetSectionId === sec.id ? "border-primary" : "border-border"}`}
+                >
                   <div className="flex items-center gap-2">
+                    {sec.sub ? <span className="text-[10px] uppercase text-muted-foreground">↳ Sub</span> : null}
                     <input
                       value={sec.title}
                       onChange={(e) =>
@@ -1032,6 +1071,12 @@ function WineMenuPage() {
                       }
                       className="flex-1 rounded border border-input bg-card px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary"
                     />
+                    <IconBtn
+                      onClick={() => setSections((p) => p.map((s) => (s.id === sec.id ? { ...s, sub: !s.sub } : s)))}
+                      title={sec.sub ? "Transformar em seção" : "Transformar em subseção"}
+                    >
+                      <span className="text-[10px] font-bold">{sec.sub ? "←" : "→"}</span>
+                    </IconBtn>
                     <IconBtn onClick={() => moveSection(si, -1)} title="Subir seção">
                       <ChevronUp className="h-3.5 w-3.5" />
                     </IconBtn>
@@ -1089,6 +1134,21 @@ function WineMenuPage() {
                               >
                                 <Pencil className="h-3 w-3" />
                               </IconBtn>
+                              {sections.length > 1 && (
+                                <select
+                                  value={sec.id}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onChange={(e) => moveWineTo(sec.id, id, e.target.value)}
+                                  title="Mover para outra seção"
+                                  className="max-w-[7rem] rounded border border-input bg-card px-1 py-0.5 text-[10px]"
+                                >
+                                  {sections.map((s2) => (
+                                    <option key={s2.id} value={s2.id}>
+                                      {s2.sub ? "↳ " : ""}{s2.title || "(sem título)"}
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
                               <IconBtn onClick={() => moveWine(sec.id, wi, -1)} title="Subir">
                                 <ChevronUp className="h-3 w-3" />
                               </IconBtn>
@@ -1125,6 +1185,21 @@ function WineMenuPage() {
             <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
               Rótulos fora da carta ({available.length})
             </div>
+            <label className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+              Incluir em:
+              <select
+                value={targetExists ? targetSectionId! : ""}
+                onChange={(e) => setTargetSectionId(e.target.value || null)}
+                className="flex-1 rounded border border-input bg-background px-2 py-1 text-xs text-foreground"
+              >
+                <option value="">Automático (pelo tipo/estilo)</option>
+                {sections.map((s2) => (
+                  <option key={s2.id} value={s2.id}>
+                    {s2.sub ? "↳ " : ""}{s2.title || "(sem título)"}
+                  </option>
+                ))}
+              </select>
+            </label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -1142,7 +1217,7 @@ function WineMenuPage() {
                     </span>
                   </span>
                   <button
-                    onClick={() => addWine(w.id)}
+                    onClick={() => addWine(w.id, targetExists ? targetSectionId : undefined)}
                     className="inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-[10px] uppercase text-primary hover:bg-background"
                   >
                     <Plus className="h-3 w-3" /> Incluir

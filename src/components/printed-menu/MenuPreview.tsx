@@ -82,9 +82,14 @@ export function MenuPreview({
   const p = paperDef ?? paperOf(paper);
   const twoCols = t.columns === 2 && p.widthMm >= 148;
 
-  const visibleSections = sections
-    .map((s) => ({ ...s, wineIds: s.wineIds.filter((id) => winesById[id]) }))
-    .filter((s) => s.wineIds.length > 0);
+  const cleaned = sections.map((s) => ({ ...s, wineIds: s.wineIds.filter((id) => winesById[id]) }));
+  const visibleSections = cleaned.filter((s, i) => {
+    if (s.wineIds.length > 0) return true;
+    if (s.sub) return false;
+    // Seção principal vazia continua visível quando tem subseções com rótulos
+    for (let j = i + 1; j < cleaned.length && cleaned[j].sub; j++) if (cleaned[j].wineIds.length) return true;
+    return false;
+  });
 
   const nameStyle = {
     fontFamily: fontCss(typography.nameFont),
@@ -195,10 +200,10 @@ export function MenuPreview({
 
         <div className={twoCols ? "[column-count:2] [column-gap:10mm]" : ""}>
           {visibleSections.map((sec) => (
-            <section key={sec.id} className="mb-6 break-inside-avoid">
+            <section key={sec.id} className={`${sec.sub ? "mb-4 mt-[-6px]" : "mb-6"} break-inside-avoid`}>
               <div
-                className={`${t.sectionTitle} ${t.rule} pb-1 ${textAlign[layout.sectionAlign]}`}
-                style={{ ...sectionStyle, ...(cd?.accentColor ? { color: cd.accentColor, borderColor: cd.accentColor } : {}) }}
+                className={sec.sub ? `pb-0.5 text-[9pt] font-semibold uppercase tracking-[0.15em] opacity-80 ${textAlign[layout.sectionAlign]}` : `${t.sectionTitle} ${t.rule} pb-1 ${textAlign[layout.sectionAlign]}`}
+                style={{ ...sectionStyle, ...(sec.sub && sectionStyle.fontSize ? { fontSize: `calc(${sectionStyle.fontSize} * 0.8)` } : {}), ...(cd?.accentColor ? { color: cd.accentColor, borderColor: cd.accentColor } : {}) }}
               >
                 {sec.title}
               </div>

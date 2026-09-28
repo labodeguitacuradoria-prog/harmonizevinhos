@@ -282,7 +282,9 @@ export function MenuPreview({
                 })}
               </ul>
             </section>
-          ))}
+            );
+          })}
+
           {visibleSections.length === 0 ? (
             <div className="py-20 text-center text-[10pt] text-black/50">
               Nenhum rótulo selecionado para esta carta.

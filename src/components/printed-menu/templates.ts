@@ -193,11 +193,14 @@ export type MenuTypography = {
   nameSize?: number;
   sectionFont?: FontKey;
   sectionSize?: number;
+  subSectionFont?: FontKey;
+  subSectionSize?: number;
   metaFont?: FontKey;
   metaSize?: number;
   priceFont?: FontKey;
   priceSize?: number;
 };
+
 
 export const DEFAULT_TYPOGRAPHY: MenuTypography = {};
 
@@ -236,7 +239,20 @@ export function normalizeFields(raw: Partial<VisibleFields> | null | undefined):
   return f;
 }
 
-export type MenuSection = { id: string; title: string; wineIds: string[]; sub?: boolean };
+export type MenuSection = { id: string; title: string; wineIds: string[]; sub?: boolean; level?: number };
+
+/** Nível hierárquico da seção (1 = primeiro nível). Cartas antigas usavam apenas "sub". */
+export function sectionLevel(s: MenuSection): number {
+  const lvl = Number(s.level);
+  if (Number.isFinite(lvl) && lvl >= 1) return Math.min(Math.round(lvl), 5);
+  return s.sub ? 2 : 1;
+}
+
+/** Rótulo amigável do nível, usado nos painéis de montagem. */
+export function levelLabel(level: number): string {
+  return `Seção de ${level}º nível`;
+}
+
 
 export type MenuWine = {
   id: string;

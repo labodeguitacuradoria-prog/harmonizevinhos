@@ -9,6 +9,7 @@ import {
   paperOf,
   wineMetaFirstLine,
   wineMetaGrapeLine,
+  sectionLevel,
   type MenuSection,
   type MenuSpacing,
   type MenuLayout,
@@ -85,11 +86,14 @@ export function MenuPreview({
   const cleaned = sections.map((s) => ({ ...s, wineIds: s.wineIds.filter((id) => winesById[id]) }));
   const visibleSections = cleaned.filter((s, i) => {
     if (s.wineIds.length > 0) return true;
-    if (s.sub) return false;
-    // Seção principal vazia continua visível quando tem subseções com rótulos
-    for (let j = i + 1; j < cleaned.length && cleaned[j].sub; j++) if (cleaned[j].wineIds.length) return true;
+    const lvl = sectionLevel(s);
+    // Cabeçalho pai continua visível quando alguma seção filha tem rótulos
+    for (let j = i + 1; j < cleaned.length && sectionLevel(cleaned[j]) > lvl; j++) {
+      if (cleaned[j].wineIds.length) return true;
+    }
     return false;
   });
+
 
   const nameStyle = {
     fontFamily: fontCss(typography.nameFont),
@@ -99,6 +103,16 @@ export function MenuPreview({
     fontFamily: fontCss(typography.sectionFont),
     fontSize: typography.sectionSize ? `${typography.sectionSize}pt` : undefined,
   };
+  /** Estilo dos títulos de 2º nível ou mais profundos. */
+  const subSectionStyle = (level: number) => {
+    const scale = Math.pow(0.92, Math.max(0, level - 2));
+    const basePt = typography.subSectionSize ?? (typography.sectionSize ? typography.sectionSize * 0.8 : 9);
+    return {
+      fontFamily: fontCss(typography.subSectionFont) ?? fontCss(typography.sectionFont),
+      fontSize: `${Number((basePt * scale).toFixed(2))}pt`,
+    };
+  };
+
   const metaStyle = {
     fontFamily: fontCss(typography.metaFont),
     fontSize: typography.metaSize ? `${typography.metaSize}pt` : undefined,
@@ -199,14 +213,22 @@ export function MenuPreview({
         </header>
 
         <div className={twoCols ? "[column-count:2] [column-gap:10mm]" : ""}>
-          {visibleSections.map((sec) => (
-            <section key={sec.id} className={`${sec.sub ? "mb-4 mt-[-6px]" : "mb-6"} break-inside-avoid`}>
+          {visibleSections.map((sec) => {
+            const lvl = sectionLevel(sec);
+            const isSub = lvl > 1;
+            return (
+            <section
+              key={sec.id}
+              className={`${isSub ? "mb-4 mt-[-6px]" : "mb-6"} break-inside-avoid`}
+              style={isSub ? { marginLeft: `${(lvl - 2) * 4}mm` } : undefined}
+            >
               <div
-                className={sec.sub ? `pb-0.5 text-[9pt] font-semibold uppercase tracking-[0.15em] opacity-80 ${textAlign[layout.sectionAlign]}` : `${t.sectionTitle} ${t.rule} pb-1 ${textAlign[layout.sectionAlign]}`}
-                style={{ ...sectionStyle, ...(sec.sub && sectionStyle.fontSize ? { fontSize: `calc(${sectionStyle.fontSize} * 0.8)` } : {}), ...(cd?.accentColor ? { color: cd.accentColor, borderColor: cd.accentColor } : {}) }}
+                className={isSub ? `pb-0.5 font-semibold uppercase tracking-[0.15em] opacity-80 ${textAlign[layout.sectionAlign]}` : `${t.sectionTitle} ${t.rule} pb-1 ${textAlign[layout.sectionAlign]}`}
+                style={{ ...(isSub ? subSectionStyle(lvl) : sectionStyle), ...(cd?.accentColor ? { color: cd.accentColor, borderColor: cd.accentColor } : {}) }}
               >
                 {sec.title}
               </div>
+
               <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>
                 {sec.wineIds.map((id) => {
                   const w = winesById[id];
@@ -260,7 +282,9 @@ export function MenuPreview({
                 })}
               </ul>
             </section>
-          ))}
+            );
+          })}
+
           {visibleSections.length === 0 ? (
             <div className="py-20 text-center text-[10pt] text-black/50">
               Nenhum rótulo selecionado para esta carta.

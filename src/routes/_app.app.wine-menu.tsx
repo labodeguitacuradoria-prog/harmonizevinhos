@@ -41,6 +41,7 @@ import {
   TEMPLATE_LIST,
   autoSections,
   sectionKey,
+  sectionLevel,
   customPaper,
   isGlassVol,
   paperOf,
@@ -119,6 +120,13 @@ const FIELD_LABELS: { key: keyof VisibleFields; label: string }[] = [
 function newId() {
   return `sec-${Math.random().toString(36).slice(2, 9)}`;
 }
+
+/** Nome da seção nas listas de seleção, com o nível hierárquico. */
+function sectionOptionLabel(s: MenuSection) {
+  const lvl = sectionLevel(s);
+  return `${"↳ ".repeat(Math.max(0, lvl - 1))}${lvl}º · ${s.title || "(sem título)"}`;
+}
+
 
 function WineMenuPage() {
   const { restaurantId, memberships, role } = useAuth();
@@ -346,16 +354,36 @@ function WineMenuPage() {
   }
 
   function addSection(sub: boolean) {
-    const sec = { id: newId(), title: sub ? "Nova subseção" : "Nova seção", wineIds: [], sub };
     setSections((p) => {
       const idx = targetSectionId ? p.findIndex((s) => s.id === targetSectionId) : -1;
+      const parentLevel = idx >= 0 ? sectionLevel(p[idx]) : 1;
+      const level = sub ? Math.min(parentLevel + 1, 5) : 1;
+      const sec = {
+        id: newId(),
+        title: sub ? `Nova seção de ${level}º nível` : "Nova seção",
+        wineIds: [] as string[],
+        sub: level > 1,
+        level,
+      };
+      setTimeout(() => setTargetSectionId(sec.id), 0);
       if (!sub || idx < 0) return [...p, sec];
       let end = idx + 1;
-      while (end < p.length && p[end].sub) end++;
+      while (end < p.length && sectionLevel(p[end]) > parentLevel) end++;
       return [...p.slice(0, end), sec, ...p.slice(end)];
     });
-    setTargetSectionId(sec.id);
   }
+
+  /** Promove (-1) ou rebaixa (+1) o nível hierárquico da seção. */
+  function changeLevel(sectionId: string, dir: -1 | 1) {
+    setSections((p) =>
+      p.map((s) => {
+        if (s.id !== sectionId) return s;
+        const level = Math.min(Math.max(sectionLevel(s) + dir, 1), 5);
+        return { ...s, level, sub: level > 1 };
+      }),
+    );
+  }
+
 
   function removeWine(sectionId: string, wineId: string) {
     setSections((prev) =>
@@ -902,13 +930,22 @@ function WineMenuPage() {
                       onSize={(s) => setTypography((t) => ({ ...t, nameSize: s }))}
                     />
                     <FontControl
-                      label="Tipo de vinho (seções)"
+                      label="Seções de 1º nível"
                       font={typography.sectionFont}
                       size={typography.sectionSize}
                       defaultSize={12}
                       onFont={(f) => setTypography((t) => ({ ...t, sectionFont: f }))}
                       onSize={(s) => setTypography((t) => ({ ...t, sectionSize: s }))}
                     />
+                    <FontControl
+                      label="Subseções (2º nível e seguintes)"
+                      font={typography.subSectionFont}
+                      size={typography.subSectionSize}
+                      defaultSize={9.5}
+                      onFont={(f) => setTypography((t) => ({ ...t, subSectionFont: f }))}
+                      onSize={(s) => setTypography((t) => ({ ...t, subSectionSize: s }))}
+                    />
+
                     <FontControl
                       label="Informações do rótulo"
                       font={typography.metaFont}
@@ -1030,7 +1067,7 @@ function WineMenuPage() {
                 </button>
                 <button
                   onClick={() => addSection(true)}
-                  title="Cria uma subseção abaixo da seção selecionada"
+                  title="Cria uma seção do nível seguinte dentro da seção selecionada"
                   className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
                 >
                   <Plus className="h-3 w-3" /> Subseção
@@ -1056,14 +1093,19 @@ function WineMenuPage() {
             </div>
 
             <div className="mt-3 space-y-3">
-              {sections.map((sec, si) => (
+              {sections.map((sec, si) => {
+                const lvl = sectionLevel(sec);
+                return (
                 <div
                   key={sec.id}
                   onClick={() => setTargetSectionId(sec.id)}
-                  className={`rounded-lg border bg-background p-3 ${sec.sub ? "ml-6" : ""} ${targetSectionId === sec.id ? "border-primary" : "border-border"}`}
+                  style={{ marginLeft: `${(lvl - 1) * 1.5}rem` }}
+                  className={`rounded-lg border bg-background p-3 ${targetSectionId === sec.id ? "border-primary" : "border-border"}`}
                 >
                   <div className="flex items-center gap-2">
-                    {sec.sub ? <span className="text-[10px] uppercase text-muted-foreground">↳ Sub</span> : null}
+                    <span className="whitespace-nowrap text-[10px] uppercase text-muted-foreground">
+                      {lvl > 1 ? "↳ " : ""}{lvl}º nível
+                    </span>
                     <input
                       value={sec.title}
                       onChange={(e) =>
@@ -1071,11 +1113,11 @@ function WineMenuPage() {
                       }
                       className="flex-1 rounded border border-input bg-card px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary"
                     />
-                    <IconBtn
-                      onClick={() => setSections((p) => p.map((s) => (s.id === sec.id ? { ...s, sub: !s.sub } : s)))}
-                      title={sec.sub ? "Transformar em seção" : "Transformar em subseção"}
-                    >
-                      <span className="text-[10px] font-bold">{sec.sub ? "←" : "→"}</span>
+                    <IconBtn onClick={() => changeLevel(sec.id, -1)} title="Subir um nível">
+                      <span className="text-[10px] font-bold">←</span>
+                    </IconBtn>
+                    <IconBtn onClick={() => changeLevel(sec.id, 1)} title="Descer um nível">
+                      <span className="text-[10px] font-bold">→</span>
                     </IconBtn>
                     <IconBtn onClick={() => moveSection(si, -1)} title="Subir seção">
                       <ChevronUp className="h-3.5 w-3.5" />
@@ -1090,6 +1132,7 @@ function WineMenuPage() {
                       <Trash2 className="h-3.5 w-3.5" />
                     </IconBtn>
                   </div>
+
                   <ul className="mt-2 space-y-1">
                     {sec.wineIds.map((id, wi) => {
                       const w = winesById[id];
@@ -1144,7 +1187,7 @@ function WineMenuPage() {
                                 >
                                   {sections.map((s2) => (
                                     <option key={s2.id} value={s2.id}>
-                                      {s2.sub ? "↳ " : ""}{s2.title || "(sem título)"}
+                                      {sectionOptionLabel(s2)}
                                     </option>
                                   ))}
                                 </select>
@@ -1172,7 +1215,8 @@ function WineMenuPage() {
                     )}
                   </ul>
                 </div>
-              ))}
+                );
+              })}
               {sections.length === 0 && (
                 <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
                   Nenhuma seção. Use "Reagrupar" para montar automaticamente por tipo.
@@ -1195,7 +1239,7 @@ function WineMenuPage() {
                 <option value="">Automático (pelo tipo/estilo)</option>
                 {sections.map((s2) => (
                   <option key={s2.id} value={s2.id}>
-                    {s2.sub ? "↳ " : ""}{s2.title || "(sem título)"}
+                    {sectionOptionLabel(s2)}
                   </option>
                 ))}
               </select>

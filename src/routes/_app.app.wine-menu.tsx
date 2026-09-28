@@ -931,13 +931,22 @@ function WineMenuPage() {
                       onSize={(s) => setTypography((t) => ({ ...t, nameSize: s }))}
                     />
                     <FontControl
-                      label="Tipo de vinho (seções)"
+                      label="Seções de 1º nível"
                       font={typography.sectionFont}
                       size={typography.sectionSize}
                       defaultSize={12}
                       onFont={(f) => setTypography((t) => ({ ...t, sectionFont: f }))}
                       onSize={(s) => setTypography((t) => ({ ...t, sectionSize: s }))}
                     />
+                    <FontControl
+                      label="Subseções (2º nível e seguintes)"
+                      font={typography.subSectionFont}
+                      size={typography.subSectionSize}
+                      defaultSize={9.5}
+                      onFont={(f) => setTypography((t) => ({ ...t, subSectionFont: f }))}
+                      onSize={(s) => setTypography((t) => ({ ...t, subSectionSize: s }))}
+                    />
+
                     <FontControl
                       label="Informações do rótulo"
                       font={typography.metaFont}

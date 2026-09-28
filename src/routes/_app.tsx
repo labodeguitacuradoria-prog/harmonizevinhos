@@ -153,6 +153,7 @@ function AppLayout() {
         <>
           <NavLink to="/admin" rail={rail} icon={<ShieldCheck className="h-4 w-4" />}>Admin</NavLink>
           <NavLink to="/admin/restaurants" rail={rail} icon={<Building2 className="h-4 w-4" />}>Restaurantes</NavLink>
+          <NavLink to="/admin/custom-menus" rail={rail} icon={<ScrollText className="h-4 w-4" />}>Cartas exclusivas</NavLink>
           <NavLink to="/admin/access-map" rail={rail} icon={<Map className="h-4 w-4" />}>Acessos</NavLink>
           <NavLink to="/admin/suppliers" rail={rail} icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>
           <NavLink to="/app/catalog-admin" rail={rail} icon={<Database className="h-4 w-4" />}>Catálogo</NavLink>

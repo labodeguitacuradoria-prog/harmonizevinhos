@@ -38,6 +38,7 @@ import {
   PAPER_LIST,
   TEMPLATE_LIST,
   autoSections,
+  sectionKey,
   customPaper,
   isGlassVol,
   paperOf,
@@ -208,7 +209,7 @@ function WineMenuPage() {
       const { data, error } = await supabase
         .from("wines")
         .select(
-          "id,name,internal_code,producer,vintage,region,appellation,country,grape,wine_type,volume,sale_price,active_on_menu",
+          "id,name,internal_code,producer,vintage,region,appellation,country,grape,wine_type,style,volume,sale_price,active_on_menu",
         )
         .eq("restaurant_id", restaurantId!)
         .order("name");
@@ -259,6 +260,15 @@ function WineMenuPage() {
   const [priceCurrency, setPriceCurrency] = useState(false);
   const [previewZoom, setPreviewZoom] = useState(0.8);
   const [sections, setSections] = useState<MenuSection[]>([]);
+  const [groupMode, setGroupMode] = useState<"type" | "style">(() => {
+    if (typeof window === "undefined") return "type";
+    return (localStorage.getItem("wine-menu-group-mode") as "type" | "style") || "type";
+  });
+  function regroup(mode: "type" | "style") {
+    setGroupMode(mode);
+    try { localStorage.setItem("wine-menu-group-mode", mode); } catch {}
+    setSections(autoSections(wines.filter((w) => w.active_on_menu !== false), mode));
+  }
   const [initialized, setInitialized] = useState(false);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -272,7 +282,7 @@ function WineMenuPage() {
   // Primeira carga: agrupa automaticamente os rótulos ativos na carta.
   useEffect(() => {
     if (initialized || isLoading || wines.length === 0) return;
-    setSections(autoSections(wines.filter((w) => w.active_on_menu !== false)));
+    setSections(autoSections(wines.filter((w) => w.active_on_menu !== false), groupMode));
     setInitialized(true);
   }, [initialized, isLoading, wines]);
 
@@ -299,7 +309,7 @@ function WineMenuPage() {
   function addWine(wineId: string, sectionId?: string) {
     setSections((prev) => {
       const w = winesById[wineId];
-      const targetTitle = isGlassVol(w?.volume) ? "Vinhos em taça" : typeLabel(w?.wine_type ?? null);
+      const targetTitle = w ? sectionKey(w as any, groupMode) : "Outros";
       let target = sectionId ? prev.find((s) => s.id === sectionId) : prev.find((s) => s.title === targetTitle);
       if (!target) {
         return [...prev, { id: newId(), title: targetTitle, wineIds: [wineId] }];
@@ -911,8 +921,19 @@ function WineMenuPage() {
                 >
                   <Plus className="h-3 w-3" /> Seção
                 </button>
+                <div className="inline-flex overflow-hidden rounded border border-border text-[10px] uppercase" title="Classificar vinhos por">
+                  {(["type", "style"] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => regroup(m)}
+                      className={`px-2 py-1 ${groupMode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
+                    >
+                      {m === "type" ? "Por tipo" : "Por estilo"}
+                    </button>
+                  ))}
+                </div>
                 <button
-                  onClick={() => setSections(autoSections(wines.filter((w) => w.active_on_menu !== false)))}
+                  onClick={() => regroup(groupMode)}
                   className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
                 >
                   <RotateCcw className="h-3 w-3" /> Reagrupar

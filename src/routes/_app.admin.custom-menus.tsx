@@ -96,7 +96,7 @@ function CustomMenusAdmin() {
                     {atts.map((a) => (
                       <button
                         key={a.path}
-                        onClick={() => openBriefFile(a.path)}
+                        onClick={() => openBriefFile(a.path, a.name)}
                         className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:border-primary"
                       >
                         <Paperclip className="h-3 w-3" /> {a.name}

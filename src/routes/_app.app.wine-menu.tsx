@@ -1200,7 +1200,9 @@ function WineMenuPage() {
                     )}
                   </ul>
                 </div>
-              ))}
+                </div>
+                );
+              })}
               {sections.length === 0 && (
                 <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
                   Nenhuma seção. Use "Reagrupar" para montar automaticamente por tipo.

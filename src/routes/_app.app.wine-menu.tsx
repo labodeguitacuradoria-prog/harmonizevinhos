@@ -785,8 +785,11 @@ function WineMenuPage() {
                 label="Rodapé"
                 value={footer}
                 onChange={setFooter}
-                placeholder="Preços em reais · Atualizada em ..."
+                placeholder="Preços em reais          Atualizada em ..."
               />
+              <p className="text-[10px] leading-relaxed text-muted-foreground">
+                Use espaços entre as expressões para afastá-las e alinhá-las no rodapé.
+              </p>
               <Field
                 label="Logo (link da imagem)"
                 value={logoUrl}

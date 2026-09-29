@@ -255,8 +255,8 @@ export function MenuPreview({
               className={`mb-4 h-[18mm] w-auto object-contain ${logoPosClass}`}
             />
           ) : null}
-          {title ? <h1 className={t.headerTitle} style={cd?.accentColor ? { color: cd.accentColor } : undefined}>{title}</h1> : null}
-          {subtitle ? <div className={t.headerSubtitle}>{subtitle}</div> : null}
+          {title ? <h1 className={`${t.headerTitle} whitespace-pre-wrap`} style={cd?.accentColor ? { color: cd.accentColor } : undefined}>{title}</h1> : null}
+          {subtitle ? <div className={`${t.headerSubtitle} whitespace-pre-wrap`}>{subtitle}</div> : null}
           {addressInHeader ? (
             <div className="mt-2 whitespace-pre-line text-[8pt] leading-snug text-black/70">
               {address}
@@ -376,7 +376,7 @@ export function MenuPreview({
               <div className="whitespace-pre-line text-[8pt] leading-snug">{address}</div>
             ) : null}
             {footer ? (
-              <div className="mt-1 text-[8pt] uppercase tracking-[0.2em]">{footer}</div>
+              <div className="mt-1 w-full whitespace-break-spaces text-[8pt] uppercase tracking-[0.2em]">{footer}</div>
             ) : null}
           </footer>
         ) : null}

@@ -30,6 +30,8 @@ export type MenuSheet = {
   title?: string;
   text?: string;
   image?: string;
+  /** Margens próprias desta folha (mm); ausente = usa as margens gerais. */
+  margins?: PageMargins;
 };
 
 export type CustomDesign = {
@@ -179,6 +181,7 @@ export function MenuPreview({
   const extraPage = (s: MenuSheet, isLast: boolean) => {
     const lines = (s.text ?? "").split("\n");
     const onlyImage = s.image && !s.title?.trim() && !s.text?.trim();
+    const m = s.margins ?? margins;
     return (
       <div
         key={s.id}
@@ -186,7 +189,7 @@ export function MenuPreview({
         style={{
           width: `${p.widthMm}mm`, maxWidth: "100%", minHeight: `${p.heightMm}mm`,
           background: cd?.bgColor || "#fff", color: cd?.textColor || "#000",
-          padding: onlyImage ? 0 : `${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm`,
+          padding: onlyImage ? 0 : `${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm`,
           breakAfter: isLast ? "auto" : "page",
           WebkitPrintColorAdjust: "exact", printColorAdjust: "exact",
         }}
@@ -217,6 +220,7 @@ export function MenuPreview({
   };
 
   const winesIndex = sheets.findIndex((s) => s.kind === "wines");
+  const wm = sheets[winesIndex]?.margins ?? margins;
   return (
     <div id="print-area" className="printed-menu mx-auto flex w-full flex-col gap-4 print:gap-0" style={{ maxWidth: `${p.widthMm}mm` }}>
       {/* Define o tamanho da folha na impressão de acordo com a escolha do usuário */}
@@ -236,7 +240,7 @@ export function MenuPreview({
                 printColorAdjust: "exact",
               }
             : {}),
-          padding: `${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm`,
+          padding: `${wm.top}mm ${wm.right}mm ${wm.bottom}mm ${wm.left}mm`,
           minHeight: `${p.heightMm}mm`,
           width: `${p.widthMm}mm`,
           maxWidth: "100%",

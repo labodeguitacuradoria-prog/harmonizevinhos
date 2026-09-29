@@ -284,7 +284,6 @@ export function MenuPreview({
                   borderColor: headingColor,
                   letterSpacing: heading?.letterSpacing != null ? `${heading.letterSpacing}pt` : undefined,
                   fontWeight: heading?.bold === true ? 700 : heading?.bold === false ? 400 : undefined,
-                  textTransform: heading ? "none" : undefined,
                   border: framed ? `1px solid ${headingColor || "currentColor"}` : undefined,
                   backgroundColor: heading?.frame === "filled" ? (headingColor || "currentColor") : undefined,
                   // A caixa preenchida usa o fundo da própria carta como cor de texto.

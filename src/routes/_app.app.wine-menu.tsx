@@ -25,7 +25,7 @@ import {
   Type,
 } from "lucide-react";
 import { toast } from "sonner";
-import { MenuPreview } from "@/components/printed-menu/MenuPreview";
+import { MenuPreview, resolveSheets } from "@/components/printed-menu/MenuPreview";
 import { SectionHeadingControls } from "@/components/printed-menu/SectionHeadingControls";
 import ModuleGate from "@/components/ModuleGate";
 import type { CustomDesign } from "@/components/printed-menu/MenuPreview";

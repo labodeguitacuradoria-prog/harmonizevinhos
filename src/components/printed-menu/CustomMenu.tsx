@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Paperclip, Sparkles, X } from "lucide-react";
+import { Loader2, Paperclip, Pencil, Sparkles, X } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
 import { resolveSheets, type CustomDesign, type MenuSheet } from "./MenuPreview";
 
@@ -268,6 +268,7 @@ function SheetSequencer({
 }) {
   const sheets = resolveSheets(value);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [renameId, setRenameId] = useState<string | null>(null);
   const save = (next: MenuSheet[]) =>
     onChange({ ...value, sheets: next, coverImage: "", coverText: "" });
   const move = (i: number, d: number) => {
@@ -301,6 +302,7 @@ function SheetSequencer({
       </div>
       <p className="mb-2 text-[11px] text-muted-foreground">
         A impressão segue esta ordem. Use as setas para posicionar as folhas antes ou depois da carta com os rótulos.
+        O lápis dá um nome à folha só para você organizar a lista — esse nome não aparece na impressão.
       </p>
       <ol className="space-y-1.5">
         {sheets.map((s, i) => {
@@ -319,8 +321,19 @@ function SheetSequencer({
                   onClick={() => setOpenId(open ? null : s.id)}
                   className="flex-1 truncate text-left disabled:cursor-default"
                 >
-                  {isWines ? "Carta com os rótulos" : s.title?.trim() || `Folha ${i + 1}`}
+                  {isWines ? "Carta com os rótulos" : s.name?.trim() || s.title?.trim() || `Folha ${i + 1}`}
                 </button>
+                {!isWines && (
+                  <button
+                    type="button"
+                    onClick={() => setRenameId(renameId === s.id ? null : s.id)}
+                    className={`px-1 ${renameId === s.id ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                    aria-label="Renomear folha (apenas na lista)"
+                    title="Renomear (não altera o título impresso)"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                )}
                 <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="px-1 disabled:opacity-30" aria-label="Subir">▲</button>
                 <button type="button" onClick={() => move(i, 1)} disabled={i === sheets.length - 1} className="px-1 disabled:opacity-30" aria-label="Descer">▼</button>
                 {!isWines && (
@@ -339,13 +352,34 @@ function SheetSequencer({
                   </>
                 )}
               </div>
+              {renameId === s.id && !isWines && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    autoFocus
+                    value={s.name ?? ""}
+                    onChange={(e) => patch(s.id, { name: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === "Escape") setRenameId(null);
+                    }}
+                    placeholder="Nome da folha na lista (ex.: Capa)"
+                    className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setRenameId(null)}
+                    className="rounded-md border border-primary/50 px-2 py-1 text-[10px] font-bold uppercase text-primary hover:bg-primary/10"
+                  >
+                    OK
+                  </button>
+                </div>
+              )}
               {open && !isWines && (
                 <div className="mt-2 grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">
                     <input
                       value={s.title ?? ""}
                       onChange={(e) => patch(s.id, { title: e.target.value })}
-                      placeholder="Título (opcional)"
+                      placeholder="Título impresso (opcional)"
                       className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
                     />
                     <textarea

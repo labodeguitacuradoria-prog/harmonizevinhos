@@ -25,6 +25,8 @@ import {
 export type MenuSheet = {
   id: string;
   kind: "extra" | "wines";
+  /** Nome interno da folha na lista do editor — nunca aparece na impressão. */
+  name?: string;
   title?: string;
   text?: string;
   image?: string;

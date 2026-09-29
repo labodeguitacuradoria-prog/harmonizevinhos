@@ -11,6 +11,64 @@ type Props = {
 
 const inputClass = "h-8 min-w-0 w-full rounded border border-input bg-background px-2 text-xs text-foreground";
 
+function HeadingStepper({
+  label,
+  value,
+  fallback,
+  min,
+  max,
+  step,
+  onChange,
+}: {
+  label: string;
+  value: number | undefined;
+  fallback: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (value: number | undefined) => void;
+}) {
+  const current = value ?? fallback;
+  const adjust = (amount: number) => onChange(Math.min(max, Math.max(min, Number((current + amount).toFixed(1)))));
+
+  return (
+    <div className="min-w-0">
+      <div className="mb-1 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+        <span>{label}</span>
+        <button type="button" className="text-[9px] text-primary hover:underline" onClick={() => onChange(undefined)}>
+          Padrão
+        </button>
+      </div>
+      <div className="grid grid-cols-[2rem_minmax(3.5rem,1fr)_2rem] items-center gap-1">
+        <Button type="button" size="icon" variant="outline" className="h-8 w-8" aria-label={`Diminuir ${label.toLowerCase()}`} title="Diminuir" onClick={() => adjust(-step)}>
+          <Minus />
+        </Button>
+        <div className="flex h-8 min-w-0 items-center rounded border border-input bg-background px-1">
+          <input
+            aria-label={label}
+            className="w-full min-w-0 bg-transparent text-center text-xs tabular-nums text-foreground outline-none"
+            type="number"
+            min={min}
+            max={max}
+            step={step}
+            value={value ?? ""}
+            placeholder={String(fallback)}
+            onChange={(event) => {
+              if (event.target.value === "") return onChange(undefined);
+              const next = Number(event.target.value);
+              if (Number.isFinite(next)) onChange(Math.min(max, Math.max(min, next)));
+            }}
+          />
+          <span className="text-[9px] text-muted-foreground">pt</span>
+        </div>
+        <Button type="button" size="icon" variant="outline" className="h-8 w-8" aria-label={`Aumentar ${label.toLowerCase()}`} title="Aumentar" onClick={() => adjust(step)}>
+          <Plus />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function SectionHeadingControls({ value, onChange, onReset }: Props) {
   const color = value.color ?? "#d4af37";
   const imageSize = value.accentImageSize ?? 16;
@@ -28,12 +86,8 @@ export function SectionHeadingControls({ value, onChange, onReset }: Props) {
             {FONT_LIST.map((font) => <option key={font.key} value={font.key}>{font.label}</option>)}
           </select>
         </label>
-        <label className="min-w-0 text-[10px] text-muted-foreground">Tamanho (pt)
-          <input className={inputClass} type="number" min="6" max="40" step="0.5" placeholder="Padrão" value={value.size ?? ""} onChange={(e) => onChange({ size: e.target.value === "" ? undefined : Math.min(40, Math.max(6, Number(e.target.value))) })} />
-        </label>
-        <label className="min-w-0 text-[10px] text-muted-foreground">Entre letras (pt)
-          <input className={inputClass} type="number" min="0" max="10" step="0.5" value={value.letterSpacing ?? ""} placeholder="Padrão" onChange={(e) => onChange({ letterSpacing: e.target.value === "" ? undefined : Math.min(10, Math.max(0, Number(e.target.value))) })} />
-        </label>
+        <HeadingStepper label="Tamanho" value={value.size} fallback={12} min={6} max={40} step={0.5} onChange={(size) => onChange({ size })} />
+        <HeadingStepper label="Entre letras" value={value.letterSpacing} fallback={0} min={0} max={10} step={0.5} onChange={(letterSpacing) => onChange({ letterSpacing })} />
         <label className="min-w-0 text-[10px] text-muted-foreground">Cor das letras
           <span className="flex h-8 items-center gap-1 rounded border border-input bg-background px-1">
             <input type="color" aria-label="Escolher cor das letras" className="h-6 w-8 shrink-0 cursor-pointer bg-transparent" value={/^#[0-9a-fA-F]{6}$/.test(color) ? color : "#d4af37"} onChange={(e) => onChange({ color: e.target.value })} />

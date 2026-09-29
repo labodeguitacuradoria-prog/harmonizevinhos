@@ -1,5 +1,6 @@
-import { AlignCenter, AlignLeft, AlignRight, Bold, Underline, RotateCcw } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, Bold, Minus, Plus, Underline, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MediaUploader } from "@/components/MediaUploader";
 import { FONT_LIST, type SectionHeadingStyle } from "./templates";
 
 type Props = {
@@ -12,6 +13,8 @@ const inputClass = "h-8 min-w-0 w-full rounded border border-input bg-background
 
 export function SectionHeadingControls({ value, onChange, onReset }: Props) {
   const color = value.color ?? "#d4af37";
+  const imageSize = value.accentImageSize ?? 16;
+  const changeImageSize = (amount: number) => onChange({ accentImageSize: Math.min(40, Math.max(6, imageSize + amount)) });
   return (
     <div className="mt-3 space-y-3 border-t border-border pt-3" onClick={(event) => event.stopPropagation()}>
       <div className="flex items-center justify-between gap-2">
@@ -56,7 +59,7 @@ export function SectionHeadingControls({ value, onChange, onReset }: Props) {
         </div>
         <label className="min-w-[110px] flex-1 text-[10px] text-muted-foreground">Sinais
           <select className={inputClass} value={value.accent ?? "none"} onChange={(e) => onChange({ accent: e.target.value as SectionHeadingStyle["accent"] })}>
-            <option value="none">Sem sinais</option><option value="star">✦ Estrelas</option><option value="diamond">◆ Losangos</option><option value="dash">— Traços</option>
+            <option value="none">Sem sinais</option><option value="star">✦ Estrelas</option><option value="diamond">◆ Losangos</option><option value="dash">— Traços</option><option value="image">Imagem própria</option>
           </select>
         </label>
         <label className="min-w-[110px] flex-1 text-[10px] text-muted-foreground">Moldura
@@ -65,6 +68,35 @@ export function SectionHeadingControls({ value, onChange, onReset }: Props) {
           </select>
         </label>
       </div>
+      {value.accent === "image" ? (
+        <div className="grid gap-3 rounded border border-border bg-card p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <MediaUploader
+            label="Imagem do sinal"
+            value={value.accentImageUrl ?? null}
+            onChange={(url) => onChange({ accentImageUrl: url ?? undefined })}
+            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            folder="catalog/menu-heading-icons"
+            kind="image"
+          />
+          <div>
+            <span className="block text-[10px] text-muted-foreground">Tamanho da imagem</span>
+            <div className="flex items-center gap-1">
+              <Button type="button" size="icon" variant="outline" className="h-8 w-8" aria-label="Diminuir imagem" title="Diminuir imagem" onClick={() => changeImageSize(-1)}><Minus /></Button>
+              <input
+                aria-label="Tamanho da imagem em pontos"
+                className="h-8 w-14 rounded border border-input bg-background px-1 text-center text-xs text-foreground"
+                type="number"
+                min="6"
+                max="40"
+                value={imageSize}
+                onChange={(event) => onChange({ accentImageSize: Math.min(40, Math.max(6, Number(event.target.value) || 6)) })}
+              />
+              <span className="text-[10px] text-muted-foreground">pt</span>
+              <Button type="button" size="icon" variant="outline" className="h-8 w-8" aria-label="Aumentar imagem" title="Aumentar imagem" onClick={() => changeImageSize(1)}><Plus /></Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

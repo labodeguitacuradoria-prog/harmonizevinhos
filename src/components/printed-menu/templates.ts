@@ -248,7 +248,11 @@ export type SectionHeadingStyle = {
   letterSpacing?: number;
   bold?: boolean;
   underline?: boolean;
-  accent?: "none" | "star" | "diamond" | "dash";
+  accent?: "none" | "star" | "diamond" | "dash" | "image";
+  /** Imagem decorativa mostrada nos dois lados do título. */
+  accentImageUrl?: string;
+  /** Tamanho impresso da imagem decorativa, em pontos. */
+  accentImageSize?: number;
   frame?: "none" | "outline" | "filled";
 };
 

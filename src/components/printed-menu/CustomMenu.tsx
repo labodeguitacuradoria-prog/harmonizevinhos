@@ -302,6 +302,7 @@ function SheetSequencer({
       </div>
       <p className="mb-2 text-[11px] text-muted-foreground">
         A impressão segue esta ordem. Use as setas para posicionar as folhas antes ou depois da carta com os rótulos.
+        O lápis dá um nome à folha só para você organizar a lista — esse nome não aparece na impressão.
       </p>
       <ol className="space-y-1.5">
         {sheets.map((s, i) => {
@@ -320,8 +321,19 @@ function SheetSequencer({
                   onClick={() => setOpenId(open ? null : s.id)}
                   className="flex-1 truncate text-left disabled:cursor-default"
                 >
-                  {isWines ? "Carta com os rótulos" : s.title?.trim() || `Folha ${i + 1}`}
+                  {isWines ? "Carta com os rótulos" : s.name?.trim() || s.title?.trim() || `Folha ${i + 1}`}
                 </button>
+                {!isWines && (
+                  <button
+                    type="button"
+                    onClick={() => setRenameId(renameId === s.id ? null : s.id)}
+                    className={`px-1 ${renameId === s.id ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                    aria-label="Renomear folha (apenas na lista)"
+                    title="Renomear (não altera o título impresso)"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                )}
                 <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="px-1 disabled:opacity-30" aria-label="Subir">▲</button>
                 <button type="button" onClick={() => move(i, 1)} disabled={i === sheets.length - 1} className="px-1 disabled:opacity-30" aria-label="Descer">▼</button>
                 {!isWines && (

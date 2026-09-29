@@ -270,6 +270,9 @@ export function MenuPreview({
             const heading = sec.headingStyle;
             const headingColor = heading?.color && /^#[0-9a-fA-F]{6}$/.test(heading.color) ? heading.color : cd?.accentColor;
             const framed = heading?.frame && heading.frame !== "none";
+            const accentImage = heading?.accent === "image" ? heading.accentImageUrl?.trim() : undefined;
+            const accentImageSize = Math.min(40, Math.max(6, heading?.accentImageSize ?? 16));
+            const textAccent = heading?.accent === "star" ? "✦" : heading?.accent === "diamond" ? "◆" : heading?.accent === "dash" ? "—" : null;
             return (
             <section
               key={sec.id}
@@ -293,7 +296,11 @@ export function MenuPreview({
                   overflowWrap: "anywhere",
                 }}
               >
-                {heading?.accent === "star" ? "✦ " : heading?.accent === "diamond" ? "◆ " : heading?.accent === "dash" ? "— " : ""}{sec.title}{heading?.accent === "star" ? " ✦" : heading?.accent === "diamond" ? " ◆" : heading?.accent === "dash" ? " —" : ""}
+                <span className={`inline-flex max-w-full items-center gap-2 ${justifyAlign[heading?.align ?? layout.sectionAlign]}`}>
+                  {accentImage ? <img src={accentImage} alt="" className="shrink-0 object-contain" style={{ width: `${accentImageSize}pt`, height: `${accentImageSize}pt` }} /> : textAccent ? <span aria-hidden="true">{textAccent}</span> : null}
+                  <span className="min-w-0">{sec.title}</span>
+                  {accentImage ? <img src={accentImage} alt="" className="shrink-0 object-contain" style={{ width: `${accentImageSize}pt`, height: `${accentImageSize}pt` }} /> : textAccent ? <span aria-hidden="true">{textAccent}</span> : null}
+                </span>
               </div>
 
               <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>

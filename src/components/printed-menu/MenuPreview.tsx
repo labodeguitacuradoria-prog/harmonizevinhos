@@ -107,6 +107,8 @@ export function MenuPreview({
 
   const cleaned = sections.map((s) => ({ ...s, wineIds: s.wineIds.filter((id) => winesById[id]) }));
   const visibleSections = cleaned.filter((s, i) => {
+    // No editor exclusivo, seções vazias também podem ser títulos editoriais.
+    if (customDesign?.exclusive && s.title.trim()) return true;
     if (s.wineIds.length > 0) return true;
     const lvl = sectionLevel(s);
     // Cabeçalho pai continua visível quando alguma seção filha tem rótulos

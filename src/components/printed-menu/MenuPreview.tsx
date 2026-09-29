@@ -275,7 +275,7 @@ export function MenuPreview({
               style={isSub ? { marginLeft: `${(lvl - 2) * 4}mm` } : undefined}
             >
               <div
-                className={`${isSub ? "pb-0.5 font-semibold uppercase opacity-80" : `${t.sectionTitle} ${t.rule} pb-1`} ${textAlign[heading?.align ?? layout.sectionAlign]} ${heading?.underline ? "underline underline-offset-4" : ""} ${framed ? "inline-block max-w-full px-3 py-1.5" : ""}`}
+                className={`${isSub ? "pb-0.5 font-semibold uppercase opacity-80" : `${t.sectionTitle} ${t.rule} pb-1`} ${textAlign[heading?.align ?? layout.sectionAlign]} ${heading?.underline ? "underline underline-offset-4" : ""} ${framed ? "w-full px-3 py-1.5" : ""}`}
                 style={{
                   ...(isSub ? subSectionStyle(lvl) : sectionStyle),
                   fontFamily: fontCss(heading?.font) ?? (isSub ? subSectionStyle(lvl).fontFamily : sectionStyle.fontFamily),

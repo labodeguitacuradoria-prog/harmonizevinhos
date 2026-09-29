@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Persist restaurant menu harmonizations in `restaurant_menu_pairing_guides`; staff mobile links use `access_links.scope = 'pairings'` because browser-only results cannot power service-floor access.
+- Store individual printed-menu heading styles inside each section's saved JSON and render them through `MenuPreview`; this keeps independent section/subsection formatting in sync across preview, saved menus, and print without changing shared templates.

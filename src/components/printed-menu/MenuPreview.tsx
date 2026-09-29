@@ -107,6 +107,8 @@ export function MenuPreview({
 
   const cleaned = sections.map((s) => ({ ...s, wineIds: s.wineIds.filter((id) => winesById[id]) }));
   const visibleSections = cleaned.filter((s, i) => {
+    // Uma seção nomeada pode funcionar como título, mesmo antes de receber rótulos.
+    if (s.title.trim()) return true;
     if (s.wineIds.length > 0) return true;
     const lvl = sectionLevel(s);
     // Cabeçalho pai continua visível quando alguma seção filha tem rótulos
@@ -265,6 +267,9 @@ export function MenuPreview({
           {visibleSections.map((sec) => {
             const lvl = sectionLevel(sec);
             const isSub = lvl > 1;
+            const heading = sec.headingStyle;
+            const headingColor = heading?.color && /^#[0-9a-fA-F]{6}$/.test(heading.color) ? heading.color : cd?.accentColor;
+            const framed = heading?.frame && heading.frame !== "none";
             return (
             <section
               key={sec.id}
@@ -272,10 +277,23 @@ export function MenuPreview({
               style={isSub ? { marginLeft: `${(lvl - 2) * 4}mm` } : undefined}
             >
               <div
-                className={isSub ? `pb-0.5 font-semibold uppercase tracking-[0.15em] opacity-80 ${textAlign[layout.sectionAlign]}` : `${t.sectionTitle} ${t.rule} pb-1 ${textAlign[layout.sectionAlign]}`}
-                style={{ ...(isSub ? subSectionStyle(lvl) : sectionStyle), ...(cd?.accentColor ? { color: cd.accentColor, borderColor: cd.accentColor } : {}) }}
+                className={`${isSub ? "pb-0.5 font-semibold uppercase opacity-80" : `${t.sectionTitle} ${t.rule} pb-1`} ${textAlign[heading?.align ?? layout.sectionAlign]} ${heading?.underline ? "underline underline-offset-4" : ""} ${framed ? "w-full px-3 py-1.5" : ""}`}
+                style={{
+                  ...(isSub ? subSectionStyle(lvl) : sectionStyle),
+                  fontFamily: fontCss(heading?.font) ?? (isSub ? subSectionStyle(lvl).fontFamily : sectionStyle.fontFamily),
+                  fontSize: heading?.size ? `${heading.size}pt` : (isSub ? subSectionStyle(lvl).fontSize : sectionStyle.fontSize),
+                  color: headingColor,
+                  borderColor: headingColor,
+                  letterSpacing: heading?.letterSpacing != null ? `${heading.letterSpacing}pt` : undefined,
+                  fontWeight: heading?.bold === true ? 700 : heading?.bold === false ? 400 : undefined,
+                  border: framed ? `1px solid ${headingColor || "#000"}` : undefined,
+                  backgroundColor: heading?.frame === "filled" ? (headingColor || "#000") : undefined,
+                  // A caixa preenchida usa o fundo da própria carta como cor de texto.
+                  ...(heading?.frame === "filled" ? { color: cd?.bgColor || "#fff" } : {}),
+                  overflowWrap: "anywhere",
+                }}
               >
-                {sec.title}
+                {heading?.accent === "star" ? "✦ " : heading?.accent === "diamond" ? "◆ " : heading?.accent === "dash" ? "— " : ""}{sec.title}{heading?.accent === "star" ? " ✦" : heading?.accent === "diamond" ? " ◆" : heading?.accent === "dash" ? " —" : ""}
               </div>
 
               <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>

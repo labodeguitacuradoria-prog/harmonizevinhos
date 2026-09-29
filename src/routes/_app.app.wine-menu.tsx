@@ -22,11 +22,14 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  Type,
 } from "lucide-react";
 import { toast } from "sonner";
 import { MenuPreview } from "@/components/printed-menu/MenuPreview";
+import { SectionHeadingControls } from "@/components/printed-menu/SectionHeadingControls";
 import ModuleGate from "@/components/ModuleGate";
 import type { CustomDesign } from "@/components/printed-menu/MenuPreview";
+import { Button } from "@/components/ui/button";
 import { CustomMenuRequestDialog, CustomDesignPanel } from "@/components/printed-menu/CustomMenu";
 import {
   DEFAULT_SPACING,
@@ -47,6 +50,7 @@ import {
   paperOf,
   typeLabel,
   type MenuSection,
+  type SectionHeadingStyle,
   type MenuSpacing,
   type MenuLayout,
   type PageMargins,
@@ -147,6 +151,7 @@ function WineMenuPage() {
   );
 
   const [editingWineId, setEditingWineId] = useState<string | null>(null);
+  const [headingEditorId, setHeadingEditorId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [savedOpen, setSavedOpen] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
@@ -382,6 +387,12 @@ function WineMenuPage() {
         return { ...s, level, sub: level > 1 };
       }),
     );
+  }
+
+  function updateHeading(sectionId: string, patch: Partial<SectionHeadingStyle>) {
+    setSections((current) => current.map((section) => section.id === sectionId
+      ? { ...section, headingStyle: { ...section.headingStyle, ...patch } }
+      : section));
   }
 
 
@@ -1100,9 +1111,9 @@ function WineMenuPage() {
                   key={sec.id}
                   onClick={() => setTargetSectionId(sec.id)}
                   style={{ marginLeft: `${(lvl - 1) * 1.5}rem` }}
-                  className={`rounded-lg border bg-background p-3 ${targetSectionId === sec.id ? "border-primary" : "border-border"}`}
+                  className={`min-w-0 rounded-lg border bg-background p-3 ${targetSectionId === sec.id ? "border-primary" : "border-border"}`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="whitespace-nowrap text-[10px] uppercase text-muted-foreground">
                       {lvl > 1 ? "↳ " : ""}{lvl}º nível
                     </span>
@@ -1111,8 +1122,18 @@ function WineMenuPage() {
                       onChange={(e) =>
                         setSections((p) => p.map((s) => (s.id === sec.id ? { ...s, title: e.target.value } : s)))
                       }
-                      className="flex-1 rounded border border-input bg-card px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary"
+                      className="min-w-[10rem] flex-1 rounded border border-input bg-card px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary"
                     />
+                    <Button
+                      type="button"
+                      variant={headingEditorId === sec.id ? "secondary" : "outline"}
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      title="Personalizar título desta seção"
+                      aria-label={`Personalizar título de ${sec.title}`}
+                      aria-expanded={headingEditorId === sec.id}
+                      onClick={(e) => { e.stopPropagation(); setHeadingEditorId(headingEditorId === sec.id ? null : sec.id); }}
+                    ><Type className="h-4 w-4" /></Button>
                     <IconBtn onClick={() => changeLevel(sec.id, -1)} title="Subir um nível">
                       <span className="text-[10px] font-bold">←</span>
                     </IconBtn>
@@ -1132,6 +1153,14 @@ function WineMenuPage() {
                       <Trash2 className="h-3.5 w-3.5" />
                     </IconBtn>
                   </div>
+
+                  {headingEditorId === sec.id && (
+                    <SectionHeadingControls
+                      value={sec.headingStyle ?? {}}
+                      onChange={(patch) => updateHeading(sec.id, patch)}
+                      onReset={() => setSections((current) => current.map((s) => s.id === sec.id ? { ...s, headingStyle: undefined } : s))}
+                    />
+                  )}
 
                   <ul className="mt-2 space-y-1">
                     {sec.wineIds.map((id, wi) => {

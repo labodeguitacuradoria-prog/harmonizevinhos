@@ -239,7 +239,20 @@ export function normalizeFields(raw: Partial<VisibleFields> | null | undefined):
   return f;
 }
 
-export type MenuSection = { id: string; title: string; wineIds: string[]; sub?: boolean; level?: number };
+/** Aparência individual do título; campos ausentes herdam o modelo e os ajustes gerais. */
+export type SectionHeadingStyle = {
+  font?: FontKey;
+  size?: number;
+  align?: "left" | "center" | "right";
+  color?: string;
+  letterSpacing?: number;
+  bold?: boolean;
+  underline?: boolean;
+  accent?: "none" | "star" | "diamond" | "dash";
+  frame?: "none" | "outline" | "filled";
+};
+
+export type MenuSection = { id: string; title: string; wineIds: string[]; sub?: boolean; level?: number; headingStyle?: SectionHeadingStyle };
 
 /** Nível hierárquico da seção (1 = primeiro nível). Cartas antigas usavam apenas "sub". */
 export function sectionLevel(s: MenuSection): number {

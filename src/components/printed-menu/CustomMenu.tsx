@@ -352,6 +352,27 @@ function SheetSequencer({
                   </>
                 )}
               </div>
+              {renameId === s.id && !isWines && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    autoFocus
+                    value={s.name ?? ""}
+                    onChange={(e) => patch(s.id, { name: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === "Escape") setRenameId(null);
+                    }}
+                    placeholder="Nome da folha na lista (ex.: Capa)"
+                    className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setRenameId(null)}
+                    className="rounded-md border border-primary/50 px-2 py-1 text-[10px] font-bold uppercase text-primary hover:bg-primary/10"
+                  >
+                    OK
+                  </button>
+                </div>
+              )}
               {open && !isWines && (
                 <div className="mt-2 grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">

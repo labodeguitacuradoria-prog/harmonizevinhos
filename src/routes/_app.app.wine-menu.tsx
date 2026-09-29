@@ -25,7 +25,7 @@ import {
   Type,
 } from "lucide-react";
 import { toast } from "sonner";
-import { MenuPreview } from "@/components/printed-menu/MenuPreview";
+import { MenuPreview, resolveSheets } from "@/components/printed-menu/MenuPreview";
 import { SectionHeadingControls } from "@/components/printed-menu/SectionHeadingControls";
 import ModuleGate from "@/components/ModuleGate";
 import type { CustomDesign } from "@/components/printed-menu/MenuPreview";
@@ -159,6 +159,7 @@ function WineMenuPage() {
   const [fontOpen, setFontOpen] = useState(false);
   const [layoutOpen, setLayoutOpen] = useState(false);
   const [marginsOpen, setMarginsOpen] = useState(false);
+  const [marginsPage, setMarginsPage] = useState<string>("all");
   const [priceFormatOpen, setPriceFormatOpen] = useState(false);
 
   useEffect(() => {
@@ -1045,18 +1046,67 @@ function WineMenuPage() {
                 </button>
                 {marginsOpen && (
                   <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
-                    <div className="grid grid-cols-2 gap-3">
-                      <MmField label="Acima (mm)" value={margins.top} onChange={(top) => setMargins((m) => ({ ...m, top }))} min={0} max={60} />
-                      <MmField label="Abaixo (mm)" value={margins.bottom} onChange={(bottom) => setMargins((m) => ({ ...m, bottom }))} min={0} max={60} />
-                      <MmField label="Esquerda (mm)" value={margins.left} onChange={(left) => setMargins((m) => ({ ...m, left }))} min={0} max={60} />
-                      <MmField label="Direita (mm)" value={margins.right} onChange={(right) => setMargins((m) => ({ ...m, right }))} min={0} max={60} />
-                    </div>
-                    <button
-                      onClick={() => setMargins({ top: activePaper.padMm, right: activePaper.padMm, bottom: activePaper.padMm, left: activePaper.padMm })}
-                      className="mt-3 inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
-                    >
-                      <RotateCcw className="h-3 w-3" /> Usar margem do papel
-                    </button>
+{(() => {
+                      const sheetList = customDesign.exclusive ? resolveSheets(customDesign) : [];
+                      const sel = sheetList.find((x) => x.id === marginsPage);
+                      const cur = sel ? sel.margins ?? margins : margins;
+                      const setCur = (patch: Partial<PageMargins>) => {
+                        if (!sel) return setMargins((m) => ({ ...m, ...patch }));
+                        const next = sheetList.map((x) => (x.id === sel.id ? { ...x, margins: { ...(x.margins ?? margins), ...patch } } : x));
+                        setCustomDesign((d) => ({ ...d, sheets: next }));
+                      };
+                      const clearOwn = () => {
+                        if (!sel) return;
+                        setCustomDesign((d) => ({ ...d, sheets: sheetList.map((x) => (x.id === sel.id ? { ...x, margins: undefined } : x)) }));
+                      };
+                      return (
+                        <>
+                          {sheetList.length > 1 && (
+                            <label className="mb-3 grid gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                              Página
+                              <select
+                                value={sel ? sel.id : "all"}
+                                onChange={(e) => setMarginsPage(e.target.value)}
+                                className="h-8 rounded border border-border bg-background px-2 text-xs normal-case text-foreground"
+                              >
+                                <option value="all">Todas as páginas (padrão)</option>
+                                {sheetList.map((x, i) => (
+                                  <option key={x.id} value={x.id}>
+                                    {i + 1}. {x.kind === "wines" ? "Carta com os rótulos" : x.name?.trim() || x.title?.trim() || `Folha ${i + 1}`}
+                                    {x.margins ? " •" : ""}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          )}
+                          <div className="grid grid-cols-2 gap-3">
+                            <MmField label="Acima (mm)" value={cur.top} onChange={(top) => setCur({ top })} min={0} max={60} />
+                            <MmField label="Abaixo (mm)" value={cur.bottom} onChange={(bottom) => setCur({ bottom })} min={0} max={60} />
+                            <MmField label="Esquerda (mm)" value={cur.left} onChange={(left) => setCur({ left })} min={0} max={60} />
+                            <MmField label="Direita (mm)" value={cur.right} onChange={(right) => setCur({ right })} min={0} max={60} />
+                          </div>
+                          {sel ? (
+                            <button
+                              onClick={clearOwn}
+                              disabled={!sel.margins}
+                              className="mt-3 inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent disabled:opacity-40"
+                            >
+                              <RotateCcw className="h-3 w-3" /> Usar margens gerais
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setMargins({ top: activePaper.padMm, right: activePaper.padMm, bottom: activePaper.padMm, left: activePaper.padMm })}
+                              className="mt-3 inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+                            >
+                              <RotateCcw className="h-3 w-3" /> Usar margem do papel
+                            </button>
+                          )}
+                          {sheetList.length > 1 && (
+                            <p className="mt-2 text-[10px] leading-snug text-muted-foreground">Páginas marcadas com • têm margens próprias.</p>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

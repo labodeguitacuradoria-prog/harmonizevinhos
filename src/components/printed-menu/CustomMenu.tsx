@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Paperclip, Sparkles, X } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
-import type { CustomDesign } from "./MenuPreview";
+import { resolveSheets, type CustomDesign, type MenuSheet } from "./MenuPreview";
 
 export type BriefAttachment = { name: string; path: string; mime?: string | null; size?: number };
 
@@ -256,6 +256,122 @@ export function CustomMenuRequestDialog({ restaurantId, onClose }: { restaurantI
   );
 }
 
+/** Sequência de folhas: folhas livres + a folha com os rótulos, em qualquer ordem. */
+function SheetSequencer({
+  value,
+  onChange,
+  restaurantId,
+}: {
+  value: CustomDesign;
+  onChange: (v: CustomDesign) => void;
+  restaurantId: string;
+}) {
+  const sheets = resolveSheets(value);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const save = (next: MenuSheet[]) =>
+    onChange({ ...value, sheets: next, coverImage: "", coverText: "" });
+  const move = (i: number, d: number) => {
+    const j = i + d;
+    if (j < 0 || j >= sheets.length) return;
+    const next = [...sheets];
+    [next[i], next[j]] = [next[j], next[i]];
+    save(next);
+  };
+  const patch = (id: string, p: Partial<MenuSheet>) =>
+    save(sheets.map((s) => (s.id === id ? { ...s, ...p } : s)));
+  const add = () => {
+    const id = crypto.randomUUID();
+    save([...sheets, { id, kind: "extra", title: "", text: "", image: "" }]);
+    setOpenId(id);
+  };
+
+  return (
+    <div className="mt-4 rounded-lg border border-border p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
+          Sequência das folhas
+        </div>
+        <button
+          type="button"
+          onClick={add}
+          className="rounded-md border border-primary/50 px-3 py-1 text-[10px] font-bold uppercase text-primary hover:bg-primary/10"
+        >
+          + Nova folha
+        </button>
+      </div>
+      <p className="mb-2 text-[11px] text-muted-foreground">
+        A impressão segue esta ordem. Use as setas para posicionar as folhas antes ou depois da carta com os rótulos.
+      </p>
+      <ol className="space-y-1.5">
+        {sheets.map((s, i) => {
+          const isWines = s.kind === "wines";
+          const open = openId === s.id;
+          return (
+            <li
+              key={s.id}
+              className={`rounded-md border ${isWines ? "border-primary/60 bg-primary/5" : "border-border"} p-2`}
+            >
+              <div className="flex items-center gap-2 text-xs">
+                <span className="w-6 text-center font-bold text-primary">{i + 1}</span>
+                <button
+                  type="button"
+                  disabled={isWines}
+                  onClick={() => setOpenId(open ? null : s.id)}
+                  className="flex-1 truncate text-left disabled:cursor-default"
+                >
+                  {isWines ? "Carta com os rótulos" : s.title?.trim() || `Folha ${i + 1}`}
+                </button>
+                <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="px-1 disabled:opacity-30" aria-label="Subir">▲</button>
+                <button type="button" onClick={() => move(i, 1)} disabled={i === sheets.length - 1} className="px-1 disabled:opacity-30" aria-label="Descer">▼</button>
+                {!isWines && (
+                  <>
+                    <button type="button" onClick={() => setOpenId(open ? null : s.id)} className="px-1 text-primary">
+                      {open ? "Fechar" : "Editar"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => save(sheets.filter((x) => x.id !== s.id))}
+                      className="px-1 text-destructive"
+                      aria-label="Excluir folha"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
+              </div>
+              {open && !isWines && (
+                <div className="mt-2 grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <input
+                      value={s.title ?? ""}
+                      onChange={(e) => patch(s.id, { title: e.target.value })}
+                      placeholder="Título (opcional)"
+                      className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
+                    />
+                    <textarea
+                      rows={6}
+                      value={s.text ?? ""}
+                      onChange={(e) => patch(s.id, { text: e.target.value })}
+                      placeholder="Texto (opcional). Comece a linha com • ou - para marcadores."
+                      className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
+                    />
+                  </div>
+                  <MediaUploader
+                    label="Imagem da folha (opcional)"
+                    value={s.image || null}
+                    onChange={(u) => patch(s.id, { image: u ?? "" })}
+                    folder={`${restaurantId}/custom-menu`}
+                  />
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 /** Painel de design exclusivo — visível apenas para o administrador geral. */
 export function CustomDesignPanel({
   value,
@@ -291,32 +407,22 @@ export function CustomDesignPanel({
         </label>
       </div>
       {value.exclusive && (
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            {color("Fundo", "bgColor", "#ffffff")}
-            {color("Texto", "textColor", "#000000")}
-            {color("Destaque (títulos)", "accentColor", "#800020")}
-            <label className="block text-[11px] uppercase text-muted-foreground">Texto da capa</label>
-            <textarea
-              rows={3}
-              value={value.coverText ?? ""}
-              onChange={(e) => set({ coverText: e.target.value })}
-              className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
+        <>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              {color("Fundo", "bgColor", "#ffffff")}
+              {color("Texto", "textColor", "#000000")}
+              {color("Destaque (títulos)", "accentColor", "#800020")}
+            </div>
+            <MediaUploader
+              label="Fundo / textura das páginas"
+              value={value.backgroundImage ?? null}
+              onChange={(u) => set({ backgroundImage: u ?? "" })}
+              folder={`${restaurantId}/custom-menu`}
             />
           </div>
-          <MediaUploader
-            label="Imagem da capa"
-            value={value.coverImage ?? null}
-            onChange={(u) => set({ coverImage: u ?? "" })}
-            folder={`${restaurantId}/custom-menu`}
-          />
-          <MediaUploader
-            label="Fundo / textura das páginas"
-            value={value.backgroundImage ?? null}
-            onChange={(u) => set({ backgroundImage: u ?? "" })}
-            folder={`${restaurantId}/custom-menu`}
-          />
-        </div>
+          <SheetSequencer value={value} onChange={onChange} restaurantId={restaurantId} />
+        </>
       )}
       {canDeliver && (
         <button

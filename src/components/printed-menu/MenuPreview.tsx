@@ -22,6 +22,14 @@ import {
   type VisibleFields,
 } from "./templates";
 
+export type MenuSheet = {
+  id: string;
+  kind: "extra" | "wines";
+  title?: string;
+  text?: string;
+  image?: string;
+};
+
 export type CustomDesign = {
   exclusive?: boolean;
   requestId?: string | null;
@@ -31,7 +39,19 @@ export type CustomDesign = {
   backgroundImage?: string;
   coverImage?: string;
   coverText?: string;
+  sheets?: MenuSheet[];
 };
+
+/** Sequência final de folhas. Converte a capa antiga e garante uma folha de rótulos. */
+export function resolveSheets(cd: CustomDesign | null | undefined): MenuSheet[] {
+  let list: MenuSheet[] = cd?.sheets?.length ? [...cd.sheets] : [];
+  if (!cd?.sheets?.length && (cd?.coverImage || cd?.coverText)) {
+    list.push({ id: "legacy-cover", kind: "extra", title: "", text: cd.coverText ?? "", image: cd.coverImage ?? "" });
+  }
+  if (!list.some((s) => s.kind === "wines")) list.push({ id: "wines", kind: "wines" });
+  list = list.filter((s, i) => s.kind !== "wines" || list.findIndex((x) => x.kind === "wines") === i);
+  return list;
+}
 
 type Props = {
   customDesign?: CustomDesign | null;
@@ -151,27 +171,53 @@ export function MenuPreview({
   const rulePosClass =
     layout.headerAlign === "left" ? "" : layout.headerAlign === "right" ? "ml-auto" : "mx-auto";
 
+  const sheets = cd ? resolveSheets(cd) : [{ id: "wines", kind: "wines" as const }];
+  const extraPage = (s: MenuSheet, isLast: boolean) => {
+    const lines = (s.text ?? "").split("\n");
+    const onlyImage = s.image && !s.title?.trim() && !s.text?.trim();
+    return (
+      <div
+        key={s.id}
+        className={`printed-page relative flex flex-col items-center justify-center overflow-hidden ${t.page}`}
+        style={{
+          width: `${p.widthMm}mm`, maxWidth: "100%", minHeight: `${p.heightMm}mm`,
+          background: cd?.bgColor || "#fff", color: cd?.textColor || "#000",
+          padding: onlyImage ? 0 : `${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm`,
+          breakAfter: isLast ? "auto" : "page",
+          WebkitPrintColorAdjust: "exact", printColorAdjust: "exact",
+        }}
+      >
+        {s.image ? (
+          <img
+            src={s.image}
+            alt={s.title || "Folha"}
+            className={onlyImage ? "absolute inset-0 h-full w-full object-cover" : "mb-6 max-h-[45%] max-w-full object-contain"}
+          />
+        ) : null}
+        {s.title?.trim() ? (
+          <h2 className="relative mb-4 text-center text-[20pt] uppercase tracking-[0.18em]" style={{ color: cd?.accentColor || undefined }}>
+            {s.title}
+          </h2>
+        ) : null}
+        {s.text?.trim() ? (
+          <div className="relative w-full max-w-[150mm] text-[11pt] leading-relaxed">
+            {lines.map((l, i) => {
+              const m = l.match(/^\s*[•\-*]\s+(.*)$/);
+              if (m) return <div key={i} className="flex gap-2 pl-2"><span>•</span><span>{m[1]}</span></div>;
+              return l.trim() ? <p key={i} className="mb-2 text-center whitespace-pre-line">{l}</p> : <div key={i} className="h-2" />;
+            })}
+          </div>
+        ) : null}
+      </div>
+    );
+  };
+
+  const winesIndex = sheets.findIndex((s) => s.kind === "wines");
   return (
-    <div id="print-area" className="printed-menu mx-auto w-full" style={{ maxWidth: `${p.widthMm}mm` }}>
+    <div id="print-area" className="printed-menu mx-auto flex w-full flex-col gap-4 print:gap-0" style={{ maxWidth: `${p.widthMm}mm` }}>
       {/* Define o tamanho da folha na impressão de acordo com a escolha do usuário */}
       <style>{`@media print { @page { size: ${p.cssSize}; margin: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm; } }`}</style>
-      {cd?.coverImage || cd?.coverText ? (
-        <div
-          className="printed-page relative flex items-center justify-center overflow-hidden"
-          style={{
-            width: `${p.widthMm}mm`, maxWidth: "100%", minHeight: `${p.heightMm}mm`,
-            background: cd.bgColor || "#fff", color: cd.textColor || "#000",
-            breakAfter: "page",
-          }}
-        >
-          {cd.coverImage ? <img src={cd.coverImage} alt="Capa" className="absolute inset-0 h-full w-full object-cover" /> : null}
-          {cd.coverText ? (
-            <div className="relative whitespace-pre-line px-[15mm] text-center text-[22pt] uppercase tracking-[0.2em]" style={{ color: cd.accentColor || undefined }}>
-              {cd.coverText}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      {sheets.slice(0, winesIndex).map((s) => extraPage(s, false))}
       <div
         className={`printed-page ${cd ? "" : "bg-white text-black"} ${t.page}`}
         style={{
@@ -190,6 +236,7 @@ export function MenuPreview({
           minHeight: `${p.heightMm}mm`,
           width: `${p.widthMm}mm`,
           maxWidth: "100%",
+          breakAfter: winesIndex < sheets.length - 1 ? "page" : "auto",
         }}
       >
         <header className={`${t.key === "minimal" ? "mb-10" : "mb-8"} ${textAlign[layout.headerAlign]}`}>
@@ -303,6 +350,7 @@ export function MenuPreview({
           </footer>
         ) : null}
       </div>
+      {sheets.slice(winesIndex + 1).map((s, i, arr) => extraPage(s, i === arr.length - 1))}
     </div>
   );
 }

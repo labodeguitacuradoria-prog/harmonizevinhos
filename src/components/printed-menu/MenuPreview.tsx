@@ -236,6 +236,7 @@ export function MenuPreview({
           minHeight: `${p.heightMm}mm`,
           width: `${p.widthMm}mm`,
           maxWidth: "100%",
+          breakAfter: winesIndex < sheets.length - 1 ? "page" : "auto",
         }}
       >
         <header className={`${t.key === "minimal" ? "mb-10" : "mb-8"} ${textAlign[layout.headerAlign]}`}>
@@ -349,6 +350,7 @@ export function MenuPreview({
           </footer>
         ) : null}
       </div>
+      {sheets.slice(winesIndex + 1).map((s, i, arr) => extraPage(s, i === arr.length - 1))}
     </div>
   );
 }

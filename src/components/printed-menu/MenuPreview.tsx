@@ -284,8 +284,8 @@ export function MenuPreview({
                   borderColor: headingColor,
                   letterSpacing: heading?.letterSpacing != null ? `${heading.letterSpacing}pt` : undefined,
                   fontWeight: heading?.bold === true ? 700 : heading?.bold === false ? 400 : undefined,
-                  border: framed ? `1px solid ${headingColor || "currentColor"}` : undefined,
-                  backgroundColor: heading?.frame === "filled" ? (headingColor || "currentColor") : undefined,
+                  border: framed ? `1px solid ${headingColor || "#000"}` : undefined,
+                  backgroundColor: heading?.frame === "filled" ? (headingColor || "#000") : undefined,
                   // A caixa preenchida usa o fundo da própria carta como cor de texto.
                   ...(heading?.frame === "filled" ? { color: cd?.bgColor || "#fff" } : {}),
                   overflowWrap: "anywhere",

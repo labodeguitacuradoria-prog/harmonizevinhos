@@ -1111,9 +1111,9 @@ function WineMenuPage() {
                   key={sec.id}
                   onClick={() => setTargetSectionId(sec.id)}
                   style={{ marginLeft: `${(lvl - 1) * 1.5}rem` }}
-                  className={`rounded-lg border bg-background p-3 ${targetSectionId === sec.id ? "border-primary" : "border-border"}`}
+                  className={`min-w-0 rounded-lg border bg-background p-3 ${targetSectionId === sec.id ? "border-primary" : "border-border"}`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="whitespace-nowrap text-[10px] uppercase text-muted-foreground">
                       {lvl > 1 ? "↳ " : ""}{lvl}º nível
                     </span>
@@ -1122,7 +1122,7 @@ function WineMenuPage() {
                       onChange={(e) =>
                         setSections((p) => p.map((s) => (s.id === sec.id ? { ...s, title: e.target.value } : s)))
                       }
-                      className="flex-1 rounded border border-input bg-card px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary"
+                      className="min-w-[10rem] flex-1 rounded border border-input bg-card px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary"
                     />
                     <Button
                       type="button"

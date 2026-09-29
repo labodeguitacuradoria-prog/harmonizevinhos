@@ -379,7 +379,7 @@ function SheetSequencer({
                     <input
                       value={s.title ?? ""}
                       onChange={(e) => patch(s.id, { title: e.target.value })}
-                      placeholder="Título (opcional)"
+                      placeholder="Título impresso (opcional)"
                       className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
                     />
                     <textarea

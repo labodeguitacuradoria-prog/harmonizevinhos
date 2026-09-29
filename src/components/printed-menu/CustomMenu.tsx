@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Paperclip, Sparkles, X } from "lucide-react";
+import { Loader2, Paperclip, Pencil, Sparkles, X } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
 import { resolveSheets, type CustomDesign, type MenuSheet } from "./MenuPreview";
 
@@ -268,6 +268,7 @@ function SheetSequencer({
 }) {
   const sheets = resolveSheets(value);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [renameId, setRenameId] = useState<string | null>(null);
   const save = (next: MenuSheet[]) =>
     onChange({ ...value, sheets: next, coverImage: "", coverText: "" });
   const move = (i: number, d: number) => {

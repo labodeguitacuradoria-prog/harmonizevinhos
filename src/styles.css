@@ -305,7 +305,10 @@ input[type="number"]::-webkit-inner-spin-button {
 @media print {
   @page {
     size: A4;
-    margin: 14mm;
+    /* margin: 0 remove as margens do navegador — e com elas o carimbo de
+       data/título no topo e o endereço da página no rodapé do PDF.
+       As margens de verdade vêm do padding das folhas (margens do usuário). */
+    margin: 0;
   }
   html,
   body {
@@ -332,8 +335,11 @@ input[type="number"]::-webkit-inner-spin-button {
     display: none !important;
   }
   .printed-page {
-    padding: 0 !important;
     box-shadow: none !important;
+    /* Repete o padding (margens) em cada folha impressa quando o conteúdo
+       passa para a página seguinte. */
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
   .menu-preview-zoom {
     zoom: 1 !important;

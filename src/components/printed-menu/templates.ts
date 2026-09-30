@@ -258,6 +258,12 @@ export type SectionHeadingStyle = {
 
 export type MenuSection = { id: string; title: string; wineIds: string[]; sub?: boolean; level?: number; headingStyle?: SectionHeadingStyle };
 
+/** Símbolo opcional exibido ao lado de um rótulo somente nesta carta impressa. */
+export type MenuWineSymbol = {
+  url: string;
+  position: "left" | "right";
+};
+
 /** Nível hierárquico da seção (1 = primeiro nível). Cartas antigas usavam apenas "sub". */
 export function sectionLevel(s: MenuSection): number {
   const lvl = Number(s.level);

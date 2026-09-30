@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import { MenuPreview, resolveSheets } from "@/components/printed-menu/MenuPreview";
 import { SectionHeadingControls } from "@/components/printed-menu/SectionHeadingControls";
+import { MediaUploader } from "@/components/MediaUploader";
 import ModuleGate from "@/components/ModuleGate";
 import type { CustomDesign } from "@/components/printed-menu/MenuPreview";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ import {
   type MenuLayout,
   type PageMargins,
   type MenuWine,
+  type MenuWineSymbol,
   type PaperKey,
   type TemplateKey,
   type VisibleFields,
@@ -103,6 +105,7 @@ type SavedList = {
     margins?: PageMargins;
     customPaper?: { widthMm: number; heightMm: number; padMm: number };
     customDesign?: CustomDesign | null;
+    wineSymbols?: Record<string, MenuWineSymbol>;
   };
   sections: MenuSection[];
   logo_url: string | null;
@@ -155,6 +158,8 @@ function WineMenuPage() {
   const [headingEditorId, setHeadingEditorId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [editingPrice, setEditingPrice] = useState("");
+  const [editingSymbolUrl, setEditingSymbolUrl] = useState<string | null>(null);
+  const [editingSymbolPosition, setEditingSymbolPosition] = useState<"left" | "right">("left");
   const [savedOpen, setSavedOpen] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
   const [spacingOpen, setSpacingOpen] = useState(false);
@@ -220,12 +225,21 @@ function WineMenuPage() {
     const name = editingName.trim();
     const priceRaw = editingPrice.trim().replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
     const price = priceRaw === "" ? null : Number(priceRaw);
-    setEditingWineId(null);
     if (!name) return;
     if (price !== null && !Number.isFinite(price)) {
       toast.error("Informe um preço válido.");
       return;
     }
+    setWineSymbols((current) => {
+      const next = { ...current };
+      if (editingSymbolUrl?.trim()) {
+        next[id] = { url: editingSymbolUrl.trim(), position: editingSymbolPosition };
+      } else {
+        delete next[id];
+      }
+      return next;
+    });
+    setEditingWineId(null);
     const patch: { name: string; sale_price?: number } = { name };
     if (price !== null) patch.sale_price = price;
     const { error } = await supabase.from("wines").update(patch).eq("id", id);
@@ -322,6 +336,7 @@ function WineMenuPage() {
   const [priceCurrency, setPriceCurrency] = useState(false);
   const [previewZoom, setPreviewZoom] = useState(0.8);
   const [sections, setSections] = useState<MenuSection[]>([]);
+  const [wineSymbols, setWineSymbols] = useState<Record<string, MenuWineSymbol>>({});
   const [groupMode, setGroupMode] = useState<"type" | "style">(() => {
     if (typeof window === "undefined") return "type";
     return (localStorage.getItem("wine-menu-group-mode") as "type" | "style") || "type";
@@ -492,6 +507,7 @@ function WineMenuPage() {
           margins,
           customPaper: useCustomPaper ? { widthMm: customW, heightMm: customH, padMm: customPad } : null,
           customDesign: customDesign.exclusive ? { ...customDesign, requestId: customDesign.requestId ?? requestId } : null,
+          wineSymbols,
         }),
       ),
       sections: JSON.parse(JSON.stringify(sections)),
@@ -553,6 +569,7 @@ function WineMenuPage() {
     setPriceCurrency(l.visible_fields?.priceCurrency === true);
     setLogoUrl(l.logo_url ?? "");
     setCustomDesign(l.visible_fields?.customDesign ?? {});
+    setWineSymbols(l.visible_fields?.wineSymbols ?? {});
     setAddress(l.address_text ?? "");
     setPaper((l.paper_size as PaperKey) ?? "a4");
     setSpacing({ ...DEFAULT_SPACING, ...(l.visible_fields?.spacing ?? {}) });
@@ -621,6 +638,7 @@ function WineMenuPage() {
                         setCurrentId(null);
                         setListName("");
                         setCustomDesign({});
+                        setWineSymbols({});
                         setNewMenuOpen(false);
                         toast.info("Nova carta: ao salvar, você escolhe o nome.");
                       }}
@@ -1307,40 +1325,76 @@ function WineMenuPage() {
                           className="flex items-center gap-2 rounded px-2 py-1 text-xs text-foreground hover:bg-accent"
                         >
                           {editingWineId === id ? (
-                            <>
-                              <input
-                                autoFocus
-                                value={editingName}
-                                onChange={(e) => setEditingName(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") saveWineName(id);
-                                  if (e.key === "Escape") setEditingWineId(null);
-                                }}
-                                className="flex-1 rounded border border-input bg-card px-2 py-1 text-xs"
-                              />
-                              <input
-                                value={editingPrice}
-                                onChange={(e) => setEditingPrice(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") saveWineName(id);
-                                  if (e.key === "Escape") setEditingWineId(null);
-                                }}
-                                inputMode="decimal"
-                                title="Preço de venda"
-                                className="w-20 rounded border border-input bg-card px-2 py-1 text-right text-xs"
-                              />
-                              <IconBtn onClick={() => saveWineName(id)} title="Salvar nome e preço">
-                                <Check className="h-3 w-3" />
-                              </IconBtn>
-                              <IconBtn onClick={() => setEditingWineId(null)} title="Cancelar">
-                                <X className="h-3 w-3" />
-                              </IconBtn>
-                            </>
+                            <div className="min-w-0 flex-1 space-y-3 rounded-md border border-border bg-card p-3">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <input
+                                  autoFocus
+                                  value={editingName}
+                                  onChange={(e) => setEditingName(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") saveWineName(id);
+                                    if (e.key === "Escape") setEditingWineId(null);
+                                  }}
+                                  className="min-w-44 flex-1 rounded border border-input bg-background px-2 py-1 text-xs"
+                                />
+                                <input
+                                  value={editingPrice}
+                                  onChange={(e) => setEditingPrice(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") saveWineName(id);
+                                    if (e.key === "Escape") setEditingWineId(null);
+                                  }}
+                                  inputMode="decimal"
+                                  title="Preço de venda"
+                                  className="w-24 rounded border border-input bg-background px-2 py-1 text-right text-xs"
+                                />
+                                <IconBtn onClick={() => saveWineName(id)} title="Salvar rótulo, preço e símbolo">
+                                  <Check className="h-3 w-3" />
+                                </IconBtn>
+                                <IconBtn onClick={() => setEditingWineId(null)} title="Cancelar">
+                                  <X className="h-3 w-3" />
+                                </IconBtn>
+                              </div>
+                              <div className="grid gap-3 border-t border-border pt-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
+                                <MediaUploader
+                                  label="Símbolo ao lado do rótulo (opcional)"
+                                  value={editingSymbolUrl}
+                                  onChange={setEditingSymbolUrl}
+                                  folder={`printed-menu-symbols/${restaurantId ?? "restaurant"}`}
+                                  kind="image"
+                                />
+                                <div>
+                                  <div className="mb-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Posição</div>
+                                  <div className="grid grid-cols-2 gap-1.5">
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant={editingSymbolPosition === "left" ? "secondary" : "outline"}
+                                      className="h-8 text-[10px] uppercase"
+                                      onClick={() => setEditingSymbolPosition("left")}
+                                    >Esquerda</Button>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant={editingSymbolPosition === "right" ? "secondary" : "outline"}
+                                      className="h-8 text-[10px] uppercase"
+                                      onClick={() => setEditingSymbolPosition("right")}
+                                    >Direita</Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           ) : (
                             <>
                               <span className="flex-1 truncate">
+                                {wineSymbols[id]?.url && wineSymbols[id].position === "left" ? (
+                                  <img src={wineSymbols[id].url} alt="" className="mr-1 inline-block h-4 w-4 object-contain align-[-3px]" />
+                                ) : null}
                                 {w.name}
                                 {w.vintage ? ` ${w.vintage}` : ""}
+                                {wineSymbols[id]?.url && wineSymbols[id].position === "right" ? (
+                                  <img src={wineSymbols[id].url} alt="" className="ml-1 inline-block h-4 w-4 object-contain align-[-3px]" />
+                                ) : null}
                                 <span className="ml-1 text-muted-foreground">{w.volume ?? ""}</span>
                               </span>
                               <span className="whitespace-nowrap tabular-nums text-muted-foreground">
@@ -1351,6 +1405,8 @@ function WineMenuPage() {
                                   setEditingWineId(id);
                                   setEditingName(w.name ?? "");
                                   setEditingPrice(String(w.sale_price ?? ""));
+                                   setEditingSymbolUrl(wineSymbols[id]?.url ?? null);
+                                   setEditingSymbolPosition(wineSymbols[id]?.position ?? "left");
                                 }}
                                 title="Editar nome e preço do rótulo"
                               >
@@ -1497,6 +1553,7 @@ function WineMenuPage() {
               priceCurrency={priceCurrency}
               sections={sections}
               winesById={winesById}
+               wineSymbols={wineSymbols}
               />
             </div>
           </div>

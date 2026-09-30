@@ -16,6 +16,7 @@ import {
   type PageMargins,
   type MenuTypography,
   type MenuWine,
+  type MenuWineSymbol,
   type PaperDef,
   type PaperKey,
   type TemplateKey,
@@ -77,6 +78,7 @@ type Props = {
   priceCurrency?: boolean;
   sections: MenuSection[];
   winesById: Record<string, MenuWine>;
+  wineSymbols?: Record<string, MenuWineSymbol>;
 };
 
 // Folha em branco, pronta para impressão. A área com id="print-area"
@@ -100,6 +102,7 @@ export function MenuPreview({
   priceCurrency = false,
   sections,
   winesById,
+  wineSymbols = {},
   customDesign,
 }: Props) {
   const cd = customDesign?.exclusive ? customDesign : null;
@@ -312,6 +315,7 @@ export function MenuPreview({
               <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>
                 {sec.wineIds.map((id) => {
                   const w = winesById[id];
+                  const symbol = wineSymbols[id];
                   const firstLine = wineMetaFirstLine(w, fields);
                   const grapeLine = wineMetaGrapeLine(w, fields);
                   return (
@@ -320,10 +324,16 @@ export function MenuPreview({
                         className={`relative flex items-baseline gap-2 ${justifyAlign[layout.itemAlign]} ${textAlign[layout.itemAlign]}`}
                       >
                         <span className={`${t.itemName} ${layout.itemAlign === "center" ? "max-w-[78%]" : ""}`} style={nameStyle}>
+                           {symbol?.url && symbol.position === "left" ? (
+                             <img src={symbol.url} alt="" className="mr-1 inline-block h-[1.15em] w-[1.15em] object-contain align-[-0.15em]" />
+                           ) : null}
                           {fields.code && w.internal_code ? (
                             <span className="mr-2 tabular-nums opacity-70">{w.internal_code}</span>
                           ) : null}
                           {w.name}
+                           {symbol?.url && symbol.position === "right" ? (
+                             <img src={symbol.url} alt="" className="ml-1 inline-block h-[1.15em] w-[1.15em] object-contain align-[-0.15em]" />
+                           ) : null}
                         </span>
                         {layout.pricePosition === "far" && t.dotted && fields.price ? (
                           <span className="min-w-6 flex-1 translate-y-[-3px] border-b border-dotted border-black/50" />

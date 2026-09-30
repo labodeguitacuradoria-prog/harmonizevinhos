@@ -259,6 +259,32 @@ function WineMenuPage() {
     },
   });
 
+  /** Cartas exclusivas só ficam visíveis ao cliente depois de disponibilizadas. */
+  const { data: deliveredIds = [] } = useQuery({
+    queryKey: ["custom-menu-delivered", restaurantId],
+    enabled: !!restaurantId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("custom_menu_requests")
+        .select("delivered_list_id")
+        .eq("restaurant_id", restaurantId!)
+        .eq("status", "delivered");
+      if (error) throw error;
+      return (data ?? []).map((r) => r.delivered_list_id).filter(Boolean) as string[];
+    },
+  });
+
+  const visibleLists = useMemo(
+    () =>
+      isAdmin
+        ? savedLists
+        : savedLists.filter((l) => !l.visible_fields?.customDesign?.exclusive || deliveredIds.includes(l.id)),
+    [isAdmin, savedLists, deliveredIds],
+  );
+
+  /** Na carta exclusiva o cliente mexe só em rótulos e preços; o layout é do administrador. */
+  const lockedDesign = !isAdmin && !!customDesign.exclusive;
+
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [listName, setListName] = useState("Carta de Vinhos");
   const [template, setTemplate] = useState<TemplateKey>("classic");
@@ -665,13 +691,13 @@ function WineMenuPage() {
                     <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                       Cartas salvas
                     </div>
-                    {savedLists.length === 0 ? (
+                    {visibleLists.length === 0 ? (
                       <p className="px-2 py-2 text-xs text-muted-foreground">
                         Nenhuma carta salva ainda.
                       </p>
                     ) : (
                       <ul className="max-h-64 space-y-1 overflow-y-auto">
-                        {savedLists.map((l) => (
+                        {visibleLists.map((l) => (
                           <li
                             key={l.id}
                             className={`flex items-center gap-2 rounded px-2 py-1.5 ${
@@ -722,6 +748,14 @@ function WineMenuPage() {
           />
         )}
 
+        {lockedDesign && (
+          <div className="mt-6 rounded-xl border border-primary/40 bg-primary/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
+            Esta é uma <b className="text-primary">carta exclusiva</b>: o layout é mantido pela nossa equipe. Aqui você
+            adiciona ou retira rótulos, ajusta os preços, salva e imprime.
+          </div>
+        )}
+
+        {!lockedDesign && (<>
         {/* Modelos */}
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {TEMPLATE_LIST.map((t) => (
@@ -791,12 +825,14 @@ function WineMenuPage() {
             </div>
           </div>
         </div>
+        </>)}
 
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
         {/* Painel de montagem */}
         <div className="no-print space-y-5">
+          {!lockedDesign && (
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Cabeçalho e rodapé</div>
             <div className="mt-3 grid gap-3">
@@ -847,7 +883,9 @@ function WineMenuPage() {
               </div>
             </div>
           </div>
+          )}
 
+          {!lockedDesign && (
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Informações do rótulo</div>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -1137,6 +1175,7 @@ function WineMenuPage() {
               </div>
             </div>
           </div>
+          )}
 
 
           <div className="rounded-xl border border-border bg-card p-4">
@@ -1144,6 +1183,7 @@ function WineMenuPage() {
               <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
                 Seções ({totalItems} rótulos)
               </div>
+              {!lockedDesign && (
               <div className="flex gap-2">
                 <button
                   onClick={() => addSection(false)}
@@ -1176,6 +1216,7 @@ function WineMenuPage() {
                   <RotateCcw className="h-3 w-3" /> Reagrupar
                 </button>
               </div>
+              )}
             </div>
 
             <div className="mt-3 space-y-3">
@@ -1192,13 +1233,21 @@ function WineMenuPage() {
                     <span className="whitespace-nowrap text-[10px] uppercase text-muted-foreground">
                       {lvl > 1 ? "↳ " : ""}{lvl}º nível
                     </span>
-                    <input
-                      value={sec.title}
-                      onChange={(e) =>
-                        setSections((p) => p.map((s) => (s.id === sec.id ? { ...s, title: e.target.value } : s)))
-                      }
-                      className="min-w-[10rem] flex-1 rounded border border-input bg-card px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary"
-                    />
+                    {lockedDesign ? (
+                      <span className="min-w-[10rem] flex-1 truncate text-xs font-semibold uppercase tracking-wide text-primary">
+                        {sec.title || "(sem título)"}
+                      </span>
+                    ) : (
+                      <input
+                        value={sec.title}
+                        onChange={(e) =>
+                          setSections((p) => p.map((s) => (s.id === sec.id ? { ...s, title: e.target.value } : s)))
+                        }
+                        className="min-w-[10rem] flex-1 rounded border border-input bg-card px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary"
+                      />
+                    )}
+                    {!lockedDesign && (
+                    <>
                     <Button
                       type="button"
                       variant={headingEditorId === sec.id ? "secondary" : "outline"}
@@ -1227,9 +1276,11 @@ function WineMenuPage() {
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </IconBtn>
+                    </>
+                    )}
                   </div>
 
-                  {headingEditorId === sec.id && (
+                  {!lockedDesign && headingEditorId === sec.id && (
                     <SectionHeadingControls
                       value={sec.headingStyle ?? {}}
                       onChange={(patch) => updateHeading(sec.id, patch)}

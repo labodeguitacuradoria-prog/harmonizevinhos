@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
-  Printer,
+  Info,
   Save,
   Plus,
   Minus,
@@ -551,6 +551,8 @@ function WineMenuPage() {
     queryClient.invalidateQueries({ queryKey: ["printed-wine-lists", restaurantId] });
     toast.success("Carta excluída.");
   }
+
+  const [printTipOpen, setPrintTipOpen] = useState(false);
 
   return (
     <div className="p-4 md:p-8">

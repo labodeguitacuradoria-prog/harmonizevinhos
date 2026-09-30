@@ -86,23 +86,54 @@ const PACKS: Pack[] = [
 
 function Landing() {
   const navigateHome = useNavigate();
+  const [returningFromGoogle, setReturningFromGoogle] = useState(false);
   // Retorno do login com Google: entra direto no painel.
   useEffect(() => {
     let pending = false;
-    try { pending = sessionStorage.getItem("oauth-pending") === "1"; } catch { /* ignora */ }
+    try {
+      const raw = sessionStorage.getItem("oauth-pending");
+      const ts = raw ? Number(raw) : 0;
+      // Só vale para um retorno recente; marcas antigas são descartadas.
+      pending = !!ts && Date.now() - ts < 10 * 60_000;
+      if (!pending && raw) sessionStorage.removeItem("oauth-pending");
+    } catch { /* ignora */ }
     if (!pending) return;
+    setReturningFromGoogle(true);
+    let done = false;
     const go = () => {
+      if (done) return;
+      done = true;
       try { sessionStorage.removeItem("oauth-pending"); } catch { /* ignora */ }
       navigateHome({ to: "/app" });
     };
-    supabase.auth.getSession().then(({ data }) => { if (data.session) go(); });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => { if (session) go(); });
-    return () => sub.subscription.unsubscribe();
+    supabase.auth.getSession().then(({ data }) => { if (data.session) go(); });
+    // Se a sessão não chegar, volta a mostrar os pacotes em vez de ficar parado.
+    const giveUp = window.setTimeout(() => {
+      if (done) return;
+      try { sessionStorage.removeItem("oauth-pending"); } catch { /* ignora */ }
+      setReturningFromGoogle(false);
+    }, 12_000);
+    return () => {
+      window.clearTimeout(giveUp);
+      sub.subscription.unsubscribe();
+    };
   }, [navigateHome]);
 
   const { theme, toggle } = useTheme();
   const [pending, setPending] = useState<string | null>(null);
   const [selected, setSelected] = useState<AppModule | null>(null);
+
+  if (returningFromGoogle) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background text-muted-foreground">
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-primary border-b-transparent" />
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+          Entrando com Google…
+        </span>
+      </div>
+    );
+  }
 
   function markSelection(module: AppModule, mode: "signup" | "signin") {
     setSelected(module);

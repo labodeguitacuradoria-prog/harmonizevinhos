@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -40,30 +40,41 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const googleInFlight = useRef(false);
 
-  // Ao voltar para esta tela (inclusive pelo histórico), nenhum estado antigo
+  // Ao voltar para esta tela pelo histórico do navegador, nenhum estado antigo
   // pode deixar os botões travados.
   useEffect(() => {
-    const reset = () => {
+    const reset = (e: PageTransitionEvent) => {
+      if (!e.persisted) return;
       setLoading(false);
       setGoogleBusy(false);
     };
     window.addEventListener("pageshow", reset);
-    window.addEventListener("focus", reset);
-    return () => {
-      window.removeEventListener("pageshow", reset);
-      window.removeEventListener("focus", reset);
-    };
+    return () => window.removeEventListener("pageshow", reset);
   }, []);
 
+  // Prepara a autenticação assim que a tela abre, para que o clique em
+  // "Continuar com Google" não precise esperar essa preparação.
   useEffect(() => {
-    // Quando esta página veio da escolha de um pacote, ela deve permanecer aberta
-    // mesmo se o navegador ainda estiver concluindo a saída da sessão anterior.
-    if (chosenModule) return;
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/app" });
+    supabase.auth.getSession().then(({ data }) => {
+      // Vindo da escolha de um pacote, a tela permanece aberta mesmo com sessão.
+      if (!chosenModule && data.session) navigate({ to: "/app" });
     });
   }, [chosenModule, navigate]);
+
+  // Assim que o Google devolver a sessão, entra no painel sem depender de
+  // outro clique.
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session && googleInFlight.current) {
+        googleInFlight.current = false;
+        try { sessionStorage.removeItem("oauth-pending"); } catch { /* ignora */ }
+        navigate({ to: "/app" });
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [navigate]);
 
   useEffect(() => {
     try {
@@ -127,24 +138,40 @@ function AuthPage() {
   }
 
   async function handleGoogle() {
-    if (googleBusy) return;
+    if (googleInFlight.current) return;
+    googleInFlight.current = true;
     setGoogleBusy(true);
+    let keepBusy = false;
     try {
-      try { sessionStorage.setItem("oauth-pending", "1"); } catch { /* ignora */ }
+      try { sessionStorage.setItem("oauth-pending", String(Date.now())); } catch { /* ignora */ }
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
         extraParams: { prompt: "select_account" },
       });
-      if (result.error) {
-        toast.error("Não foi possível entrar com Google. Tente novamente.");
+      if (result.redirected) {
+        // O navegador está indo para o Google: mantém o aviso "Abrindo o Google…".
+        keepBusy = true;
         return;
       }
-      if (result.redirected) return;
+      if (result.error) {
+        try { sessionStorage.removeItem("oauth-pending"); } catch { /* ignora */ }
+        const msg = result.error.message ?? "";
+        if (/cancel/i.test(msg)) {
+          toast.info("Login com Google cancelado.");
+        } else if (/popup/i.test(msg)) {
+          toast.error("O navegador bloqueou a janela do Google. Permita pop-ups e tente de novo.");
+        } else {
+          toast.error("Não foi possível entrar com Google. Tente novamente.");
+        }
+        return;
+      }
+      try { sessionStorage.removeItem("oauth-pending"); } catch { /* ignora */ }
       navigate({ to: "/app" });
     } catch {
       toast.error("Não foi possível entrar com Google. Tente novamente.");
     } finally {
-      setGoogleBusy(false);
+      googleInFlight.current = false;
+      if (!keepBusy) setGoogleBusy(false);
     }
   }
 
@@ -181,7 +208,7 @@ function AuthPage() {
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.99 10.99 0 0 0 1 12c0 1.77.42 3.44 1.18 4.93l3.66-2.84z"/>
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
           </svg>
-          Continuar com Google
+          {googleBusy ? "Abrindo o Google…" : "Continuar com Google"}
         </button>
 
         <div className="my-6 flex items-center gap-3">

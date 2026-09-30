@@ -75,6 +75,7 @@ function AppLayout() {
     claimedForUser.current = null;
     try {
       localStorage.removeItem("signup-module");
+      sessionStorage.removeItem("oauth-pending");
     } catch {
       /* ignora indisponibilidade do armazenamento */
     }

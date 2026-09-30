@@ -154,6 +154,7 @@ function WineMenuPage() {
   const [editingWineId, setEditingWineId] = useState<string | null>(null);
   const [headingEditorId, setHeadingEditorId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [editingPrice, setEditingPrice] = useState("");
   const [savedOpen, setSavedOpen] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
   const [spacingOpen, setSpacingOpen] = useState(false);
@@ -217,11 +218,19 @@ function WineMenuPage() {
 
   async function saveWineName(id: string) {
     const name = editingName.trim();
+    const priceRaw = editingPrice.trim().replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+    const price = priceRaw === "" ? null : Number(priceRaw);
     setEditingWineId(null);
     if (!name) return;
-    const { error } = await supabase.from("wines").update({ name }).eq("id", id);
+    if (price !== null && !Number.isFinite(price)) {
+      toast.error("Informe um preço válido.");
+      return;
+    }
+    const patch: { name: string; sale_price?: number } = { name };
+    if (price !== null) patch.sale_price = price;
+    const { error } = await supabase.from("wines").update(patch).eq("id", id);
     if (error) {
-      toast.error("Não foi possível salvar o nome do rótulo.");
+      toast.error("Não foi possível salvar o rótulo.");
       return;
     }
     toast.success("Rótulo atualizado.");
@@ -1309,7 +1318,18 @@ function WineMenuPage() {
                                 }}
                                 className="flex-1 rounded border border-input bg-card px-2 py-1 text-xs"
                               />
-                              <IconBtn onClick={() => saveWineName(id)} title="Salvar nome">
+                              <input
+                                value={editingPrice}
+                                onChange={(e) => setEditingPrice(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") saveWineName(id);
+                                  if (e.key === "Escape") setEditingWineId(null);
+                                }}
+                                inputMode="decimal"
+                                title="Preço de venda"
+                                className="w-20 rounded border border-input bg-card px-2 py-1 text-right text-xs"
+                              />
+                              <IconBtn onClick={() => saveWineName(id)} title="Salvar nome e preço">
                                 <Check className="h-3 w-3" />
                               </IconBtn>
                               <IconBtn onClick={() => setEditingWineId(null)} title="Cancelar">
@@ -1323,12 +1343,16 @@ function WineMenuPage() {
                                 {w.vintage ? ` ${w.vintage}` : ""}
                                 <span className="ml-1 text-muted-foreground">{w.volume ?? ""}</span>
                               </span>
+                              <span className="whitespace-nowrap tabular-nums text-muted-foreground">
+                                {Number(w.sale_price ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                              </span>
                               <IconBtn
                                 onClick={() => {
                                   setEditingWineId(id);
                                   setEditingName(w.name ?? "");
+                                  setEditingPrice(String(w.sale_price ?? ""));
                                 }}
-                                title="Editar nome do rótulo"
+                                title="Editar nome e preço do rótulo"
                               >
                                 <Pencil className="h-3 w-3" />
                               </IconBtn>

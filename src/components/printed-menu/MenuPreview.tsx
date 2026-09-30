@@ -224,7 +224,9 @@ export function MenuPreview({
   return (
     <div id="print-area" className="printed-menu mx-auto flex w-full flex-col gap-4 print:gap-0" style={{ maxWidth: `${p.widthMm}mm` }}>
       {/* Define o tamanho da folha na impressão de acordo com a escolha do usuário */}
-      <style>{`@media print { @page { size: ${p.cssSize}; margin: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm; } }`}</style>
+      {/* margin: 0 na página elimina o carimbo do navegador (data e endereço)
+          na impressão/PDF; as margens do usuário vêm do padding das folhas. */}
+      <style>{`@media print { @page { size: ${p.cssSize}; margin: 0; } }`}</style>
       {sheets.slice(0, winesIndex).map((s) => extraPage(s, false))}
       <div
         className={`printed-page ${cd ? "" : "bg-white text-black"} ${t.page}`}

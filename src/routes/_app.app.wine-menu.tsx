@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Printer,
+  Info,
   Save,
   Plus,
   Minus,
@@ -552,6 +553,8 @@ function WineMenuPage() {
     toast.success("Carta excluída.");
   }
 
+  const [printTipOpen, setPrintTipOpen] = useState(false);
+
   return (
     <div className="p-4 md:p-8">
       <div className="no-print">
@@ -626,6 +629,25 @@ function WineMenuPage() {
               >
                 <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
               </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setPrintTipOpen((v) => !v)}
+                  className="inline-flex items-center justify-center rounded-md border border-border p-2 text-muted-foreground hover:bg-accent"
+                  aria-label="Dica de impressão"
+                  title="Dica de impressão"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                </button>
+                {printTipOpen && (
+                  <div className="absolute right-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 text-[11px] leading-relaxed text-muted-foreground shadow-lg">
+                    Ao imprimir no Chrome ou Edge, marque <b>“Gráficos de segundo plano”</b> em Mais configurações.
+                    A data e o endereço do navegador <b>não</b> aparecem no PDF: a página já é preparada sem as margens
+                    do navegador. Não é preciso desmarcar “Cabeçalhos e rodapés”.
+                  </div>
+                )}
+              </div>
+
 
               {/* Cartas salvas — dropdown */}
               <div className="relative" data-saved-dropdown>

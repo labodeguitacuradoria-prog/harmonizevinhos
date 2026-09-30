@@ -24,6 +24,7 @@ import {
   AlignCenter,
   AlignRight,
   Type,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { MenuPreview, resolveSheets } from "@/components/printed-menu/MenuPreview";
@@ -156,6 +157,7 @@ function WineMenuPage() {
 
   const [editingWineId, setEditingWineId] = useState<string | null>(null);
   const [headingEditorId, setHeadingEditorId] = useState<string | null>(null);
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [editingName, setEditingName] = useState("");
   const [editingPrice, setEditingPrice] = useState("");
   const [editingSymbolUrl, setEditingSymbolUrl] = useState<string | null>(null);
@@ -1246,9 +1248,42 @@ function WineMenuPage() {
               )}
             </div>
 
+            {sections.length > 1 && (
+              <div className="mt-3 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCollapsedIds(new Set(sections.map((s) => s.id)))}
+                  className="rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+                >Recolher tudo</button>
+                <button
+                  type="button"
+                  onClick={() => setCollapsedIds(new Set())}
+                  className="rounded border border-border px-2 py-1 text-[10px] uppercase text-muted-foreground hover:bg-accent"
+                >Expandir tudo</button>
+              </div>
+            )}
             <div className="mt-3 space-y-3">
-              {sections.map((sec, si) => {
+              {(() => {
+                const hidden = new Set<string>();
+                let hideBelow: number | null = null;
+                sections.forEach((s) => {
+                  const l = sectionLevel(s);
+                  if (hideBelow !== null && l > hideBelow) { hidden.add(s.id); return; }
+                  hideBelow = collapsedIds.has(s.id) ? l : null;
+                });
+                return sections.map((sec, si) => ({ sec, si, hide: hidden.has(sec.id) }));
+              })().map(({ sec, si, hide }) => {
+                if (hide) return null;
                 const lvl = sectionLevel(sec);
+                const collapsed = collapsedIds.has(sec.id);
+                const next = sections[si + 1];
+                const childCount = (() => {
+                  let n = 0;
+                  for (let k = si + 1; k < sections.length && sectionLevel(sections[k]) > lvl; k++) n++;
+                  return n;
+                })();
+                const hasContent = childCount > 0 || sec.wineIds.length > 0;
+                void next;
                 return (
                 <div
                   key={sec.id}
@@ -1257,8 +1292,30 @@ function WineMenuPage() {
                   className={`min-w-0 rounded-lg border bg-background p-3 ${targetSectionId === sec.id ? "border-primary" : "border-border"}`}
                 >
                   <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={!hasContent}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCollapsedIds((p) => {
+                          const n = new Set(p);
+                          if (n.has(sec.id)) n.delete(sec.id); else n.add(sec.id);
+                          return n;
+                        });
+                      }}
+                      title={collapsed ? "Expandir" : "Recolher"}
+                      aria-expanded={!collapsed}
+                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-primary hover:bg-accent disabled:opacity-30"
+                    >
+                      {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </button>
                     <span className="whitespace-nowrap text-[10px] uppercase text-muted-foreground">
                       {lvl > 1 ? "↳ " : ""}{lvl}º nível
+                      {collapsed && hasContent && (
+                        <span className="ml-1 normal-case text-primary">
+                          ({sec.wineIds.length} rót.{childCount ? ` · ${childCount} subseç.` : ""})
+                        </span>
+                      )}
                     </span>
                     {lockedDesign ? (
                       <span className="min-w-[10rem] flex-1 truncate text-xs font-semibold uppercase tracking-wide text-primary">
@@ -1315,7 +1372,7 @@ function WineMenuPage() {
                     />
                   )}
 
-                  <ul className="mt-2 space-y-1">
+                  <ul className={`mt-2 space-y-1 ${collapsedIds.has(sec.id) ? "hidden" : ""}`}>
                     {sec.wineIds.map((id, wi) => {
                       const w = winesById[id];
                       if (!w) return null;

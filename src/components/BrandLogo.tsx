@@ -1,20 +1,24 @@
 import { cn } from "@/lib/utils";
 
-/** Símbolo La Bodeguita: garrafa formada por linhas horizontais em dourado e branco. */
+/** Símbolo oficial La Bodeguita: garrafa de 22 linhas alternando dourado e branco. */
+const LINES: Array<[number, number]> = [
+  [57, 63], [56, 64], [56, 64], [56, 64], [56, 64], [54, 66], [52, 68],
+  [50, 70], [50, 70], [50, 70], [50, 70], [50, 70], [50, 70], [50, 70],
+  [50, 70], [50, 70], [50, 70], [50, 70], [50, 70], [50, 70], [50, 70], [52, 68],
+];
+
 export function BrandMark({ className }: { className?: string }) {
-  // Larguras das linhas de cima (gargalo) para baixo (corpo)
-  const rows = [4, 4, 4, 6, 10, 14, 16, 16, 16, 16, 16, 16];
   return (
-    <svg viewBox="0 0 20 40" className={cn("h-8 w-4", className)} aria-hidden="true">
-      {rows.map((w, i) => (
-        <rect
+    <svg viewBox="48 10 24 88" className={cn("h-8 w-[9px]", className)} aria-hidden="true">
+      {LINES.map(([x1, x2], i) => (
+        <line
           key={i}
-          x={(20 - w) / 2}
-          y={2 + i * 3.1}
-          width={w}
-          height={1.8}
-          rx={0.9}
-          style={{ fill: i % 2 === 0 ? "var(--gold)" : "var(--foreground)" }}
+          x1={x1}
+          x2={x2}
+          y1={12 + i * 4}
+          y2={12 + i * 4}
+          strokeWidth={2}
+          style={{ stroke: i % 2 === 0 ? "var(--gold)" : "var(--foreground)" }}
         />
       ))}
     </svg>

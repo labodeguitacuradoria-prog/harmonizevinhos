@@ -31,6 +31,8 @@ export type MenuSheet = {
   title?: string;
   text?: string;
   image?: string;
+  /** Seções impressas nesta página de rótulos. Ausente em cartas antigas. */
+  sectionIds?: string[];
   /** Margens próprias desta folha (mm); ausente = usa as margens gerais. */
   margins?: PageMargins;
 };
@@ -47,14 +49,32 @@ export type CustomDesign = {
   sheets?: MenuSheet[];
 };
 
-/** Sequência final de folhas. Converte a capa antiga e garante uma folha de rótulos. */
-export function resolveSheets(cd: CustomDesign | null | undefined): MenuSheet[] {
+/** Sequência final de folhas. Converte cartas antigas e distribui cada seção uma única vez. */
+export function resolveSheets(cd: CustomDesign | null | undefined, sections: MenuSection[] = []): MenuSheet[] {
   let list: MenuSheet[] = cd?.sheets?.length ? [...cd.sheets] : [];
   if (!cd?.sheets?.length && (cd?.coverImage || cd?.coverText)) {
     list.push({ id: "legacy-cover", kind: "extra", title: "", text: cd.coverText ?? "", image: cd.coverImage ?? "" });
   }
   if (!list.some((s) => s.kind === "wines")) list.push({ id: "wines", kind: "wines" });
-  list = list.filter((s, i) => s.kind !== "wines" || list.findIndex((x) => x.kind === "wines") === i);
+  const validIds = new Set(sections.map((section) => section.id));
+  const claimed = new Set<string>();
+  const wineIndexes = list.flatMap((sheet, index) => sheet.kind === "wines" ? [index] : []);
+  const legacySinglePage = wineIndexes.length === 1 && list[wineIndexes[0]]?.sectionIds === undefined;
+  list = list.map((sheet, index) => {
+    if (sheet.kind !== "wines") return sheet;
+    const requested = legacySinglePage && index === wineIndexes[0]
+      ? sections.map((section) => section.id)
+      : (sheet.sectionIds ?? []);
+    const sectionIds = requested.filter((id) => validIds.has(id) && !claimed.has(id));
+    sectionIds.forEach((id) => claimed.add(id));
+    return { ...sheet, sectionIds };
+  });
+  const unassigned = sections.map((section) => section.id).filter((id) => !claimed.has(id));
+  if (unassigned.length) {
+    const firstWineIndex = list.findIndex((sheet) => sheet.kind === "wines");
+    const firstWine = list[firstWineIndex];
+    list[firstWineIndex] = { ...firstWine, sectionIds: [...(firstWine.sectionIds ?? []), ...unassigned] };
+  }
   return list;
 }
 
@@ -180,7 +200,7 @@ export function MenuPreview({
   const rulePosClass =
     layout.headerAlign === "left" ? "" : layout.headerAlign === "right" ? "ml-auto" : "mx-auto";
 
-  const sheets = cd ? resolveSheets(cd) : [{ id: "wines", kind: "wines" as const }];
+  const sheets = resolveSheets(customDesign, cleaned);
   const extraPage = (s: MenuSheet, isLast: boolean) => {
     const lines = (s.text ?? "").split("\n");
     const onlyImage = s.image && !s.title?.trim() && !s.text?.trim();
@@ -222,16 +242,12 @@ export function MenuPreview({
     );
   };
 
-  const winesIndex = sheets.findIndex((s) => s.kind === "wines");
-  const wm = sheets[winesIndex]?.margins ?? margins;
-  return (
-    <div id="print-area" className="printed-menu mx-auto flex w-full flex-col gap-4 print:gap-0" style={{ maxWidth: `${p.widthMm}mm` }}>
-      {/* Define o tamanho da folha na impressão de acordo com a escolha do usuário */}
-      {/* margin: 0 na página elimina o carimbo do navegador (data e endereço)
-          na impressão/PDF; as margens do usuário vêm do padding das folhas. */}
-      <style>{`@media print { @page { size: ${p.cssSize}; margin: 0; } }`}</style>
-      {sheets.slice(0, winesIndex).map((s) => extraPage(s, false))}
+  const winePage = (sheet: MenuSheet, isLast: boolean) => {
+    const pageSections = visibleSections.filter((section) => sheet.sectionIds?.includes(section.id));
+    const wm = sheet.margins ?? margins;
+    return (
       <div
+        key={sheet.id}
         className={`printed-page ${cd ? "" : "bg-white text-black"} ${t.page}`}
         style={{
           ...(cd
@@ -249,31 +265,21 @@ export function MenuPreview({
           minHeight: `${p.heightMm}mm`,
           width: `${p.widthMm}mm`,
           maxWidth: "100%",
-          breakAfter: winesIndex < sheets.length - 1 ? "page" : "auto",
+          breakAfter: isLast ? "auto" : "page",
         }}
       >
         <header className={`${t.key === "minimal" ? "mb-10" : "mb-8"} ${textAlign[layout.headerAlign]}`}>
           {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={title ? `Logo ${title}` : "Logo do restaurante"}
-              className={`mb-4 h-[18mm] w-auto object-contain ${logoPosClass}`}
-            />
+            <img src={logoUrl} alt={title ? `Logo ${title}` : "Logo do restaurante"} className={`mb-4 h-[18mm] w-auto object-contain ${logoPosClass}`} />
           ) : null}
           {title ? <h1 className={`${t.headerTitle} whitespace-pre-wrap`} style={cd?.accentColor ? { color: cd.accentColor } : undefined}>{title}</h1> : null}
           {subtitle ? <div className={`${t.headerSubtitle} whitespace-pre-wrap`}>{subtitle}</div> : null}
-          {addressInHeader ? (
-            <div className="mt-2 whitespace-pre-line text-[8pt] leading-snug text-black/70">
-              {address}
-            </div>
-          ) : null}
-          {t.key === "classic" ? (
-            <div className={`mt-4 h-px w-24 bg-black/70 ${rulePosClass}`} />
-          ) : null}
+          {addressInHeader ? <div className="mt-2 whitespace-pre-line text-[8pt] leading-snug text-black/70">{address}</div> : null}
+          {t.key === "classic" ? <div className={`mt-4 h-px w-24 bg-black/70 ${rulePosClass}`} /> : null}
         </header>
 
         <div className={twoCols ? "[column-count:2] [column-gap:10mm]" : ""}>
-          {visibleSections.map((sec) => {
+          {pageSections.map((sec) => {
             const lvl = sectionLevel(sec);
             const isSub = lvl > 1;
             const heading = sec.headingStyle;
@@ -283,117 +289,77 @@ export function MenuPreview({
             const accentImageSize = Math.min(40, Math.max(6, heading?.accentImageSize ?? 16));
             const textAccent = heading?.accent === "star" ? "✦" : heading?.accent === "diamond" ? "◆" : heading?.accent === "dash" ? "—" : null;
             return (
-            <section
-              key={sec.id}
-              className={`${isSub ? "mb-4 mt-[-6px]" : "mb-6"} break-inside-avoid`}
-              style={isSub ? { marginLeft: `${(lvl - 2) * 4}mm` } : undefined}
-            >
-              <div
-                className={`${isSub ? "pb-0.5 font-semibold uppercase opacity-80" : `${t.sectionTitle} ${t.rule} pb-1`} ${textAlign[heading?.align ?? layout.sectionAlign]} ${heading?.underline ? "underline underline-offset-4" : ""} ${framed ? "w-full px-3 py-1.5" : ""}`}
-                style={{
-                  ...(isSub ? subSectionStyle(lvl) : sectionStyle),
-                  fontFamily: fontCss(heading?.font) ?? (isSub ? subSectionStyle(lvl).fontFamily : sectionStyle.fontFamily),
-                  fontSize: heading?.size ? `${heading.size}pt` : (isSub ? subSectionStyle(lvl).fontSize : sectionStyle.fontSize),
-                  color: headingColor,
-                  borderColor: headingColor,
-                  letterSpacing: heading?.letterSpacing != null ? `${heading.letterSpacing}pt` : undefined,
-                  fontWeight: heading?.bold === true ? 700 : heading?.bold === false ? 400 : undefined,
-                  border: framed ? `1px solid ${headingColor || "#000"}` : undefined,
-                  backgroundColor: heading?.frame === "filled" ? (headingColor || "#000") : undefined,
-                  // A caixa preenchida usa o fundo da própria carta como cor de texto.
-                  ...(heading?.frame === "filled" ? { color: cd?.bgColor || "#fff" } : {}),
-                  overflowWrap: "anywhere",
-                }}
-              >
-                <span className={`inline-flex max-w-full items-center gap-2 ${justifyAlign[heading?.align ?? layout.sectionAlign]}`}>
-                  {accentImage ? <img src={accentImage} alt="" className="shrink-0 object-contain" style={{ width: `${accentImageSize}pt`, height: `${accentImageSize}pt` }} /> : textAccent ? <span aria-hidden="true">{textAccent}</span> : null}
-                  <span className="min-w-0">{sec.title}</span>
-                  {accentImage ? <img src={accentImage} alt="" className="shrink-0 object-contain" style={{ width: `${accentImageSize}pt`, height: `${accentImageSize}pt` }} /> : textAccent ? <span aria-hidden="true">{textAccent}</span> : null}
-                </span>
-              </div>
-
-              <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>
-                {sec.wineIds.map((id) => {
-                  const w = winesById[id];
-                  const symbol = wineSymbols[id];
-                  const firstLine = wineMetaFirstLine(w, fields);
-                  const grapeLine = wineMetaGrapeLine(w, fields);
-                  return (
-                    <li key={id} className="break-inside-avoid">
-                      <div
-                        className={`relative flex items-baseline gap-2 ${justifyAlign[layout.itemAlign]} ${textAlign[layout.itemAlign]}`}
-                      >
-                        <span className={`${t.itemName} ${layout.itemAlign === "center" ? "max-w-[78%]" : ""}`} style={nameStyle}>
-                           {symbol?.url && symbol.position === "left" ? (
-                             <img src={symbol.url} alt="" className="mr-1 inline-block h-[1.15em] w-[1.15em] object-contain align-[-0.15em]" />
-                           ) : null}
-                          {fields.code && w.internal_code ? (
-                            <span className="mr-2 tabular-nums opacity-70">{w.internal_code}</span>
-                          ) : null}
-                          {w.name}
-                           {symbol?.url && symbol.position === "right" ? (
-                             <img src={symbol.url} alt="" className="ml-1 inline-block h-[1.15em] w-[1.15em] object-contain align-[-0.15em]" />
-                           ) : null}
-                        </span>
-                        {layout.pricePosition === "far" && t.dotted && fields.price ? (
-                          <span className="min-w-6 flex-1 translate-y-[-3px] border-b border-dotted border-black/50" />
-                        ) : layout.pricePosition === "far" && (layout.itemAlign === "left" || layout.itemAlign === "right") ? (
-                          <span className="flex-1" />
-                        ) : null}
-                        {fields.price && w.sale_price != null ? (
-                          <span
-                            className={`${t.itemPrice} ${
-                              layout.pricePosition === "far" && layout.itemAlign === "center" ? "absolute right-0" : ""
-                            }`}
-                            style={priceStyle}
-                          >
-                            {formatPrice(w.sale_price, priceDecimals, priceCurrency)}
+              <section key={sec.id} className={`${isSub ? "mb-4 mt-[-6px]" : "mb-6"} break-inside-avoid`} style={isSub ? { marginLeft: `${(lvl - 2) * 4}mm` } : undefined}>
+                <div
+                  className={`${isSub ? "pb-0.5 font-semibold uppercase opacity-80" : `${t.sectionTitle} ${t.rule} pb-1`} ${textAlign[heading?.align ?? layout.sectionAlign]} ${heading?.underline ? "underline underline-offset-4" : ""} ${framed ? "w-full px-3 py-1.5" : ""}`}
+                  style={{
+                    ...(isSub ? subSectionStyle(lvl) : sectionStyle),
+                    fontFamily: fontCss(heading?.font) ?? (isSub ? subSectionStyle(lvl).fontFamily : sectionStyle.fontFamily),
+                    fontSize: heading?.size ? `${heading.size}pt` : (isSub ? subSectionStyle(lvl).fontSize : sectionStyle.fontSize),
+                    color: headingColor,
+                    borderColor: headingColor,
+                    letterSpacing: heading?.letterSpacing != null ? `${heading.letterSpacing}pt` : undefined,
+                    fontWeight: heading?.bold === true ? 700 : heading?.bold === false ? 400 : undefined,
+                    border: framed ? `1px solid ${headingColor || "#000"}` : undefined,
+                    backgroundColor: heading?.frame === "filled" ? (headingColor || "#000") : undefined,
+                    ...(heading?.frame === "filled" ? { color: cd?.bgColor || "#fff" } : {}),
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  <span className={`inline-flex max-w-full items-center gap-2 ${justifyAlign[heading?.align ?? layout.sectionAlign]}`}>
+                    {accentImage ? <img src={accentImage} alt="" className="shrink-0 object-contain" style={{ width: `${accentImageSize}pt`, height: `${accentImageSize}pt` }} /> : textAccent ? <span aria-hidden="true">{textAccent}</span> : null}
+                    <span className="min-w-0">{sec.title}</span>
+                    {accentImage ? <img src={accentImage} alt="" className="shrink-0 object-contain" style={{ width: `${accentImageSize}pt`, height: `${accentImageSize}pt` }} /> : textAccent ? <span aria-hidden="true">{textAccent}</span> : null}
+                  </span>
+                </div>
+                <ul className="mt-2.5 flex flex-col" style={{ gap: `${spacing.itemGap}pt` }}>
+                  {sec.wineIds.map((id) => {
+                    const w = winesById[id];
+                    const symbol = wineSymbols[id];
+                    const firstLine = wineMetaFirstLine(w, fields);
+                    const grapeLine = wineMetaGrapeLine(w, fields);
+                    return (
+                      <li key={id} className="break-inside-avoid">
+                        <div className={`relative flex items-baseline gap-2 ${justifyAlign[layout.itemAlign]} ${textAlign[layout.itemAlign]}`}>
+                          <span className={`${t.itemName} ${layout.itemAlign === "center" ? "max-w-[78%]" : ""}`} style={nameStyle}>
+                            {symbol?.url && symbol.position === "left" ? <img src={symbol.url} alt="" className="mr-1 inline-block h-[1.15em] w-[1.15em] object-contain align-[-0.15em]" /> : null}
+                            {fields.code && w.internal_code ? <span className="mr-2 tabular-nums opacity-70">{w.internal_code}</span> : null}
+                            {w.name}
+                            {symbol?.url && symbol.position === "right" ? <img src={symbol.url} alt="" className="ml-1 inline-block h-[1.15em] w-[1.15em] object-contain align-[-0.15em]" /> : null}
                           </span>
-                        ) : null}
-                      </div>
-                      {firstLine ? (
-                        <div
-                          className={`${t.itemMeta} ${textAlign[layout.itemAlign]}`}
-                          style={{ ...metaStyle, marginTop: `${spacing.nameGap}pt` }}
-                        >
-                          {firstLine}
+                          {layout.pricePosition === "far" && t.dotted && fields.price ? <span className="min-w-6 flex-1 translate-y-[-3px] border-b border-dotted border-black/50" /> : layout.pricePosition === "far" && (layout.itemAlign === "left" || layout.itemAlign === "right") ? <span className="flex-1" /> : null}
+                          {fields.price && w.sale_price != null ? <span className={`${t.itemPrice} ${layout.pricePosition === "far" && layout.itemAlign === "center" ? "absolute right-0" : ""}`} style={priceStyle}>{formatPrice(w.sale_price, priceDecimals, priceCurrency)}</span> : null}
                         </div>
-                      ) : null}
-                      {grapeLine ? (
-                        <div
-                          className={`${t.itemMeta} ${textAlign[layout.itemAlign]}`}
-                          style={{ ...metaStyle, marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}
-                        >
-                          {grapeLine}
-                        </div>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
+                        {firstLine ? <div className={`${t.itemMeta} ${textAlign[layout.itemAlign]}`} style={{ ...metaStyle, marginTop: `${spacing.nameGap}pt` }}>{firstLine}</div> : null}
+                        {grapeLine ? <div className={`${t.itemMeta} ${textAlign[layout.itemAlign]}`} style={{ ...metaStyle, marginTop: `${firstLine ? spacing.lineGap : spacing.nameGap}pt` }}>{grapeLine}</div> : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
             );
           })}
-
-          {visibleSections.length === 0 ? (
-            <div className="py-20 text-center text-[10pt] text-black/50">
-              Nenhum rótulo selecionado para esta carta.
-            </div>
-          ) : null}
+          {pageSections.length === 0 ? <div className="py-20 text-center text-[10pt] text-black/50">Nenhuma seção escolhida para esta página.</div> : null}
         </div>
-
         {footer || addressInFooter ? (
           <footer className="mt-10 border-t border-black/30 pt-3 text-center text-black/70">
-            {addressInFooter ? (
-              <div className="whitespace-pre-line text-[8pt] leading-snug">{address}</div>
-            ) : null}
-            {footer ? (
-              <div className="mt-1 w-full whitespace-break-spaces text-[8pt] uppercase tracking-[0.2em]">{footer}</div>
-            ) : null}
+            {addressInFooter ? <div className="whitespace-pre-line text-[8pt] leading-snug">{address}</div> : null}
+            {footer ? <div className="mt-1 w-full whitespace-break-spaces text-[8pt] uppercase tracking-[0.2em]">{footer}</div> : null}
           </footer>
         ) : null}
       </div>
-      {sheets.slice(winesIndex + 1).map((s, i, arr) => extraPage(s, i === arr.length - 1))}
+    );
+  };
+
+  return (
+    <div id="print-area" className="printed-menu mx-auto flex w-full flex-col gap-4 print:gap-0" style={{ maxWidth: `${p.widthMm}mm` }}>
+      {/* Define o tamanho da folha na impressão de acordo com a escolha do usuário */}
+      {/* margin: 0 na página elimina o carimbo do navegador (data e endereço)
+          na impressão/PDF; as margens do usuário vêm do padding das folhas. */}
+      <style>{`@media print { @page { size: ${p.cssSize}; margin: 0; } }`}</style>
+      {sheets.map((sheet, index) => sheet.kind === "wines"
+        ? winePage(sheet, index === sheets.length - 1)
+        : extraPage(sheet, index === sheets.length - 1))}
     </div>
   );
 }

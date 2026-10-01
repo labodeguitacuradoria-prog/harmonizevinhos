@@ -33,7 +33,7 @@ import { MediaUploader } from "@/components/MediaUploader";
 import ModuleGate from "@/components/ModuleGate";
 import type { CustomDesign } from "@/components/printed-menu/MenuPreview";
 import { Button } from "@/components/ui/button";
-import { CustomMenuRequestDialog, CustomDesignPanel } from "@/components/printed-menu/CustomMenu";
+import { CustomMenuRequestDialog, CustomDesignPanel, SheetSequencer } from "@/components/printed-menu/CustomMenu";
 import {
   DEFAULT_SPACING,
   DEFAULT_TYPOGRAPHY,
@@ -508,7 +508,9 @@ function WineMenuPage() {
           layout,
           margins,
           customPaper: useCustomPaper ? { widthMm: customW, heightMm: customH, padMm: customPad } : null,
-          customDesign: customDesign.exclusive ? { ...customDesign, requestId: customDesign.requestId ?? requestId } : null,
+          customDesign: customDesign.exclusive || customDesign.sheets?.length
+            ? { ...customDesign, sheets: resolveSheets(customDesign, sections), requestId: customDesign.requestId ?? requestId }
+            : null,
           wineSymbols,
         }),
       ),
@@ -915,6 +917,15 @@ function WineMenuPage() {
           )}
 
           {!lockedDesign && (
+          <SheetSequencer
+            value={customDesign}
+            onChange={setCustomDesign}
+            restaurantId={restaurantId ?? "restaurant"}
+            sections={sections}
+          />
+          )}
+
+          {!lockedDesign && (
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Informações do rótulo</div>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -1139,7 +1150,7 @@ function WineMenuPage() {
                 {marginsOpen && (
                   <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
 {(() => {
-                      const sheetList = customDesign.exclusive ? resolveSheets(customDesign) : [];
+                      const sheetList = resolveSheets(customDesign, sections);
                       const sel = sheetList.find((x) => x.id === marginsPage);
                       const cur = sel ? sel.margins ?? margins : margins;
                       const setCur = (patch: Partial<PageMargins>) => {

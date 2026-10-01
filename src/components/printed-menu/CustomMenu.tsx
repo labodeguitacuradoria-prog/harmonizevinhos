@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Paperclip, Pencil, Sparkles, X } from "lucide-react";
+import { FilePlus2, Loader2, Paperclip, Pencil, Sparkles, X } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
 import { resolveSheets, type CustomDesign, type MenuSheet } from "./MenuPreview";
+import { sectionLevel, type MenuSection } from "./templates";
 
 export type BriefAttachment = { name: string; path: string; mime?: string | null; size?: number };
 
@@ -257,16 +258,18 @@ export function CustomMenuRequestDialog({ restaurantId, onClose }: { restaurantI
 }
 
 /** Sequência de folhas: folhas livres + a folha com os rótulos, em qualquer ordem. */
-function SheetSequencer({
+export function SheetSequencer({
   value,
   onChange,
   restaurantId,
+  sections,
 }: {
   value: CustomDesign;
   onChange: (v: CustomDesign) => void;
   restaurantId: string;
+  sections: MenuSection[];
 }) {
-  const sheets = resolveSheets(value);
+  const sheets = resolveSheets(value, sections);
   const [openId, setOpenId] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
   const save = (next: MenuSheet[]) =>
@@ -280,10 +283,30 @@ function SheetSequencer({
   };
   const patch = (id: string, p: Partial<MenuSheet>) =>
     save(sheets.map((s) => (s.id === id ? { ...s, ...p } : s)));
-  const add = () => {
+  const addExtra = () => {
     const id = crypto.randomUUID();
     save([...sheets, { id, kind: "extra", title: "", text: "", image: "" }]);
     setOpenId(id);
+  };
+  const addWinePage = () => {
+    const id = crypto.randomUUID();
+    save([...sheets, { id, kind: "wines", name: `Página de rótulos ${sheets.filter((sheet) => sheet.kind === "wines").length + 1}`, sectionIds: [] }]);
+    setOpenId(id);
+  };
+  const assignSection = (sheetId: string, sectionId: string) => {
+    save(sheets.map((sheet) => {
+      if (sheet.kind !== "wines") return sheet;
+      const without = (sheet.sectionIds ?? []).filter((id) => id !== sectionId);
+      return sheet.id === sheetId ? { ...sheet, sectionIds: [...without, sectionId] } : { ...sheet, sectionIds: without };
+    }));
+  };
+  const removeWinePage = (sheet: MenuSheet) => {
+    const remaining = sheets.filter((item) => item.id !== sheet.id);
+    const targetIndex = remaining.findIndex((item) => item.kind === "wines");
+    if (targetIndex < 0) return;
+    const target = remaining[targetIndex];
+    remaining[targetIndex] = { ...target, sectionIds: [...new Set([...(target.sectionIds ?? []), ...(sheet.sectionIds ?? [])])] };
+    save(remaining);
   };
 
   return (
@@ -292,22 +315,24 @@ function SheetSequencer({
         <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
           Sequência das folhas
         </div>
-        <button
-          type="button"
-          onClick={add}
-          className="rounded-md border border-primary/50 px-3 py-1 text-[10px] font-bold uppercase text-primary hover:bg-primary/10"
-        >
-          + Nova folha
-        </button>
+        <div className="flex flex-wrap justify-end gap-1.5">
+          <button type="button" onClick={addWinePage} className="inline-flex items-center gap-1 rounded-md border border-primary/50 px-2 py-1 text-[10px] font-bold uppercase text-primary hover:bg-primary/10">
+            <FilePlus2 className="h-3 w-3" /> Página de rótulos
+          </button>
+          <button type="button" onClick={addExtra} className="rounded-md border border-primary/50 px-2 py-1 text-[10px] font-bold uppercase text-primary hover:bg-primary/10">
+            + Folha extra
+          </button>
+        </div>
       </div>
       <p className="mb-2 text-[11px] text-muted-foreground">
-        A impressão segue esta ordem. Use as setas para posicionar as folhas antes ou depois da carta com os rótulos.
-        O lápis dá um nome à folha só para você organizar a lista — esse nome não aparece na impressão.
+        A impressão segue esta ordem. Abra uma página de rótulos para escolher suas seções. O nome com lápis é apenas organizacional.
       </p>
       <ol className="space-y-1.5">
         {sheets.map((s, i) => {
           const isWines = s.kind === "wines";
           const open = openId === s.id;
+          const pageSections = isWines ? sections.filter((section) => s.sectionIds?.includes(section.id)) : [];
+          const pageWineCount = pageSections.reduce((total, section) => total + section.wineIds.length, 0);
           return (
             <li
               key={s.id}
@@ -317,14 +342,12 @@ function SheetSequencer({
                 <span className="w-6 text-center font-bold text-primary">{i + 1}</span>
                 <button
                   type="button"
-                  disabled={isWines}
                   onClick={() => setOpenId(open ? null : s.id)}
-                  className="flex-1 truncate text-left disabled:cursor-default"
+                   className="flex-1 truncate text-left"
                 >
-                  {isWines ? "Carta com os rótulos" : s.name?.trim() || s.title?.trim() || `Folha ${i + 1}`}
+                   {isWines ? s.name?.trim() || `Página de rótulos ${sheets.slice(0, i + 1).filter((sheet) => sheet.kind === "wines").length}` : s.name?.trim() || s.title?.trim() || `Folha ${i + 1}`}
                 </button>
-                {!isWines && (
-                  <button
+                <button
                     type="button"
                     onClick={() => setRenameId(renameId === s.id ? null : s.id)}
                     className={`px-1 ${renameId === s.id ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
@@ -333,26 +356,28 @@ function SheetSequencer({
                   >
                     <Pencil className="h-3 w-3" />
                   </button>
-                )}
                 <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="px-1 disabled:opacity-30" aria-label="Subir">▲</button>
                 <button type="button" onClick={() => move(i, 1)} disabled={i === sheets.length - 1} className="px-1 disabled:opacity-30" aria-label="Descer">▼</button>
-                {!isWines && (
-                  <>
-                    <button type="button" onClick={() => setOpenId(open ? null : s.id)} className="px-1 text-primary">
-                      {open ? "Fechar" : "Editar"}
-                    </button>
-                    <button
+                <button type="button" onClick={() => setOpenId(open ? null : s.id)} className="px-1 text-primary">
+                  {open ? "Fechar" : "Editar"}
+                </button>
+                {(!isWines || sheets.filter((sheet) => sheet.kind === "wines").length > 1) && (
+                  <button
                       type="button"
-                      onClick={() => save(sheets.filter((x) => x.id !== s.id))}
+                      onClick={() => isWines ? removeWinePage(s) : save(sheets.filter((x) => x.id !== s.id))}
                       className="px-1 text-destructive"
                       aria-label="Excluir folha"
                     >
                       <X className="h-3.5 w-3.5" />
-                    </button>
-                  </>
+                  </button>
                 )}
               </div>
-              {renameId === s.id && !isWines && (
+              {isWines ? (
+                <div className="mt-1 pl-8 text-[10px] text-muted-foreground">
+                  {pageSections.length} {pageSections.length === 1 ? "seção" : "seções"} · {pageWineCount} {pageWineCount === 1 ? "rótulo" : "rótulos"}
+                </div>
+              ) : null}
+              {renameId === s.id && (
                 <div className="mt-2 flex items-center gap-2">
                   <input
                     autoFocus
@@ -371,6 +396,30 @@ function SheetSequencer({
                   >
                     OK
                   </button>
+                </div>
+              )}
+              {open && isWines && (
+                <div className="mt-2 border-t border-border pt-2">
+                  <div className="mb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Seções nesta página</div>
+                  <div className="grid gap-1 sm:grid-cols-2">
+                    {sections.map((section) => {
+                      const assignedHere = s.sectionIds?.includes(section.id) ?? false;
+                      const assignedPage = sheets.find((sheet) => sheet.kind === "wines" && sheet.sectionIds?.includes(section.id));
+                      return (
+                        <button
+                          key={section.id}
+                          type="button"
+                          onClick={() => assignSection(s.id, section.id)}
+                          className={`flex min-w-0 items-center gap-2 rounded border px-2 py-1.5 text-left text-[11px] ${assignedHere ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-accent"}`}
+                          title={assignedPage && !assignedHere ? `Mover de ${assignedPage.name || "outra página"}` : undefined}
+                        >
+                          <span className="w-4 shrink-0 text-center">{assignedHere ? "✓" : ""}</span>
+                          <span className="truncate">{"↳ ".repeat(Math.max(0, sectionLevel(section) - 1))}{section.title || "(sem título)"}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {sections.length === 0 ? <p className="text-[11px] text-muted-foreground">Crie uma seção para adicioná-la a esta página.</p> : null}
                 </div>
               )}
               {open && !isWines && (
@@ -455,7 +504,6 @@ export function CustomDesignPanel({
               folder={`${restaurantId}/custom-menu`}
             />
           </div>
-          <SheetSequencer value={value} onChange={onChange} restaurantId={restaurantId} />
         </>
       )}
       {canDeliver && (

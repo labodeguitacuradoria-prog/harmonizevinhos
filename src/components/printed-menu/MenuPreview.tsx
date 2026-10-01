@@ -248,7 +248,7 @@ export function MenuPreview({
     return (
       <div
         key={sheet.id}
-        className={`printed-page ${cd ? "" : "bg-white text-black"} ${t.page}`}
+        className={`printed-page flex flex-col ${cd ? "" : "bg-white text-black"} ${t.page}`}
         style={{
           ...(cd
             ? {
@@ -278,7 +278,7 @@ export function MenuPreview({
           {t.key === "classic" ? <div className={`mt-4 h-px w-24 bg-black/70 ${rulePosClass}`} /> : null}
         </header>
 
-        <div className={twoCols ? "[column-count:2] [column-gap:10mm]" : ""}>
+        <div className={`flex-1 ${twoCols ? "[column-count:2] [column-gap:10mm]" : ""}`}>
           {pageSections.map((sec) => {
             const lvl = sectionLevel(sec);
             const isSub = lvl > 1;
@@ -342,7 +342,7 @@ export function MenuPreview({
           {pageSections.length === 0 ? <div className="py-20 text-center text-[10pt] text-black/50">Nenhuma seção escolhida para esta página.</div> : null}
         </div>
         {footer || addressInFooter ? (
-          <footer className="mt-10 border-t border-black/30 pt-3 text-center text-black/70">
+          <footer className="mt-auto border-t border-black/30 pt-3 text-center text-black/70">
             {addressInFooter ? <div className="whitespace-pre-line text-[8pt] leading-snug">{address}</div> : null}
             {footer ? <div className="mt-1 w-full whitespace-break-spaces text-[8pt] uppercase tracking-[0.2em]">{footer}</div> : null}
           </footer>

@@ -509,7 +509,7 @@ function WineMenuPage() {
           margins,
           customPaper: useCustomPaper ? { widthMm: customW, heightMm: customH, padMm: customPad } : null,
           customDesign: customDesign.exclusive || customDesign.sheets?.length
-            ? { ...customDesign, requestId: customDesign.requestId ?? requestId }
+            ? { ...customDesign, sheets: resolveSheets(customDesign, sections), requestId: customDesign.requestId ?? requestId }
             : null,
           wineSymbols,
         }),

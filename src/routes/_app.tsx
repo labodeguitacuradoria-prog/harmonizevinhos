@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { BrandLogo, BrandMark } from "@/components/BrandLogo";
 import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X, KeyRound, GraduationCap } from "lucide-react";
 import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
 import { canAccessRoute, type AppModule } from "@/lib/modules";
@@ -178,12 +179,7 @@ function AppLayout() {
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground md:flex-row">
       {/* Mobile top bar */}
       <div className="flex items-center justify-between border-b border-border bg-card px-3 py-2 md:hidden">
-        <div className="flex min-w-0 items-center gap-2">
-          <Wine className="h-5 w-5 shrink-0 text-primary" />
-          <span className="truncate text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
-            Gestão de Vinhos
-          </span>
-        </div>
+        <BrandLogo variant="compact" className="min-w-0" />
         <button
           onClick={() => setMenuOpen(true)}
           aria-label="Abrir menu"
@@ -234,10 +230,10 @@ function AppLayout() {
               boxShadow: "0 0 15px color-mix(in oklab, var(--wine) 32%, transparent)",
             }}
           >
-            <Wine className="h-6 w-6 text-primary" />
+            <BrandMark className="h-8 w-4" />
           </div>
-          <span className="text-center text-[8px] font-bold uppercase leading-tight tracking-[0.25em] text-primary">
-            Gestão de<br />Vinhos
+          <span className="brand-font text-center text-[8px] font-medium uppercase leading-tight tracking-[0.25em] text-primary">
+            La<br />Bodeguita
           </span>
         </div>
         {role === "restaurant" && <RestaurantContextSwitcher compact />}

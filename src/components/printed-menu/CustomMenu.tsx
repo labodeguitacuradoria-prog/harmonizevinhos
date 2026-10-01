@@ -331,6 +331,8 @@ export function SheetSequencer({
         {sheets.map((s, i) => {
           const isWines = s.kind === "wines";
           const open = openId === s.id;
+          const pageSections = isWines ? sections.filter((section) => s.sectionIds?.includes(section.id)) : [];
+          const pageWineCount = pageSections.reduce((total, section) => total + section.wineIds.length, 0);
           return (
             <li
               key={s.id}
@@ -370,6 +372,11 @@ export function SheetSequencer({
                   </button>
                 )}
               </div>
+              {isWines ? (
+                <div className="mt-1 pl-8 text-[10px] text-muted-foreground">
+                  {pageSections.length} {pageSections.length === 1 ? "seção" : "seções"} · {pageWineCount} {pageWineCount === 1 ? "rótulo" : "rótulos"}
+                </div>
+              ) : null}
               {renameId === s.id && (
                 <div className="mt-2 flex items-center gap-2">
                   <input

@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/hooks/use-theme";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Moon, Sun, ScrollText, UtensilsCrossed, DollarSign, LayoutDashboard, GraduationCap, Wine } from "lucide-react";
 import type { AppModule } from "@/lib/modules";
 
@@ -144,12 +145,7 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
-        <div className="flex items-center gap-2">
-          <Wine className="h-5 w-5 text-primary" />
-          <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
-            La Bodeguita Vinhos
-          </span>
-        </div>
+        <BrandLogo />
         <button
           onClick={toggle}
           title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}

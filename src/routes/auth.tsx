@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Wine } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { toast } from "sonner";
 import { authErrorPt } from "@/lib/auth-errors";
 
@@ -178,10 +179,7 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-sm">
-        <div className="mb-6 flex items-center gap-2">
-          <Wine className="h-6 w-6 text-primary" />
-          <span className="text-lg font-semibold">Gestão de Vinhos</span>
-        </div>
+        <BrandLogo className="mb-6" />
         <h1 className="text-2xl font-semibold">
           {mode === "signin" ? "Entrar" : "Criar conta"}
         </h1>

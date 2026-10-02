@@ -758,7 +758,10 @@ function WinesSection() {
                     {[w.internal_code, w.producer, w.vintage].filter(Boolean).join(" · ") || "-"}
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-                    <span>{wineTypeLabel(w.wine_type)}</span>
+                    <span>
+                      {wineTypeLabel(w.wine_type)}
+                      {w.style ? ` · ${w.style}` : ""}
+                    </span>
                     {w.volume && <span>{w.volume}</span>}
                     {w.country && <span>{w.country}</span>}
                     <span>R$ {Number(w.sale_price).toFixed(2)}</span>

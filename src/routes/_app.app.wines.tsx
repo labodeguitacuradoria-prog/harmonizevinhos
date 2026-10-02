@@ -758,7 +758,10 @@ function WinesSection() {
                     {[w.internal_code, w.producer, w.vintage].filter(Boolean).join(" · ") || "-"}
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-                    <span>{wineTypeLabel(w.wine_type)}</span>
+                    <span>
+                      {wineTypeLabel(w.wine_type)}
+                      {w.style ? ` · ${w.style}` : ""}
+                    </span>
                     {w.volume && <span>{w.volume}</span>}
                     {w.country && <span>{w.country}</span>}
                     <span>R$ {Number(w.sale_price).toFixed(2)}</span>
@@ -913,7 +916,10 @@ function WinesSection() {
                     </button>
                   </td>
                   <td className="px-4 py-3">{w.vintage ?? "-"}</td>
-                  <td className="px-4 py-3">{wineTypeLabel(w.wine_type)}</td>
+                  <td className="px-4 py-3">
+                    <div>{wineTypeLabel(w.wine_type)}</div>
+                    {w.style ? <div className="text-xs text-muted-foreground">{w.style}</div> : null}
+                  </td>
                   <td className="px-4 py-3">{w.volume ?? "-"}</td>
                   {printOnly ? <td className="px-4 py-3">{w.country ?? "-"}</td> : null}
                   {!printOnly ? (

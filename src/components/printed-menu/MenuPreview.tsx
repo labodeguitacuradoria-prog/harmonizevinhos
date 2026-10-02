@@ -360,13 +360,22 @@ export function MenuPreview({
       {/* margin: 0 na página elimina o carimbo do navegador (data e endereço)
           na impressão/PDF; as margens do usuário vêm do padding das folhas. */}
       <style>{`@media print { @page { size: ${p.cssSize}; margin: 0; } }`}</style>
-      {sheets.map((sheet, index) => {
-        const page = sheet.kind === "wines"
-          ? winePage(sheet, index === sheets.length - 1)
-          : extraPage(sheet, index === sheets.length - 1);
-        if (!focusSheetId) return page;
-        return <div key={sheet.id} className={sheet.id === focusSheetId ? "contents" : "hidden print:contents"}>{page}</div>;
-      })}
+      {(() => {
+        const render = (list: MenuSheet[]) => list.map((sheet) => {
+          const index = sheets.indexOf(sheet);
+          return sheet.kind === "wines"
+            ? winePage(sheet, index === sheets.length - 1)
+            : extraPage(sheet, index === sheets.length - 1);
+        });
+        const focused = focusSheetId ? sheets.filter((s) => s.id === focusSheetId) : [];
+        if (!focused.length) return render(sheets);
+        return (
+          <>
+            <div className="flex flex-col gap-4 print:hidden">{render(focused)}</div>
+            <div className="hidden print:block">{render(sheets)}</div>
+          </>
+        );
+      })()}
     </div>
   );
 }

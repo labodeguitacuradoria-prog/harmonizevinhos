@@ -309,6 +309,10 @@ function WineMenuPage() {
 
   /** Na carta exclusiva o cliente mexe só em rótulos e preços; o layout é do administrador. */
   const lockedDesign = !isAdmin && !!customDesign.exclusive;
+  const focusMode = isAdmin && !!customDesign.exclusive;
+  const [focusIndex, setFocusIndex] = useState(0);
+  const previewSheets = resolveSheets(customDesign, sections);
+  const safeFocus = Math.min(focusIndex, Math.max(0, previewSheets.length - 1));
 
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [listName, setListName] = useState("Carta de Vinhos");
@@ -1580,7 +1584,28 @@ function WineMenuPage() {
         </div>
 
         {/* Pré-visualização */}
-        <div className="print-root">
+        <div className={`print-root ${focusMode ? "lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto" : ""}`}>
+          {focusMode ? (
+            <div className="no-print mb-2 flex items-center gap-2 rounded-lg border border-border bg-card p-1.5">
+              <IconBtn onClick={() => setFocusIndex(Math.max(0, safeFocus - 1))} title="Página anterior">
+                <span className="px-1 text-sm">‹</span>
+              </IconBtn>
+              <select
+                value={safeFocus}
+                onChange={(e) => setFocusIndex(Number(e.target.value))}
+                className="min-w-0 flex-1 rounded border border-border bg-background px-2 py-1 text-xs"
+              >
+                {previewSheets.map((sh, i) => (
+                  <option key={sh.id} value={i}>
+                    {i + 1}/{previewSheets.length} · {sh.name || sh.title || (sh.kind === "wines" ? "Carta com os rótulos" : "Folha extra")}
+                  </option>
+                ))}
+              </select>
+              <IconBtn onClick={() => setFocusIndex(Math.min(previewSheets.length - 1, safeFocus + 1))} title="Próxima página">
+                <span className="px-1 text-sm">›</span>
+              </IconBtn>
+            </div>
+          ) : null}
           <div className="no-print mb-2 flex flex-wrap items-center justify-between gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             <span>Pré-visualização · {activePaper.code} ({activePaper.dims})</span>
             <div className="flex items-center gap-1 rounded border border-border bg-card p-1 tracking-normal">

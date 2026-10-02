@@ -99,6 +99,8 @@ type Props = {
   sections: MenuSection[];
   winesById: Record<string, MenuWine>;
   wineSymbols?: Record<string, MenuWineSymbol>;
+  /** Quando definido, só esta folha aparece na tela (todas continuam na impressão). */
+  focusSheetId?: string | null;
 };
 
 // Folha em branco, pronta para impressão. A área com id="print-area"
@@ -124,6 +126,7 @@ export function MenuPreview({
   winesById,
   wineSymbols = {},
   customDesign,
+  focusSheetId,
 }: Props) {
   const cd = customDesign?.exclusive ? customDesign : null;
   const t = TEMPLATES[template];
@@ -357,9 +360,13 @@ export function MenuPreview({
       {/* margin: 0 na página elimina o carimbo do navegador (data e endereço)
           na impressão/PDF; as margens do usuário vêm do padding das folhas. */}
       <style>{`@media print { @page { size: ${p.cssSize}; margin: 0; } }`}</style>
-      {sheets.map((sheet, index) => sheet.kind === "wines"
-        ? winePage(sheet, index === sheets.length - 1)
-        : extraPage(sheet, index === sheets.length - 1))}
+      {sheets.map((sheet, index) => {
+        const page = sheet.kind === "wines"
+          ? winePage(sheet, index === sheets.length - 1)
+          : extraPage(sheet, index === sheets.length - 1);
+        if (!focusSheetId) return page;
+        return <div key={sheet.id} className={sheet.id === focusSheetId ? "contents" : "hidden print:contents"}>{page}</div>;
+      })}
     </div>
   );
 }

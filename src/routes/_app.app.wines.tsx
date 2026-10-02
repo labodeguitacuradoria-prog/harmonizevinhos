@@ -913,7 +913,10 @@ function WinesSection() {
                     </button>
                   </td>
                   <td className="px-4 py-3">{w.vintage ?? "-"}</td>
-                  <td className="px-4 py-3">{wineTypeLabel(w.wine_type)}</td>
+                  <td className="px-4 py-3">
+                    <div>{wineTypeLabel(w.wine_type)}</div>
+                    {w.style ? <div className="text-xs text-muted-foreground">{w.style}</div> : null}
+                  </td>
                   <td className="px-4 py-3">{w.volume ?? "-"}</td>
                   {printOnly ? <td className="px-4 py-3">{w.country ?? "-"}</td> : null}
                   {!printOnly ? (

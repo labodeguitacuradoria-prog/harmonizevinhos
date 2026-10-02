@@ -311,8 +311,6 @@ function WineMenuPage() {
   const lockedDesign = !isAdmin && !!customDesign.exclusive;
   const focusMode = isAdmin && !!customDesign.exclusive;
   const [focusIndex, setFocusIndex] = useState(0);
-  const previewSheets = resolveSheets(customDesign, sections);
-  const safeFocus = Math.min(focusIndex, Math.max(0, previewSheets.length - 1));
 
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [listName, setListName] = useState("Carta de Vinhos");
@@ -615,6 +613,8 @@ function WineMenuPage() {
 
   const [printTipOpen, setPrintTipOpen] = useState(false);
 
+  const previewSheets = resolveSheets(customDesign, sections);
+  const safeFocus = Math.min(focusIndex, Math.max(0, previewSheets.length - 1));
   return (
     <div className="p-4 md:p-8">
       <div className="no-print">

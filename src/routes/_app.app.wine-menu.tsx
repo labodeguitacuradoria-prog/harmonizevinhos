@@ -1646,7 +1646,8 @@ function WineMenuPage() {
               priceCurrency={priceCurrency}
               sections={sections}
               winesById={winesById}
-               wineSymbols={wineSymbols}
+              wineSymbols={wineSymbols}
+              focusSheetId={focusMode ? previewSheets[safeFocus]?.id ?? null : null}
               />
             </div>
           </div>

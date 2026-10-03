@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FilePlus2, Loader2, Paperclip, Pencil, Sparkles, X } from "lucide-react";
+import { ChevronDown, FilePlus2, Loader2, Paperclip, Pencil, Sparkles, X } from "lucide-react";
 import { MediaUploader } from "@/components/MediaUploader";
 import { resolveSheets, type CustomDesign, type MenuSheet } from "./MenuPreview";
 import { sectionLevel, type MenuSection } from "./templates";
@@ -270,6 +270,7 @@ export function SheetSequencer({
   sections: MenuSection[];
 }) {
   const sheets = resolveSheets(value, sections);
+  const [expanded, setExpanded] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
   const save = (next: MenuSheet[]) =>
@@ -310,12 +311,19 @@ export function SheetSequencer({
   };
 
   return (
-    <div className="mt-4 rounded-lg border border-border p-3">
-      <div className="mb-2 flex items-center justify-between">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
-          Sequência das folhas
-        </div>
-        <div className="flex flex-wrap justify-end gap-1.5">
+    <div className="overflow-hidden rounded-lg border border-border bg-card">
+      <button
+        type="button"
+        onClick={() => setExpanded((current) => !current)}
+        className={`grid h-10 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 text-left text-[11px] font-bold uppercase tracking-wider ${expanded ? "bg-accent text-primary" : "text-muted-foreground hover:bg-accent"}`}
+        aria-expanded={expanded}
+      >
+        <span className="truncate">Sequência das folhas · {sheets.length} {sheets.length === 1 ? "página" : "páginas"}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
+      </button>
+      {expanded ? (
+      <div className="border-t border-border p-3">
+        <div className="mb-2 flex flex-wrap justify-end gap-1.5">
           <button type="button" onClick={addWinePage} className="inline-flex items-center gap-1 rounded-md border border-primary/50 px-2 py-1 text-[10px] font-bold uppercase text-primary hover:bg-primary/10">
             <FilePlus2 className="h-3 w-3" /> Página de rótulos
           </button>
@@ -323,11 +331,10 @@ export function SheetSequencer({
             + Folha extra
           </button>
         </div>
-      </div>
       <p className="mb-2 text-[11px] text-muted-foreground">
         A impressão segue esta ordem. Abra uma página de rótulos para escolher suas seções. O nome com lápis é apenas organizacional.
       </p>
-      <ol className="space-y-1.5">
+      <ol className="max-h-[65vh] space-y-1.5 overflow-y-auto pr-1">
         {sheets.map((s, i) => {
           const isWines = s.kind === "wines";
           const open = openId === s.id;
@@ -451,6 +458,8 @@ export function SheetSequencer({
           );
         })}
       </ol>
+      </div>
+      ) : null}
     </div>
   );
 }

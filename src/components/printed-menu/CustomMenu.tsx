@@ -471,12 +471,16 @@ export function CustomDesignPanel({
   restaurantId,
   onDeliver,
   canDeliver,
+  expanded = true,
+  onExpandedChange,
 }: {
   value: CustomDesign;
   onChange: (v: CustomDesign) => void;
   restaurantId: string;
   onDeliver: () => void;
   canDeliver: boolean;
+  expanded?: boolean;
+  onExpandedChange?: () => void;
 }) {
   const set = (patch: Partial<CustomDesign>) => onChange({ ...value, ...patch });
   const color = (label: string, key: "bgColor" | "textColor" | "accentColor", defaultValue: string) => (
@@ -488,41 +492,49 @@ export function CustomDesignPanel({
     />
   );
   return (
-    <div className="mt-6 rounded-xl border border-primary/60 bg-card p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[2px] text-primary">
-          <Sparkles className="h-4 w-4" /> Design exclusivo (administrador)
-        </div>
-        <label className="flex items-center gap-2 text-xs">
-          <input type="checkbox" checked={!!value.exclusive} onChange={(e) => set({ exclusive: e.target.checked })} />
-          Ativar design exclusivo nesta carta
-        </label>
-      </div>
-      {value.exclusive && (
-        <>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              {color("Fundo", "bgColor", "#ffffff")}
-              {color("Texto", "textColor", "#000000")}
-              {color("Destaque (títulos)", "accentColor", "#800020")}
+    <div className="overflow-hidden rounded-lg border border-primary/60 bg-card">
+      <button
+        type="button"
+        onClick={onExpandedChange}
+        className={`grid h-10 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 text-left text-[11px] font-bold uppercase tracking-wider ${expanded ? "bg-accent text-primary" : "text-muted-foreground hover:bg-accent"}`}
+        aria-expanded={expanded}
+      >
+        <span className="flex min-w-0 items-center gap-2 truncate">
+          <Sparkles className="h-4 w-4 shrink-0" /> Design exclusivo · {value.exclusive ? "Ativo" : "Inativo"}
+        </span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`} />
+      </button>
+      {expanded ? (
+        <div className="border-t border-border p-3">
+          <label className="mb-3 flex items-center gap-2 text-xs">
+            <input type="checkbox" checked={!!value.exclusive} onChange={(e) => set({ exclusive: e.target.checked })} />
+            Ativar design exclusivo nesta carta
+          </label>
+          {value.exclusive ? (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                {color("Fundo", "bgColor", "#ffffff")}
+                {color("Texto", "textColor", "#000000")}
+                {color("Destaque (títulos)", "accentColor", "#800020")}
+              </div>
+              <MediaUploader
+                label="Fundo / textura das páginas"
+                value={value.backgroundImage ?? null}
+                onChange={(u) => set({ backgroundImage: u ?? "" })}
+                folder={`${restaurantId}/custom-menu`}
+              />
             </div>
-            <MediaUploader
-              label="Fundo / textura das páginas"
-              value={value.backgroundImage ?? null}
-              onChange={(u) => set({ backgroundImage: u ?? "" })}
-              folder={`${restaurantId}/custom-menu`}
-            />
-          </div>
-        </>
-      )}
-      {canDeliver && (
-        <button
-          onClick={onDeliver}
-          className="mt-4 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-foreground"
-        >
-          Salvar e disponibilizar ao restaurante
-        </button>
-      )}
+          ) : null}
+          {canDeliver ? (
+            <button
+              onClick={onDeliver}
+              className="mt-4 w-full rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-foreground"
+            >
+              Salvar e disponibilizar ao restaurante
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

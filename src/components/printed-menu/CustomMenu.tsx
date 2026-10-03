@@ -331,7 +331,6 @@ export function SheetSequencer({
             + Folha extra
           </button>
         </div>
-      </div>
       <p className="mb-2 text-[11px] text-muted-foreground">
         A impressão segue esta ordem. Abra uma página de rótulos para escolher suas seções. O nome com lápis é apenas organizacional.
       </p>

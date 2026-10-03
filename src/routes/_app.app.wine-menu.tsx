@@ -163,7 +163,7 @@ function WineMenuPage() {
   const [editingSymbolUrl, setEditingSymbolUrl] = useState<string | null>(null);
   const [editingSymbolPosition, setEditingSymbolPosition] = useState<"left" | "right">("left");
   const [savedOpen, setSavedOpen] = useState(false);
-  const [customOpen, setCustomOpen] = useState(false);
+  const [editorPanel, setEditorPanel] = useState<"model" | "paper" | "header" | null>(null);
   const [spacingOpen, setSpacingOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
   const [layoutOpen, setLayoutOpen] = useState(false);
@@ -180,16 +180,6 @@ function WineMenuPage() {
     document.addEventListener("mousedown", handle);
     return () => document.removeEventListener("mousedown", handle);
   }, [savedOpen]);
-
-  useEffect(() => {
-    if (!customOpen) return;
-    function handle(e: MouseEvent) {
-      const target = e.target as HTMLElement;
-      if (!target.closest("[data-custom-dropdown]")) setCustomOpen(false);
-    }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
-  }, [customOpen]);
 
   useEffect(() => {
     if (!spacingOpen) return;
@@ -790,87 +780,98 @@ function WineMenuPage() {
           </div>
         )}
 
-        {!lockedDesign && (<>
-        {/* Modelos */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {TEMPLATE_LIST.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTemplate(t.key)}
-              className={`rounded-xl border p-4 text-left transition ${
-                template === t.key ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/60"
-              }`}
-            >
-              <div className="text-xs font-bold uppercase tracking-wider text-primary">{t.label}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{t.desc}</div>
-            </button>
-          ))}
-        </div>
-
-        {/* Tamanho do papel */}
-        <div className="mt-4">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Tamanho do papel</div>
-          <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {PAPER_LIST.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => {
-                  setPaper(p.key);
-                  setUseCustomPaper(false);
-                  setCustomOpen(false);
-                  setMargins({ top: p.padMm, right: p.padMm, bottom: p.padMm, left: p.padMm });
-                }}
-                className={`rounded-xl border p-3 text-left transition ${
-                  !useCustomPaper && paper === p.key
-                    ? "border-primary bg-accent"
-                    : "border-border bg-card hover:border-primary/60"
-                }`}
-              >
-                <div className="text-xs font-bold uppercase tracking-wider text-primary">{p.code}</div>
-                <div className="mt-1 text-xs text-muted-foreground">{p.dims}</div>
-              </button>
-            ))}
-            <div className="relative" data-custom-dropdown>
-              <button
-                onClick={() => {
-                  setUseCustomPaper(true);
-                  setCustomOpen((v) => !v);
-                }}
-                className={`w-full rounded-xl border p-3 text-left transition ${
-                  useCustomPaper ? "border-primary bg-accent" : "border-border bg-card hover:border-primary/60"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-bold uppercase tracking-wider text-primary">Personalizado</div>
-                  <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${customOpen ? "rotate-180" : ""}`} />
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">Você define as medidas</div>
-              </button>
-              {customOpen && (
-                <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border bg-card p-3 shadow-lg">
-                  <div className="grid gap-3">
-                    <MmField label="Largura (mm)" value={customW} onChange={setCustomW} min={60} max={420} />
-                    <MmField label="Altura (mm)" value={customH} onChange={setCustomH} min={80} max={594} />
-                  </div>
-                  <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
-                    Exemplos: 100 × 210 mm (folha estreita), 150 × 300 mm (carta alta). 10 mm = 1 cm.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        </>)}
-
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
         {/* Painel de montagem */}
         <div className="no-print space-y-5">
           {!lockedDesign && (
-          <div className="rounded-xl border border-border bg-card p-4">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-primary">Cabeçalho e rodapé</div>
-            <div className="mt-3 grid gap-3">
+          <div className="space-y-2">
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <button
+                type="button"
+                onClick={() => setEditorPanel((current) => current === "model" ? null : "model")}
+                className={`grid h-10 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 text-left text-[11px] font-bold uppercase tracking-wider ${editorPanel === "model" ? "bg-accent text-primary" : "text-muted-foreground hover:bg-accent"}`}
+                aria-expanded={editorPanel === "model"}
+              >
+                <span className="truncate">Modelo · {TEMPLATE_LIST.find((item) => item.key === template)?.label}</span>
+                <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${editorPanel === "model" ? "rotate-180" : ""}`} />
+              </button>
+              {editorPanel === "model" ? (
+                <div className="grid gap-1 border-t border-border p-2">
+                  {TEMPLATE_LIST.map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => { setTemplate(item.key); setEditorPanel(null); }}
+                      className={`rounded-md border px-3 py-2 text-left ${template === item.key ? "border-primary bg-primary/10" : "border-transparent hover:bg-accent"}`}
+                    >
+                      <span className="block text-xs font-bold text-primary">{item.label}</span>
+                      <span className="block text-[10px] text-muted-foreground">{item.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <button
+                type="button"
+                onClick={() => setEditorPanel((current) => current === "paper" ? null : "paper")}
+                className={`grid h-10 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 text-left text-[11px] font-bold uppercase tracking-wider ${editorPanel === "paper" ? "bg-accent text-primary" : "text-muted-foreground hover:bg-accent"}`}
+                aria-expanded={editorPanel === "paper"}
+              >
+                <span className="truncate">Papel · {activePaper.code} ({activePaper.dims})</span>
+                <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${editorPanel === "paper" ? "rotate-180" : ""}`} />
+              </button>
+              {editorPanel === "paper" ? (
+                <div className="grid gap-1 border-t border-border p-2">
+                  {PAPER_LIST.map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => {
+                        setPaper(item.key);
+                        setUseCustomPaper(false);
+                        setMargins({ top: item.padMm, right: item.padMm, bottom: item.padMm, left: item.padMm });
+                        setEditorPanel(null);
+                      }}
+                      className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border px-3 py-2 text-left ${!useCustomPaper && paper === item.key ? "border-primary bg-primary/10" : "border-transparent hover:bg-accent"}`}
+                    >
+                      <span className="text-xs font-bold text-primary">{item.code}</span>
+                      <span className="shrink-0 text-[10px] text-muted-foreground">{item.dims}</span>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setUseCustomPaper(true)}
+                    className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border px-3 py-2 text-left ${useCustomPaper ? "border-primary bg-primary/10" : "border-transparent hover:bg-accent"}`}
+                  >
+                    <span className="text-xs font-bold text-primary">Personalizado</span>
+                    <span className="shrink-0 text-[10px] text-muted-foreground">Definir medidas</span>
+                  </button>
+                  {useCustomPaper ? (
+                    <div className="mt-1 grid grid-cols-2 gap-3 rounded-md border border-border bg-background p-3">
+                      <MmField label="Largura (mm)" value={customW} onChange={setCustomW} min={60} max={420} />
+                      <MmField label="Altura (mm)" value={customH} onChange={setCustomH} min={80} max={594} />
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <button
+                type="button"
+                onClick={() => setEditorPanel((current) => current === "header" ? null : "header")}
+                className={`grid h-10 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 text-left text-[11px] font-bold uppercase tracking-wider ${editorPanel === "header" ? "bg-accent text-primary" : "text-muted-foreground hover:bg-accent"}`}
+                aria-expanded={editorPanel === "header"}
+              >
+                <span className="truncate">Cabeçalho e rodapé</span>
+                <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${editorPanel === "header" ? "rotate-180" : ""}`} />
+              </button>
+              {editorPanel === "header" ? (
+              <div className="grid gap-3 border-t border-border p-3">
               <Field label="Nome desta carta (uso interno)" value={listName} onChange={setListName} />
               <Field label="Título impresso" value={title} onChange={setTitle} placeholder="Nome do restaurante" />
               <Field label="Subtítulo" value={subtitle} onChange={setSubtitle} placeholder="Carta de Vinhos" />
@@ -916,6 +917,8 @@ function WineMenuPage() {
                   ))}
                 </div>
               </div>
+              </div>
+              ) : null}
             </div>
           </div>
           )}

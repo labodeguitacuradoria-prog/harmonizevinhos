@@ -163,7 +163,7 @@ function WineMenuPage() {
   const [editingSymbolUrl, setEditingSymbolUrl] = useState<string | null>(null);
   const [editingSymbolPosition, setEditingSymbolPosition] = useState<"left" | "right">("left");
   const [savedOpen, setSavedOpen] = useState(false);
-  const [editorPanel, setEditorPanel] = useState<"model" | "paper" | "header" | null>(null);
+  const [editorPanel, setEditorPanel] = useState<"exclusive" | "model" | "paper" | "header" | null>(null);
   const [spacingOpen, setSpacingOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
   const [layoutOpen, setLayoutOpen] = useState(false);
@@ -763,16 +763,6 @@ function WineMenuPage() {
         {requestOpen && restaurantId && (
           <CustomMenuRequestDialog restaurantId={restaurantId} onClose={() => setRequestOpen(false)} />
         )}
-        {isAdmin && restaurantId && (
-          <CustomDesignPanel
-            value={customDesign}
-            onChange={setCustomDesign}
-            restaurantId={restaurantId}
-            onDeliver={deliver}
-            canDeliver={!!(customDesign.requestId ?? requestId)}
-          />
-        )}
-
         {lockedDesign && (
           <div className="mt-6 rounded-xl border border-primary/40 bg-primary/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
             Esta é uma <b className="text-primary">carta exclusiva</b>: o layout é mantido pela nossa equipe. Aqui você
@@ -784,7 +774,19 @@ function WineMenuPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
         {/* Painel de montagem */}
-        <div className="no-print space-y-5">
+        <div className={`no-print space-y-5 no-scrollbar ${focusMode ? "lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto lg:pr-1" : ""}`}>
+          {isAdmin && restaurantId ? (
+            <CustomDesignPanel
+              value={customDesign}
+              onChange={setCustomDesign}
+              restaurantId={restaurantId}
+              onDeliver={deliver}
+              canDeliver={!!(customDesign.requestId ?? requestId)}
+              expanded={editorPanel === "exclusive"}
+              onExpandedChange={() => setEditorPanel((current) => current === "exclusive" ? null : "exclusive")}
+            />
+          ) : null}
+
           {!lockedDesign && (
           <div className="space-y-2">
             <div className="overflow-hidden rounded-lg border border-border bg-card">

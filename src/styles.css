@@ -77,6 +77,15 @@
   --card-raw: #141414;
   --surface-2: #1a1a1a;
   --text-kpi: #888888;
+  --landing-button-ink: oklch(0.18 0.025 55);
+  --landing-button-gold-start: oklch(0.86 0.15 90);
+  --landing-button-gold-middle: oklch(0.76 0.14 82);
+  --landing-button-gold-end: oklch(0.67 0.13 72);
+  --landing-button-gold-hover-start: oklch(0.9 0.14 92);
+  --landing-button-gold-hover-end: oklch(0.73 0.15 78);
+  --landing-button-shadow: color-mix(in oklab, var(--gold) 32%, transparent);
+  --landing-button-glass: color-mix(in oklab, var(--card) 78%, transparent);
+  --landing-button-glass-hover: color-mix(in oklab, var(--gold) 9%, var(--card));
   --training-paper: oklch(0.99 0.004 95);
   --training-ink: oklch(0.18 0 0);
   --training-wine: oklch(0.38 0.14 24);
@@ -177,6 +186,15 @@
   --card-raw: #ffffff;
   --surface-2: #f2efe8;
   --text-kpi: #6b6b6b;
+  --landing-button-ink: oklch(0.2 0.025 55);
+  --landing-button-gold-start: oklch(0.79 0.14 88);
+  --landing-button-gold-middle: oklch(0.69 0.13 80);
+  --landing-button-gold-end: oklch(0.6 0.12 70);
+  --landing-button-gold-hover-start: oklch(0.84 0.14 90);
+  --landing-button-gold-hover-end: oklch(0.66 0.14 75);
+  --landing-button-shadow: color-mix(in oklab, var(--gold) 24%, transparent);
+  --landing-button-glass: color-mix(in oklab, var(--card) 88%, transparent);
+  --landing-button-glass-hover: color-mix(in oklab, var(--gold) 8%, var(--card));
 
   --gradient-nav-active: linear-gradient(
     to top,
@@ -269,6 +287,105 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Tela de escolha de pacotes — padrão Luminous Gold Pill aplicado apenas aqui. */
+.landing-button {
+  position: relative;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.625rem 1.25rem;
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.landing-button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.landing-button:not(.landing-button-disabled):active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.landing-button-primary {
+  border: 1px solid color-mix(in oklab, var(--gold) 78%, transparent);
+  color: var(--landing-button-ink);
+  background: linear-gradient(
+    135deg,
+    var(--landing-button-gold-start),
+    var(--landing-button-gold-middle) 52%,
+    var(--landing-button-gold-end)
+  );
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 44%, transparent),
+    0 8px 18px -9px var(--landing-button-shadow);
+}
+
+.landing-button-primary::after {
+  content: "";
+  position: absolute;
+  inset: 1px 14% auto;
+  height: 1px;
+  background: color-mix(in oklab, var(--foreground) 55%, transparent);
+  pointer-events: none;
+}
+
+.landing-button-primary:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(
+    135deg,
+    var(--landing-button-gold-hover-start),
+    var(--landing-button-gold-hover-end)
+  );
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 55%, transparent),
+    0 11px 22px -9px var(--landing-button-shadow);
+}
+
+.landing-button-outline {
+  border: 1px solid color-mix(in oklab, var(--gold) 42%, var(--border));
+  color: var(--primary);
+  background: var(--landing-button-glass);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 7%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.landing-button-outline:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in oklab, var(--gold) 80%, transparent);
+  background: var(--landing-button-glass-hover);
+  box-shadow: 0 8px 18px -12px var(--landing-button-shadow);
+}
+
+.landing-button-compact {
+  min-height: 40px;
+  padding: 0.5rem 1rem;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+}
+
+.landing-button-disabled {
+  min-height: 44px;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  background: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-button {
+    transition: none;
+  }
 }
 
 @utility nav-active {

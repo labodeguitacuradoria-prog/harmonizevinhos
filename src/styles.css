@@ -293,6 +293,30 @@ a[class~="bg-primary"]:hover {
   backdrop-filter: blur(8px);
 }
 
+button[class~="border-border"]:not([class~="bg-primary"]):not([class*="bg-destructive"]),
+button[class~="border-input"]:not([class~="bg-primary"]):not([class*="bg-destructive"]),
+a[class~="border-border"]:not([class~="bg-primary"]),
+a[class*="border-primary"]:not([class~="bg-primary"]) {
+  border-color: var(--button-outline-border);
+  background-color: var(--button-outline-bg);
+  color: var(--button-outline-text);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+  backdrop-filter: blur(8px);
+}
+
+button[class~="border-border"]:not([class~="bg-primary"]):not([class*="bg-destructive"]):hover,
+button[class~="border-input"]:not([class~="bg-primary"]):not([class*="bg-destructive"]):hover,
+a[class~="border-border"]:not([class~="bg-primary"]):hover,
+a[class*="border-primary"]:not([class~="bg-primary"]):hover {
+  border-color: color-mix(in oklab, var(--gold) 60%, transparent);
+  color: var(--foreground);
+}
+
+button[class*="border-destructive"],
+button[class*="bg-destructive"] {
+  border-radius: 9999px;
+}
+
 .outline-glass-button:hover {
   border-color: color-mix(in oklab, var(--gold) 60%, transparent);
   color: var(--foreground);

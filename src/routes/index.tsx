@@ -147,9 +147,10 @@ function Landing() {
       <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
         <BrandLogo />
         <button
+          type="button"
           onClick={toggle}
           title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
-          className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors hover:border-primary"
+          className="landing-button landing-button-outline landing-button-compact"
         >
           {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
           <span className="hidden sm:inline">{theme === "dark" ? "Claro" : "Escuro"}</span>
@@ -224,7 +225,7 @@ function Landing() {
                       href={`/auth?mode=signup&module=${p.module}`}
                       onClick={() => markSelection(p.module, "signup")}
                       aria-busy={pending === `${p.module}:signup`}
-                      className="block w-full rounded-md bg-primary px-4 py-2.5 text-center text-[12px] font-semibold text-primary-foreground transition-all duration-100 hover:opacity-90 active:scale-[0.98] active:brightness-90"
+                      className="landing-button landing-button-primary w-full"
                     >
                       {pending === `${p.module}:signup` ? "Abrindo…" : "Experimente grátis"}
                     </a>
@@ -232,7 +233,7 @@ function Landing() {
                       href={`/auth?mode=signin&module=${p.module}`}
                       onClick={() => markSelection(p.module, "signin")}
                       aria-busy={pending === `${p.module}:signin`}
-                      className="block w-full rounded-md border border-border px-4 py-2.5 text-center text-[12px] font-semibold text-primary transition-all duration-100 hover:border-primary active:scale-[0.98] active:bg-accent"
+                      className="landing-button landing-button-outline w-full"
                     >
                       {pending === `${p.module}:signin` ? "Abrindo…" : "Entrar"}
                     </a>
@@ -241,13 +242,13 @@ function Landing() {
                   <>
                     <span
                       aria-disabled="true"
-                      className="block w-full cursor-not-allowed rounded-md bg-muted px-4 py-2.5 text-center text-[12px] font-semibold text-muted-foreground opacity-70"
+                      className="landing-button landing-button-disabled w-full"
                     >
                       Experimente grátis
                     </span>
                     <span
                       aria-disabled="true"
-                      className="block w-full cursor-not-allowed rounded-md border border-border px-4 py-2.5 text-center text-[12px] font-semibold text-muted-foreground opacity-70"
+                      className="landing-button landing-button-disabled w-full"
                     >
                       Entrar
                     </span>

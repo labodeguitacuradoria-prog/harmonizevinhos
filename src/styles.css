@@ -264,6 +264,18 @@ a[class~="bg-primary"] {
   transition: transform 200ms ease, box-shadow 200ms ease, background-image 200ms ease;
 }
 
+button[class~="bg-primary"],
+a[class~="bg-primary"] {
+  min-height: 44px;
+}
+
+button[class~="bg-primary"][class*="text-xs"],
+button[class~="bg-primary"][class*="text-["],
+a[class~="bg-primary"][class*="text-xs"],
+a[class~="bg-primary"][class*="text-["] {
+  min-height: 36px;
+}
+
 .luminous-gold-button::before,
 button[class~="bg-primary"]::before,
 a[class~="bg-primary"]::before {
@@ -291,6 +303,13 @@ a[class~="bg-primary"]:hover {
   color: var(--button-outline-text);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
   backdrop-filter: blur(8px);
+}
+
+button[class~="border-border"],
+button[class~="border-input"],
+a[class~="border-border"],
+a[class*="border-primary"] {
+  min-height: 36px;
 }
 
 button[class~="border-border"]:not([class~="bg-primary"]):not([class*="bg-destructive"]),

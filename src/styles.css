@@ -270,9 +270,9 @@ a[class~="bg-primary"] {
 }
 
 button[class~="bg-primary"][class*="text-xs"],
-button[class~="bg-primary"][class*="text-["],
-a[class~="bg-primary"][class*="text-xs"],
-a[class~="bg-primary"][class*="text-["] {
+button[class~="bg-primary"][class~="h-8"],
+button[class~="bg-primary"][class~="h-9"],
+a[class~="bg-primary"][class*="text-xs"] {
   min-height: 36px;
 }
 

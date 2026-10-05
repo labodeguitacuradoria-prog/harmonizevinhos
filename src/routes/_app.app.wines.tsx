@@ -215,7 +215,7 @@ function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
       />
       {open && (q.trim().length >= 2) && (
-        <div className="absolute left-3 right-3 z-10 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+        <div className="no-scrollbar absolute left-3 right-3 z-10 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
           {loading && <div className="p-3 text-xs text-muted-foreground">Buscando...</div>}
           {!loading && results.length === 0 && <div className="p-3 text-xs text-muted-foreground">Nenhum rótulo encontrado.</div>}
           {results.map((r) => (
@@ -1649,7 +1649,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
           <h3 className="text-lg font-semibold">{title}</h3>
           <button onClick={onClose} className="rounded-md p-1 hover:bg-accent"><X className="h-4 w-4" /></button>
         </div>
-        <div className="overflow-y-auto p-6">{children}</div>
+        <div className="no-scrollbar overflow-y-auto p-6">{children}</div>
       </div>
     </div>
   );

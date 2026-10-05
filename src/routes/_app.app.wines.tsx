@@ -865,7 +865,7 @@ function WinesSection() {
       </div>
 
       {/* Desktop: table */}
-      <div className="no-scrollbar mt-4 hidden overflow-auto rounded-lg border border-border bg-card max-h-[calc(100vh-220px)] sm:block">
+      <div className="no-scrollbar mt-4 hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
@@ -1490,7 +1490,7 @@ function GlassesSection() {
       </div>
 
       {/* Desktop: table */}
-      <div className="no-scrollbar mt-4 hidden overflow-auto rounded-lg border border-border bg-card max-h-[calc(100vh-220px)] sm:block">
+      <div className="no-scrollbar mt-4 hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>

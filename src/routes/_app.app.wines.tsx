@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, X, ScanLine, Info, FileUp, AlertTriangle, Check as CheckIcon, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, ScanLine, Info, FileUp, AlertTriangle, Check as CheckIcon, Pencil, Trash2, Search, SlidersHorizontal } from "lucide-react";
+import type React from "react";
 import { MediaUploader, MediaGallery } from "@/components/MediaUploader";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { WineOverview } from "@/components/WineOverview";
@@ -360,6 +361,17 @@ function FilterInput({ value, onChange, placeholder }: { value: string; onChange
   );
 }
 
+const filterCls = "w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]";
+function FilterField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-1">
+      <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+
 type ColFilters = {
 
   internal_code: string;
@@ -418,8 +430,11 @@ function WinesSection() {
   const [overviewMetric, setOverviewMetric] = useState<"qty" | "revenue">("qty");
   const [onlyActive, setOnlyActive] = useState<boolean>(true);
   const [filters, setFilters] = useState<ColFilters>(EMPTY_FILTERS);
+  const [quick, setQuick] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const setF = (k: keyof ColFilters, v: string) => setFilters((p) => ({ ...p, [k]: v as never }));
-  const hasAnyFilter = Object.values(filters).some((v) => v !== "");
+  const activeFilterCount = Object.values(filters).filter((v) => v !== "").length;
+  const hasAnyFilter = activeFilterCount > 0 || quick.trim() !== "";
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const toggleSelected = (id: string) =>
@@ -611,6 +626,7 @@ function WinesSection() {
 
   const filteredWines = wines
     .filter((w) => (onlyActive ? w.active_on_menu : true))
+    .filter((w) => !quick.trim() || matchText(quick, w.name) || matchText(quick, w.producer) || matchText(quick, w.internal_code))
     .filter((w) => {
       if (printOnly) {
         return (
@@ -654,24 +670,78 @@ function WinesSection() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+        <div className="relative flex flex-1 flex-wrap items-center gap-2 sm:max-w-xl">
+          <div className="relative min-w-[220px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
-              type="checkbox"
-              checked={onlyActive}
-              onChange={(e) => setOnlyActive(e.target.checked)}
-              className="h-3.5 w-3.5"
+              value={quick}
+              onChange={(e) => setQuick(e.target.value)}
+              placeholder="Pesquisar por rótulo, produtor ou código..."
+              className="w-full rounded-md border border-input bg-card py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
             />
-            Apenas ativos na carta
-          </label>
-          {hasAnyFilter && (
-            <button
-              type="button"
-              onClick={() => setFilters(EMPTY_FILTERS)}
-              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-            >
-              Limpar filtros
-            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowFilters((s) => !s)}
+            className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium ${showFilters || activeFilterCount > 0 ? "border-primary text-primary" : "border-border text-muted-foreground hover:text-foreground"} bg-card`}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filtro detalhado
+            {activeFilterCount > 0 && (
+              <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{activeFilterCount}</span>
+            )}
+          </button>
+          {showFilters && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setShowFilters(false)} />
+              <div className="absolute left-0 top-full z-40 mt-2 w-full max-w-md rounded-lg border border-border bg-popover p-4 shadow-xl">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="section-title !mb-0 !border-0 !pb-0">Filtro detalhado</span>
+                  <button type="button" onClick={() => setShowFilters(false)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+                </div>
+                <label className="mb-3 flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={onlyActive} onChange={(e) => setOnlyActive(e.target.checked)} className="h-4 w-4" />
+                  Apenas ativos na carta
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <FilterField label="Tipo">
+                    <select value={filters.wine_type} onChange={(e) => setF("wine_type", e.target.value)} className={filterCls}>
+                      <option value="">Todos</option>
+                      {typeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </FilterField>
+                  <FilterField label="Volume">
+                    <select value={filters.volume} onChange={(e) => setF("volume", e.target.value)} className={filterCls}>
+                      <option value="">Todos</option>
+                      {volumeOptions.map((v) => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  </FilterField>
+                  <FilterField label="Safra"><FilterInput value={filters.vintage} onChange={(v) => setF("vintage", v)} placeholder="ex. 2020" /></FilterField>
+                  {printOnly ? <FilterField label="País"><FilterInput value={filters.country} onChange={(v) => setF("country", v)} placeholder="ex. Brasil" /></FilterField> : null}
+                  <FilterField label="Preço de venda"><FilterInput value={filters.sale_price} onChange={(v) => setF("sale_price", v)} placeholder=">100 ou 50-150" /></FilterField>
+                  {!printOnly ? (
+                    <>
+                      <FilterField label="Custo"><FilterInput value={filters.cost_price} onChange={(v) => setF("cost_price", v)} placeholder=">50 ou 10-30" /></FilterField>
+                      <FilterField label="Markup %"><FilterInput value={filters.markup} onChange={(v) => setF("markup", v)} placeholder=">150" /></FilterField>
+                      <FilterField label="Estoque"><FilterInput value={filters.stock} onChange={(v) => setF("stock", v)} placeholder="<5" /></FilterField>
+                      <FilterField label="Venda mensal"><FilterInput value={filters.monthly} onChange={(v) => setF("monthly", v)} placeholder=">0" /></FilterField>
+                      <FilterField label="Alerta de compra">
+                        <select value={filters.alert} onChange={(e) => setF("alert", e.target.value)} className={filterCls}>
+                          <option value="">Todos</option>
+                          <option value="comprar">Comprar</option>
+                          <option value="ok">Ok</option>
+                          <option value="sem">Sem contagem</option>
+                        </select>
+                      </FilterField>
+                    </>
+                  ) : null}
+                </div>
+                <div className="mt-4 flex justify-between">
+                  <button type="button" onClick={() => { setFilters(EMPTY_FILTERS); setQuick(""); }} className="text-xs font-medium text-muted-foreground hover:text-foreground">Limpar filtros</button>
+                  <button type="button" onClick={() => setShowFilters(false)} className="rounded-md bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground">Aplicar</button>
+                </div>
+              </div>
+            </>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -827,52 +897,6 @@ function WinesSection() {
               ) : null}
               {!printOnly ? <th className="px-4 py-3">Venda mensal</th> : null}
               {!printOnly ? <th className="px-4 py-3">Alerta de compra</th> : null}
-            </tr>
-            <tr className="border-t border-border/60 bg-card/80 [&>th]:px-2 [&>th]:py-1.5 [&>th]:font-normal">
-              <th />
-              <th><FilterInput value={filters.internal_code} onChange={(v) => setF("internal_code", v)} placeholder="filtrar" /></th>
-              <th><FilterInput value={filters.name} onChange={(v) => setF("name", v)} placeholder="rótulo/produtor" /></th>
-              <th><FilterInput value={filters.vintage} onChange={(v) => setF("vintage", v)} placeholder="ex. 2020" /></th>
-              <th>
-                <select
-                  value={filters.wine_type}
-                  onChange={(e) => setF("wine_type", e.target.value)}
-                  className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
-                >
-                  <option value="">ex. Espumante</option>
-                  {typeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </th>
-              <th>
-                <select
-                  value={filters.volume}
-                  onChange={(e) => setF("volume", e.target.value)}
-                  className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
-                >
-                  <option value="">ex. 750 ml</option>
-                  {volumeOptions.map((v) => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </th>
-              {printOnly ? <th><FilterInput value={filters.country} onChange={(v) => setF("country", v)} placeholder="ex. Brasil" /></th> : null}
-              {!printOnly ? <th><FilterInput value={filters.cost_price} onChange={(v) => setF("cost_price", v)} placeholder=">50 ou 10-30" /></th> : null}
-              <th><FilterInput value={filters.sale_price} onChange={(v) => setF("sale_price", v)} placeholder="ex: R$100,00" /></th>
-              {!printOnly ? <th><FilterInput value={filters.markup} onChange={(v) => setF("markup", v)} placeholder=">150" /></th> : null}
-              {!printOnly ? <th><FilterInput value={filters.stock} onChange={(v) => setF("stock", v)} placeholder="<5" /></th> : null}
-              {!printOnly ? <th><FilterInput value={filters.monthly} onChange={(v) => setF("monthly", v)} placeholder=">0" /></th> : null}
-              {!printOnly ? (
-                <th>
-                  <select
-                    value={filters.alert}
-                    onChange={(e) => setF("alert", e.target.value)}
-                    className="w-full rounded border border-input bg-background px-1.5 py-1 text-[11px]"
-                  >
-                    <option value="">Todos</option>
-                    <option value="comprar">Comprar</option>
-                    <option value="ok">Ok</option>
-                    <option value="sem">Sem contagem</option>
-                  </select>
-                </th>
-              ) : null}
             </tr>
           </thead>
           <tbody>

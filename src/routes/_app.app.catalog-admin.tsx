@@ -609,7 +609,7 @@ function CatalogAdmin() {
               const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
               const missing = checks.filter(c => !c.ok);
               const isExpanded = expandedId === item.id;
-              const colCount = (statusTab === "approved" ? 10 : 9) + (showSelect ? 1 : 0);
+              const colCount = (statusTab === "approved" ? 9 : 8) + (showSelect ? 1 : 0);
               return (
               <React.Fragment key={item.id}>
               <tr className="hover:bg-accent/50">
@@ -623,9 +623,12 @@ function CatalogAdmin() {
                     />
                   </td>
                 )}
-                <td className="px-4 py-3 font-medium">{item.name}</td>
-
-                <td className="px-4 py-3">{item.producer ?? "—"}</td>
+                <td className="px-4 py-3">
+                  <span className="block font-medium">{item.name}</span>
+                  {item.producer && (
+                    <span className="block text-xs text-muted-foreground">{item.producer}</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">{item.vintage ?? "—"}</td>
                 <td className="px-4 py-3"><span className="block">{item.wine_type ?? "—"}</span><span className="block text-xs text-muted-foreground">{item.style ?? ""}</span></td>
                 <td className="px-4 py-3">{item.country ?? "—"}</td>

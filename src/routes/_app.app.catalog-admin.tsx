@@ -107,7 +107,6 @@ function CatalogAdmin() {
 
   const [filters, setFilters] = useState({
     name: "",
-    producer: "",
     completeness: "",
     vintage: "",
     typeStyle: "",
@@ -278,8 +277,7 @@ function CatalogAdmin() {
     return items
       .filter(i => statusTab === "duplicates" ? duplicateIds.has(i.id) : i.status === statusTab)
       .filter(i => {
-        if (!matchText(filters.name, i.name)) return false;
-        if (!matchText(filters.producer, i.producer)) return false;
+        if (!matchText(filters.name, i.name) && !matchText(filters.name, i.producer)) return false;
         if (!matchText(filters.typeStyle, i.wine_type) && !matchText(filters.typeStyle, i.style)) return false;
         if (!matchNum(filters.vintage, i.vintage)) return false;
         if (filters.completeness.trim()) {
@@ -538,24 +536,12 @@ function CatalogAdmin() {
                 </th>
               )}
               <th className="px-4 py-3">
-
                 <div className="space-y-1">
-                  <span>Rótulo</span>
+                  <span>Rótulo / Produtor</span>
                   <input
                     value={filters.name}
                     onChange={e => setF("name", e.target.value)}
-                    placeholder="Filtrar rótulo..."
-                    className="w-full rounded border border-input bg-background px-2 py-1 text-[11px] font-normal normal-case placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
-                  />
-                </div>
-              </th>
-              <th className="px-4 py-3">
-                <div className="space-y-1">
-                  <span>Produtor</span>
-                  <input
-                    value={filters.producer}
-                    onChange={e => setF("producer", e.target.value)}
-                    placeholder="Filtrar produtor..."
+                    placeholder="Filtrar rótulo ou produtor..."
                     className="w-full rounded border border-input bg-background px-2 py-1 text-[11px] font-normal normal-case placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
                   />
                 </div>
@@ -611,7 +597,7 @@ function CatalogAdmin() {
               const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
               const missing = checks.filter(c => !c.ok);
               const isExpanded = expandedId === item.id;
-              const colCount = (statusTab === "approved" ? 10 : 9) + (showSelect ? 1 : 0);
+              const colCount = (statusTab === "approved" ? 9 : 8) + (showSelect ? 1 : 0);
               return (
               <React.Fragment key={item.id}>
               <tr className="hover:bg-accent/50">
@@ -625,9 +611,12 @@ function CatalogAdmin() {
                     />
                   </td>
                 )}
-                <td className="px-4 py-3 font-medium">{item.name}</td>
-
-                <td className="px-4 py-3">{item.producer ?? "—"}</td>
+                <td className="px-4 py-3">
+                  <span className="block font-medium">{item.name}</span>
+                  {item.producer && (
+                    <span className="block text-xs text-muted-foreground">{item.producer}</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">{item.vintage ?? "—"}</td>
                 <td className="px-4 py-3"><span className="block">{item.wine_type ?? "—"}</span><span className="block text-xs text-muted-foreground">{item.style ?? ""}</span></td>
                 <td className="px-4 py-3">{item.country ?? "—"}</td>

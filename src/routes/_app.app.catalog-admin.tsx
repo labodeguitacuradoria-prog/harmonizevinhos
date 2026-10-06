@@ -107,7 +107,6 @@ function CatalogAdmin() {
 
   const [filters, setFilters] = useState({
     name: "",
-    producer: "",
     completeness: "",
     vintage: "",
     typeStyle: "",
@@ -278,8 +277,7 @@ function CatalogAdmin() {
     return items
       .filter(i => statusTab === "duplicates" ? duplicateIds.has(i.id) : i.status === statusTab)
       .filter(i => {
-        if (!matchText(filters.name, i.name)) return false;
-        if (!matchText(filters.producer, i.producer)) return false;
+        if (!matchText(filters.name, i.name) && !matchText(filters.name, i.producer)) return false;
         if (!matchText(filters.typeStyle, i.wine_type) && !matchText(filters.typeStyle, i.style)) return false;
         if (!matchNum(filters.vintage, i.vintage)) return false;
         if (filters.completeness.trim()) {

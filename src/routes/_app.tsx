@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandLogo, BrandMark } from "@/components/BrandLogo";
-import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X, KeyRound, GraduationCap } from "lucide-react";
+import { Wine, LogOut, Home, Package, Share2, Users, BarChart3, ShieldCheck, CalendarRange, ClipboardList, Database, Building2, FolderCog, LayoutDashboard, Coins, DollarSign, Map, UtensilsCrossed, BookOpen, ScrollText, ShoppingCart, Menu, X, KeyRound, GraduationCap, Megaphone } from "lucide-react";
 import RestaurantContextSwitcher from "@/components/RestaurantContextSwitcher";
 import { canAccessRoute, type AppModule } from "@/lib/modules";
 import { useServerFn } from "@tanstack/react-start";
@@ -155,6 +155,7 @@ function AppLayout() {
         <>
           <NavLink to="/admin" rail={rail} icon={<ShieldCheck className="h-4 w-4" />}>Admin</NavLink>
           <NavLink to="/admin/restaurants" rail={rail} icon={<Building2 className="h-4 w-4" />}>Restaurantes</NavLink>
+           <NavLink to="/admin/marketing-materials" rail={rail} icon={<Megaphone className="h-4 w-4" />}>Divulgação</NavLink>
           <NavLink to="/admin/custom-menus" rail={rail} icon={<ScrollText className="h-4 w-4" />}>Cartas exclusivas</NavLink>
           <NavLink to="/admin/access-map" rail={rail} icon={<Map className="h-4 w-4" />}>Acessos</NavLink>
           <NavLink to="/admin/suppliers" rail={rail} icon={<Users className="h-4 w-4" />}>Fornecedores</NavLink>

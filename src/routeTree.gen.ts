@@ -19,6 +19,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as AppAdminAccessMapRouteImport } from './routes/_app.admin.access-map'
 import { Route as AppAdminCustomMenusRouteImport } from './routes/_app.admin.custom-menus'
+import { Route as AppAdminMarketingMaterialsRouteImport } from './routes/_app.admin.marketing-materials'
 import { Route as AppAdminRestaurantsRouteImport } from './routes/_app.admin.restaurants'
 import { Route as AppAdminSuppliersRouteImport } from './routes/_app.admin.suppliers'
 import { Route as AppAppIndexRouteImport } from './routes/_app.app.index'
@@ -99,6 +100,12 @@ const AppAdminCustomMenusRoute = AppAdminCustomMenusRouteImport.update({
   path: '/admin/custom-menus',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminMarketingMaterialsRoute =
+  AppAdminMarketingMaterialsRouteImport.update({
+    id: '/admin/marketing-materials',
+    path: '/admin/marketing-materials',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppAdminRestaurantsRoute = AppAdminRestaurantsRouteImport.update({
   id: '/admin/restaurants',
   path: '/admin/restaurants',
@@ -260,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/custom-menus': typeof AppAdminCustomMenusRoute
+  '/admin/marketing-materials': typeof AppAdminMarketingMaterialsRoute
   '/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/access-links': typeof AppAppAccessLinksRoute
@@ -301,6 +309,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/custom-menus': typeof AppAdminCustomMenusRoute
+  '/admin/marketing-materials': typeof AppAdminMarketingMaterialsRoute
   '/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/admin/suppliers': typeof AppAdminSuppliersRoute
   '/app/access-links': typeof AppAppAccessLinksRoute
@@ -344,6 +353,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_app/admin/access-map': typeof AppAdminAccessMapRoute
   '/_app/admin/custom-menus': typeof AppAdminCustomMenusRoute
+  '/_app/admin/marketing-materials': typeof AppAdminMarketingMaterialsRoute
   '/_app/admin/restaurants': typeof AppAdminRestaurantsRoute
   '/_app/admin/suppliers': typeof AppAdminSuppliersRoute
   '/_app/app/access-links': typeof AppAppAccessLinksRoute
@@ -387,6 +397,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin/access-map'
     | '/admin/custom-menus'
+    | '/admin/marketing-materials'
     | '/admin/restaurants'
     | '/admin/suppliers'
     | '/app/access-links'
@@ -428,6 +439,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin/access-map'
     | '/admin/custom-menus'
+    | '/admin/marketing-materials'
     | '/admin/restaurants'
     | '/admin/suppliers'
     | '/app/access-links'
@@ -470,6 +482,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_app/admin/access-map'
     | '/_app/admin/custom-menus'
+    | '/_app/admin/marketing-materials'
     | '/_app/admin/restaurants'
     | '/_app/admin/suppliers'
     | '/_app/app/access-links'
@@ -587,6 +600,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/custom-menus'
       fullPath: '/admin/custom-menus'
       preLoaderRoute: typeof AppAdminCustomMenusRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin/marketing-materials': {
+      id: '/_app/admin/marketing-materials'
+      path: '/admin/marketing-materials'
+      fullPath: '/admin/marketing-materials'
+      preLoaderRoute: typeof AppAdminMarketingMaterialsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin/restaurants': {
@@ -805,6 +825,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAdminAccessMapRoute: typeof AppAdminAccessMapRoute
   AppAdminCustomMenusRoute: typeof AppAdminCustomMenusRoute
+  AppAdminMarketingMaterialsRoute: typeof AppAdminMarketingMaterialsRoute
   AppAdminRestaurantsRoute: typeof AppAdminRestaurantsRoute
   AppAdminSuppliersRoute: typeof AppAdminSuppliersRoute
   AppAppAccessLinksRoute: typeof AppAppAccessLinksRoute
@@ -837,6 +858,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAdminAccessMapRoute: AppAdminAccessMapRoute,
   AppAdminCustomMenusRoute: AppAdminCustomMenusRoute,
+  AppAdminMarketingMaterialsRoute: AppAdminMarketingMaterialsRoute,
   AppAdminRestaurantsRoute: AppAdminRestaurantsRoute,
   AppAdminSuppliersRoute: AppAdminSuppliersRoute,
   AppAppAccessLinksRoute: AppAppAccessLinksRoute,

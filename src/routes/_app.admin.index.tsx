@@ -1,10 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { ShieldCheck, Users, Map, Building2 } from "lucide-react";
+import { ShieldCheck, Users, Map, Building2, Megaphone } from "lucide-react";
 
 export const Route = createFileRoute("/_app/admin/")({
   component: AdminHome,
+  head: () => ({
+    meta: [
+      { title: "Administração | La Bodeguita" },
+      { name: "description", content: "Administração geral da plataforma La Bodeguita." },
+      { property: "og:title", content: "Administração | La Bodeguita" },
+      { property: "og:description", content: "Administração geral da plataforma La Bodeguita." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
 });
 
 function AdminHome() {
@@ -43,6 +53,13 @@ function AdminHome() {
           <div>
             <div className="font-semibold">Restaurantes cadastrados</div>
             <div className="text-sm text-muted-foreground">Abra cada restaurante para ajustar problemas e corrigir erros.</div>
+          </div>
+        </Link>
+        <Link to="/admin/marketing-materials" className="flex items-start gap-3 rounded-lg border border-border bg-card p-5 hover:bg-accent">
+          <Megaphone className="mt-1 h-5 w-5 text-primary" />
+          <div>
+            <div className="font-semibold">Materiais de Divulgação</div>
+            <div className="text-sm text-muted-foreground">Acesse apresentações e materiais oficiais do aplicativo.</div>
           </div>
         </Link>
       </div>

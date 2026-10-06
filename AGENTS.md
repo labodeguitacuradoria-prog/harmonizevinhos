@@ -14,3 +14,4 @@
 - Store per-wine printed-menu symbols in each saved list's `visible_fields`, not in `wines`, because symbol and side are specific to that menu design.
 - Store printed-menu page order and section assignments in `visible_fields.customDesign.sheets`; this keeps pagination migration-free and compatible with legacy lists.
 - TrainingLibraryManager supports section and dialog presentations with shared editing content, so catalog administration can use a compact trigger without changing restaurant training.
+- Keep official promotional files in the admin marketing-materials library and serve app-distributed downloads from `public/materials`; this centralizes reusable commercial assets without mixing them into operational screens.

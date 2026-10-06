@@ -536,24 +536,12 @@ function CatalogAdmin() {
                 </th>
               )}
               <th className="px-4 py-3">
-
                 <div className="space-y-1">
-                  <span>Rótulo</span>
+                  <span>Rótulo / Produtor</span>
                   <input
                     value={filters.name}
                     onChange={e => setF("name", e.target.value)}
-                    placeholder="Filtrar rótulo..."
-                    className="w-full rounded border border-input bg-background px-2 py-1 text-[11px] font-normal normal-case placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
-                  />
-                </div>
-              </th>
-              <th className="px-4 py-3">
-                <div className="space-y-1">
-                  <span>Produtor</span>
-                  <input
-                    value={filters.producer}
-                    onChange={e => setF("producer", e.target.value)}
-                    placeholder="Filtrar produtor..."
+                    placeholder="Filtrar rótulo ou produtor..."
                     className="w-full rounded border border-input bg-background px-2 py-1 text-[11px] font-normal normal-case placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
                   />
                 </div>

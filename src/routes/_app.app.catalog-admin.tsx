@@ -15,11 +15,20 @@ import {
 } from "@/components/WineFieldsEditor";
 import GlobalTrainingCardEditor from "@/components/training/GlobalTrainingCardEditor";
 import TrainingLibraryManager from "@/components/training/TrainingLibraryManager";
+import { Button } from "@/components/ui/button";
 
 export { classifySparklingSugar, toProxiedFileUrl };
 
 export const Route = createFileRoute("/_app/app/catalog-admin")({
   component: CatalogAdmin,
+  head: () => ({ meta: [
+    { title: "Catálogo Global | La Bodeguita" },
+    { name: "description", content: "Curadoria de rótulos e biblioteca de treinamento da La Bodeguita." },
+    { property: "og:title", content: "Catálogo Global | La Bodeguita" },
+    { property: "og:description", content: "Curadoria de rótulos e biblioteca de treinamento da La Bodeguita." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 type CatalogStatus = "pending" | "approved" | "rejected";
@@ -425,14 +434,14 @@ function CatalogAdmin() {
           </div>
         </div>
         {isAdmin && (
-          <button onClick={() => setEditing({ name: "", status: "approved" })}
-            className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <div className="flex flex-wrap items-center gap-2">
+          <TrainingLibraryManager admin presentation="dialog" />
+          <Button onClick={() => setEditing({ name: "", status: "approved" })}>
             <Plus className="h-4 w-4" /> Novo Rótulo
-          </button>
+          </Button>
+          </div>
         )}
       </header>
-
-      {isAdmin ? <TrainingLibraryManager admin /> : null}
 
       <div className="flex flex-wrap items-center gap-2 border-b border-border">
         <TabButton active={statusTab === "pending"} onClick={() => setStatusTab("pending")} icon={<Clock className="h-4 w-4" />}>

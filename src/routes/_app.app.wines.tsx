@@ -865,8 +865,8 @@ function WinesSection() {
       </div>
 
       {/* Desktop: table */}
-      <div className="no-scrollbar mt-4 hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
-        <table className="w-full text-sm">
+      <div className="no-scrollbar mt-4 hidden overflow-x-clip rounded-lg border border-border bg-card sm:block">
+        <table className="w-full table-auto text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="w-8 px-2 py-3">
@@ -880,31 +880,31 @@ function WinesSection() {
                   }
                 />
               </th>
-              <th className="px-4 py-3">Código</th>
-              <th className="px-4 py-3">Rótulo</th>
-              <th className="px-4 py-3">Safra</th>
-              <th className="px-4 py-3">Tipo</th>
-              <th className="px-4 py-3">Volume</th>
-              {printOnly ? <th className="px-4 py-3">País</th> : null}
-              {!printOnly ? <th className="px-4 py-3">Custo</th> : null}
-              <th className="px-4 py-3">Preço de Venda</th>
-              {!printOnly ? <th className="px-4 py-3">Markup</th> : null}
+              <th className="px-3 py-3">Código</th>
+              <th className="px-3 py-3">Rótulo</th>
+              <th className="px-3 py-3">Safra</th>
+              <th className="px-3 py-3">Tipo</th>
+              <th className="px-3 py-3">Volume</th>
+              {printOnly ? <th className="px-3 py-3">País</th> : null}
+              {!printOnly ? <th className="px-3 py-3">Custo</th> : null}
+              <th className="px-3 py-3">Preço de Venda</th>
+              {!printOnly ? <th className="px-3 py-3">Markup</th> : null}
               {!printOnly ? (
-                <th className="px-4 py-3">
+                <th className="px-3 py-3">
                   <div>Estoque</div>
                   <div className="text-[9px] font-normal normal-case text-muted-foreground/70">última contagem</div>
                 </th>
               ) : null}
-              {!printOnly ? <th className="px-4 py-3">Venda mensal</th> : null}
-              {!printOnly ? <th className="px-4 py-3">Alerta de compra</th> : null}
+              {!printOnly ? <th className="px-3 py-3">Venda mensal</th> : null}
+              {!printOnly ? <th className="px-3 py-3">Alerta de compra</th> : null}
             </tr>
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={printOnly ? 8 : 12} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={printOnly ? 8 : 12} className="px-3 py-8 text-center text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && filteredWines.length === 0 && (
-              <tr><td colSpan={printOnly ? 8 : 12} className="px-4 py-8 text-center text-muted-foreground">
+              <tr><td colSpan={printOnly ? 8 : 12} className="px-3 py-8 text-center text-muted-foreground">
                 {hasAnyFilter || onlyActive ? "Nenhum vinho encontrado com esses filtros." : "Nenhum vinho cadastrado ainda."}
               </td></tr>
             )}
@@ -930,7 +930,7 @@ function WinesSection() {
                       onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
                     />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3">
                     <button type="button" onClick={() => setViewWine(w)} className="text-left hover:text-primary">
                       <div className="flex items-center gap-1.5">
                         <span className="font-medium underline-offset-2 hover:underline">{w.name}</span>
@@ -939,13 +939,13 @@ function WinesSection() {
                       <div className="text-xs text-muted-foreground">{w.producer ?? ""}</div>
                     </button>
                   </td>
-                  <td className="px-4 py-3">{w.vintage ?? "-"}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3">{w.vintage ?? "-"}</td>
+                  <td className="px-3 py-3">
                     <div>{wineTypeLabel(w.wine_type)}</div>
                     {w.style ? <div className="text-xs text-muted-foreground">{w.style}</div> : null}
                   </td>
-                  <td className="px-4 py-3">{w.volume ?? "-"}</td>
-                  {printOnly ? <td className="px-4 py-3">{w.country ?? "-"}</td> : null}
+                  <td className="px-3 py-3">{w.volume ?? "-"}</td>
+                  {printOnly ? <td className="px-3 py-3">{w.country ?? "-"}</td> : null}
                   {!printOnly ? (
                     <td className="px-2 py-2">
                       <InlineCell
@@ -968,9 +968,9 @@ function WinesSection() {
                       onSaved={() => qc.invalidateQueries({ queryKey: ["wines"] })}
                     />
                   </td>
-                  {!printOnly ? <td className="px-4 py-3">{markup}{markup !== "-" && "%"}</td> : null}
+                  {!printOnly ? <td className="px-3 py-3">{markup}{markup !== "-" && "%"}</td> : null}
                   {!printOnly ? (
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       {isGlassVol(w.volume) ? (
                         "—"
                       ) : stockMap[w.id] ? (
@@ -985,9 +985,9 @@ function WinesSection() {
                       )}
                     </td>
                   ) : null}
-                  {!printOnly ? <td className="px-4 py-3">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td> : null}
+                  {!printOnly ? <td className="px-3 py-3">{(monthlySalesMap[w.id] ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td> : null}
                   {!printOnly ? (
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       {isGlassVol(w.volume) ? (
                         <span className="text-muted-foreground">—</span>
                       ) : (
@@ -1454,12 +1454,12 @@ function GlassesSection() {
       {/* Mobile: card list */}
       <div className="mt-4 space-y-2 sm:hidden">
         {isLoading && (
-          <div className="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-border bg-card px-3 py-8 text-center text-sm text-muted-foreground">
             Carregando...
           </div>
         )}
         {!isLoading && glasses.length === 0 && (
-          <div className="rounded-lg border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-border bg-card px-3 py-8 text-center text-sm text-muted-foreground">
             Nenhuma taça cadastrada ainda.
           </div>
         )}
@@ -1490,8 +1490,8 @@ function GlassesSection() {
       </div>
 
       {/* Desktop: table */}
-      <div className="no-scrollbar mt-4 hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
-        <table className="w-full text-sm">
+      <div className="no-scrollbar mt-4 hidden overflow-x-clip rounded-lg border border-border bg-card sm:block">
+        <table className="w-full table-auto text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Taça</th>

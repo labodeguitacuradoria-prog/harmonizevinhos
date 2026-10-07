@@ -1490,8 +1490,8 @@ function GlassesSection() {
       </div>
 
       {/* Desktop: table */}
-      <div className="no-scrollbar mt-4 hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
-        <table className="w-full text-sm">
+      <div className="no-scrollbar mt-4 hidden overflow-x-clip rounded-lg border border-border bg-card sm:block">
+        <table className="w-full table-auto text-sm">
           <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Taça</th>

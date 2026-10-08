@@ -237,6 +237,16 @@ function CatalogSearch({ onPick }: { onPick: (c: CatalogPick) => void }) {
 
 export const Route = createFileRoute("/_app/app/wines")({
   component: ProductsPage,
+  head: () => ({
+    meta: [
+      { title: "Cadastro de Produtos | La Bodeguita" },
+      { name: "description", content: "Gerencie os rótulos, preços e produtos da carta de vinhos do seu restaurante na La Bodeguita." },
+      { property: "og:title", content: "Cadastro de Produtos | La Bodeguita" },
+      { property: "og:description", content: "Gestão dos rótulos, preços e produtos da carta de vinhos do restaurante." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   validateSearch: (search: Record<string, unknown>) => ({
     wine: typeof search.wine === "string" ? search.wine : undefined,
   }),
@@ -865,11 +875,11 @@ function WinesSection() {
       </div>
 
       {/* Desktop: table */}
-      <div className="no-scrollbar mt-4 hidden overflow-x-clip rounded-lg border border-border bg-card sm:block">
+      <div className="mt-4 hidden rounded-lg border border-border bg-card sm:block">
         <table className="w-full table-auto text-sm">
-          <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th className="w-8 px-2 py-3">
+              <th className="sticky top-0 z-20 bg-card w-8 px-2 py-3">
                 <input
                   type="checkbox"
                   className="h-3.5 w-3.5"
@@ -880,23 +890,23 @@ function WinesSection() {
                   }
                 />
               </th>
-              <th className="px-3 py-3">Código</th>
-              <th className="px-3 py-3">Rótulo</th>
-              <th className="px-3 py-3">Safra</th>
-              <th className="px-3 py-3">Tipo</th>
-              <th className="px-3 py-3">Volume</th>
-              {printOnly ? <th className="px-3 py-3">País</th> : null}
-              {!printOnly ? <th className="px-3 py-3">Custo</th> : null}
-              <th className="px-3 py-3">Preço de Venda</th>
-              {!printOnly ? <th className="px-3 py-3">Markup</th> : null}
+              <th className="sticky top-0 z-20 bg-card px-3 py-3">Código</th>
+              <th className="sticky top-0 z-20 bg-card px-3 py-3">Rótulo</th>
+              <th className="sticky top-0 z-20 bg-card px-3 py-3">Safra</th>
+              <th className="sticky top-0 z-20 bg-card px-3 py-3">Tipo</th>
+              <th className="sticky top-0 z-20 bg-card px-3 py-3">Volume</th>
+              {printOnly ? <th className="sticky top-0 z-20 bg-card px-3 py-3">País</th> : null}
+              {!printOnly ? <th className="sticky top-0 z-20 bg-card px-3 py-3">Custo</th> : null}
+              <th className="sticky top-0 z-20 bg-card px-3 py-3">Preço de Venda</th>
+              {!printOnly ? <th className="sticky top-0 z-20 bg-card px-3 py-3">Markup</th> : null}
               {!printOnly ? (
-                <th className="px-3 py-3">
+                <th className="sticky top-0 z-20 bg-card px-3 py-3">
                   <div>Estoque</div>
                   <div className="text-[9px] font-normal normal-case text-muted-foreground/70">última contagem</div>
                 </th>
               ) : null}
-              {!printOnly ? <th className="px-3 py-3">Venda mensal</th> : null}
-              {!printOnly ? <th className="px-3 py-3">Alerta de compra</th> : null}
+              {!printOnly ? <th className="sticky top-0 z-20 bg-card px-3 py-3">Venda mensal</th> : null}
+              {!printOnly ? <th className="sticky top-0 z-20 bg-card px-3 py-3">Alerta de compra</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -1490,17 +1500,17 @@ function GlassesSection() {
       </div>
 
       {/* Desktop: table */}
-      <div className="no-scrollbar mt-4 hidden overflow-x-clip rounded-lg border border-border bg-card sm:block">
+      <div className="mt-4 hidden rounded-lg border border-border bg-card sm:block">
         <table className="w-full table-auto text-sm">
-          <thead className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th className="px-4 py-3">Taça</th>
-              <th className="px-4 py-3">Marca</th>
-              <th className="px-4 py-3">Capacidade</th>
-              <th className="px-4 py-3">Indicada para</th>
-              <th className="px-4 py-3">Material</th>
-              <th className="px-4 py-3">Custo</th>
-              <th className="px-4 py-3">Estoque</th>
+              <th className="sticky top-0 z-20 bg-card px-4 py-3">Taça</th>
+              <th className="sticky top-0 z-20 bg-card px-4 py-3">Marca</th>
+              <th className="sticky top-0 z-20 bg-card px-4 py-3">Capacidade</th>
+              <th className="sticky top-0 z-20 bg-card px-4 py-3">Indicada para</th>
+              <th className="sticky top-0 z-20 bg-card px-4 py-3">Material</th>
+              <th className="sticky top-0 z-20 bg-card px-4 py-3">Custo</th>
+              <th className="sticky top-0 z-20 bg-card px-4 py-3">Estoque</th>
             </tr>
           </thead>
           <tbody>

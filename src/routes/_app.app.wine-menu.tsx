@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import { MenuPreview, resolveSheets } from "@/components/printed-menu/MenuPreview";
 import { SectionHeadingControls } from "@/components/printed-menu/SectionHeadingControls";
+import { MenuHelpDialog } from "@/components/printed-menu/MenuHelpDialog";
 import { MediaUploader } from "@/components/MediaUploader";
 import ModuleGate from "@/components/ModuleGate";
 import type { CustomDesign } from "@/components/printed-menu/MenuPreview";
@@ -622,6 +623,7 @@ function WineMenuPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <MenuHelpDialog />
               <div className="relative">
                 <button
                   onClick={() => setNewMenuOpen((v) => !v)}

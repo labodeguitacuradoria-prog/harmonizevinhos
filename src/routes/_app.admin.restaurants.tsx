@@ -227,7 +227,7 @@ function AdminRestaurants() {
         </div>
       </div>
 
-      <div className="sticky top-0 z-20 mt-4 border-y border-border bg-background py-3">
+      <div className="mt-4 border-y border-border bg-background py-3">
         <div className="grid gap-2 lg:grid-cols-[minmax(220px,1fr)_180px_180px_auto]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -240,9 +240,9 @@ function AdminRestaurants() {
         <div className="mt-2 text-[11px] uppercase text-muted-foreground">{filteredRows.length} {filteredRows.length === 1 ? "restaurante" : "restaurantes"}</div>
       </div>
 
-      <div className="mt-4 max-h-[calc(100vh-250px)] overflow-auto rounded-md border border-border bg-card">
+      <div className="mt-4 rounded-md border border-border bg-card">
         <table className="min-w-[1120px] w-full text-sm">
-          <thead className="sticky top-0 z-10 bg-[color:var(--surface-2)] text-[10px] uppercase text-muted-foreground shadow-sm">
+          <thead className="text-[10px] uppercase text-muted-foreground [&_th]:sticky [&_th]:top-0 [&_th]:z-20 [&_th]:bg-card [&_th]:shadow-sm">
             <tr>
               <th className="px-3 py-3 text-left">Restaurante</th>
               <th className="px-3 py-3 text-left">Cidade / Rede</th>

@@ -15,3 +15,4 @@
 - Store printed-menu page order and section assignments in `visible_fields.customDesign.sheets`; this keeps pagination migration-free and compatible with legacy lists.
 - TrainingLibraryManager supports section and dialog presentations with shared editing content, so catalog administration can use a compact trigger without changing restaurant training.
 - Keep official promotional files in the admin marketing-materials library and serve app-distributed downloads from `public/materials`; this centralizes reusable commercial assets without mixing them into operational screens.
+- Product table headers must stick on individual header cells with opaque backgrounds and no overflow on intermediate table wrappers; this keeps columns pinned to the page scroll container without internal scrollbars.

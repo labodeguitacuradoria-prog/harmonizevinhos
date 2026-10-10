@@ -6,6 +6,7 @@ import { ChevronDown, FilePlus2, Loader2, Paperclip, Pencil, Sparkles, X } from 
 import { MediaUploader } from "@/components/MediaUploader";
 import { resolveSheets, type CustomDesign, type MenuSheet } from "./MenuPreview";
 import { sectionLevel, type MenuSection } from "./templates";
+import { BackgroundMenu, PdfMenuImporter } from "./PdfMenuImporter";
 
 export type BriefAttachment = { name: string; path: string; mime?: string | null; size?: number };
 
@@ -473,6 +474,8 @@ export function CustomDesignPanel({
   canDeliver,
   expanded = true,
   onExpandedChange,
+  requestId,
+  sections,
 }: {
   value: CustomDesign;
   onChange: (v: CustomDesign) => void;
@@ -481,6 +484,8 @@ export function CustomDesignPanel({
   canDeliver: boolean;
   expanded?: boolean;
   onExpandedChange?: () => void;
+  requestId?: string | null;
+  sections?: MenuSection[];
 }) {
   const set = (patch: Partial<CustomDesign>) => onChange({ ...value, ...patch });
   const color = (label: string, key: "bgColor" | "textColor" | "accentColor", defaultValue: string) => (
@@ -517,11 +522,17 @@ export function CustomDesignPanel({
                 {color("Texto", "textColor", "#000000")}
                 {color("Destaque (títulos)", "accentColor", "#800020")}
               </div>
-              <MediaUploader
-                label="Fundo / textura das páginas"
-                value={value.backgroundImage ?? null}
-                onChange={(u) => set({ backgroundImage: u ?? "" })}
-                folder={`${restaurantId}/custom-menu`}
+              <BackgroundMenu
+                value={value.backgroundImage}
+                onChange={(u) => set({ backgroundImage: u })}
+                restaurantId={restaurantId}
+              />
+              <PdfMenuImporter
+                value={value}
+                onChange={onChange}
+                restaurantId={restaurantId}
+                requestId={requestId ?? value.requestId}
+                sections={sections ?? []}
               />
             </div>
           ) : null}

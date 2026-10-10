@@ -786,6 +786,8 @@ function WineMenuPage() {
               canDeliver={!!(customDesign.requestId ?? requestId)}
               expanded={editorPanel === "exclusive"}
               onExpandedChange={() => setEditorPanel((current) => current === "exclusive" ? null : "exclusive")}
+              requestId={customDesign.requestId ?? requestId}
+              sections={sections}
             />
           ) : null}
 

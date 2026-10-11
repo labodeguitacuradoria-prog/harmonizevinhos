@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClipboardList, ClipboardCheck, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { StockImportDialog } from "@/components/StockImportDialog";
+import { Upload, ClipboardList, ClipboardCheck, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/estoque")({
   component: EstoqueHub,
@@ -38,6 +40,7 @@ const items = [
 ] as const;
 
 function EstoqueHub() {
+  const [importOpen, setImportOpen] = useState(false);
   return (
     <div className="p-6 md:p-10">
       <div>
@@ -48,6 +51,21 @@ function EstoqueHub() {
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => setImportOpen(true)}
+          className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 text-left transition hover:border-primary hover:bg-accent sm:col-span-2"
+        >
+          <div className="rounded-lg border border-border bg-background p-3 text-primary group-hover:border-primary">
+            <Upload className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <div className="text-sm font-semibold uppercase tracking-wider text-primary">Importar estoque</div>
+            <div className="mt-1 text-sm text-muted-foreground">
+              Envie PDF, foto, planilha ou texto. Os rótulos são localizados pelo código e os não encontrados podem ser criados.
+            </div>
+          </div>
+        </button>
         {items.map((it) => {
           const Icon = it.icon;
           return (
@@ -72,6 +90,7 @@ function EstoqueHub() {
           );
         })}
       </div>
+      {importOpen && <StockImportDialog onClose={() => setImportOpen(false)} />}
     </div>
   );
 }

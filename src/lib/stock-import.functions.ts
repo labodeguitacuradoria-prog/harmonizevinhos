@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createLovableAiGateway } from "./ai-gateway.server";
+import { structuredResponse } from "./ai-responses.server";
 
 const SYSTEM_PROMPT = `Você digitaliza RELATÓRIOS DE ESTOQUE / INVENTÁRIO de vinhos de restaurantes (PDF, planilha, foto de contagem ou texto).
 
@@ -61,7 +60,8 @@ function coerce(parsed: any): StockImportItem[] {
       confianca: str(it.confianca),
     }));
 }
-function extractJson(raw: string): any {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _extractJson(raw: string): any {
   const t = (s: string) => {
     try { return JSON.parse(s); } catch { return null; }
   };
@@ -75,34 +75,12 @@ function extractJson(raw: string): any {
 }
 
 async function callModel(userContent: unknown): Promise<StockImportItem[]> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("Serviço de IA não configurado.");
-  const gateway = createLovableAiGateway(apiKey);
-  const messages = [{ role: "user" as const, content: userContent as any }];
-  try {
-    const { output } = await generateText({
-      model: gateway("google/gemini-3.7-flash"),
-      system: SYSTEM_PROMPT,
-      messages,
-      output: Output.object({ schema: ResultSchema }),
-      maxOutputTokens: 32768,
-      temperature: 0.1,
-    });
-    const items = coerce(output);
-    if (items.length) return items;
-  } catch (error) {
-    if (!NoObjectGeneratedError.isInstance(error)) throw error;
-    const items = coerce(extractJson(error.text ?? ""));
-    if (items.length) return items;
-  }
-  const { text } = await generateText({
-    model: gateway("google/gemini-3.1-pro-preview"),
-    system: SYSTEM_PROMPT + `\n\nResponda APENAS com JSON válido no formato {"itens":[...]}.`,
-    messages,
-    maxOutputTokens: 32768,
-    temperature: 0,
+  const out = await structuredResponse({
+    system: SYSTEM_PROMPT,
+    messages: [{ role: "user", content: userContent as any }],
+    schema: ResultSchema,
   });
-  const items = coerce(extractJson(text ?? ""));
+  const items = coerce(out);
   if (items.length) return items;
   throw new Error("A IA não conseguiu ler este estoque. Tente um arquivo mais nítido ou cole o texto da tabela.");
 }

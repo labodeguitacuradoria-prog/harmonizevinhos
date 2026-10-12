@@ -627,7 +627,15 @@ function SessionDetail({
           </thead>
           <tbody>
             {isLoading && <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
-            {!isLoading && visible.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Nenhum item nesta visão.</td></tr>}
+            {!isLoading && visible.length === 0 && (
+              <tr>
+                <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+                  {search.trim() !== ""
+                    ? `Nenhum rótulo encontrado para "${search.trim()}".`
+                    : "Nenhum item nesta visão."}
+                </td>
+              </tr>
+            )}
             {visible.map((i) => {
               const diff = i.counted_qty !== null ? i.counted_qty - i.previous_qty : null;
               return (

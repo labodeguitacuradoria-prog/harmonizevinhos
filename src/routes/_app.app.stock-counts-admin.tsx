@@ -14,7 +14,7 @@ import {
   Check,
   X,
   PlusCircle,
-
+  Search,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/stock-counts-admin")({
@@ -246,6 +246,7 @@ function SessionDetail({
   const [filter, setFilter] = useState<"all" | "flagged" | "pending">("all");
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-session-items", session.id],
@@ -282,11 +283,30 @@ function SessionDetail({
 
   const editable = session.status === "draft";
 
+  const searchNorm = useMemo(
+    () =>
+      search
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, ""),
+    [search],
+  );
+
   const visible = useMemo(() => {
-    if (filter === "flagged") return items.filter((i) => i.flag);
-    if (filter === "pending") return items.filter((i) => i.counted_qty === null && !i.flag);
-    return items;
-  }, [items, filter]);
+    let list = items;
+    if (filter === "flagged") list = list.filter((i) => i.flag);
+    else if (filter === "pending") list = list.filter((i) => i.counted_qty === null && !i.flag);
+    if (searchNorm) {
+      list = list.filter((i) => {
+        const name = (i.wine.name ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const producer = (i.wine.producer ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const code = (i.wine.internal_code ?? "").toLowerCase();
+        return name.includes(searchNorm) || producer.includes(searchNorm) || code.includes(searchNorm);
+      });
+    }
+    return list;
+  }, [items, filter, searchNorm]);
 
   async function updateQty(item: ItemRow, qty: number) {
     if (!editable) {
@@ -520,7 +540,34 @@ function SessionDetail({
         </div>
       )}
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <div className="relative w-full max-w-md">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por rótulo, produtor ou código..."
+            aria-label="Buscar rótulo"
+            className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-9 text-sm outline-none focus:border-primary"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              aria-label="Limpar busca"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        {search.trim() !== "" && (
+          <span className="text-xs text-muted-foreground">
+            {visible.length} de {items.length} rótulo(s)
+          </span>
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
         {[
           { key: "all", label: `Todos (${items.length})` },
           { key: "pending", label: `Pendentes (${items.filter((i) => i.counted_qty === null && !i.flag).length})` },
@@ -580,7 +627,15 @@ function SessionDetail({
           </thead>
           <tbody>
             {isLoading && <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
-            {!isLoading && visible.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Nenhum item nesta visão.</td></tr>}
+            {!isLoading && visible.length === 0 && (
+              <tr>
+                <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+                  {search.trim() !== ""
+                    ? `Nenhum rótulo encontrado para "${search.trim()}".`
+                    : "Nenhum item nesta visão."}
+                </td>
+              </tr>
+            )}
             {visible.map((i) => {
               const diff = i.counted_qty !== null ? i.counted_qty - i.previous_qty : null;
               return (

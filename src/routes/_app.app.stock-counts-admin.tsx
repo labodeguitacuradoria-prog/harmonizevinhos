@@ -283,11 +283,30 @@ function SessionDetail({
 
   const editable = session.status === "draft";
 
+  const searchNorm = useMemo(
+    () =>
+      search
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, ""),
+    [search],
+  );
+
   const visible = useMemo(() => {
-    if (filter === "flagged") return items.filter((i) => i.flag);
-    if (filter === "pending") return items.filter((i) => i.counted_qty === null && !i.flag);
-    return items;
-  }, [items, filter]);
+    let list = items;
+    if (filter === "flagged") list = list.filter((i) => i.flag);
+    else if (filter === "pending") list = list.filter((i) => i.counted_qty === null && !i.flag);
+    if (searchNorm) {
+      list = list.filter((i) => {
+        const name = (i.wine.name ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const producer = (i.wine.producer ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const code = (i.wine.internal_code ?? "").toLowerCase();
+        return name.includes(searchNorm) || producer.includes(searchNorm) || code.includes(searchNorm);
+      });
+    }
+    return list;
+  }, [items, filter, searchNorm]);
 
   async function updateQty(item: ItemRow, qty: number) {
     if (!editable) {

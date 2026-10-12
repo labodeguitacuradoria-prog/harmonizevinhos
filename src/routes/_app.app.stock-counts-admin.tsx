@@ -193,9 +193,9 @@ function StockCountAdminPage() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
+            {isLoading && <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
             {!isLoading && sessions.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Nenhuma contagem registrada.</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Nenhuma contagem registrada.</td></tr>
             )}
             {sessions.map((s) => {
               const c = counts[s.id] ?? { counted: 0, total: 0, flags: 0, openIssues: 0 };
@@ -245,6 +245,7 @@ function SessionDetail({
   const qc = useQueryClient();
   const [filter, setFilter] = useState<"all" | "flagged" | "pending">("all");
   const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-session-items", session.id],
@@ -252,7 +253,7 @@ function SessionDetail({
       const { data, error } = await supabase
         .from("stock_count_items")
         .select(
-          "id, wine_id, previous_qty, counted_qty, flag, flag_note, wine:wines(id, name, producer, vintage, volume, wine_type, internal_code)",
+          "id, wine_id, previous_qty, counted_qty, flag, flag_note, wine:wines(id, name, producer, vintage, volume, wine_type, internal_code, active_on_menu)",
         )
         .eq("session_id", session.id);
       if (error) throw error;
@@ -323,6 +324,27 @@ function SessionDetail({
     const { error } = await supabase.from("stock_count_items").delete().eq("id", item.id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["admin-session-items", session.id] });
+  }
+
+  function toggleSel(wineId: string) {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(wineId)) n.delete(wineId); else n.add(wineId);
+      return n;
+    });
+  }
+
+  async function includeInCatalog() {
+    const ids = [...selected].filter((id) => items.some((i) => i.wine_id === id && !(i.wine as any).active_on_menu));
+    if (ids.length === 0) return toast.info("Os rótulos selecionados já estão no cadastro de produtos.");
+    setBusy(true);
+    const { error } = await supabase.from("wines").update({ active_on_menu: true, count_in_stock: true }).in("id", ids);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success(`${ids.length} rótulo(s) incluído(s) no cadastro de produtos`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["admin-session-items", session.id] });
+    qc.invalidateQueries({ queryKey: ["wines"] });
   }
 
   async function resolveIssue(id: string) {
@@ -516,10 +538,36 @@ function SessionDetail({
         ))}
       </div>
 
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
+        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Rótulos marcados</span>
+        <span className="text-sm text-primary">{selected.size} selecionado(s)</span>
+        <button
+          onClick={() => setSelected(new Set(visible.filter((i) => !(i.wine as any).active_on_menu).map((i) => i.wine_id)))}
+          className="rounded-md border border-input px-3 py-1.5 text-xs hover:bg-accent"
+        >
+          Marcar os fora do cadastro
+        </button>
+        <button
+          disabled={selected.size === 0 || busy}
+          onClick={includeInCatalog}
+          className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+        >
+          <PlusCircle className="h-3.5 w-3.5" /> Incluir no cadastro de produtos
+        </button>
+      </div>
+
       <div className="mt-4 overflow-x-auto rounded-lg border border-border bg-card">
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
+              <th className="px-3 py-2">
+                <input
+                  type="checkbox"
+                  aria-label="Marcar todos"
+                  checked={visible.length > 0 && visible.every((i) => selected.has(i.wine_id))}
+                  onChange={(e) => setSelected(e.target.checked ? new Set(visible.map((i) => i.wine_id)) : new Set())}
+                />
+              </th>
               <th className="px-3 py-2">Cód.</th>
               <th className="px-3 py-2">Rótulo</th>
               <th className="px-3 py-2">Volume</th>
@@ -531,15 +579,23 @@ function SessionDetail({
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
-            {!isLoading && visible.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Nenhum item nesta visão.</td></tr>}
+            {isLoading && <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Carregando...</td></tr>}
+            {!isLoading && visible.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Nenhum item nesta visão.</td></tr>}
             {visible.map((i) => {
               const diff = i.counted_qty !== null ? i.counted_qty - i.previous_qty : null;
               return (
                 <tr key={i.id} className={`border-b border-border last:border-0 ${i.flag ? "bg-amber-500/5" : ""}`}>
+                  <td className="px-3 py-2">
+                    <input type="checkbox" aria-label={`Marcar ${i.wine.name}`} checked={selected.has(i.wine_id)} onChange={() => toggleSel(i.wine_id)} />
+                  </td>
                   <td className="px-3 py-2 font-mono text-xs text-muted-foreground">{i.wine.internal_code ?? "-"}</td>
                   <td className="px-3 py-2">
-                    <div className="font-medium">{i.wine.name}</div>
+                    <div className="flex items-center gap-2 font-medium">
+                      {i.wine.name}
+                      {!(i.wine as any).active_on_menu && (
+                        <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-amber-600 dark:text-amber-400">Fora do cadastro</span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {[i.wine.producer, i.wine.vintage, i.wine.wine_type].filter(Boolean).join(" · ")}
                     </div>

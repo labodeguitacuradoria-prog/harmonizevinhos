@@ -14,7 +14,7 @@ import {
   Check,
   X,
   PlusCircle,
-
+  Search,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/app/stock-counts-admin")({
@@ -246,6 +246,7 @@ function SessionDetail({
   const [filter, setFilter] = useState<"all" | "flagged" | "pending">("all");
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-session-items", session.id],

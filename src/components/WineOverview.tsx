@@ -147,6 +147,32 @@ export function WineOverview({
   const participation = series && series.restaurantTotal > 0 ? (series.wineTotal / series.restaurantTotal) * 100 : 0;
 
   const [notesOpen, setNotesOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const { data: history, isLoading: historyLoading } = useQuery({
+    queryKey: ["wine-overview-stock-history", wine.id, restaurantId],
+    enabled: historyOpen && !!restaurantId,
+    queryFn: async () => {
+      const since = new Date();
+      since.setMonth(since.getMonth() - 4);
+      const { data: sess } = await supabase
+        .from("stock_count_sessions")
+        .select("id, reference_date, status")
+        .eq("restaurant_id", restaurantId)
+        .gte("reference_date", since.toISOString().slice(0, 10))
+        .order("reference_date", { ascending: false });
+      const ids = (sess ?? []).map((s) => s.id);
+      if (!ids.length) return [];
+      const { data: items } = await supabase
+        .from("stock_count_items")
+        .select("session_id, previous_qty, counted_qty")
+        .eq("wine_id", wine.id)
+        .in("session_id", ids);
+      const bySession = new Map((items ?? []).map((i) => [i.session_id, i]));
+      return (sess ?? [])
+        .filter((s) => bySession.has(s.id))
+        .map((s) => ({ ...s, ...bySession.get(s.id)! }));
+    },
+  });
   const grapes = (wine.grape || "")
     .split(/[,;/•]|\se\s/gi)
     .map((g) => g.trim())
@@ -274,18 +300,30 @@ export function WineOverview({
           <div className="flex flex-col justify-center gap-3">
             <Kpi label="Preço de venda" value={`R$ ${fmtBRL(Number(wine.sale_price), 2)}`} tone="primary" />
             {!simple && (
-              <Kpi
-                label="Estoque atual"
-                value={
-                  isGlassVol(wine.volume)
-                    ? "—"
-                    : stock?.qty != null
-                      ? `${stock.qty} un`
-                      : "sem contagem"
-                }
-                hint={stock?.date ? new Date(stock.date).toLocaleDateString("pt-BR") : undefined}
-                icon={<Package className="h-3.5 w-3.5" />}
-              />
+              <button
+                type="button"
+                disabled={isGlassVol(wine.volume)}
+                onClick={() => setHistoryOpen(true)}
+                title="Ver últimas contagens (até 4 meses)"
+                className="group rounded-xl text-left transition hover:ring-1 hover:ring-primary/60 disabled:cursor-default disabled:hover:ring-0"
+              >
+                <Kpi
+                  label="Estoque atual"
+                  value={
+                    isGlassVol(wine.volume)
+                      ? "—"
+                      : stock?.qty != null
+                        ? `${stock.qty} un`
+                        : "sem contagem"
+                  }
+                  hint={
+                    isGlassVol(wine.volume)
+                      ? undefined
+                      : `${stock?.date ? new Date(stock.date + "T12:00:00").toLocaleDateString("pt-BR") + " · " : ""}ver histórico ›`
+                  }
+                  icon={<Package className="h-3.5 w-3.5" />}
+                />
+              </button>
             )}
           </div>
         </div>

@@ -415,6 +415,55 @@ export function WineOverview({
 
       </div>
 
+      {historyOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={() => setHistoryOpen(false)}>
+          <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-6 py-3">
+              <div className="min-w-0">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Últimas contagens · 4 meses</div>
+                <h3 className="truncate text-base font-semibold">{wine.name}</h3>
+              </div>
+              <button type="button" onClick={() => setHistoryOpen(false)} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground" aria-label="Fechar">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto px-6 py-4 text-[13px]">
+              {historyLoading ? (
+                <div className="text-muted-foreground">Carregando...</div>
+              ) : !history?.length ? (
+                <div className="text-muted-foreground">Nenhuma contagem deste rótulo nos últimos 4 meses.</div>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                      <th className="py-2 text-left">Data</th>
+                      <th className="py-2 text-right">Anterior</th>
+                      <th className="py-2 text-right">Contado</th>
+                      <th className="py-2 text-right">Diferença</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((h) => {
+                      const diff = h.counted_qty != null ? h.counted_qty - h.previous_qty : null;
+                      return (
+                        <tr key={h.id} className="border-t border-border">
+                          <td className="py-2">
+                            {new Date(h.reference_date + "T12:00:00").toLocaleDateString("pt-BR")}
+                            {h.status !== "closed" && <span className="ml-2 text-[10px] text-muted-foreground">(em aberto)</span>}
+                          </td>
+                          <td className="py-2 text-right text-muted-foreground">{h.previous_qty}</td>
+                          <td className="py-2 text-right font-semibold text-primary">{h.counted_qty ?? "—"}</td>
+                          <td className="py-2 text-right">{diff == null ? "—" : diff > 0 ? `+${diff}` : diff}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {notesOpen && (
         <NotesModal
           wineName={wine.name}

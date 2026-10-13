@@ -147,6 +147,32 @@ export function WineOverview({
   const participation = series && series.restaurantTotal > 0 ? (series.wineTotal / series.restaurantTotal) * 100 : 0;
 
   const [notesOpen, setNotesOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const { data: history, isLoading: historyLoading } = useQuery({
+    queryKey: ["wine-overview-stock-history", wine.id, restaurantId],
+    enabled: historyOpen && !!restaurantId,
+    queryFn: async () => {
+      const since = new Date();
+      since.setMonth(since.getMonth() - 4);
+      const { data: sess } = await supabase
+        .from("stock_count_sessions")
+        .select("id, reference_date, status")
+        .eq("restaurant_id", restaurantId)
+        .gte("reference_date", since.toISOString().slice(0, 10))
+        .order("reference_date", { ascending: false });
+      const ids = (sess ?? []).map((s) => s.id);
+      if (!ids.length) return [];
+      const { data: items } = await supabase
+        .from("stock_count_items")
+        .select("session_id, previous_qty, counted_qty")
+        .eq("wine_id", wine.id)
+        .in("session_id", ids);
+      const bySession = new Map((items ?? []).map((i) => [i.session_id, i]));
+      return (sess ?? [])
+        .filter((s) => bySession.has(s.id))
+        .map((s) => ({ ...s, ...bySession.get(s.id)! }));
+    },
+  });
   const grapes = (wine.grape || "")
     .split(/[,;/•]|\se\s/gi)
     .map((g) => g.trim())
@@ -274,18 +300,30 @@ export function WineOverview({
           <div className="flex flex-col justify-center gap-3">
             <Kpi label="Preço de venda" value={`R$ ${fmtBRL(Number(wine.sale_price), 2)}`} tone="primary" />
             {!simple && (
-              <Kpi
-                label="Estoque atual"
-                value={
-                  isGlassVol(wine.volume)
-                    ? "—"
-                    : stock?.qty != null
-                      ? `${stock.qty} un`
-                      : "sem contagem"
-                }
-                hint={stock?.date ? new Date(stock.date).toLocaleDateString("pt-BR") : undefined}
-                icon={<Package className="h-3.5 w-3.5" />}
-              />
+              <button
+                type="button"
+                disabled={isGlassVol(wine.volume)}
+                onClick={() => setHistoryOpen(true)}
+                title="Ver últimas contagens (até 4 meses)"
+                className="group rounded-xl text-left transition hover:ring-1 hover:ring-primary/60 disabled:cursor-default disabled:hover:ring-0"
+              >
+                <Kpi
+                  label="Estoque atual"
+                  value={
+                    isGlassVol(wine.volume)
+                      ? "—"
+                      : stock?.qty != null
+                        ? `${stock.qty} un`
+                        : "sem contagem"
+                  }
+                  hint={
+                    isGlassVol(wine.volume)
+                      ? undefined
+                      : `${stock?.date ? new Date(stock.date + "T12:00:00").toLocaleDateString("pt-BR") + " · " : ""}ver histórico ›`
+                  }
+                  icon={<Package className="h-3.5 w-3.5" />}
+                />
+              </button>
             )}
           </div>
         </div>
@@ -377,6 +415,55 @@ export function WineOverview({
 
       </div>
 
+      {historyOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={() => setHistoryOpen(false)}>
+          <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-6 py-3">
+              <div className="min-w-0">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Últimas contagens · 4 meses</div>
+                <h3 className="truncate text-base font-semibold">{wine.name}</h3>
+              </div>
+              <button type="button" onClick={() => setHistoryOpen(false)} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground" aria-label="Fechar">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto px-6 py-4 text-[13px]">
+              {historyLoading ? (
+                <div className="text-muted-foreground">Carregando...</div>
+              ) : !history?.length ? (
+                <div className="text-muted-foreground">Nenhuma contagem deste rótulo nos últimos 4 meses.</div>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                      <th className="py-2 text-left">Data</th>
+                      <th className="py-2 text-right">Anterior</th>
+                      <th className="py-2 text-right">Contado</th>
+                      <th className="py-2 text-right">Diferença</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((h) => {
+                      const diff = h.counted_qty != null ? h.counted_qty - h.previous_qty : null;
+                      return (
+                        <tr key={h.id} className="border-t border-border">
+                          <td className="py-2">
+                            {new Date(h.reference_date + "T12:00:00").toLocaleDateString("pt-BR")}
+                            {h.status !== "closed" && <span className="ml-2 text-[10px] text-muted-foreground">(em aberto)</span>}
+                          </td>
+                          <td className="py-2 text-right text-muted-foreground">{h.previous_qty}</td>
+                          <td className="py-2 text-right font-semibold text-primary">{h.counted_qty ?? "—"}</td>
+                          <td className="py-2 text-right">{diff == null ? "—" : diff > 0 ? `+${diff}` : diff}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {notesOpen && (
         <NotesModal
           wineName={wine.name}

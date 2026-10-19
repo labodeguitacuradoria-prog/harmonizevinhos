@@ -282,12 +282,35 @@ export const extractWineFromFile = createServerFn({ method: "POST" })
           { type: "text" as const, text: "Extraia todas as informações técnicas desta ficha de vinho conforme o esquema JSON solicitado." },
           { type: "image" as const, image: `data:${data.mimeType};base64,${base64}` },
         ]
-      : [
-          { type: "text" as const, text: "Extraia todas as informações técnicas desta ficha de vinho conforme o esquema JSON solicitado." },
-          { type: "file" as const, data: base64, mediaType: data.mimeType },
-        ];
+      : null;
 
-    return callModel(userContent);
+    if (userContent) return callModel(userContent);
+
+    // PDFs: o endpoint chat/completions rejeita anexos de arquivo (HTTP 400).
+    // Usamos a API Responses, que aceita PDF nativamente.
+    try {
+      const { structuredResponse } = await import("./ai-responses.server");
+      const out = await structuredResponse({
+        system: SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Extraia todas as informações técnicas desta ficha de vinho conforme o esquema JSON solicitado." },
+              { type: "file", data: base64, mediaType: "application/pdf" },
+            ],
+          },
+        ],
+        schema: ExtractedSchema,
+      });
+      return coerceExtracted(out);
+    } catch (e: any) {
+      const msg = String(e?.message ?? e);
+      console.error("[wine-extract pdf]", msg);
+      if (/402|credit/i.test(msg)) throw new Error("Créditos de IA esgotados.");
+      if (/429|rate/i.test(msg)) throw new Error("Muitas solicitações agora. Aguarde e tente de novo.");
+      throw new Error("Não foi possível ler este PDF. Se for protegido ou escaneado, envie como imagem ou cole o texto.");
+    }
   });
 
 const TextInput = z.object({ text: z.string().min(10) });

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Sparkles, FileText, Upload, Loader2, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { wineFileType, WINE_FILE_MAX_BYTES } from "@/lib/wine-file-input";
+import { Button } from "@/components/ui/button";
 import {
   extractWineFromFile,
   extractWineFromText,
@@ -18,6 +19,7 @@ type Props = {
 
 
 export function WineAiExtractor({ onExtracted }: Props) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<"file" | "text" | "url">("file");
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
@@ -159,22 +161,32 @@ export function WineAiExtractor({ onExtracted }: Props) {
 
 
       {tab === "file" ? (
-        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#D4AF37]/50 bg-[#0b0b0b] px-3 py-6 text-sm text-[#888] hover:bg-[#1a1a1a]">
+        <>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={busy}
+          onClick={() => fileInputRef.current?.click()}
+          className="h-auto min-h-16 w-full whitespace-normal border-dashed border-primary/50 bg-background px-3 py-6 text-sm text-muted-foreground hover:bg-accent"
+        >
           {busy ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin text-[#D4AF37]" />
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
               {fileStage === "upload" ? "Enviando ficha..." : "Analisando ficha..."}
             </>
           ) : (
             <>
-              <Upload className="h-4 w-4 text-[#D4AF37]" />
+              <Upload className="h-4 w-4 text-primary" />
               Selecionar PDF ou imagem da ficha
             </>
           )}
+        </Button>
           <input
+            ref={fileInputRef}
             type="file"
             accept="application/pdf,image/*"
             className="hidden"
+            aria-label="Arquivo da ficha técnica"
             disabled={busy}
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -182,7 +194,7 @@ export function WineAiExtractor({ onExtracted }: Props) {
               e.target.value = "";
             }}
           />
-        </label>
+        </>
       ) : tab === "url" ? (
         <div className="space-y-2">
           <input

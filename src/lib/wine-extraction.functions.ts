@@ -3,6 +3,7 @@ import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGateway } from "./ai-gateway.server";
+import { WineFileInput, WINE_FILE_MAX_BYTES } from "./wine-file-input";
 
 const SYSTEM_PROMPT = `Você é um Sommelier de nível Master of Wine e Analista Químico especialista em leitura de fichas técnicas de vinícolas e notas de degustação.
 Sua missão é ler o material fornecido (ficha técnica em PDF/imagem ou texto colado), extrair rigorosamente todas as informações sensoriais, físicas e químicas, e retornar uma resposta estritamente estruturada em JSON.
@@ -263,31 +264,30 @@ function coerceExtracted(p: any): ExtractedWine {
   };
 }
 
-const FileInput = z.object({
-  fileBase64: z.string().min(10),
-  mimeType: z.string().min(1),
-});
-
 export const extractWineFromFile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => FileInput.parse(d))
-  .handler(async ({ data }) => {
-    let base64 = data.fileBase64;
-    const c = base64.indexOf(",");
-    if (c !== -1) base64 = base64.substring(c + 1);
+  .inputValidator((d: unknown) => WineFileInput.parse(d))
+  .handler(async ({ data, context }) => {
+    if (!data.storagePath.startsWith(`catalog/tech/${context.userId}/`)) {
+      throw new Error("Você não tem acesso a esta ficha técnica.");
+    }
+    const { data: file, error } = await context.supabase.storage
+      .from("product-media").download(data.storagePath);
+    if (error || !file) throw new Error("Não foi possível abrir a ficha enviada. Envie o arquivo novamente.");
+    if (!file.size || file.size > WINE_FILE_MAX_BYTES) throw new Error("A ficha deve ter conteúdo e no máximo 15 MB.");
+    const bytes = new Uint8Array(await file.arrayBuffer());
 
     const isImage = data.mimeType.startsWith("image/");
     const userContent = isImage
       ? [
           { type: "text" as const, text: "Extraia todas as informações técnicas desta ficha de vinho conforme o esquema JSON solicitado." },
-          { type: "image" as const, image: `data:${data.mimeType};base64,${base64}` },
+          { type: "image" as const, image: bytes, mediaType: data.mimeType },
         ]
       : null;
 
     if (userContent) return callModel(userContent);
 
-    // PDFs: o endpoint chat/completions rejeita anexos de arquivo (HTTP 400).
-    // Usamos a API Responses, que aceita PDF nativamente.
+    // File bytes stay server-side; the browser RPC carries only the storage key.
     try {
       const { structuredResponse } = await import("./ai-responses.server");
       const out = await structuredResponse({
@@ -297,7 +297,7 @@ export const extractWineFromFile = createServerFn({ method: "POST" })
             role: "user",
             content: [
               { type: "text", text: "Extraia todas as informações técnicas desta ficha de vinho conforme o esquema JSON solicitado." },
-              { type: "file", data: base64, mediaType: "application/pdf" },
+              { type: "file", data: bytes, mediaType: "application/pdf" },
             ],
           },
         ],

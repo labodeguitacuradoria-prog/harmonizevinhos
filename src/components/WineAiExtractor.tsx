@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Sparkles, FileText, Upload, Loader2, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { wineFileType, WINE_FILE_MAX_BYTES } from "@/lib/wine-file-input";
 import {
   extractWineFromFile,
   extractWineFromText,
@@ -16,59 +17,55 @@ type Props = {
 };
 
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
 export function WineAiExtractor({ onExtracted }: Props) {
   const [tab, setTab] = useState<"file" | "text" | "url">("file");
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [fileStage, setFileStage] = useState<"upload" | "analysis" | null>(null);
+  const [fileError, setFileError] = useState("");
   const extractFile = useServerFn(extractWineFromFile);
   const extractText = useServerFn(extractWineFromText);
   const extractUrl = useServerFn(extractWineFromUrl);
 
 
   async function handleFile(file: File) {
-    if (file.size > 15 * 1024 * 1024) {
+    if (busy) return;
+    setFileError("");
+    if (file.size > WINE_FILE_MAX_BYTES) {
+      setFileError("Arquivo maior que 15 MB.");
       toast.error("Arquivo maior que 15 MB.");
       return;
     }
     setBusy(true);
+    setFileStage("upload");
     try {
-      const dataUrl = await fileToBase64(file);
-
-      // Upload paralelo ao storage para persistir a ficha original
-      let sourceFileUrl: string | undefined;
-      try {
-        const ext = file.name.split(".").pop() || (file.type.startsWith("image/") ? "img" : "pdf");
-        const path = `catalog/tech/${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("product-media").upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-        if (!upErr) {
-          const { data: signed } = await supabase.storage.from("product-media").createSignedUrl(path, 60 * 60 * 24 * 365);
-          sourceFileUrl = signed?.signedUrl;
-        }
-      } catch { /* upload é opcional */ }
-
-      const res = await extractFile({
-        data: { fileBase64: dataUrl, mimeType: file.type || "application/pdf" },
+      if (!file.size) throw new Error("O arquivo está vazio. Selecione outra ficha.");
+      const { mimeType, extension } = wineFileType(file);
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) throw new Error("Sua sessão expirou. Entre novamente para enviar a ficha.");
+      const path = `catalog/tech/${sessionData.session.user.id}/${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from("product-media").upload(path, file, {
+        cacheControl: "3600", upsert: false, contentType: mimeType,
       });
-      onExtracted(res, { sourceFileUrl, mimeType: file.type });
+      if (uploadError) throw new Error("Não foi possível enviar a ficha. Verifique sua conexão e tente novamente.");
+      const { data: signed, error: signedError } = await supabase.storage.from("product-media")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signedError || !signed?.signedUrl) throw new Error("A ficha foi enviada, mas não foi possível abrir o arquivo. Tente novamente.");
+      setFileStage("analysis");
+      const res = await extractFile({
+        data: { storagePath: path, mimeType },
+      });
+      onExtracted(res, { sourceFileUrl: signed.signedUrl, mimeType });
       toast.success("Ficha extraída! Revise os campos antes de salvar.");
-    } catch (e: any) {
-      toast.error(e.message || "Falha ao extrair a ficha.");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Falha ao extrair a ficha. Tente novamente.";
+      setFileError(message);
+      toast.error(message);
     } finally {
       setBusy(false);
+      setFileStage(null);
     }
   }
 
@@ -166,7 +163,7 @@ export function WineAiExtractor({ onExtracted }: Props) {
           {busy ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin text-[#D4AF37]" />
-              Analisando...
+              {fileStage === "upload" ? "Enviando ficha..." : "Analisando ficha..."}
             </>
           ) : (
             <>
@@ -252,6 +249,7 @@ export function WineAiExtractor({ onExtracted }: Props) {
           </button>
         </div>
       )}
+      {fileError && <p role="alert" className="mt-2 text-sm text-destructive">{fileError}</p>}
     </div>
   );
 }

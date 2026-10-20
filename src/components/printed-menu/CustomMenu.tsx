@@ -129,6 +129,7 @@ export function CustomMenuRequestDialog({ restaurantId, onClose }: { restaurantI
   const [title, setTitle] = useState("Carta personalizada");
   const [brief, setBrief] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const attachRef = useRef<HTMLInputElement>(null);
   const [sending, setSending] = useState(false);
 
   const { data: requests = [] } = useQuery({

@@ -41,20 +41,13 @@ import {
   type WineLite,
 } from "@/lib/menu-pairing.functions";
 import { publicOrigin } from "@/lib/public-origin";
+import { WINE_FILE_MAX_BYTES, wineFileType } from "@/lib/wine-file-input";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 type BusyState = null | "extract" | "pair" | "save" | "link";
 type EditablePick = DishPairing["picks"][number];
 
-function fileToBase64(f: File) {
-  return new Promise<string>((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(String(r.result));
-    r.onerror = rej;
-    r.readAsDataURL(f);
-  });
-}
 
 function normalizeKey(value: string) {
   return value.trim().toLocaleLowerCase("pt-BR");
@@ -243,8 +236,16 @@ export function MenuPairingStudio() {
   async function onFile(f: File) {
     setBusy("extract");
     try {
-      const b64 = await fileToBase64(f);
-      const found = await extract({ data: { fileBase64: b64, mimeType: f.type || "application/pdf" } });
+      if (f.size > WINE_FILE_MAX_BYTES) throw new Error("O arquivo deve ter no máximo 15 MB.");
+      const { mimeType, extension } = wineFileType(f);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const uid = sessionData.session?.user.id;
+      if (!uid) throw new Error("Sua sessão expirou. Entre novamente.");
+      // Upload directly to storage: large Base64 payloads break the server-function transport.
+      const storagePath = `catalog/tech/${uid}/${crypto.randomUUID()}.${extension}`;
+      const { error: upErr } = await supabase.storage.from("product-media").upload(storagePath, f, { contentType: mimeType });
+      if (upErr) throw new Error("Não foi possível enviar o cardápio. Verifique sua conexão e tente novamente.");
+      const found = await extract({ data: { storagePath, mimeType } });
       if (!found?.length) toast.error("Nenhum prato encontrado no arquivo.");
       else {
         setDishes((d) => [...d, ...found]);

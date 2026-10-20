@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { ACCEPT } from "@/lib/file-accept";
 import { toast } from "sonner";
 import { X, Upload, Loader2, FileText, Sparkles, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -160,6 +161,7 @@ export function WineListImportDialog({
   const extractFile = useServerFn(extractWineListFromFile);
   const extractText = useServerFn(extractWineListFromText);
   const filesRef = useRef<File[]>([]);
+  const pickerRef = useRef<HTMLInputElement>(null);
 
   function buildRows(items: WineListItem[]) {
     const seen = new Set<string>();
@@ -498,24 +500,32 @@ export function WineListImportDialog({
               </div>
 
               {mode === "file" ? (
-                <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-primary/50 bg-background px-4 py-12 text-sm text-muted-foreground hover:bg-accent/40">
+                <>
+                <button
+                  type="button"
+                  onClick={() => pickerRef.current?.click()}
+                  className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-primary/50 bg-background px-4 py-12 text-sm text-muted-foreground hover:bg-accent/40"
+                >
                   <Upload className="h-6 w-6 text-primary" />
                   <span className="font-medium text-foreground">Selecionar PDF ou fotos da carta</span>
                   <span className="text-xs">
                     Pode enviar várias páginas de uma vez. Fotos nítidas dão melhor resultado.
                   </span>
-                  <input
-                    type="file"
-                    multiple
-                    accept="application/pdf,image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const fs = Array.from(e.target.files ?? []);
-                      e.target.value = "";
-                      handleFiles(fs);
-                    }}
-                  />
-                </label>
+                </button>
+                <input
+                  ref={pickerRef}
+                  type="file"
+                  multiple
+                  accept={ACCEPT.pdfOrImage}
+                  className="hidden"
+                  aria-label="Arquivos da carta de vinhos"
+                  onChange={(e) => {
+                    const fs = Array.from(e.target.files ?? []);
+                    e.target.value = "";
+                    handleFiles(fs);
+                  }}
+                />
+                </>
               ) : (
                 <div className="space-y-2">
                   <textarea

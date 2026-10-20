@@ -190,15 +190,16 @@ export function OrderDocumentsDialog({
                 Observação
                 <input value={notes} onChange={(e) => setNotes(e.target.value)} className={`mt-1 ${inp}`} />
               </label>
-              <label className="text-[10px] uppercase tracking-wide text-muted-foreground lg:col-span-2">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground lg:col-span-2">
                 Arquivo (PDF ou imagem)
                 <input
                   type="file"
+                  aria-label="Arquivo do documento"
                   accept={ACCEPT.pdfOrImage}
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                   className={`mt-1 ${inp}`}
                 />
-              </label>
+              </div>
             </div>
             <div className="mt-3 flex justify-end">
               <button

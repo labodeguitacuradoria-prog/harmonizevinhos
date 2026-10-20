@@ -120,7 +120,7 @@ export function SalesImportDialog({
     if (!built.length) toast.error("Nenhuma linha de vinho foi identificada no documento.");
   }
 
-  async function handleFiles(files: FileList | null) {
+  async function handleFiles(files: File[] | null) {
     if (!files || !files.length) return;
     setStep("loading");
     try {
@@ -198,7 +198,7 @@ export function SalesImportDialog({
               className="hidden"
               onChange={(e) => {
                 const fs = e.target.files;
-                handleFiles(fs ? (Array.from(fs) as unknown as FileList) : null);
+                handleFiles(fs ? Array.from(fs) : null);
                 e.target.value = "";
               }}
             />

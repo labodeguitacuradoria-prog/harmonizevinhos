@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ACCEPT } from "@/lib/file-accept";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -207,20 +208,26 @@ export function CustomMenuRequestDialog({ restaurantId, onClose }: { restaurantI
           placeholder="Ex.: algo elegante, com as cores do restaurante, capa com foto do salão..."
           className="mb-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
-        <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-input px-3 py-4 text-sm text-muted-foreground hover:bg-accent">
+        <button
+          type="button"
+          onClick={() => attachRef.current?.click()}
+          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-input px-3 py-4 text-sm text-muted-foreground hover:bg-accent"
+        >
           <Paperclip className="h-4 w-4" /> Anexar PDF, imagens, logotipo (opcional)
+        </button>
           <input
+            ref={attachRef}
             type="file"
             multiple
             className="hidden"
-            accept="application/pdf,image/*,.doc,.docx,.ai,.svg,.zip"
+            aria-label="Anexos do pedido de carta"
+            accept={ACCEPT.menuBrief}
             onChange={(e) => {
               const list = Array.from(e.target.files ?? []);
               setFiles((prev) => [...prev, ...list]);
               e.target.value = "";
             }}
           />
-        </label>
         {files.length > 0 && (
           <ul className="mt-2 space-y-1">
             {files.map((f, i) => (

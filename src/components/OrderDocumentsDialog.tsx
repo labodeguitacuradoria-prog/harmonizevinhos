@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ACCEPT } from "@/lib/file-accept";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -193,7 +194,7 @@ export function OrderDocumentsDialog({
                 Arquivo (PDF ou imagem)
                 <input
                   type="file"
-                  accept="application/pdf,image/*"
+                  accept={ACCEPT.pdfOrImage}
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                   className={`mt-1 ${inp}`}
                 />

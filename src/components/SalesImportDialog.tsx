@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { ACCEPT } from "@/lib/file-accept";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { X, Upload, Loader2, FileText, Sparkles, AlertTriangle } from "lucide-react";
@@ -193,9 +194,13 @@ export function SalesImportDialog({
               ref={fileRef}
               type="file"
               multiple
-              accept="application/pdf,image/*,text/csv,text/plain"
+              accept={ACCEPT.sales}
               className="hidden"
-              onChange={(e) => handleFiles(e.target.files)}
+              onChange={(e) => {
+                const fs = e.target.files;
+                handleFiles(fs ? (Array.from(fs) as unknown as FileList) : null);
+                e.target.value = "";
+              }}
             />
             <div>
               <label className="text-xs uppercase text-muted-foreground">Ou cole o texto da tabela</label>

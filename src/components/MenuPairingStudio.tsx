@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ACCEPT } from "@/lib/file-accept";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -484,7 +485,7 @@ export function MenuPairingStudio() {
           <input
             ref={fileRef}
             type="file"
-            accept="application/pdf,image/*"
+            accept={ACCEPT.pdfOrImage}
             className="hidden"
             onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
           />

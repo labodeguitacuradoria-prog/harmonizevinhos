@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { extensionAccept } from "@/lib/file-accept";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, X, FileText, Image as ImageIcon, Link2, Loader2 } from "lucide-react";
@@ -134,7 +135,7 @@ export function MediaUploader({
             )}
             <input
               type="file"
-              accept={accept}
+              accept={extensionAccept(accept) || undefined}
               className="hidden"
               disabled={uploading}
               onChange={(e) => {

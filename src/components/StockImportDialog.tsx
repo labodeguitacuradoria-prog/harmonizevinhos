@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { ACCEPT } from "@/lib/file-accept";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -222,7 +223,7 @@ export function StockImportDialog({ onClose }: { onClose: () => void }) {
               >
                 {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Lendo o estoque...</> : <><Upload className="h-4 w-4" /> Selecionar PDF, imagem ou planilha</>}
               </button>
-              <input ref={inputRef} type="file" hidden accept=".pdf,image/*,.xlsx,.xls,.csv,.ods"
+              <input ref={inputRef} type="file" hidden accept={ACCEPT.stock}
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
               <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5}
                 placeholder="ou cole aqui a tabela de estoque (código, nome, quantidade...)"

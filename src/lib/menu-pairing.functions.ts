@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { WINE_FILE_MAX_BYTES, WineFileInput } from "./wine-file-input";
 
 const DishSchema = z.object({
   name: z.string(),
@@ -27,23 +28,27 @@ export const extractMenuDishes = createServerFn({ method: "POST" })
     z
       .object({
         text: z.string().max(40000).optional(),
-        fileBase64: z.string().optional(),
-        mimeType: z.string().optional(),
+        storagePath: WineFileInput.shape.storagePath.optional(),
+        mimeType: WineFileInput.shape.mimeType.optional(),
         url: z.string().url().max(2000).optional(),
       })
       .parse(d),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { structuredResponse } = await import("./ai-responses.server");
     const content: any[] = [{ type: "text", text: "Extraia todos os pratos deste cardápio." }];
-    if (data.fileBase64 && data.mimeType) {
-      let b64 = data.fileBase64;
-      const c = b64.indexOf(",");
-      if (c !== -1) b64 = b64.slice(c + 1);
+    if (data.storagePath && data.mimeType) {
+      if (!data.storagePath.startsWith(`catalog/tech/${context.userId}/`)) {
+        throw new Error("Você não tem acesso a este arquivo.");
+      }
+      const { data: file, error } = await context.supabase.storage.from("product-media").download(data.storagePath);
+      if (error || !file) throw new Error("Não foi possível abrir o cardápio enviado. Envie o arquivo novamente.");
+      if (!file.size || file.size > WINE_FILE_MAX_BYTES) throw new Error("O arquivo deve ter conteúdo e no máximo 15 MB.");
+      const bytes = new Uint8Array(await file.arrayBuffer());
       content.push(
         data.mimeType.startsWith("image/")
-          ? { type: "image", image: `data:${data.mimeType};base64,${b64}` }
-          : { type: "file", data: b64, mediaType: data.mimeType },
+          ? { type: "image", image: bytes, mediaType: data.mimeType }
+          : { type: "file", data: bytes, mediaType: "application/pdf" },
       );
     } else if (data.url) {
       if (!/^https?:\/\//i.test(data.url)) throw new Error("Informe um link começando com http ou https.");

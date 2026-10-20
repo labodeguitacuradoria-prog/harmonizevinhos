@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { ACCEPT } from "@/lib/file-accept";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Sparkles, FileText, Upload, Loader2, Link2 } from "lucide-react";
@@ -184,7 +185,7 @@ export function WineAiExtractor({ onExtracted }: Props) {
           <input
             ref={fileInputRef}
             type="file"
-            accept="application/pdf,image/*"
+            accept={ACCEPT.techSheet}
             className="hidden"
             aria-label="Arquivo da ficha técnica"
             disabled={busy}

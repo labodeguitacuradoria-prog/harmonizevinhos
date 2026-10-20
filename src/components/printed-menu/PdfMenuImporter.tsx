@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { ACCEPT } from "@/lib/file-accept";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -66,6 +67,7 @@ export function PdfMenuImporter({
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<"image" | "text">("image");
+  const pickerRef = useRef<HTMLInputElement>(null);
 
   const { data: attachments = [] } = useQuery({
     queryKey: ["custom-menu-request-attachments", requestId],
@@ -174,20 +176,27 @@ export function PdfMenuImporter({
           ))}
         </div>
       ) : null}
-      <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-input px-3 py-3 text-xs text-muted-foreground hover:bg-accent ${busy ? "pointer-events-none opacity-50" : ""}`}>
+      <button
+        type="button"
+        disabled={!!busy}
+        onClick={() => pickerRef.current?.click()}
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-input px-3 py-3 text-xs text-muted-foreground hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+      >
         {busy === "upload" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
         {busy ? "Importando páginas..." : "Selecionar PDF do computador"}
-        <input
+      </button>
+      <input
+          ref={pickerRef}
           type="file"
-          accept="application/pdf"
+          accept={ACCEPT.pdf}
           className="hidden"
+          aria-label="PDF da carta"
           onChange={async (e) => {
             const f = e.target.files?.[0];
             e.target.value = "";
             if (f) await importPdf(await f.arrayBuffer(), "upload");
           }}
         />
-      </label>
     </Collapsible>
   );
 }

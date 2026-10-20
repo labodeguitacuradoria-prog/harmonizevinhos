@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { extensionAccept } from "@/lib/file-accept";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, X, FileText, Image as ImageIcon, Link2, Loader2 } from "lucide-react";
@@ -22,6 +23,7 @@ export function MediaUploader({
 }: Props) {
   const [uploading, setUploading] = useState(false);
   const [urlInput, setUrlInput] = useState("");
+  const pickerRef = useRef<HTMLInputElement>(null);
 
   async function uploadBlob(blob: Blob, ext: string) {
     const path = `${folder}/${crypto.randomUUID()}.${ext}`;
@@ -121,7 +123,12 @@ export function MediaUploader({
         </div>
       ) : (
         <>
-          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-input px-3 py-4 text-sm text-muted-foreground hover:bg-accent">
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => pickerRef.current?.click()}
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-input px-3 py-4 text-sm text-muted-foreground hover:bg-accent disabled:opacity-60"
+          >
             {uploading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" /> Processando...
@@ -132,9 +139,12 @@ export function MediaUploader({
                 Selecionar arquivo
               </>
             )}
+          </button>
             <input
+              ref={pickerRef}
               type="file"
-              accept={accept}
+              aria-label={label || "Arquivo"}
+              accept={extensionAccept(accept) || undefined}
               className="hidden"
               disabled={uploading}
               onChange={(e) => {
@@ -143,7 +153,6 @@ export function MediaUploader({
                 e.target.value = "";
               }}
             />
-          </label>
           {kind === "image" && (
             <div className="flex items-center gap-2">
               <div className="flex flex-1 items-center gap-1.5 rounded-md border border-input bg-background px-2">

@@ -19,4 +19,4 @@
 - Admin restaurant tables use the page scroll container with opaque sticky header cells and no internal height limit or overflow wrapper; this hides redundant scrollbars and keeps column headings visible.
 - Keep printed-menu usage guidance in a dedicated dialog component opened from the editor header; this isolates instructional navigation from saved menu state and printing.
 - Technical-sheet extraction uploads originals to user-prefixed private storage keys and passes only validated keys through RPC; authenticated server-side downloads keep file bytes out of browser serialization and preserve source files.
-- Open the technical-sheet picker synchronously from an explicit non-submit Button through a ref to a separate file input; this avoids nested label activation without changing upload or extraction.
+- File pickers open from an explicit non-submit button via a ref to a separate hidden input, with extension-only `accept` values from `src/lib/file-accept.ts`, and AI document uploads go to storage with only the key sent by RPC; MIME filters and nested labels can hang the Windows/OneDrive "Abrir" dialog and large Base64 payloads break server-function transport.

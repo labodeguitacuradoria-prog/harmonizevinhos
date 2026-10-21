@@ -390,6 +390,7 @@ type ColFilters = {
   wine_type: string;
   volume: string;
   country: string;
+  grape: string;
   cost_price: string;
   sale_price: string;
   markup: string;
@@ -398,7 +399,7 @@ type ColFilters = {
   alert: "" | "comprar" | "ok" | "sem";
 };
 const EMPTY_FILTERS: ColFilters = {
-  internal_code: "", name: "", vintage: "", wine_type: "", volume: "", country: "",
+  internal_code: "", name: "", vintage: "", wine_type: "", volume: "", country: "", grape: "",
   cost_price: "", sale_price: "", markup: "", stock: "", monthly: "", alert: "",
 };
 
@@ -421,6 +422,17 @@ function matchNum(filter: string, value: number | null | undefined): boolean {
     }
   }
   return String(n).includes(s.replace(",", "."));
+}
+function foldText(v: unknown): string {
+  return String(v ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+function matchGrape(filter: string, w: any): boolean {
+  const s = foldText(filter).trim();
+  if (!s) return true;
+  const detail = Array.isArray(w?.grapes_detail)
+    ? w.grapes_detail.map((g: any) => (typeof g === "string" ? g : g?.name ?? g?.grape ?? "")).join(" ")
+    : "";
+  return [w?.name, w?.grape, detail].some((v) => foldText(v).includes(s));
 }
 function matchText(filter: string, value: string | null | undefined): boolean {
   const s = filter.trim().toLowerCase();
@@ -646,6 +658,7 @@ function WinesSection() {
           (filters.wine_type === "" || filters.wine_type === wineTypeLabel(w.wine_type)) &&
           (filters.volume === "" || filters.volume === (w.volume ?? "")) &&
           matchText(filters.country, w.country) &&
+          matchGrape(filters.grape, w) &&
           matchNum(filters.sale_price, Number(w.sale_price))
         );
       }
@@ -665,6 +678,7 @@ function WinesSection() {
         matchText(filters.vintage, w.vintage != null ? String(w.vintage) : "") &&
         (filters.wine_type === "" || filters.wine_type === wineTypeLabel(w.wine_type)) &&
         (filters.volume === "" || filters.volume === (w.volume ?? "")) &&
+        matchGrape(filters.grape, w) &&
         matchNum(filters.cost_price, Number(w.cost_price)) &&
         matchNum(filters.sale_price, Number(w.sale_price)) &&
         matchNum(filters.markup, markup) &&
@@ -727,6 +741,7 @@ function WinesSection() {
                     </select>
                   </FilterField>
                   <FilterField label="Safra"><FilterInput value={filters.vintage} onChange={(v) => setF("vintage", v)} placeholder="ex. 2020" /></FilterField>
+                  <FilterField label="Uva"><FilterInput value={filters.grape} onChange={(v) => setF("grape", v)} placeholder="ex. Malbec" /></FilterField>
                   {printOnly ? <FilterField label="País"><FilterInput value={filters.country} onChange={(v) => setF("country", v)} placeholder="ex. Brasil" /></FilterField> : null}
                   <FilterField label="Preço de venda"><FilterInput value={filters.sale_price} onChange={(v) => setF("sale_price", v)} placeholder=">100 ou 50-150" /></FilterField>
                   {!printOnly ? (

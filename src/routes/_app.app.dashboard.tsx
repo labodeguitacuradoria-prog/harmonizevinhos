@@ -1146,7 +1146,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
           />
         )}
         {tab === "estoque" && (
-          <div className="grid min-w-0 gap-6 xl:grid-cols-2">
+          <div className="grid min-w-0 gap-6 lg:grid-cols-2">
           <EstoquePanel
             wines={wines}
             stockMap={stockMap}

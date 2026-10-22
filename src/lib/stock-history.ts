@@ -11,10 +11,10 @@ export type StockHistorySession = {
 export type StockHistoryItem = { session_id: string; wine_id: string; counted_qty: number | null };
 export type StockHistoryPoint = { id: string; date: string; bottles: number; restaurant: string };
 
-// Six calendar months, including the current month; date-only keys avoid timezone shifts.
+// Four calendar months, including the current month; date-only keys avoid timezone shifts.
 export function stockHistoryRange(now: Date) {
   const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  return { start: key(new Date(now.getFullYear(), now.getMonth() - 5, 1)), end: key(now) };
+  return { start: key(new Date(now.getFullYear(), now.getMonth() - 3, 1)), end: key(now) };
 }
 
 export function stockHistoryPoints(

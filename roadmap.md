@@ -2,6 +2,8 @@
 
 ## Em andamento
 
+- [ ] Ajustar histórico de estoque para linhas, quatro meses, quadriculado e largura sem rolagem; manter valores opcionais e ocultar números do eixo vertical.
+
 - [x] Adicionar gráfico do total de garrafas por contagem dos últimos seis meses ao lado de Estoque em adega e validar dados e apresentação.
 
 - [x] Corrigir o envio de fichas técnicas usando arquivo armazenado, sem Base64 no transporte da tela.

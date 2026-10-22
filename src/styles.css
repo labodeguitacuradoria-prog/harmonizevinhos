@@ -77,6 +77,8 @@
   --card-raw: #141414;
   --surface-2: #1a1a1a;
   --text-kpi: #888888;
+  --stock-chart-grid: color-mix(in oklab, var(--gold) 16%, transparent);
+  --stock-chart-highlight: color-mix(in oklab, var(--gold) 8%, transparent);
   --landing-button-ink: oklch(0.18 0.025 55);
   --landing-button-gold-start: oklch(0.86 0.15 90);
   --landing-button-gold-middle: oklch(0.76 0.14 82);

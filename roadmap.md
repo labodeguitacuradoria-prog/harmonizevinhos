@@ -2,6 +2,8 @@
 
 ## Em andamento
 
+- [x] Adicionar gráfico do total de garrafas por contagem dos últimos seis meses ao lado de Estoque em adega e validar dados e apresentação.
+
 - [x] Corrigir o envio de fichas técnicas usando arquivo armazenado, sem Base64 no transporte da tela.
 - [x] Validar envio, extração e recuperação de erros pela tela com a ficha real Gustave Lorentz (1,1 MB), sem salvar um produto de teste.
 

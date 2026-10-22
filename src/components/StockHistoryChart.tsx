@@ -38,7 +38,7 @@ export default function StockHistoryChart({ points, loading, error, isGroup }: {
                       <stop offset="100%" stopColor="var(--wine)" />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="var(--stock-chart-grid)" />
+                  <CartesianGrid stroke="var(--stock-chart-grid)" horizontalCoordinatesGenerator={({ offset }) => Array.from({ length: 6 }, (_, index) => (offset.top ?? 0) + (offset.height ?? 0) * index / 5)} />
                   <XAxis dataKey="date" tickFormatter={shortDate} interval="preserveStartEnd" minTickGap={18} tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} stroke="var(--border)" label={{ value: "Data da contagem", position: "insideBottom", offset: -10, fill: "var(--muted-foreground)", fontSize: 10 }} />
                   <YAxis allowDecimals={false} width={0} tick={false} tickLine={false} axisLine={false} />
                   <Tooltip cursor={{ stroke: "var(--stock-chart-highlight)" }} content={({ active, payload }) => {

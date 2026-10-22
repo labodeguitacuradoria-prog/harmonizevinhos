@@ -2,7 +2,7 @@
 
 ## Em andamento
 
-- [ ] Ajustar histórico de estoque para linhas, quatro meses, quadriculado e largura sem rolagem; manter valores opcionais e ocultar números do eixo vertical.
+- [x] Ajustar histórico de estoque para linhas, quatro meses, quadriculado e largura sem rolagem; manter valores opcionais e ocultar números do eixo vertical. Testes do período passaram; apresentação validada com contagens simuladas, pois a conta ativa não retornou contagens reais.
 
 - [x] Adicionar gráfico do total de garrafas por contagem dos últimos seis meses ao lado de Estoque em adega e validar dados e apresentação.
 

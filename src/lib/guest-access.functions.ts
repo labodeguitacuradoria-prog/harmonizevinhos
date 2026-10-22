@@ -690,7 +690,11 @@ export const getGuestDashboardData = createServerFn({ method: "POST" })
           quantity: Number(c.quantity ?? 0),
           total_amount: Number(c.total_amount ?? 0),
         })),
-        stock: { map: stockMap, lastDate: sessionDateBR(lastSession) ?? null },
+        stock: {
+          map: stockMap,
+          lastDate: sessionDateBR(lastSession) ?? null,
+          history: await (await import("@/lib/stock-history")).fetchStockHistory(supabaseAdmin, [rid], new Date()),
+        },
         targets: (targets ?? []).map((t) => ({
           id: t.id as string,
           indicator: t.indicator as string,

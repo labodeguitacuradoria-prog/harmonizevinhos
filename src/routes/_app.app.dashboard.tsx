@@ -28,8 +28,18 @@ import DashboardTargetsEditor, {
 } from "@/components/DashboardTargetsEditor";
 import SalesDiagnosticReport from "@/components/SalesDiagnosticReport";
 import ModuleGate from "@/components/ModuleGate";
+import StockHistoryChart from "@/components/StockHistoryChart";
+import { fetchStockHistory, stockHistoryRange, type StockHistoryPoint } from "@/lib/stock-history";
 
 export const Route = createFileRoute("/_app/app/dashboard")({
+  head: () => ({ meta: [
+    { title: "Painel de Controle — La Bodeguita Vinhos" },
+    { name: "description", content: "Acompanhe faturamento, estoque, contagens e desempenho da gestão de vinhos do restaurante." },
+    { property: "og:title", content: "Painel de Controle — La Bodeguita Vinhos" },
+    { property: "og:description", content: "Indicadores de vendas e histórico de estoque para a gestão estratégica de vinhos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: () => (
     <ModuleGate route="/app/dashboard">
       <DashboardPage />
@@ -157,7 +167,7 @@ export type GuestDashboardData = {
   wines: WineRow[];
   movements: Movement[];
   corkage: Array<{ reference_year: number; reference_month: number; quantity: number; total_amount: number }>;
-  stock: { map: Record<string, number>; lastDate: string | null };
+  stock: { map: Record<string, number>; lastDate: string | null; history?: StockHistoryPoint[] };
   targets: Array<{
     id: string;
     indicator: string;
@@ -241,6 +251,15 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
   const wines = guest ? guest.wines : authWines;
   const stockData = guest ? guest.stock : authStock;
   const stockMap = stockData.map;
+  const historyRange = stockHistoryRange(now);
+  const { data: authStockHistory = [], isLoading: stockHistoryLoading, isError: stockHistoryError } = useQuery({
+    queryKey: ["dash-stock-history", scopeKey, historyRange.start, historyRange.end],
+    enabled: enabled && tab === "estoque",
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+    queryFn: () => fetchStockHistory(supabase, scopeIds, now),
+  });
 
   const { data: authMovements = [] } = useQuery<Movement[]>({
     queryKey: ["dash-movements", scopeKey, currentYear],
@@ -1127,6 +1146,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
           />
         )}
         {tab === "estoque" && (
+          <div className="grid min-w-0 gap-6 xl:grid-cols-2">
           <EstoquePanel
             wines={wines}
             stockMap={stockMap}
@@ -1135,6 +1155,13 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             lastStockDate={stockData.lastDate}
             guest={!!guest}
           />
+          <StockHistoryChart
+            points={guest ? guest.stock.history ?? [] : authStockHistory}
+            loading={!guest && stockHistoryLoading}
+            error={!guest && stockHistoryError}
+            isGroup={isGroup}
+          />
+          </div>
         )}
         {tab === "preco" && (
           <PrecoPanel

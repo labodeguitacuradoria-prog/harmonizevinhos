@@ -1366,6 +1366,57 @@ export type Database = {
           },
         ]
       }
+      supplier_access_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          last_access_at: string | null
+          restaurant_id: string
+          revoked_at: string | null
+          supplier_id: string
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          id?: string
+          last_access_at?: string | null
+          restaurant_id: string
+          revoked_at?: string | null
+          supplier_id: string
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          last_access_at?: string | null
+          restaurant_id?: string
+          revoked_at?: string | null
+          supplier_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_access_links_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_access_links_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_catalog: {
         Row: {
           address_city: string | null

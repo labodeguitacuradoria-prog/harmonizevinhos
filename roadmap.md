@@ -2,6 +2,8 @@
 
 ## Em andamento
 
+- [x] Criar links rápidos de fornecedor na tela Compartilhamento; painel validado com dados reais da Pousada Do Engenho em celular, tablet e computador, busca e revogação verificadas, autorização de teste desativada. Envio externo disponível após publicação.
+
 - [x] Ajustar histórico de estoque para linhas, quatro meses, quadriculado e largura sem rolagem; manter valores opcionais e ocultar números do eixo vertical. Testes do período passaram; apresentação validada com contagens simuladas, pois a conta ativa não retornou contagens reais.
 
 - [x] Adicionar gráfico do total de garrafas por contagem dos últimos seis meses ao lado de Estoque em adega e validar dados e apresentação.

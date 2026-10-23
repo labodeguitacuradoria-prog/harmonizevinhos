@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+const expect = (actual: unknown) => ({ toBe: (expected: unknown) => assert.equal(actual, expected) });
 import { supplierLinkAllowed, supplierSales, type SupplierPanelWine } from './supplier-panel';
 const now = new Date('2026-10-23T12:00:00Z');
 const link = { revoked_at: null, expires_at: '2026-11-23T12:00:00Z' };

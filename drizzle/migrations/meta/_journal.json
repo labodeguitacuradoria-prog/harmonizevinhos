@@ -78,6 +78,13 @@
       "when": 1791485038497,
       "tag": "0010_admin_read_roles_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792755275953,
+      "tag": "0011_supplier_quick_links",
+      "breakpoints": true
     }
   ]
 }

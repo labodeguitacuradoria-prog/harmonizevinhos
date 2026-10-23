@@ -16,6 +16,7 @@ import { Route as HarmonizarRouteImport } from './routes/harmonizar'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as FornecedorTokenRouteImport } from './routes/fornecedor.$token'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
 import { Route as AppAdminAccessMapRouteImport } from './routes/_app.admin.access-map'
 import { Route as AppAdminCustomMenusRouteImport } from './routes/_app.admin.custom-menus'
@@ -83,6 +84,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FornecedorTokenRoute = FornecedorTokenRouteImport.update({
+  id: '/fornecedor/$token',
+  path: '/fornecedor/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
@@ -265,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/fornecedor/$token': typeof FornecedorTokenRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/custom-menus': typeof AppAdminCustomMenusRoute
   '/admin/marketing-materials': typeof AppAdminMarketingMaterialsRoute
@@ -307,6 +314,7 @@ export interface FileRoutesByTo {
   '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/fornecedor/$token': typeof FornecedorTokenRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
   '/admin/custom-menus': typeof AppAdminCustomMenusRoute
   '/admin/marketing-materials': typeof AppAdminMarketingMaterialsRoute
@@ -351,6 +359,7 @@ export interface FileRoutesById {
   '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/fornecedor/$token': typeof FornecedorTokenRoute
   '/_app/admin/access-map': typeof AppAdminAccessMapRoute
   '/_app/admin/custom-menus': typeof AppAdminCustomMenusRoute
   '/_app/admin/marketing-materials': typeof AppAdminMarketingMaterialsRoute
@@ -395,6 +404,7 @@ export interface FileRouteTypes {
     | '/landing'
     | '/reset-password'
     | '/signup'
+    | '/fornecedor/$token'
     | '/admin/access-map'
     | '/admin/custom-menus'
     | '/admin/marketing-materials'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/landing'
     | '/reset-password'
     | '/signup'
+    | '/fornecedor/$token'
     | '/admin/access-map'
     | '/admin/custom-menus'
     | '/admin/marketing-materials'
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/landing'
     | '/reset-password'
     | '/signup'
+    | '/fornecedor/$token'
     | '/_app/admin/access-map'
     | '/_app/admin/custom-menus'
     | '/_app/admin/marketing-materials'
@@ -524,6 +536,7 @@ export interface RootRouteChildren {
   LandingRoute: typeof LandingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  FornecedorTokenRoute: typeof FornecedorTokenRoute
   AcessoKindTokenRoute: typeof AcessoKindTokenRoute
   ApiPublicCatalogFileRoute: typeof ApiPublicCatalogFileRoute
   ApiPublicTrainingImageRoute: typeof ApiPublicTrainingImageRoute
@@ -579,6 +592,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fornecedor/$token': {
+      id: '/fornecedor/$token'
+      path: '/fornecedor/$token'
+      fullPath: '/fornecedor/$token'
+      preLoaderRoute: typeof FornecedorTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/admin/': {
@@ -898,6 +918,7 @@ const rootRouteChildren: RootRouteChildren = {
   LandingRoute: LandingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  FornecedorTokenRoute: FornecedorTokenRoute,
   AcessoKindTokenRoute: AcessoKindTokenRoute,
   ApiPublicCatalogFileRoute: ApiPublicCatalogFileRoute,
   ApiPublicTrainingImageRoute: ApiPublicTrainingImageRoute,

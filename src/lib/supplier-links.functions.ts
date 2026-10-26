@@ -104,6 +104,18 @@ export const getSupplierPanel = createServerFn({ method: 'POST' })
         for (const item of items ?? []) stock[item.wine_id] = item.counted_qty;
       }
     }
+    // Restaurant-wide bottle total stays server-side; only a coarse per-wine share leaves.
+    let restaurantTotal = 0;
+    for (let offset = 0; ; offset += 1000) {
+      const { data: rows, error } = await db.from('inventory_movements').select('quantity').eq('restaurant_id', link.restaurant_id).eq('movement_type', 'sale').gte('occurred_at', `${months[0]}-01T03:00:00Z`).lte('occurred_at', now.toISOString()).order('id').range(offset, offset + 999);
+      if (error) throw new Error('Não foi possível carregar as vendas.');
+      for (const r of rows ?? []) restaurantTotal += Number(r.quantity) || 0;
+      if (!rows || rows.length < 1000) break;
+    }
+    const perWine: Record<string, number> = {};
+    for (const s of sales) perWine[s.wine_id] = (perWine[s.wine_id] ?? 0) + s.quantity;
+    const shares: Record<string, number> = {};
+    for (const w of wines) shares[w.id] = restaurantTotal > 0 ? Math.round(((perWine[w.id] ?? 0) / restaurantTotal) * 50) / 50 : 0;
     await db.from('supplier_access_links').update({ last_access_at: now.toISOString() }).eq('id', link.id);
-    return { ok: true as const, restaurantName: restaurant.data?.name ?? '', supplierName: supplier.data.name, wines, sales, stock, stockDate: session?.reference_date ?? null, months, updatedAt: now.toISOString() };
+    return { ok: true as const, restaurantName: restaurant.data?.name ?? '', supplierName: supplier.data.name, wines, sales, stock, shares, stockDate: session?.reference_date ?? null, months, updatedAt: now.toISOString() };
   });

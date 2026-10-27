@@ -24,3 +24,15 @@ describe('supplier sales scope', () => {
     expect(result.bottles).toBe(2); expect(result.revenue).toBe(160);
   });
 });
+import { monthlyAverages, yearlyBottles } from './supplier-panel';
+describe('venda mensal e comparativo anual', () => {
+  it('divide o total do rótulo pelos meses lançados no restaurante', () => {
+    expect(monthlyAverages([{ wine_id: 'a', quantity: 6 }, { wine_id: 'a', quantity: 4 }], 4)).toEqual({ a: 2.5 });
+  });
+  it('soma garrafas por mês do ano, ignorando taças', () => {
+    const wines = [{ id: 'a', volume: '750 ml' }, { id: 't', volume: 'Taça' }] as any;
+    const sales = [{ wine_id: 'a', quantity: 3, unit_price: null, occurred_at: '2026-03-10T15:00:00Z' }, { wine_id: 't', quantity: 9, unit_price: null, occurred_at: '2026-03-10T15:00:00Z' }, { wine_id: 'a', quantity: 2, unit_price: null, occurred_at: '2025-03-10T15:00:00Z' }];
+    expect(yearlyBottles(wines, sales, 2026)[2]).toBe(3);
+    expect(yearlyBottles(wines, sales, 2025)[2]).toBe(2);
+  });
+});

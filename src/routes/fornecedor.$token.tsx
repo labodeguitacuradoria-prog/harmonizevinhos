@@ -42,7 +42,6 @@ function SupplierPage() {
   const slice = share > 0 ? share : hasSales ? 0.01 : 0;
   const pieData = [{ name: 'Este rótulo', value: slice }, { name: 'Demais vinhos', value: 1 - slice }];
   const markup = (w: { cost_price: number; sale_price: number }) => w.cost_price > 0 ? `${(w.sale_price / w.cost_price).toFixed(2).replace('.', ',')}x` : '—';
-  const isGlass = (w: { volume?: string | null }) => /taça|taca|glass/i.test(w.volume ?? '');
   return <main className="mx-auto min-h-screen max-w-7xl px-4 pb-8 pt-5 md:px-8 md:pt-8">
     <header className="flex items-center justify-between gap-3 border-b border-border pb-5"><BrandLogo /><div className="flex items-center gap-2"><span className="hidden text-xs text-muted-foreground sm:block">{new Date(data.updatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span><Button size="icon" variant="outline" aria-label="Atualizar painel" title="Atualizar painel" onClick={() => refetch()} disabled={isFetching}><RefreshCw className={isFetching ? 'animate-spin' : ''} /></Button></div></header>
     <section className="flex flex-wrap items-end justify-between gap-4 py-6 md:py-8">

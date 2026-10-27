@@ -1376,6 +1376,7 @@ export type Database = {
           restaurant_id: string
           revoked_at: string | null
           supplier_id: string
+          token: string | null
           token_hash: string
         }
         Insert: {
@@ -1387,6 +1388,7 @@ export type Database = {
           restaurant_id: string
           revoked_at?: string | null
           supplier_id: string
+          token?: string | null
           token_hash: string
         }
         Update: {
@@ -1398,6 +1400,7 @@ export type Database = {
           restaurant_id?: string
           revoked_at?: string | null
           supplier_id?: string
+          token?: string | null
           token_hash?: string
         }
         Relationships: [

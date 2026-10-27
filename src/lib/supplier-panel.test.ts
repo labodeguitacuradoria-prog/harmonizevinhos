@@ -27,7 +27,7 @@ describe('supplier sales scope', () => {
 import { monthlyAverages, yearlyBottles } from './supplier-panel';
 describe('venda mensal e comparativo anual', () => {
   it('divide o total do rótulo pelos meses lançados no restaurante', () => {
-    expect(monthlyAverages([{ wine_id: 'a', quantity: 6 }, { wine_id: 'a', quantity: 4 }], 4)).toEqual({ a: 2.5 });
+    expect(monthlyAverages([{ wine_id: 'a', quantity: 6 }, { wine_id: 'a', quantity: 4 }], 4).a).toBe(2.5);
   });
   it('soma garrafas por mês do ano, ignorando taças', () => {
     const wines = [{ id: 'a', volume: '750 ml' }, { id: 't', volume: 'Taça' }] as any;

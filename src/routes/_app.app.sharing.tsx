@@ -4,11 +4,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Share2, Link2, Copy, Send, Eye, Ban, Loader2 } from 'lucide-react';
+import { Share2, Link2, Copy, Send, Eye, Ban, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { publicOrigin } from '@/lib/public-origin';
-import { createSupplierLink, revokeSupplierLink, setSupplierSharing } from '@/lib/supplier-links.functions';
+import { createSupplierLink, revokeSupplierLink, setSupplierSharing, getSupplierLinkToken, deleteSupplierLink } from '@/lib/supplier-links.functions';
 
 export const Route = createFileRoute('/_app/app/sharing')({
   head: () => ({ meta: [
@@ -100,13 +100,23 @@ function SharingPage() {
               <Button variant="outline" size="sm" asChild><a href={`https://wa.me/${phone}?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer"><Send />Enviar por WhatsApp</a></Button>
               <Button variant="outline" size="sm" asChild><a href={`/fornecedor/${current.token}`} target="_blank" rel="noopener noreferrer"><Eye />Ver como fornecedor</a></Button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Copie ou envie agora. O endereço não fica salvo na tela; o acesso pode ser revogado abaixo.</p>
+            <p className="mt-2 text-xs text-muted-foreground">Você pode reabrir, copiar ou reenviar este link abaixo enquanto estiver ativo.</p>
           </div>}
           {supplierLinks.map(l => {
             const active = !l.revoked_at && new Date(l.expires_at).getTime() > Date.now();
+            const withToken = (fn: (u: string, exp: string) => void) => action(s.id, async () => { const r = await getSupplierLinkToken({ data: { id: l.id } }); fn(`${publicOrigin()}/fornecedor/${r.token}`, r.expires_at); });
+            const msg = (u: string, exp: string) => `Olá! Confira as informações dos seus vinhos no restaurante pela La Bodeguita:\n${u}\nAcesso até ${new Date(exp).toLocaleDateString('pt-BR')}. Este link é privado; não o encaminhe.`;
             return <div key={l.id} className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
               <span>{l.revoked_at ? 'Revogado' : !active ? 'Expirado' : !on ? 'Suspenso' : 'Link ativo'} · Até {new Date(l.expires_at).toLocaleDateString('pt-BR')} · Último acesso: {l.last_access_at ? new Date(l.last_access_at).toLocaleString('pt-BR') : 'ainda não acessado'}</span>
-              {active && <Button size="sm" variant="ghost" disabled={!!busy} onClick={() => action(s.id, async () => { await revokeSupplierLink({ data: { id: l.id } }); setFresh(prev => { const next = { ...prev }; delete next[s.id]; return next; }); toast.success('Link revogado.'); })}><Ban />Revogar</Button>}
+              <div className="flex flex-wrap gap-1">
+                {active && <>
+                  <Button size="sm" variant="ghost" disabled={!!busy} onClick={() => { const w = window.open('', '_blank'); withToken(u => { if (w) w.location.href = u; else window.open(u, '_blank'); }).catch(() => w?.close()); }}><Eye />Ver como fornecedor</Button>
+                  <Button size="sm" variant="ghost" disabled={!!busy} onClick={() => withToken(u => copy(u))}><Copy />Copiar</Button>
+                  <Button size="sm" variant="ghost" disabled={!!busy} onClick={() => { const w = window.open('', '_blank'); withToken((u, exp) => { const href = `https://wa.me/${phone}?text=${encodeURIComponent(msg(u, exp))}`; if (w) w.location.href = href; else window.open(href, '_blank'); }); }}><Send />Reenviar</Button>
+                  <Button size="sm" variant="ghost" disabled={!!busy} onClick={() => action(s.id, async () => { await revokeSupplierLink({ data: { id: l.id } }); setFresh(prev => { const next = { ...prev }; delete next[s.id]; return next; }); toast.success('Link revogado.'); })}><Ban />Revogar</Button>
+                </>}
+                {!active && <Button size="sm" variant="ghost" disabled={!!busy} onClick={() => action(s.id, async () => { await deleteSupplierLink({ data: { id: l.id } }); toast.success('Link excluído.'); })}><Trash2 />Excluir</Button>}
+              </div>
             </div>;
           })}
         </li>;

@@ -32,7 +32,7 @@ export const createSupplierLink = createServerFn({ method: 'POST' })
     const expires_at = new Date(Date.now() + data.days * 86400000).toISOString();
     const { data: link, error } = await supabaseAdmin.from('supplier_access_links').insert({
       restaurant_id: data.restaurant_id, supplier_id: data.supplier_id,
-      token_hash: helpers.hashToken(token), created_by: context.userId, expires_at,
+      token_hash: helpers.hashToken(token), token, created_by: context.userId, expires_at,
     }).select('id').single();
     if (error) throw new Error('Não foi possível gerar o link.');
     const { error: sharingError } = await supabaseAdmin.from('restaurant_supplier_access').upsert({ restaurant_id: data.restaurant_id, supplier_id: data.supplier_id, enabled: true }, { onConflict: 'restaurant_id,supplier_id' });
@@ -54,6 +54,35 @@ export const revokeSupplierLink = createServerFn({ method: 'POST' })
     if (updateError) throw new Error('Não foi possível revogar o link.');
     return { ok: true };
   });
+
+export const getSupplierLinkToken = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase.from('supplier_access_links').select('restaurant_id').eq('id', data.id).maybeSingle();
+    if (error || !row) throw new Error('Link não encontrado ou sem permissão.');
+    await authorize(context, row.restaurant_id);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: link } = await supabaseAdmin.from('supplier_access_links').select('token,expires_at,revoked_at').eq('id', data.id).single();
+    if (!link?.token) throw new Error('Este link foi criado antes da atualização e não pode ser reaberto. Gere um novo link.');
+    if (link.revoked_at || new Date(link.expires_at).getTime() <= Date.now()) throw new Error('Link inativo.');
+    return { token: link.token as string, expires_at: link.expires_at as string };
+  });
+
+export const deleteSupplierLink = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase.from('supplier_access_links').select('restaurant_id,revoked_at,expires_at').eq('id', data.id).maybeSingle();
+    if (error || !row) throw new Error('Link não encontrado ou sem permissão.');
+    await authorize(context, row.restaurant_id);
+    if (!row.revoked_at && new Date(row.expires_at).getTime() > Date.now()) throw new Error('Revogue o link antes de excluí-lo.');
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { error: delError } = await supabaseAdmin.from('supplier_access_links').delete().eq('id', data.id);
+    if (delError) throw new Error('Não foi possível excluir o link.');
+    return { ok: true };
+  });
+
 
 export const getSupplierPanel = createServerFn({ method: 'POST' })
   .inputValidator((d: unknown) => z.object({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/) }).parse(d))

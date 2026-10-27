@@ -100,7 +100,7 @@ function SharingPage() {
               <Button variant="outline" size="sm" asChild><a href={`https://wa.me/${phone}?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer"><Send />Enviar por WhatsApp</a></Button>
               <Button variant="outline" size="sm" asChild><a href={`/fornecedor/${current.token}`} target="_blank" rel="noopener noreferrer"><Eye />Ver como fornecedor</a></Button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Copie ou envie agora. O endereço não fica salvo na tela; o acesso pode ser revogado abaixo.</p>
+            <p className="mt-2 text-xs text-muted-foreground">Você pode reabrir, copiar ou reenviar este link abaixo enquanto estiver ativo.</p>
           </div>}
           {supplierLinks.map(l => {
             const active = !l.revoked_at && new Date(l.expires_at).getTime() > Date.now();

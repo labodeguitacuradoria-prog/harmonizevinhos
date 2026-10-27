@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { supplierLinkAllowed, type SupplierPanelWine, type SupplierSale } from './supplier-panel';
+import { supplierLinkAllowed, monthlyAverages, yearlyBottles, type SupplierPanelWine, type SupplierSale } from './supplier-panel';
 
 const Scope = z.object({ restaurant_id: z.string().uuid(), supplier_id: z.string().uuid() });
 async function authorize(context: { supabase: any; userId: string }, restaurantId: string) {
@@ -115,16 +115,17 @@ export const getSupplierPanel = createServerFn({ method: 'POST' })
       const date = new Date(Date.UTC(year, month - 4 + i, 1));
       return date.toISOString().slice(0, 7);
     });
-    const sales: SupplierSale[] = [];
+    const allSales: SupplierSale[] = [];
     const stock: Record<string, number | null> = {};
-    const { data: session, error: sessionError } = await db.from('stock_count_sessions').select('id,reference_date').eq('restaurant_id', link.restaurant_id).eq('status', 'closed').order('reference_date', { ascending: false }).order('closed_at', { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
+    // Mesma regra do Cadastro de Produtos: última contagem fechada pela data de fechamento.
+    const { data: session, error: sessionError } = await db.from('stock_count_sessions').select('id,reference_date,closed_at').eq('restaurant_id', link.restaurant_id).eq('status', 'closed').order('closed_at', { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
     if (sessionError) throw new Error('Não foi possível carregar a contagem.');
     for (let batch = 0; batch < wines.length; batch += 50) {
       const ids = wines.slice(batch, batch + 50).map(w => w.id);
       for (let offset = 0; ; offset += 1000) {
-        const { data: rows, error } = await db.from('inventory_movements').select('wine_id,quantity,unit_price,occurred_at').eq('restaurant_id', link.restaurant_id).eq('movement_type', 'sale').in('wine_id', ids).gte('occurred_at', `${months[0]}-01T03:00:00Z`).lte('occurred_at', now.toISOString()).order('id').range(offset, offset + 999);
+        const { data: rows, error } = await db.from('inventory_movements').select('wine_id,quantity,unit_price,occurred_at').eq('restaurant_id', link.restaurant_id).eq('movement_type', 'sale').in('wine_id', ids).order('id').range(offset, offset + 999);
         if (error) throw new Error('Não foi possível carregar as vendas.');
-        sales.push(...(rows ?? []));
+        allSales.push(...(rows ?? []));
         if (!rows || rows.length < 1000) break;
       }
       if (session) {
@@ -133,18 +134,28 @@ export const getSupplierPanel = createServerFn({ method: 'POST' })
         for (const item of items ?? []) stock[item.wine_id] = item.counted_qty;
       }
     }
-    // Restaurant-wide bottle total stays server-side; only a coarse per-wine share leaves.
+    const fromIso = new Date(`${months[0]}-01T03:00:00Z`).getTime();
+    const sales = allSales.filter(s => new Date(s.occurred_at).getTime() >= fromIso);
+    // Restaurant-wide totals stay server-side; only per-wine averages and a coarse share leave.
     let restaurantTotal = 0;
+    const launched = new Set<string>();
     for (let offset = 0; ; offset += 1000) {
-      const { data: rows, error } = await db.from('inventory_movements').select('quantity').eq('restaurant_id', link.restaurant_id).eq('movement_type', 'sale').gte('occurred_at', `${months[0]}-01T03:00:00Z`).lte('occurred_at', now.toISOString()).order('id').range(offset, offset + 999);
+      const { data: rows, error } = await db.from('inventory_movements').select('quantity,occurred_at').eq('restaurant_id', link.restaurant_id).eq('movement_type', 'sale').order('id').range(offset, offset + 999);
       if (error) throw new Error('Não foi possível carregar as vendas.');
-      for (const r of rows ?? []) restaurantTotal += Number(r.quantity) || 0;
+      for (const r of rows ?? []) {
+        const d = new Date(r.occurred_at as string);
+        launched.add(`${d.getFullYear()}-${d.getMonth()}`);
+        if (d.getTime() >= fromIso) restaurantTotal += Number(r.quantity) || 0;
+      }
       if (!rows || rows.length < 1000) break;
     }
+    const monthly = monthlyAverages(allSales, launched.size);
     const perWine: Record<string, number> = {};
     for (const s of sales) perWine[s.wine_id] = (perWine[s.wine_id] ?? 0) + s.quantity;
     const shares: Record<string, number> = {};
     for (const w of wines) shares[w.id] = restaurantTotal > 0 ? Math.round(((perWine[w.id] ?? 0) / restaurantTotal) * 50) / 50 : 0;
+    const yearCurr = yearlyBottles(wines, allSales, year);
+    const yearPrev = yearlyBottles(wines, allSales, year - 1);
     await db.from('supplier_access_links').update({ last_access_at: now.toISOString() }).eq('id', link.id);
-    return { ok: true as const, restaurantName: restaurant.data?.name ?? '', supplierName: supplier.data.name, wines, sales, stock, shares, stockDate: session?.reference_date ?? null, months, updatedAt: now.toISOString() };
+    return { ok: true as const, restaurantName: restaurant.data?.name ?? '', supplierName: supplier.data.name, wines, sales, stock, monthly, shares, yearCurr, yearPrev, currentYear: year, stockDate: session ? (session.closed_at ?? session.reference_date) : null, months, updatedAt: now.toISOString() };
   });

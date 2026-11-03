@@ -138,14 +138,21 @@ export const getSupplierPanel = createServerFn({ method: 'POST' })
     const sales = allSales.filter(s => new Date(s.occurred_at).getTime() >= fromIso);
     // Restaurant-wide totals stay server-side; only per-wine averages and a coarse share leave.
     let restaurantTotal = 0;
+    let restaurantRevenue = 0;
+    let firstRevMs = 0;
+    const revFromMs = Date.UTC(year, month - 24, 1, 3);
     const launched = new Set<string>();
     for (let offset = 0; ; offset += 1000) {
-      const { data: rows, error } = await db.from('inventory_movements').select('quantity,occurred_at').eq('restaurant_id', link.restaurant_id).eq('movement_type', 'sale').order('id').range(offset, offset + 999);
+      const { data: rows, error } = await db.from('inventory_movements').select('quantity,unit_price,occurred_at').eq('restaurant_id', link.restaurant_id).eq('movement_type', 'sale').order('id').range(offset, offset + 999);
       if (error) throw new Error('Não foi possível carregar as vendas.');
       for (const r of rows ?? []) {
         const d = new Date(r.occurred_at as string);
         launched.add(`${d.getFullYear()}-${d.getMonth()}`);
         if (d.getTime() >= fromIso) restaurantTotal += Number(r.quantity) || 0;
+        if (d.getTime() >= revFromMs) {
+          restaurantRevenue += (Number(r.quantity) || 0) * (Number(r.unit_price) || 0);
+          if (!firstRevMs || d.getTime() < firstRevMs) firstRevMs = d.getTime();
+        }
       }
       if (!rows || rows.length < 1000) break;
     }
@@ -154,8 +161,18 @@ export const getSupplierPanel = createServerFn({ method: 'POST' })
     for (const s of sales) perWine[s.wine_id] = (perWine[s.wine_id] ?? 0) + s.quantity;
     const shares: Record<string, number> = {};
     for (const w of wines) shares[w.id] = restaurantTotal > 0 ? Math.round(((perWine[w.id] ?? 0) / restaurantTotal) * 50) / 50 : 0;
+    // Revenue share over up to 24 months (requested by the owner to be shown as a percentage).
+    const revenueShares: Record<string, number> = {};
+    for (const s of allSales) {
+      if (new Date(s.occurred_at).getTime() < revFromMs) continue;
+      revenueShares[s.wine_id] = (revenueShares[s.wine_id] ?? 0) + (Number(s.quantity) || 0) * (Number(s.unit_price) || 0);
+    }
+    for (const id of Object.keys(revenueShares)) revenueShares[id] = restaurantRevenue > 0 ? (revenueShares[id] / restaurantRevenue) * 100 : 0;
+    const revenueMonths = firstRevMs ? Math.min(24, (year * 12 + month) - (new Date(firstRevMs).getUTCFullYear() * 12 + new Date(firstRevMs).getUTCMonth() + 1) + 1) : 0;
+    const wineYears: Record<string, { curr: number[]; prev: number[] }> = {};
+    for (const w of wines) wineYears[w.id] = { curr: yearlyBottles([w], allSales, year), prev: yearlyBottles([w], allSales, year - 1) };
     const yearCurr = yearlyBottles(wines, allSales, year);
     const yearPrev = yearlyBottles(wines, allSales, year - 1);
     await db.from('supplier_access_links').update({ last_access_at: now.toISOString() }).eq('id', link.id);
-    return { ok: true as const, restaurantName: restaurant.data?.name ?? '', supplierName: supplier.data.name, wines, sales, stock, monthly, shares, yearCurr, yearPrev, currentYear: year, stockDate: session ? (session.closed_at ?? session.reference_date) : null, months, updatedAt: now.toISOString() };
+    return { ok: true as const, restaurantName: restaurant.data?.name ?? '', supplierName: supplier.data.name, wines, sales, stock, monthly, shares, revenueShares, revenueMonths, wineYears, yearCurr, yearPrev, currentYear: year, stockDate: session ? (session.closed_at ?? session.reference_date) : null, months, updatedAt: now.toISOString() };
   });

@@ -36,3 +36,34 @@ describe('venda mensal e comparativo anual', () => {
     expect(yearlyBottles(wines, sales, 2025)[2]).toBe(2);
   });
 });
+
+import { isGlassVolume, accumulateBottles } from './supplier-panel';
+describe('participação em garrafas', () => {
+  const from = Date.UTC(2026, 9, 1, 3); // 01/10/2026
+  it('reconhece taça como não-garrafa', () => {
+    expect(isGlassVolume('Taça 150ml')).toBe(true);
+    expect(isGlassVolume('750 ml')).toBe(false);
+    expect(isGlassVolume(null)).toBe(false);
+  });
+  it('soma garrafas e deixa as taças fora do total da casa', () => {
+    const rows = [
+      { wine_id: 'a', quantity: 4, occurred_at: '2026-10-10T15:00:00Z' },
+      { wine_id: 't', quantity: 30, occurred_at: '2026-10-10T15:00:00Z' },
+      { wine_id: 'b', quantity: 6, occurred_at: '2026-10-12T15:00:00Z' },
+    ];
+    const s = accumulateBottles({ total: 0, firstMs: 0, byWine: {} }, rows, new Set(['t']), from);
+    expect(s.total).toBe(10);
+    expect(s.byWine.a).toBe(4);
+    expect(s.byWine.t).toBe(undefined);
+    expect(Math.round((s.byWine.a / s.total) * 1000) / 10).toBe(40);
+  });
+  it('descarta o que é anterior à janela e marca a primeira venda', () => {
+    const rows = [
+      { wine_id: 'a', quantity: 5, occurred_at: '2026-09-30T20:00:00Z' },
+      { wine_id: 'a', quantity: 2, occurred_at: '2026-10-05T15:00:00Z' },
+    ];
+    const s = accumulateBottles({ total: 0, firstMs: 0, byWine: {} }, rows, new Set<string>(), from);
+    expect(s.total).toBe(2);
+    expect(s.firstMs).toBe(new Date('2026-10-05T15:00:00Z').getTime());
+  });
+});

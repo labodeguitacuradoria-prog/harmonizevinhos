@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getSupplierPanel } from '@/lib/supplier-links.functions';
-import { supplierSales } from '@/lib/supplier-panel';
 import { BrandLogo } from '@/components/BrandLogo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +21,6 @@ export const Route = createFileRoute('/fornecedor/$token')({
 });
 const money = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const number = (n: number) => n.toLocaleString('pt-BR');
-const monthLabel = (key: string) => new Date(`${key}-15T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
 function SupplierPage() {
   const { token } = Route.useParams();
   const [search, setSearch] = useState('');

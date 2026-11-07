@@ -10,20 +10,13 @@ import { claimSignupModule } from "@/lib/modules.functions";
 import AccessMapDialog from "@/components/AccessMapDialog";
 import { Building2, Layers, Plus, Users, X, ArrowRight, Moon, Sun, GraduationCap, FileSpreadsheet, Printer } from "lucide-react";
 import { EXAMPLE_RESTAURANT } from "@/lib/manual/printed-menu-manual";
-
-const LEARN_TASKS: { title: string; goal: string; step: number }[] = [
-  { title: "Cadastrar os vinhos da carta", goal: "Trazer os rótulos da planilha para o sistema", step: 1 },
-  { title: "Criar minha primeira carta", goal: "Escolher modelo, papel e cabeçalho", step: 2 },
-  { title: "Organizar as seções", goal: "Espumantes, brancos, tintos, taças…", step: 4 },
-  { title: "Escolher o que aparece impresso", goal: "Safra, uva, região, preço", step: 6 },
-  { title: "Imprimir ou gerar o PDF", goal: "Deixar a carta pronta para a mesa", step: 9 },
-];
+import { DEMO_TASKS as LEARN_TASKS } from "@/lib/manual/demo-tasks";
 
 function LearnDialog({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
-  function start(step: number) {
+  function start(task: (typeof LEARN_TASKS)[number]["key"]) {
     onClose();
-    navigate({ to: "/app/manual", hash: `passo-${step}` });
+    navigate({ to: "/app/demo", search: { task } });
   }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
@@ -46,7 +39,7 @@ function LearnDialog({ onClose }: { onClose: () => void }) {
           {LEARN_TASKS.map((t) => (
             <button
               key={t.title}
-              onClick={() => start(t.step)}
+              onClick={() => start(t.key)}
               className="group flex w-full items-center gap-3 rounded-md border border-border px-3 py-2.5 text-left transition-colors hover:border-primary"
             >
               <span className="min-w-0 flex-1">
@@ -58,7 +51,7 @@ function LearnDialog({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <button
-          onClick={() => start(1)}
+          onClick={() => start("wines")}
           className="mt-5 w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
         >
           Fazer a demonstração completa

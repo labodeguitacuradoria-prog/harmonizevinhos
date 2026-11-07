@@ -29,6 +29,7 @@ import { Route as AppAppCadastrosRouteImport } from './routes/_app.app.cadastros
 import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalog-admin'
 import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage-fees'
 import { Route as AppAppDashboardRouteImport } from './routes/_app.app.dashboard'
+import { Route as AppAppDemoRouteImport } from './routes/_app.app.demo'
 import { Route as AppAppEstoqueRouteImport } from './routes/_app.app.estoque'
 import { Route as AppAppManualRouteImport } from './routes/_app.app.manual'
 import { Route as AppAppOrdersRouteImport } from './routes/_app.app.orders'
@@ -151,6 +152,11 @@ const AppAppCorkageFeesRoute = AppAppCorkageFeesRouteImport.update({
 const AppAppDashboardRoute = AppAppDashboardRouteImport.update({
   id: '/app/dashboard',
   path: '/app/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppDemoRoute = AppAppDemoRouteImport.update({
+  id: '/app/demo',
+  path: '/app/demo',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppEstoqueRoute = AppAppEstoqueRouteImport.update({
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
+  '/app/demo': typeof AppAppDemoRoute
   '/app/estoque': typeof AppAppEstoqueRoute
   '/app/manual': typeof AppAppManualRoute
   '/app/orders': typeof AppAppOrdersRoute
@@ -332,6 +339,7 @@ export interface FileRoutesByTo {
   '/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
+  '/app/demo': typeof AppAppDemoRoute
   '/app/estoque': typeof AppAppEstoqueRoute
   '/app/manual': typeof AppAppManualRoute
   '/app/orders': typeof AppAppOrdersRoute
@@ -378,6 +386,7 @@ export interface FileRoutesById {
   '/_app/app/catalog-admin': typeof AppAppCatalogAdminRoute
   '/_app/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/_app/app/dashboard': typeof AppAppDashboardRoute
+  '/_app/app/demo': typeof AppAppDemoRoute
   '/_app/app/estoque': typeof AppAppEstoqueRoute
   '/_app/app/manual': typeof AppAppManualRoute
   '/_app/app/orders': typeof AppAppOrdersRoute
@@ -424,6 +433,7 @@ export interface FileRouteTypes {
     | '/app/catalog-admin'
     | '/app/corkage-fees'
     | '/app/dashboard'
+    | '/app/demo'
     | '/app/estoque'
     | '/app/manual'
     | '/app/orders'
@@ -468,6 +478,7 @@ export interface FileRouteTypes {
     | '/app/catalog-admin'
     | '/app/corkage-fees'
     | '/app/dashboard'
+    | '/app/demo'
     | '/app/estoque'
     | '/app/manual'
     | '/app/orders'
@@ -513,6 +524,7 @@ export interface FileRouteTypes {
     | '/_app/app/catalog-admin'
     | '/_app/app/corkage-fees'
     | '/_app/app/dashboard'
+    | '/_app/app/demo'
     | '/_app/app/estoque'
     | '/_app/app/manual'
     | '/_app/app/orders'
@@ -697,6 +709,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/demo': {
+      id: '/_app/app/demo'
+      path: '/app/demo'
+      fullPath: '/app/demo'
+      preLoaderRoute: typeof AppAppDemoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/estoque': {
       id: '/_app/app/estoque'
       path: '/app/estoque'
@@ -872,6 +891,7 @@ interface AppRouteChildren {
   AppAppCatalogAdminRoute: typeof AppAppCatalogAdminRoute
   AppAppCorkageFeesRoute: typeof AppAppCorkageFeesRoute
   AppAppDashboardRoute: typeof AppAppDashboardRoute
+  AppAppDemoRoute: typeof AppAppDemoRoute
   AppAppEstoqueRoute: typeof AppAppEstoqueRoute
   AppAppManualRoute: typeof AppAppManualRoute
   AppAppOrdersRoute: typeof AppAppOrdersRoute
@@ -906,6 +926,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppCatalogAdminRoute: AppAppCatalogAdminRoute,
   AppAppCorkageFeesRoute: AppAppCorkageFeesRoute,
   AppAppDashboardRoute: AppAppDashboardRoute,
+  AppAppDemoRoute: AppAppDemoRoute,
   AppAppEstoqueRoute: AppAppEstoqueRoute,
   AppAppManualRoute: AppAppManualRoute,
   AppAppOrdersRoute: AppAppOrdersRoute,

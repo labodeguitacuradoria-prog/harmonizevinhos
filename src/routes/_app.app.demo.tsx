@@ -225,7 +225,43 @@ function DemoPage() {
                   </Group>
                 )}
                 {current.key === "print" && (
-                  <button onClick={() => { setPrinted(true); window.print(); }} className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
+                  <button onClick={async () => {
+                    const { jsPDF } = await import("jspdf");
+                    const a5 = paper === "A5";
+                    const doc = new jsPDF({ unit: "mm", format: a5 ? "a5" : "a4" });
+                    const W = doc.internal.pageSize.getWidth();
+                    const H = doc.internal.pageSize.getHeight();
+                    const m = a5 ? 12 : 18;
+                    const fam = model === "moderno" ? "helvetica" : model === "minimal" ? "courier" : "times";
+                    let y = m + 6;
+                    doc.setFont(fam, "bold").setFontSize(a5 ? 15 : 18).setTextColor(128, 0, 32);
+                    doc.text((header || "Seu restaurante").toUpperCase(), W / 2, y, { align: "center" });
+                    y += 6;
+                    doc.setFont(fam, "normal").setFontSize(8).setTextColor(60, 40, 30);
+                    doc.text("CARTA DE VINHOS", W / 2, y, { align: "center" });
+                    y += 4;
+                    doc.setDrawColor(128, 0, 32).line(m, y, W - m, y);
+                    y += 8;
+                    const fs = a5 ? 8.5 : 10;
+                    for (const s of sections) {
+                      const ws = s.wines.filter((w) => !hidden.has(w.n));
+                      if (!ws.length) continue;
+                      if (y > H - m - 12) { doc.addPage(); y = m + 6; }
+                      doc.setFont(fam, "bold").setFontSize(fs + 1).setTextColor(128, 0, 32).text(s.title.toUpperCase(), m, y);
+                      y += 6;
+                      doc.setFont(fam, "normal").setFontSize(fs).setTextColor(42, 26, 18);
+                      for (const w of ws) {
+                        if (y > H - m) { doc.addPage(); y = m + 6; }
+                        const label = `${fields.n ? `${w.n}  ` : ""}${w.name}${fields.country ? ` · ${w.country}` : ""}`;
+                        doc.text(label, m, y, { maxWidth: W - 2 * m - 22 });
+                        if (fields.price) doc.text(`R$ ${w.price}`, W - m, y, { align: "right" });
+                        y += fs * 0.55;
+                      }
+                      y += 4;
+                    }
+                    doc.save(`carta-${(header || "demonstracao").toLowerCase().replace(/[^a-z0-9]+/gi, "-")}.pdf`);
+                    setPrinted(true);
+                  }} className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
                     <Printer size={16} /> Gerar PDF
                   </button>
                 )}

@@ -8,6 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { createRestaurantWithAccess } from "@/lib/access.functions";
 import { claimSignupModule } from "@/lib/modules.functions";
 import AccessMapDialog from "@/components/AccessMapDialog";
+import MenuShowcase from "@/components/MenuShowcase";
 import { Building2, Layers, Plus, Users, X, ArrowRight, Moon, Sun, GraduationCap, FileSpreadsheet, Printer } from "lucide-react";
 import { EXAMPLE_RESTAURANT } from "@/lib/manual/printed-menu-manual";
 import { DEMO_TASKS as LEARN_TASKS } from "@/lib/manual/demo-tasks";
@@ -165,7 +166,9 @@ function HomePage() {
             <GraduationCap size={16} /> Aprender como o sistema funciona
           </button>
         </div>
-      ) : (
+      ) : null}
+      {memberships.length === 0 && <MenuShowcase />}
+      {memberships.length === 0 ? null : (
         <div className="mt-4 overflow-hidden rounded-lg border border-border bg-card sm:mt-6">
           {memberships.map((m, i) => {
             const canManage = m.role === "rest_admin" || m.role === "rest_owner";

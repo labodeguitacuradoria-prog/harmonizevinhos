@@ -10,7 +10,7 @@ import { claimSignupModule } from "@/lib/modules.functions";
 import AccessMapDialog from "@/components/AccessMapDialog";
 import { Building2, Layers, Plus, Users, X, ArrowRight, Moon, Sun, GraduationCap, FileSpreadsheet, Printer } from "lucide-react";
 import { EXAMPLE_RESTAURANT } from "@/lib/manual/printed-menu-manual";
-import { DEMO_TASKS as LEARN_TASKS } from "./_app.app.demo";
+import { DEMO_TASKS as LEARN_TASKS } from "@/lib/manual/demo-tasks";
 
 function LearnDialog({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();

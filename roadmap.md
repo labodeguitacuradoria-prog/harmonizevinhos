@@ -19,3 +19,4 @@
 - [x] Corrigir o congelamento da janela "Abrir" do Windows em todos os botões que enviam PDF ou imagem.
 
 ## Backlog
+- [x] Guia interativo por missões na Carta impressa

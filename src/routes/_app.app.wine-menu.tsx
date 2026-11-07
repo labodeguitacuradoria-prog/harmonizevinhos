@@ -1,3 +1,4 @@
+import { MenuGuidedTour } from "@/components/printed-menu/MenuGuidedTour";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -624,6 +625,7 @@ function WineMenuPage() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <MenuHelpDialog />
+              <MenuGuidedTour />
               <div className="relative">
                 <button
                   onClick={() => setNewMenuOpen((v) => !v)}
@@ -661,6 +663,7 @@ function WineMenuPage() {
                 )}
               </div>
               <button
+                data-tour="save"
                 onClick={() => save(false)}
                 disabled={saving}
                 className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-primary hover:bg-accent disabled:opacity-50"
@@ -677,6 +680,7 @@ function WineMenuPage() {
                 </button>
               )}
               <button
+                data-tour="print"
                 onClick={() => window.print()}
                 className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-foreground hover:opacity-90"
               >
@@ -793,7 +797,7 @@ function WineMenuPage() {
 
           {!lockedDesign && (
           <div className="space-y-2">
-            <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <div data-tour="template" className="overflow-hidden rounded-lg border border-border bg-card">
               <button
                 type="button"
                 onClick={() => setEditorPanel((current) => current === "model" ? null : "model")}
@@ -1231,7 +1235,7 @@ function WineMenuPage() {
           )}
 
 
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div data-tour="sections" className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
               <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
                 Seções ({totalItems} rótulos)
@@ -1633,7 +1637,7 @@ function WineMenuPage() {
               </IconBtn>
             </div>
           </div>
-          <div className="overflow-x-auto rounded-xl border border-border bg-neutral-200 p-4 print:border-0 print:bg-white print:p-0">
+          <div data-tour="preview" className="overflow-x-auto rounded-xl border border-border bg-neutral-200 p-4 print:border-0 print:bg-white print:p-0">
             <div className="menu-preview-zoom" style={{ zoom: previewZoom }}>
               <MenuPreview
               customDesign={customDesign}

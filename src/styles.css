@@ -307,11 +307,13 @@
   );
 }
 .light .landing-veil {
+  /* Véu escuro e quente mesmo no modo claro: a foto mantém o clima
+     e os cards claros de vidro ganham contraste. */
   background: linear-gradient(
     to bottom,
-    color-mix(in oklab, var(--background) 52%, transparent),
-    color-mix(in oklab, var(--background) 30%, transparent) 45%,
-    color-mix(in oklab, var(--background) 60%, transparent)
+    rgb(18 12 8 / 0.62),
+    rgb(18 12 8 / 0.42) 45%,
+    rgb(18 12 8 / 0.7)
   );
 }
 

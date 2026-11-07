@@ -144,7 +144,7 @@ function Landing() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
+      <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
         <BrandLogo />
         <div className="flex shrink-0 items-center gap-2">
           <button
@@ -162,7 +162,7 @@ function Landing() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-5 pb-16">
+      <main className="mx-auto flex min-h-[calc(100vh-72px)] max-w-7xl flex-col px-5 pb-6">
         <h1 className="max-w-3xl text-2xl font-semibold tracking-tight md:text-4xl">
           Escolha o pacote que você quer usar
         </h1>
@@ -171,14 +171,14 @@ function Landing() {
           quiser.
         </p>
 
-        <div className="mt-10 grid items-stretch gap-4 lg:grid-cols-5">
+        <div className="mt-6 grid items-stretch gap-3 lg:grid-cols-5">
           {PACKS.map((p) => {
             const active = selected ? selected === p.module : !!p.highlight;
             const available = p.available !== false;
             return (
             <div
               key={p.module}
-              className="relative flex h-full flex-col rounded-2xl border bg-card p-5 transition-all duration-150 lg:min-h-[520px] lg:pt-7"
+              className="relative flex h-full flex-col rounded-2xl border bg-card p-4 transition-all duration-150 lg:p-5"
               style={{
                 borderColor: active
                   ? "color-mix(in oklab, var(--gold) 55%, transparent)"
@@ -203,14 +203,14 @@ function Landing() {
                   Em desenvolvimento
                 </span>
               )}
-              <div className="flex items-center gap-2 text-primary lg:flex-col lg:items-start lg:gap-4">
-                <span className="shrink-0 lg:[&>svg]:h-8 lg:[&>svg]:w-8">{p.icon}</span>
-                <h2 className="text-sm font-semibold leading-snug text-foreground lg:text-base">{p.title}</h2>
+              <div className="flex items-center gap-2 text-primary lg:flex-col lg:items-start lg:gap-3">
+                <span className="shrink-0 lg:[&>svg]:h-7 lg:[&>svg]:w-7">{p.icon}</span>
+                <h2 className="text-sm font-semibold leading-snug text-foreground lg:text-[15px]">{p.title}</h2>
               </div>
-              <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">
+              <p className="mt-2.5 text-[12px] leading-relaxed text-muted-foreground">
                 {p.description}
               </p>
-              <ul className="mt-4 space-y-1.5">
+              <ul className="mt-3 space-y-1.5">
                 {p.bullets.map((b) => (
                   <li key={b} className="flex gap-2 text-[11px] text-muted-foreground">
                     <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-primary" />
@@ -223,7 +223,7 @@ function Landing() {
                   Este módulo ainda está em desenvolvimento e será liberado em breve.
                 </p>
               )}
-              <div className="mt-auto space-y-2 border-t border-border pt-4">
+              <div className="mt-auto space-y-2 border-t border-border pt-3">
                 {available ? (
                   <>
                     <a

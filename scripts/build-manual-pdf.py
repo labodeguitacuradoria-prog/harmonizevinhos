@@ -39,6 +39,7 @@ for i,s in enumerate(m["PRINTED_MENU_STEPS"],1):
     blk+=[Spacer(1,6),Table([[box("EXEMPLO · SABOR DA TERRA",s["example"]),box("CONFIRA  ☐",s["check"])]],colWidths=[245,245],style=[("VALIGN",(0,0),(-1,-1),"TOP"),("LEFTPADDING",(0,0),(-1,-1),0)])]
     if s.get("tip"): blk+=[Spacer(1,4),Paragraph(f"<font color='#B08D1E'><b>Dica:</b></font> {s['tip']}",mut)]
     f+=[KeepTogether(blk),Spacer(1,16)]
-f+=[Paragraph("Dúvidas frequentes",h2)]
-for q in m["PRINTED_MENU_FAQ"]: f+=[Paragraph(f"<b>{q['q']}</b>",body),Paragraph(q["a"],mut),Spacer(1,6)]
+faq=[Paragraph("Dúvidas frequentes",h2)]
+for q in m["PRINTED_MENU_FAQ"]: faq+=[Paragraph(f"<b>{q['q']}</b>",body),Paragraph(q["a"],mut),Spacer(1,6)]
+f.append(KeepTogether(faq))
 SimpleDocTemplate("public/materials/manual-impressao-de-cartas.pdf",pagesize=A4,leftMargin=40,rightMargin=40,topMargin=45,bottomMargin=50,title="Manual — Impressão de Cartas").build(f,onFirstPage=footer,onLaterPages=footer)

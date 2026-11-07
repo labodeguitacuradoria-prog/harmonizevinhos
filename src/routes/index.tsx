@@ -171,7 +171,7 @@ function Landing() {
           quiser.
         </p>
 
-        <div className="mt-6 grid flex-1 items-stretch gap-3 lg:grid-cols-5">
+        <div className="mt-6 grid items-stretch gap-3 lg:grid-cols-5">
           {PACKS.map((p) => {
             const active = selected ? selected === p.module : !!p.highlight;
             const available = p.available !== false;

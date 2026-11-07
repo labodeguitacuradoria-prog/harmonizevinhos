@@ -184,7 +184,7 @@ function Landing() {
             return (
             <div
               key={p.module}
-              className="relative flex h-full flex-col rounded-2xl border p-4 backdrop-blur-2xl transition-all duration-150 lg:p-5"
+              className="landing-card relative flex h-full flex-col rounded-2xl border p-4 backdrop-blur-2xl transition-all duration-150 lg:p-5"
               style={{
                 background: "var(--landing-card-bg)",
                 borderColor: active

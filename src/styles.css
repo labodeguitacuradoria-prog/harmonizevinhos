@@ -312,6 +312,11 @@
   --foreground: oklch(1 0 0);
   --muted-foreground: oklch(0.82 0 0);
 }
+/* Dentro dos cards de vidro claro o texto volta a ser escuro. */
+.light .landing-page .landing-card {
+  --foreground: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.42 0 0);
+}
 .light .landing-veil {
   /* Véu escuro e quente mesmo no modo claro: a foto mantém o clima
      e os cards claros de vidro ganham contraste. */

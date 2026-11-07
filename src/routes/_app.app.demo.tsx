@@ -7,9 +7,12 @@ import { EXAMPLE_MENU, EXAMPLE_RESTAURANT, type ExampleSection } from "@/lib/man
 
 
 export const Route = createFileRoute("/_app/app/demo")({
-  validateSearch: (s: Record<string, unknown>): { task?: TaskKey } => {
+  validateSearch: (s: Record<string, unknown>): { task?: TaskKey; model?: string; paper?: "A4" | "A5" } => {
     const t = DEMO_TASKS.find((x) => x.key === s.task);
-    return t ? { task: t.key } : {};
+    const out: { task?: TaskKey; model?: string; paper?: "A4" | "A5" } = t ? { task: t.key } : {};
+    if (typeof s.model === "string" && ["classico", "moderno", "minimal"].includes(s.model)) out.model = s.model;
+    if (s.paper === "A4" || s.paper === "A5") out.paper = s.paper;
+    return out;
   },
   head: () => ({
     meta: [
@@ -27,15 +30,15 @@ const MODELS = [
 ];
 
 function DemoPage() {
-  const { task } = Route.useSearch();
+  const { task, model: presetModel, paper: presetPaper } = Route.useSearch();
   const navigate = useNavigate();
   const [idx, setIdx] = useState(Math.max(0, DEMO_TASKS.findIndex((t) => t.key === task)));
   const current = DEMO_TASKS[idx];
 
   // estado da demonstração
   const [imported, setImported] = useState(idx > 0);
-  const [model, setModel] = useState<string | null>(idx > 1 ? "classico" : null);
-  const [paper, setPaper] = useState<"A4" | "A5" | null>(idx > 1 ? "A4" : null);
+  const [model, setModel] = useState<string | null>(presetModel ?? (idx > 1 ? "classico" : null));
+  const [paper, setPaper] = useState<"A4" | "A5" | null>(presetPaper ?? (idx > 1 ? "A4" : null));
   const [header, setHeader] = useState(idx > 1 ? EXAMPLE_RESTAURANT : "");
   const [sections, setSections] = useState<ExampleSection[]>(EXAMPLE_MENU);
   const [moved, setMoved] = useState(false);

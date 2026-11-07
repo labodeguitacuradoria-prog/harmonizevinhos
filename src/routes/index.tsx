@@ -184,7 +184,7 @@ function Landing() {
             return (
             <div
               key={p.module}
-              className="landing-card relative flex h-full flex-col rounded-2xl p-4 transition-all duration-150 lg:p-5"
+              className="landing-card relative flex h-full flex-col rounded-2xl p-4 backdrop-blur-xl backdrop-saturate-150 transition-all duration-150 lg:p-5"
               data-active={active ? "true" : undefined}
             >
               {p.highlight && !selected && (

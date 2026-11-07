@@ -144,7 +144,7 @@ function Landing() {
 
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="landing-page relative min-h-screen bg-background text-foreground">
       {/* Fundo: salão de restaurante com véu escuro para manter a leitura */}
       <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
         <img src={landingBg} alt="" className="h-full w-full object-cover" />
@@ -184,15 +184,15 @@ function Landing() {
             return (
             <div
               key={p.module}
-              className="relative flex h-full flex-col rounded-2xl border p-4 backdrop-blur-xl transition-all duration-150 lg:p-5"
+              className="landing-card relative flex h-full flex-col rounded-2xl border p-4 backdrop-blur-2xl transition-all duration-150 lg:p-5"
               style={{
                 background: "var(--landing-card-bg)",
                 borderColor: active
-                  ? "color-mix(in oklab, var(--gold) 55%, transparent)"
-                  : "color-mix(in oklab, var(--foreground) 14%, transparent)",
+                  ? "color-mix(in oklab, var(--gold) 60%, transparent)"
+                  : "color-mix(in oklab, var(--foreground) 18%, transparent)",
                 boxShadow: active
-                  ? "0 0 24px color-mix(in oklab, var(--wine) 28%, transparent), inset 0 1px 0 color-mix(in oklab, var(--foreground) 10%, transparent)"
-                  : "inset 0 1px 0 color-mix(in oklab, var(--foreground) 8%, transparent)",
+                  ? "0 24px 48px -12px rgb(0 0 0 / 0.55), 0 0 28px color-mix(in oklab, var(--wine) 32%, transparent), inset 0 1px 0 color-mix(in oklab, var(--foreground) 16%, transparent)"
+                  : "0 20px 40px -14px rgb(0 0 0 / 0.5), inset 0 1px 0 color-mix(in oklab, var(--foreground) 12%, transparent)",
               }}
             >
               {p.highlight && !selected && (

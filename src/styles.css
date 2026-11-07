@@ -544,7 +544,18 @@ input[type="number"]::-webkit-inner-spin-button {
     0 0 36px -6px color-mix(in oklab, var(--gold) 30%, transparent);
 }
 .light .landing-page .landing-card {
-  background: linear-gradient(145deg, rgb(255 255 255 / 0.42), rgb(255 255 255 / 0.24));
+  /* Vidro leitoso: transparência suficiente para o fundo, base clara para leitura. */
+  --foreground: oklch(0.18 0.01 60);
+  --muted-foreground: oklch(0.3 0.01 60);
+  --primary: oklch(0.5 0.12 70);
+  --border: rgb(60 40 20 / 0.18);
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.74) 50%, rgb(250 245 235 / 0.68));
+  border-color: rgb(255 255 255 / 0.6);
+  border-top-color: rgb(255 255 255 / 0.95);
+}
+.light .landing-page .landing-card::before {
+  background: radial-gradient(120% 60% at 0% 0%, rgb(255 255 255 / 0.7), transparent 55%);
 }
 /* Modo claro: botão principal em dourado profundo com texto branco para contraste. */
 .light .landing-page .landing-button-primary {

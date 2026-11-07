@@ -306,6 +306,12 @@
     color-mix(in oklab, var(--background) 68%, transparent)
   );
 }
+/* No modo claro a foto de fundo continua escura: textos da tela inicial
+   (título, logo, subtítulo) passam a claros para manter a leitura. */
+.light .landing-page {
+  --foreground: oklch(1 0 0);
+  --muted-foreground: oklch(0.82 0 0);
+}
 .light .landing-veil {
   /* Véu escuro e quente mesmo no modo claro: a foto mantém o clima
      e os cards claros de vidro ganham contraste. */

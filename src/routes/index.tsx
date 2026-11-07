@@ -144,7 +144,7 @@ function Landing() {
 
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="landing-page relative min-h-screen bg-background text-foreground">
       {/* Fundo: salão de restaurante com véu escuro para manter a leitura */}
       <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
         <img src={landingBg} alt="" className="h-full w-full object-cover" />

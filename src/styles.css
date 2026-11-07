@@ -291,6 +291,30 @@
   scrollbar-width: none;
 }
 
+/* Tela inicial — fundo de restaurante com véu e cards de vidro. */
+:root {
+  --landing-card-bg: color-mix(in oklab, var(--card) 55%, transparent);
+}
+.light {
+  --landing-card-bg: color-mix(in oklab, var(--card) 82%, transparent);
+}
+.landing-veil {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--background) 72%, transparent),
+    color-mix(in oklab, var(--background) 55%, transparent) 45%,
+    color-mix(in oklab, var(--background) 82%, transparent)
+  );
+}
+.light .landing-veil {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--background) 62%, transparent),
+    color-mix(in oklab, var(--background) 40%, transparent) 45%,
+    color-mix(in oklab, var(--background) 70%, transparent)
+  );
+}
+
 /* Tela de escolha de pacotes — padrão Luminous Gold Pill aplicado apenas aqui. */
 .landing-button {
   position: relative;

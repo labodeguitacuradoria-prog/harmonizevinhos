@@ -148,13 +148,7 @@ function Landing() {
       {/* Fundo: salão de restaurante com véu escuro para manter a leitura */}
       <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
         <img src={landingBg} alt="" className="h-full w-full object-cover" />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to bottom, color-mix(in oklab, var(--background) 72%, transparent), color-mix(in oklab, var(--background) 55%, transparent) 45%, color-mix(in oklab, var(--background) 82%, transparent))",
-          }}
-        />
+        <div className="landing-veil absolute inset-0" />
       </div>
       <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
         <BrandLogo />
@@ -192,7 +186,7 @@ function Landing() {
               key={p.module}
               className="relative flex h-full flex-col rounded-2xl border p-4 backdrop-blur-xl transition-all duration-150 lg:p-5"
               style={{
-                background: "color-mix(in oklab, var(--card) 55%, transparent)",
+                background: "var(--landing-card-bg)",
                 borderColor: active
                   ? "color-mix(in oklab, var(--gold) 55%, transparent)"
                   : "color-mix(in oklab, var(--foreground) 14%, transparent)",

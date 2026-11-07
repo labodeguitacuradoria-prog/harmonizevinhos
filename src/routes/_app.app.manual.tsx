@@ -84,7 +84,7 @@ function ManualPage() {
 
       <ol className="space-y-4">
         {PRINTED_MENU_STEPS.map((s, i) => (
-          <li key={s.title} className={`rounded-xl border bg-card p-5 ${done[i] ? "border-primary" : "border-border"}`}>
+          <li id={`passo-${i + 1}`} key={s.title} className={`scroll-mt-6 rounded-xl border bg-card p-5 ${done[i] ? "border-primary" : "border-border"}`}>
             <div className="flex items-start justify-between gap-3">
               <h2 className="text-base font-semibold">
                 <span className="mr-2 text-primary tabular-nums">Passo {i + 1}.</span>{s.title}

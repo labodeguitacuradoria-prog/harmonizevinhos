@@ -146,15 +146,20 @@ function Landing() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
         <BrandLogo />
-        <button
-          type="button"
-          onClick={toggle}
-          title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
-          className="landing-button landing-button-outline landing-button-compact"
-        >
-          {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
-          <span className="hidden sm:inline">{theme === "dark" ? "Claro" : "Escuro"}</span>
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={toggle}
+            title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+            className="landing-button landing-button-outline landing-button-compact"
+          >
+            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+            <span className="hidden sm:inline">{theme === "dark" ? "Claro" : "Escuro"}</span>
+          </button>
+          <a href="/auth?mode=signin" className="landing-button landing-button-primary landing-button-compact">
+            Entrar
+          </a>
+        </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-5 pb-16">
@@ -166,14 +171,14 @@ function Landing() {
           quiser.
         </p>
 
-        <div className="mt-8 grid items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-10 grid items-stretch gap-4 lg:grid-cols-5">
           {PACKS.map((p) => {
             const active = selected ? selected === p.module : !!p.highlight;
             const available = p.available !== false;
             return (
             <div
               key={p.module}
-              className="relative flex h-full flex-col rounded-2xl border bg-card p-5 transition-all duration-150"
+              className="relative flex h-full flex-col rounded-2xl border bg-card p-5 transition-all duration-150 lg:min-h-[520px] lg:pt-7"
               style={{
                 borderColor: active
                   ? "color-mix(in oklab, var(--gold) 55%, transparent)"
@@ -198,9 +203,9 @@ function Landing() {
                   Em desenvolvimento
                 </span>
               )}
-              <div className="flex items-center gap-2 text-primary">
-                {p.icon}
-                <h2 className="text-sm font-semibold leading-snug text-foreground">{p.title}</h2>
+              <div className="flex items-center gap-2 text-primary lg:flex-col lg:items-start lg:gap-4">
+                <span className="shrink-0 lg:[&>svg]:h-8 lg:[&>svg]:w-8">{p.icon}</span>
+                <h2 className="text-sm font-semibold leading-snug text-foreground lg:text-base">{p.title}</h2>
               </div>
               <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">
                 {p.description}
@@ -229,30 +234,14 @@ function Landing() {
                     >
                       {pending === `${p.module}:signup` ? "Abrindo…" : "Experimente grátis"}
                     </a>
-                    <a
-                      href={`/auth?mode=signin&module=${p.module}`}
-                      onClick={() => markSelection(p.module, "signin")}
-                      aria-busy={pending === `${p.module}:signin`}
-                      className="landing-button landing-button-outline w-full"
-                    >
-                      {pending === `${p.module}:signin` ? "Abrindo…" : "Entrar"}
-                    </a>
                   </>
                 ) : (
-                  <>
-                    <span
-                      aria-disabled="true"
-                      className="landing-button landing-button-disabled w-full"
-                    >
-                      Experimente grátis
-                    </span>
-                    <span
-                      aria-disabled="true"
-                      className="landing-button landing-button-disabled w-full"
-                    >
-                      Entrar
-                    </span>
-                  </>
+                  <span
+                    aria-disabled="true"
+                    className="landing-button landing-button-disabled w-full"
+                  >
+                    Experimente grátis
+                  </span>
                 )}
               </div>
             </div>

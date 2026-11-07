@@ -184,16 +184,8 @@ function Landing() {
             return (
             <div
               key={p.module}
-              className="landing-card relative flex h-full flex-col rounded-2xl border p-4 backdrop-blur-2xl transition-all duration-150 lg:p-5"
-              style={{
-                background: "var(--landing-card-bg)",
-                borderColor: active
-                  ? "color-mix(in oklab, var(--gold) 60%, transparent)"
-                  : "color-mix(in oklab, var(--foreground) 18%, transparent)",
-                boxShadow: active
-                  ? "0 24px 48px -12px rgb(0 0 0 / 0.55), 0 0 28px color-mix(in oklab, var(--wine) 32%, transparent), inset 0 1px 0 color-mix(in oklab, var(--foreground) 16%, transparent)"
-                  : "0 20px 40px -14px rgb(0 0 0 / 0.5), inset 0 1px 0 color-mix(in oklab, var(--foreground) 12%, transparent)",
-              }}
+              className="landing-card relative flex h-full flex-col rounded-2xl p-4 backdrop-blur-xl backdrop-saturate-150 transition-all duration-150 lg:p-5"
+              data-active={active ? "true" : undefined}
             >
               {p.highlight && !selected && (
                 <span className="absolute -top-2.5 right-4 rounded-full bg-primary px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-foreground">
@@ -230,14 +222,14 @@ function Landing() {
                   Este módulo ainda está em desenvolvimento e será liberado em breve.
                 </p>
               )}
-              <div className="mt-auto space-y-2 border-t border-border pt-3">
+              <div className="mt-auto flex justify-end border-t border-border pt-3 lg:block">
                 {available ? (
                   <>
                     <a
                       href={`/auth?mode=signup&module=${p.module}`}
                       onClick={() => markSelection(p.module, "signup")}
                       aria-busy={pending === `${p.module}:signup`}
-                      className="landing-button landing-button-primary w-full"
+                      className="landing-button landing-button-primary landing-card-cta lg:w-full"
                     >
                       {pending === `${p.module}:signup` ? "Abrindo…" : "Experimente grátis"}
                     </a>
@@ -245,7 +237,7 @@ function Landing() {
                 ) : (
                   <span
                     aria-disabled="true"
-                    className="landing-button landing-button-disabled w-full"
+                    className="landing-button landing-button-disabled landing-card-cta lg:w-full"
                   >
                     Experimente grátis
                   </span>

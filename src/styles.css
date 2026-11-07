@@ -500,3 +500,52 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .brand-font { font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif; }
+
+/* Cards de vidro com volume: reflexo, borda iluminada e sombra em camadas. */
+.landing-card {
+  isolation: isolate;
+  border: 1px solid color-mix(in oklab, var(--foreground) 16%, transparent);
+  border-top-color: color-mix(in oklab, var(--foreground) 34%, transparent);
+  border-left-color: color-mix(in oklab, var(--foreground) 26%, transparent);
+  background:
+    linear-gradient(145deg,
+      color-mix(in oklab, var(--foreground) 12%, transparent),
+      color-mix(in oklab, var(--foreground) 3%, transparent) 45%,
+      transparent),
+    color-mix(in oklab, var(--background) 55%, transparent);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  box-shadow:
+    0 1px 0 color-mix(in oklab, var(--foreground) 30%, transparent) inset,
+    0 -1px 0 rgb(0 0 0 / 0.35) inset,
+    0 2px 4px rgb(0 0 0 / 0.25),
+    0 12px 24px -8px rgb(0 0 0 / 0.45),
+    0 32px 64px -20px rgb(0 0 0 / 0.6);
+}
+.landing-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(120% 60% at 0% 0%,
+    color-mix(in oklab, var(--foreground) 18%, transparent), transparent 55%);
+}
+.landing-card:hover { transform: translateY(-3px); }
+.landing-card[data-active="true"] {
+  border-color: color-mix(in oklab, var(--gold) 55%, transparent);
+  border-top-color: color-mix(in oklab, var(--gold) 80%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in oklab, var(--gold) 45%, transparent) inset,
+    0 -1px 0 rgb(0 0 0 / 0.35) inset,
+    0 12px 24px -8px rgb(0 0 0 / 0.5),
+    0 32px 64px -20px rgb(0 0 0 / 0.65),
+    0 0 36px -6px color-mix(in oklab, var(--gold) 30%, transparent);
+}
+.light .landing-page .landing-card {
+  background: linear-gradient(145deg, rgb(255 255 255 / 0.78), rgb(255 255 255 / 0.55));
+}
+/* Botão do card: compacto no celular, largura total só no computador. */
+.landing-card-cta { min-height: 36px; padding: 0.5rem 1.1rem; font-size: 0.6875rem; }
+@media (min-width: 1024px) { .landing-card-cta { min-height: 44px; font-size: 0.75rem; } }

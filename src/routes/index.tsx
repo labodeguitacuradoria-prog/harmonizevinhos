@@ -5,6 +5,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { BrandLogo } from "@/components/BrandLogo";
 import { Moon, Sun, ScrollText, UtensilsCrossed, DollarSign, LayoutDashboard, GraduationCap, Wine } from "lucide-react";
 import type { AppModule } from "@/lib/modules";
+import landingBg from "@/assets/landing-restaurant-bg.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -143,8 +144,19 @@ function Landing() {
 
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+    <div className="relative min-h-screen bg-background text-foreground">
+      {/* Fundo: salão de restaurante com véu escuro para manter a leitura */}
+      <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
+        <img src={landingBg} alt="" className="h-full w-full object-cover" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, color-mix(in oklab, var(--background) 72%, transparent), color-mix(in oklab, var(--background) 55%, transparent) 45%, color-mix(in oklab, var(--background) 82%, transparent))",
+          }}
+        />
+      </div>
+      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
         <BrandLogo />
         <div className="flex shrink-0 items-center gap-2">
           <button
@@ -162,7 +174,7 @@ function Landing() {
         </div>
       </header>
 
-      <main className="mx-auto flex min-h-[calc(100vh-72px)] max-w-7xl flex-col px-5 pb-6">
+      <main className="relative z-10 mx-auto flex min-h-[calc(100vh-72px)] max-w-7xl flex-col px-5 pb-6">
         <h1 className="max-w-3xl text-2xl font-semibold tracking-tight md:text-4xl">
           Escolha o pacote que você quer usar
         </h1>
@@ -178,14 +190,15 @@ function Landing() {
             return (
             <div
               key={p.module}
-              className="relative flex h-full flex-col rounded-2xl border bg-card p-4 transition-all duration-150 lg:p-5"
+              className="relative flex h-full flex-col rounded-2xl border p-4 backdrop-blur-xl transition-all duration-150 lg:p-5"
               style={{
+                background: "color-mix(in oklab, var(--card) 55%, transparent)",
                 borderColor: active
                   ? "color-mix(in oklab, var(--gold) 55%, transparent)"
-                  : "var(--border)",
+                  : "color-mix(in oklab, var(--foreground) 14%, transparent)",
                 boxShadow: active
-                  ? "0 0 24px color-mix(in oklab, var(--wine) 28%, transparent)"
-                  : undefined,
+                  ? "0 0 24px color-mix(in oklab, var(--wine) 28%, transparent), inset 0 1px 0 color-mix(in oklab, var(--foreground) 10%, transparent)"
+                  : "inset 0 1px 0 color-mix(in oklab, var(--foreground) 8%, transparent)",
               }}
             >
               {p.highlight && !selected && (

@@ -124,6 +124,7 @@ function AppLayout() {
       { to: "/app/corkage-fees", icon: <Coins className="h-4 w-4" />, label: "Rolha" },
       { to: "/app/sharing", icon: <Share2 className="h-4 w-4" />, label: "Compartilhar" },
       { to: "/app/access-links", icon: <KeyRound className="h-4 w-4" />, label: "Links de acesso" },
+      { to: "/app/manual", icon: <BookOpen className="h-4 w-4" />, label: "Manual" },
     ];
     const visible =
       role === "admin"

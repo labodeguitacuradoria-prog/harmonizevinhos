@@ -30,6 +30,7 @@ import { Route as AppAppCatalogAdminRouteImport } from './routes/_app.app.catalo
 import { Route as AppAppCorkageFeesRouteImport } from './routes/_app.app.corkage-fees'
 import { Route as AppAppDashboardRouteImport } from './routes/_app.app.dashboard'
 import { Route as AppAppEstoqueRouteImport } from './routes/_app.app.estoque'
+import { Route as AppAppManualRouteImport } from './routes/_app.app.manual'
 import { Route as AppAppOrdersRouteImport } from './routes/_app.app.orders'
 import { Route as AppAppPairingKnowledgeRouteImport } from './routes/_app.app.pairing-knowledge'
 import { Route as AppAppPairingsRouteImport } from './routes/_app.app.pairings'
@@ -155,6 +156,11 @@ const AppAppDashboardRoute = AppAppDashboardRouteImport.update({
 const AppAppEstoqueRoute = AppAppEstoqueRouteImport.update({
   id: '/app/estoque',
   path: '/app/estoque',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAppManualRoute = AppAppManualRouteImport.update({
+  id: '/app/manual',
+  path: '/app/manual',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAppOrdersRoute = AppAppOrdersRouteImport.update({
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
   '/app/estoque': typeof AppAppEstoqueRoute
+  '/app/manual': typeof AppAppManualRoute
   '/app/orders': typeof AppAppOrdersRoute
   '/app/pairing-knowledge': typeof AppAppPairingKnowledgeRoute
   '/app/pairings': typeof AppAppPairingsRoute
@@ -326,6 +333,7 @@ export interface FileRoutesByTo {
   '/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/app/dashboard': typeof AppAppDashboardRoute
   '/app/estoque': typeof AppAppEstoqueRoute
+  '/app/manual': typeof AppAppManualRoute
   '/app/orders': typeof AppAppOrdersRoute
   '/app/pairing-knowledge': typeof AppAppPairingKnowledgeRoute
   '/app/pairings': typeof AppAppPairingsRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/_app/app/corkage-fees': typeof AppAppCorkageFeesRoute
   '/_app/app/dashboard': typeof AppAppDashboardRoute
   '/_app/app/estoque': typeof AppAppEstoqueRoute
+  '/_app/app/manual': typeof AppAppManualRoute
   '/_app/app/orders': typeof AppAppOrdersRoute
   '/_app/app/pairing-knowledge': typeof AppAppPairingKnowledgeRoute
   '/_app/app/pairings': typeof AppAppPairingsRoute
@@ -416,6 +425,7 @@ export interface FileRouteTypes {
     | '/app/corkage-fees'
     | '/app/dashboard'
     | '/app/estoque'
+    | '/app/manual'
     | '/app/orders'
     | '/app/pairing-knowledge'
     | '/app/pairings'
@@ -459,6 +469,7 @@ export interface FileRouteTypes {
     | '/app/corkage-fees'
     | '/app/dashboard'
     | '/app/estoque'
+    | '/app/manual'
     | '/app/orders'
     | '/app/pairing-knowledge'
     | '/app/pairings'
@@ -503,6 +514,7 @@ export interface FileRouteTypes {
     | '/_app/app/corkage-fees'
     | '/_app/app/dashboard'
     | '/_app/app/estoque'
+    | '/_app/app/manual'
     | '/_app/app/orders'
     | '/_app/app/pairing-knowledge'
     | '/_app/app/pairings'
@@ -692,6 +704,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppEstoqueRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/app/manual': {
+      id: '/_app/app/manual'
+      path: '/app/manual'
+      fullPath: '/app/manual'
+      preLoaderRoute: typeof AppAppManualRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/app/orders': {
       id: '/_app/app/orders'
       path: '/app/orders'
@@ -854,6 +873,7 @@ interface AppRouteChildren {
   AppAppCorkageFeesRoute: typeof AppAppCorkageFeesRoute
   AppAppDashboardRoute: typeof AppAppDashboardRoute
   AppAppEstoqueRoute: typeof AppAppEstoqueRoute
+  AppAppManualRoute: typeof AppAppManualRoute
   AppAppOrdersRoute: typeof AppAppOrdersRoute
   AppAppPairingKnowledgeRoute: typeof AppAppPairingKnowledgeRoute
   AppAppPairingsRoute: typeof AppAppPairingsRoute
@@ -887,6 +907,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAppCorkageFeesRoute: AppAppCorkageFeesRoute,
   AppAppDashboardRoute: AppAppDashboardRoute,
   AppAppEstoqueRoute: AppAppEstoqueRoute,
+  AppAppManualRoute: AppAppManualRoute,
   AppAppOrdersRoute: AppAppOrdersRoute,
   AppAppPairingKnowledgeRoute: AppAppPairingKnowledgeRoute,
   AppAppPairingsRoute: AppAppPairingsRoute,

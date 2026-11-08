@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { EXAMPLE_MENU, EXAMPLE_RESTAURANT } from "@/lib/manual/printed-menu-manual";
 
 type Look = {
@@ -53,13 +53,23 @@ export default function MenuShowcase() {
   const navigate = useNavigate();
   return (
     <section className="mt-8">
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-1 flex items-center gap-2">
         <Sparkles size={16} className="text-primary" />
         <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-primary">O que você pode criar e imprimir</h2>
       </div>
+      <p className="mb-4 text-[11px] text-muted-foreground">
+        Clique em uma carta para experimentá-la na demonstração.
+      </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {LOOKS.map((l) => (
-          <div key={l.key} className="flex flex-col rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary">
+          <button
+            key={l.key}
+            type="button"
+            onClick={() => navigate({ to: "/app/demo", search: { task: "menu", model: l.model, paper: l.paper } })}
+            title={`Experimentar "${l.title}" na demonstração`}
+            aria-label={`Experimentar ${l.title} na demonstração`}
+            className="group flex w-full cursor-pointer flex-col rounded-lg border border-border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-[0_10px_30px_-12px_rgba(212,175,55,0.35)] focus-visible:border-primary focus-visible:outline-none"
+          >
             <div className="rounded-md bg-muted/40 py-4"><Mini look={l} /></div>
             <div className="mt-3 flex items-baseline justify-between gap-2">
               <h3 className="text-sm font-semibold text-foreground">{l.title}</h3>
@@ -67,13 +77,10 @@ export default function MenuShowcase() {
             </div>
             <p className="mt-1 text-[12px] text-muted-foreground">{l.style}</p>
             <p className="mt-1 text-[11px] text-primary">{l.ideal}</p>
-            <button
-              onClick={() => navigate({ to: "/app/demo", search: { task: "menu", model: l.model, paper: l.paper } })}
-              className="mt-auto pt-3 text-left text-[12px] font-semibold text-primary hover:underline"
-            >
-              Experimentar na demonstração →
-            </button>
-          </div>
+            <span className="mt-auto flex items-center gap-1 pt-3 text-[11px] font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+              Abrir na demonstração <ArrowRight size={13} />
+            </span>
+          </button>
         ))}
       </div>
     </section>

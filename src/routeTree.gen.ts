@@ -15,7 +15,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as HarmonizarRouteImport } from './routes/harmonizar'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ShowcaseCheckRouteImport } from './routes/showcase-check'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as FornecedorTokenRouteImport } from './routes/fornecedor.$token'
 import { Route as AppAdminIndexRouteImport } from './routes/_app.admin.index'
@@ -82,11 +81,6 @@ const LandingRoute = LandingRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ShowcaseCheckRoute = ShowcaseCheckRouteImport.update({
-  id: '/showcase-check',
-  path: '/showcase-check',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -288,7 +282,6 @@ export interface FileRoutesByFullPath {
   '/harmonizar': typeof HarmonizarRoute
   '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/showcase-check': typeof ShowcaseCheckRoute
   '/signup': typeof SignupRoute
   '/fornecedor/$token': typeof FornecedorTokenRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
@@ -334,7 +327,6 @@ export interface FileRoutesByTo {
   '/harmonizar': typeof HarmonizarRoute
   '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/showcase-check': typeof ShowcaseCheckRoute
   '/signup': typeof SignupRoute
   '/fornecedor/$token': typeof FornecedorTokenRoute
   '/admin/access-map': typeof AppAdminAccessMapRoute
@@ -382,7 +374,6 @@ export interface FileRoutesById {
   '/harmonizar': typeof HarmonizarRoute
   '/landing': typeof LandingRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/showcase-check': typeof ShowcaseCheckRoute
   '/signup': typeof SignupRoute
   '/fornecedor/$token': typeof FornecedorTokenRoute
   '/_app/admin/access-map': typeof AppAdminAccessMapRoute
@@ -430,7 +421,6 @@ export interface FileRouteTypes {
     | '/harmonizar'
     | '/landing'
     | '/reset-password'
-    | '/showcase-check'
     | '/signup'
     | '/fornecedor/$token'
     | '/admin/access-map'
@@ -476,7 +466,6 @@ export interface FileRouteTypes {
     | '/harmonizar'
     | '/landing'
     | '/reset-password'
-    | '/showcase-check'
     | '/signup'
     | '/fornecedor/$token'
     | '/admin/access-map'
@@ -523,7 +512,6 @@ export interface FileRouteTypes {
     | '/harmonizar'
     | '/landing'
     | '/reset-password'
-    | '/showcase-check'
     | '/signup'
     | '/fornecedor/$token'
     | '/_app/admin/access-map'
@@ -571,7 +559,6 @@ export interface RootRouteChildren {
   HarmonizarRoute: typeof HarmonizarRoute
   LandingRoute: typeof LandingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ShowcaseCheckRoute: typeof ShowcaseCheckRoute
   SignupRoute: typeof SignupRoute
   FornecedorTokenRoute: typeof FornecedorTokenRoute
   AcessoKindTokenRoute: typeof AcessoKindTokenRoute
@@ -622,13 +609,6 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/showcase-check': {
-      id: '/showcase-check'
-      path: '/showcase-check'
-      fullPath: '/showcase-check'
-      preLoaderRoute: typeof ShowcaseCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -979,7 +959,6 @@ const rootRouteChildren: RootRouteChildren = {
   HarmonizarRoute: HarmonizarRoute,
   LandingRoute: LandingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ShowcaseCheckRoute: ShowcaseCheckRoute,
   SignupRoute: SignupRoute,
   FornecedorTokenRoute: FornecedorTokenRoute,
   AcessoKindTokenRoute: AcessoKindTokenRoute,

@@ -260,8 +260,19 @@ function DemoPage() {
                     const doc = new jsPDF({ unit: "mm", format: paper === "DL" ? [100, 210] : paper === "Letter" ? "letter" : a5 ? "a5" : "a4" });
                     const W = doc.internal.pageSize.getWidth();
                     const H = doc.internal.pageSize.getHeight();
-                    const m = a5 ? 12 : 18;
-                    const fam = menuFont === "sans" ? "helvetica" : menuFont === "mono" || menuFont === "slab" ? "courier" : "times";
+                    const m = paper === "DL" ? 8 : a5 ? 12 : 18;
+                    let fam = menuFont === "sans" ? "helvetica" : menuFont === "mono" || menuFont === "slab" ? "courier" : "times";
+                    if (menuFont === "script" || menuFont === "slab") {
+                      const response = await fetch(`/fonts/menu-${menuFont}.ttf`);
+                      if (!response.ok) throw new Error("Não foi possível carregar a fonte da carta.");
+                      const bytes = new Uint8Array(await response.arrayBuffer());
+                      let binary = "";
+                      for (const byte of bytes) binary += String.fromCharCode(byte);
+                      doc.addFileToVFS("menu-font.ttf", btoa(binary));
+                      doc.addFont("menu-font.ttf", "menuFont", "normal");
+                      doc.addFont("menu-font.ttf", "menuFont", "bold");
+                      fam = "menuFont";
+                    }
                     const rgb = (hex: string): [number, number, number] => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
                     const paintPage = () => doc.setFillColor(...rgb(colors.bgColor)).rect(0, 0, W, H, "F");
                     const newPage = () => { doc.addPage(); paintPage(); };
@@ -281,19 +292,32 @@ function DemoPage() {
                     doc.setDrawColor(...rgb(colors.accentColor)).line(m, y, W - m, y);
                     y += 8;
                     const fs = a5 ? 8.5 : 10;
-                    for (const s of sections) {
+                    const contentTop = y;
+                    const columnWidth = columns ? (W - 2 * m - 8) / 2 : W - 2 * m;
+                    let column = 0;
+                    const advance = () => {
+                      if (columns && column === 0) { column = 1; y = contentTop; }
+                      else { newPage(); column = 0; y = m + 6; }
+                    };
+                    const printableSections = look?.paper === "DL" ? sections.filter((s) => s.title === "Taças") : sections;
+                    for (const s of printableSections) {
                       const ws = s.wines.filter((w) => !hidden.has(w.n));
                       if (!ws.length) continue;
-                      if (y > H - m - 12) { newPage(); y = m + 6; }
-                      doc.setFont(fam, "bold").setFontSize(fs + 1).setTextColor(...rgb(colors.accentColor)).text(s.title.toUpperCase(), m, y);
+                      if (y > H - m - 12) advance();
+                      let x = m + column * (columnWidth + 8);
+                      doc.setFont(fam, "bold").setFontSize(fs + 1).setTextColor(...rgb(colors.accentColor)).text(s.title.toUpperCase(), x, y);
                       y += 6;
-                      doc.setFont(fam, "normal").setFontSize(fs).setTextColor(...rgb(colors.textColor));
                       for (const w of ws) {
-                        if (y > H - m) { newPage(); y = m + 6; }
+                        doc.setFont(fam, "normal").setFontSize(fs).setTextColor(...rgb(colors.textColor));
                         const label = `${fields.n ? `${w.n}  ` : ""}${w.name}${fields.country ? ` · ${w.country}` : ""}`;
-                        doc.text(label, m, y, { maxWidth: W - 2 * m - 22 });
-                        if (fields.price) doc.text(`R$ ${w.price}`, W - m, y, { align: "right" });
-                        y += fs * 0.55;
+                        const lines = doc.splitTextToSize(label, columnWidth - (fields.price ? 23 : 0));
+                        const rowHeight = Math.max(1, lines.length) * fs * 0.45 + 1;
+                        if (y + rowHeight > H - m) advance();
+                        x = m + column * (columnWidth + 8);
+                        doc.setFont(fam, "normal").setFontSize(fs).setTextColor(...rgb(colors.textColor));
+                        doc.text(lines, x, y);
+                        if (fields.price) doc.text(`R$ ${w.price}`, x + columnWidth, y, { align: "right" });
+                        y += rowHeight;
                       }
                       y += 4;
                     }
@@ -350,7 +374,7 @@ function Group({ label, children }: { label: string; children: React.ReactNode }
 }
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <Button onClick={onClick} className={`flex items-center gap-1 rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase transition-colors ${on ? "border-primary bg-[color:var(--surface-2)] text-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
+    <Button variant="outline" onClick={onClick} className={`flex items-center gap-1 rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase transition-colors ${on ? "border-primary bg-[color:var(--surface-2)] text-primary" : "border-border text-muted-foreground hover:border-primary"}`}>
       {children}
     </Button>
   );

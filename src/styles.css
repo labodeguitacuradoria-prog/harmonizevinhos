@@ -600,3 +600,8 @@ input[type="number"]::-webkit-inner-spin-button {
 .printed-page.menu-custom-colors [class*="text-black"] { color: inherit; opacity: 1; }
 .printed-page.menu-custom-colors [class*="border-black"] { border-color: currentColor; }
 .printed-page.menu-custom-colors [class*="bg-black"] { background-color: currentColor; }
+
+@font-face { font-family: "Menu Script"; src: url("/fonts/menu-script.ttf") format("truetype"); font-display: swap; }
+@font-face { font-family: "Menu Slab"; src: url("/fonts/menu-slab.ttf") format("truetype"); font-display: swap; }
+.menu-font-script { font-family: "Menu Script", "Segoe Script", cursive; }
+.menu-font-slab { font-family: "Menu Slab", Rockwell, serif; }

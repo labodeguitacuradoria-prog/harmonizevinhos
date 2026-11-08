@@ -66,6 +66,14 @@ import { MODULES, SINGLE_MODULES, type AppModule } from "@/lib/modules";
 
 
 export const Route = createFileRoute("/_app/app/")({
+  head: () => ({ meta: [
+    { title: "Meus restaurantes e modelos de cartas · La Bodeguita" },
+    { name: "description", content: "Acesse seus restaurantes e explore modelos de cartas de vinhos para impressão." },
+    { property: "og:title", content: "Meus restaurantes e modelos de cartas · La Bodeguita" },
+    { property: "og:description", content: "Cartas de vinhos com identidade, fundos e fontes para seu restaurante." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: HomePage,
 });
 

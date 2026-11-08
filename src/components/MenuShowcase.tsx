@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { EXAMPLE_MENU, EXAMPLE_RESTAURANT } from "@/lib/manual/printed-menu-manual";
 
 type Look = {
@@ -77,9 +77,6 @@ export default function MenuShowcase() {
             </div>
             <p className="mt-1 text-[12px] text-muted-foreground">{l.style}</p>
             <p className="mt-1 text-[11px] text-primary">{l.ideal}</p>
-            <span className="mt-auto flex items-center gap-1 pt-3 text-[11px] font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-              Abrir na demonstração <ArrowRight size={13} />
-            </span>
           </button>
         ))}
       </div>

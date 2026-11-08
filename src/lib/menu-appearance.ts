@@ -21,7 +21,7 @@ export function contrastRatio(a: string, b: string) {
 
 export function readableColors(bgColor: string, textColor?: string, accentColor?: string) {
   const bg = /^#[0-9a-f]{6}$/i.test(bgColor) ? bgColor : MENU_PALETTES[0].bgColor;
-  const fallback = contrastRatio(bg, "#ffffff") >= contrastRatio(bg, "#202020") ? "#ffffff" : "#202020";
+  const fallback = contrastRatio(bg, "#ffffff") >= contrastRatio(bg, "#000000") ? "#ffffff" : "#000000";
   const safe = (color?: string) => color && /^#[0-9a-f]{6}$/i.test(color) && contrastRatio(bg, color) >= 4.5 ? color : fallback;
   return { bgColor: bg, textColor: safe(textColor), accentColor: safe(accentColor) };
 }

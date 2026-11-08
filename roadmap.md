@@ -2,6 +2,11 @@
 
 ## Em andamento
 
+- [x] Liberar fundo da carta no editor do restaurante com contraste automático; compilação e testes passaram.
+- [x] Ampliar vitrine compacta com fontes, monogramas ilustrativos, verde floresta e azul claro; demonstração e downloads de PDF validados.
+- [x] Atualizar manual interno e PDF para versão 1.1.
+- [ ] Validar salvar e reabrir uma carta real no editor: conta conectada sem restaurante e módulo não liberado.
+
 - [x] Criar links rápidos de fornecedor na tela Compartilhamento; painel validado com dados reais da Pousada Do Engenho em celular, tablet e computador, busca e revogação verificadas, autorização de teste desativada. Envio externo disponível após publicação.
 
 - [x] Ajustar histórico de estoque para linhas, quatro meses, quadriculado e largura sem rolagem; manter valores opcionais e ocultar números do eixo vertical. Testes do período passaram; apresentação validada com contagens simuladas, pois a conta ativa não retornou contagens reais.

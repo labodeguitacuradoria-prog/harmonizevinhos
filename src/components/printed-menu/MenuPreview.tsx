@@ -1,3 +1,4 @@
+import { readableColors } from "@/lib/menu-appearance";
 import {
   DEFAULT_SPACING,
   DEFAULT_TYPOGRAPHY,
@@ -128,7 +129,9 @@ export function MenuPreview({
   customDesign,
   focusSheetId,
 }: Props) {
-  const cd = customDesign?.exclusive ? customDesign : null;
+  const cd = customDesign?.exclusive || customDesign?.bgColor
+    ? { ...customDesign, ...readableColors(customDesign.bgColor || "#ffffff", customDesign.textColor, customDesign.accentColor) }
+    : null;
   const t = TEMPLATES[template];
   const p = paperDef ?? paperOf(paper);
   const twoCols = t.columns === 2 && p.widthMm >= 148;
@@ -251,13 +254,13 @@ export function MenuPreview({
     return (
       <div
         key={sheet.id}
-        className={`printed-page flex flex-col ${cd ? "" : "bg-white text-black"} ${t.page}`}
+        className={`printed-page flex flex-col ${cd ? "menu-custom-colors" : "bg-white text-black"} ${t.page}`}
         style={{
           ...(cd
             ? {
                 backgroundColor: cd.bgColor || "#fff",
                 color: cd.textColor || "#000",
-                backgroundImage: cd.backgroundImage ? `url(${cd.backgroundImage})` : undefined,
+                backgroundImage: cd.exclusive && cd.backgroundImage ? `url(${cd.backgroundImage})` : undefined,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 WebkitPrintColorAdjust: "exact",
@@ -286,7 +289,8 @@ export function MenuPreview({
             const lvl = sectionLevel(sec);
             const isSub = lvl > 1;
             const heading = sec.headingStyle;
-            const headingColor = heading?.color && /^#[0-9a-fA-F]{6}$/.test(heading.color) ? heading.color : cd?.accentColor;
+            const requestedHeadingColor = heading?.color && /^#[0-9a-fA-F]{6}$/.test(heading.color) ? heading.color : cd?.accentColor;
+            const headingColor = cd ? readableColors(cd.bgColor, cd.textColor, requestedHeadingColor).accentColor : requestedHeadingColor;
             const framed = heading?.frame && heading.frame !== "none";
             const accentImage = heading?.accent === "image" ? heading.accentImageUrl?.trim() : undefined;
             const accentImageSize = Math.min(40, Math.max(6, heading?.accentImageSize ?? 16));

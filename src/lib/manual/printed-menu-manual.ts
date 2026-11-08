@@ -2,8 +2,8 @@
 // Usado pela página do aplicativo e pelo gerador do PDF (scripts/build-manual-pdf.py lê o JSON exportado).
 // Sempre que a tela da Carta mudar, revise este arquivo e gere o PDF novamente.
 
-export const MANUAL_VERSION = "1.0";
-export const MANUAL_REVISION = "07/11/2026";
+export const MANUAL_VERSION = "1.1";
+export const MANUAL_REVISION = "08/11/2026";
 export const MANUAL_PDF_URL = "/materials/manual-impressao-de-cartas.pdf";
 
 export type ExampleWine = { n: number; name: string; country: string; price: number };
@@ -88,11 +88,13 @@ export const PRINTED_MENU_STEPS: ManualStep[] = [
     actions: [
       "Em Modelo, escolha um visual (por exemplo Clássico, Duas colunas ou Minimalista).",
       "Escolha o tamanho do papel (A4 é o mais comum).",
+      "Em Fundo da carta, escolha uma amostra ou uma cor personalizada. Texto e títulos recebem contraste legível automaticamente.",
       "Em Cabeçalho e rodapé, escreva o título, o subtítulo e os contatos.",
+      "No campo Logo (link da imagem), informe o endereço do logotipo do restaurante para aparecer no topo.",
       "Em Nome desta carta (uso interno), dê um nome para achar a versão depois — ele não sai impresso.",
     ],
     example: "Título: Carta de Vinhos. Subtítulo: Restaurante Sabor da Terra. Nome interno: Sabor da Terra — Carta 2026.",
-    check: "O título aparece no topo da Pré-visualização.",
+    check: "Título, logotipo e fundo aparecem na Pré-visualização, com texto legível.",
   },
   {
     title: "Organize as seções",
@@ -177,6 +179,6 @@ export const PRINTED_MENU_STEPS: ManualStep[] = [
 export const PRINTED_MENU_FAQ: { q: string; a: string }[] = [
   { q: "Retirar da carta apaga o vinho?", a: "Não. Ele sai só desta carta e continua em Produtos." },
   { q: "Mudei um preço. Preciso refazer a carta?", a: "Não. Abra a carta salva e imprima de novo: o preço novo já aparece." },
-  { q: "O fundo e as cores não saíram no PDF.", a: "Ative Gráficos de segundo plano na janela de impressão do navegador." },
+  { q: "O fundo e as cores não saíram no PDF.", a: "Ative Gráficos de segundo plano na janela de impressão do navegador. Ao escolher fundos escuros ou coloridos, confira a leitura do texto e faça uma impressão de teste." },
   { q: "Um vinho não aparece para incluir.", a: "Confira se ele está cadastrado e ativo no restaurante selecionado." },
 ];

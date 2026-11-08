@@ -35,6 +35,7 @@ import { MediaUploader } from "@/components/MediaUploader";
 import ModuleGate from "@/components/ModuleGate";
 import type { CustomDesign } from "@/components/printed-menu/MenuPreview";
 import { Button } from "@/components/ui/button";
+import { MenuBackgroundControls } from "@/components/printed-menu/MenuBackgroundControls";
 import { CustomMenuRequestDialog, CustomDesignPanel, SheetSequencer } from "@/components/printed-menu/CustomMenu";
 import {
   DEFAULT_SPACING,
@@ -165,7 +166,7 @@ function WineMenuPage() {
   const [editingSymbolUrl, setEditingSymbolUrl] = useState<string | null>(null);
   const [editingSymbolPosition, setEditingSymbolPosition] = useState<"left" | "right">("left");
   const [savedOpen, setSavedOpen] = useState(false);
-  const [editorPanel, setEditorPanel] = useState<"exclusive" | "model" | "paper" | "header" | null>(null);
+  const [editorPanel, setEditorPanel] = useState<"exclusive" | "model" | "paper" | "header" | "background" | null>(null);
   const [spacingOpen, setSpacingOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
   const [layoutOpen, setLayoutOpen] = useState(false);
@@ -502,7 +503,7 @@ function WineMenuPage() {
           layout,
           margins,
           customPaper: useCustomPaper ? { widthMm: customW, heightMm: customH, padMm: customPad } : null,
-          customDesign: customDesign.exclusive || customDesign.sheets?.length
+          customDesign: customDesign.exclusive || customDesign.bgColor || customDesign.sheets?.length
             ? { ...customDesign, sheets: resolveSheets(customDesign, sections), requestId: customDesign.requestId ?? requestId }
             : null,
           wineSymbols,
@@ -794,6 +795,15 @@ function WineMenuPage() {
               sections={sections}
             />
           ) : null}
+
+          <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <Button variant="ghost" className="h-10 w-full justify-between rounded-none px-3 text-xs uppercase"
+              aria-expanded={editorPanel === "background"}
+              onClick={() => setEditorPanel((current) => current === "background" ? null : "background")}>
+              Fundo da carta <ChevronDown className={editorPanel === "background" ? "rotate-180" : ""} />
+            </Button>
+            {editorPanel === "background" && <div className="border-t border-border p-3"><MenuBackgroundControls value={customDesign} onChange={setCustomDesign} /></div>}
+          </div>
 
           {!lockedDesign && (
           <div className="space-y-2">

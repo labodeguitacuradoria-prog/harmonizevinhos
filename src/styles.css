@@ -69,6 +69,17 @@
 }
 
 :root {
+  --menu-white: #ffffff;
+  --menu-ivory: #fbf8f1;
+  --menu-forest: #163024;
+  --menu-blue: #dbeaf5;
+  --menu-graphite: #141414;
+  --menu-wine: #800020;
+  --menu-ink: #202020;
+  --menu-blue-ink: #0f1e36;
+  --menu-light-ink: #f5f5f0;
+  --menu-gold-ink: #e5c578;
+  --menu-wine-gold: #f1e788;
   /* Raw brand tokens — manual */
   --gold: #D4AF37;
   --wine: #800020;
@@ -570,3 +581,27 @@ input[type="number"]::-webkit-inner-spin-button {
 /* Botão do card: compacto no celular, largura total só no computador. */
 .landing-card-cta { min-height: 36px; padding: 0.5rem 1.1rem; font-size: 0.6875rem; }
 @media (min-width: 1024px) { .landing-card-cta { min-height: 44px; font-size: 0.75rem; } }
+
+/* Printed-paper palettes do not change with the app theme. */
+.palette-white { --paper-bg: var(--menu-white); --paper-ink: var(--menu-ink); --paper-accent: var(--menu-wine); }
+.palette-ivory { --paper-bg: var(--menu-ivory); --paper-ink: var(--menu-ink); --paper-accent: var(--menu-wine); }
+.palette-forest { --paper-bg: var(--menu-forest); --paper-ink: var(--menu-light-ink); --paper-accent: var(--menu-gold-ink); }
+.palette-blue { --paper-bg: var(--menu-blue); --paper-ink: var(--menu-blue-ink); --paper-accent: var(--menu-wine); }
+.palette-graphite { --paper-bg: var(--menu-graphite); --paper-ink: var(--menu-light-ink); --paper-accent: var(--menu-gold-ink); }
+.palette-wine { --paper-bg: var(--menu-wine); --paper-ink: var(--menu-white); --paper-accent: var(--menu-wine-gold); }
+.menu-sample { background: var(--paper-bg); color: var(--paper-ink); print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.menu-sample-heading { color: var(--paper-accent); }
+.menu-swatch, .menu-swatch:hover { background: var(--paper-bg); }
+.menu-font-serif { font-family: Georgia, "Times New Roman", serif; }
+.menu-font-sans { font-family: "Segoe UI", Helvetica, Arial, sans-serif; }
+.menu-font-slab { font-family: Rockwell, "Courier New", Georgia, serif; }
+.menu-font-mono { font-family: "Courier New", monospace; }
+.menu-font-script { font-family: "Segoe Script", "Brush Script MT", cursive; }
+.printed-page.menu-custom-colors [class*="text-black"] { color: inherit; opacity: 1; }
+.printed-page.menu-custom-colors [class*="border-black"] { border-color: currentColor; }
+.printed-page.menu-custom-colors [class*="bg-black"] { background-color: currentColor; }
+
+@font-face { font-family: "Menu Script"; src: url("/fonts/menu-script.ttf") format("truetype"); font-display: swap; }
+@font-face { font-family: "Menu Slab"; src: url("/fonts/menu-slab.ttf") format("truetype"); font-display: swap; }
+.menu-font-script { font-family: "Menu Script", "Segoe Script", cursive; }
+.menu-font-slab { font-family: "Menu Slab", Rockwell, serif; }

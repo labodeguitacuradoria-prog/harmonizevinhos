@@ -1,83 +1,48 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
-import { EXAMPLE_MENU, EXAMPLE_RESTAURANT } from "@/lib/manual/printed-menu-manual";
-
-type Look = {
-  key: string;
-  title: string;
-  format: string;
-  style: string;
-  ideal: string;
-  model: "classico" | "moderno" | "minimal";
-  paper: "A4" | "A5";
-  font: string;
-  cols?: boolean;
-  slim?: boolean;
-  upper?: boolean;
-};
-
-const LOOKS: Look[] = [
-  { key: "nobre", title: "Clássica Nobre", format: "A4", style: "Serifada, seções em caixa alta e preços pontilhados.", ideal: "Cantinas, steakhouses e casas tradicionais.", model: "classico", paper: "A4", font: "font-serif", upper: true },
-  { key: "duas", title: "Duas colunas", format: "A4", style: "Alta densidade: muitos rótulos em poucas folhas.", ideal: "Cartas extensas que querem economizar páginas.", model: "moderno", paper: "A4", font: "font-sans", cols: true },
-  { key: "contemp", title: "Contemporânea", format: "A4", style: "Sem serifa, muito respiro, foco em uva e região.", ideal: "Alta gastronomia e bistrôs autorais.", model: "minimal", paper: "A4", font: "font-sans" },
-  { key: "taca", title: "Taças da semana", format: "Slim 10×21", style: "Faixa vertical para pranchetas estreitas.", ideal: "Destacar taças e a seleção do sommelier.", model: "moderno", paper: "A5", font: "font-serif", slim: true },
-  { key: "mesa", title: "Mesa compacta", format: "A5", style: "Meia folha A4, ideal para menus sazonais.", ideal: "Pranchetas de madeira e cartas curtas.", model: "classico", paper: "A5", font: "font-serif" },
-];
-
-function Mini({ look }: { look: Look }) {
-  const sections = EXAMPLE_MENU.slice(0, look.slim ? 2 : look.cols ? 4 : 3);
-  return (
-    <div className={`mx-auto h-56 overflow-hidden rounded-sm bg-[#fbf8f1] p-3 text-[#2a1a12] shadow-lg ${look.slim ? "w-24" : look.paper === "A5" ? "w-32" : "w-40"} ${look.font}`}>
-      <div className={`border-b border-[#2a1a12]/30 pb-1 text-center text-[7px] font-bold ${look.upper ? "uppercase tracking-[0.2em]" : ""}`}>
-        {EXAMPLE_RESTAURANT}
-      </div>
-      <div className={look.cols ? "mt-1 grid grid-cols-2 gap-x-2" : "mt-1"}>
-        {sections.map((s) => (
-          <div key={s.title} className="mt-1">
-            <div className={`text-[5.5px] font-bold text-[#800020] ${look.upper ? "uppercase tracking-widest" : ""}`}>{s.title}</div>
-            {s.wines.slice(0, look.slim ? 3 : 4).map((w) => (
-              <div key={w.n} className="flex items-baseline gap-0.5 text-[4.5px] leading-[7px]">
-                <span className="truncate">{w.name}</span>
-                {look.upper && <span className="flex-1 border-b border-dotted border-[#2a1a12]/40" />}
-                <span className="ml-auto shrink-0">{w.price}</span>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+import { Button } from "@/components/ui/button";
+import { MENU_LOOKS } from "@/lib/menu-appearance";
+import { EXAMPLE_MENU } from "@/lib/manual/printed-menu-manual";
 
 export default function MenuShowcase() {
   const navigate = useNavigate();
   return (
     <section className="mt-8">
-      <div className="mb-1 flex items-center gap-2">
+      <div className="mb-4 flex items-center gap-2">
         <Sparkles size={16} className="text-primary" />
-        <h2 className="text-[12px] font-bold uppercase tracking-[0.18em] text-primary">O que você pode criar e imprimir</h2>
+        <h2 className="text-xs font-bold uppercase text-primary">O que você pode criar e imprimir</h2>
       </div>
-      <p className="mb-4 text-[11px] text-muted-foreground">
-        Clique em uma carta para experimentá-la na demonstração.
-      </p>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {LOOKS.map((l) => (
-          <button
-            key={l.key}
-            type="button"
-            onClick={() => navigate({ to: "/app/demo", search: { task: "menu", model: l.model, paper: l.paper } })}
-            title={`Experimentar "${l.title}" na demonstração`}
-            aria-label={`Experimentar ${l.title} na demonstração`}
-            className="group flex w-full cursor-pointer flex-col rounded-lg border border-border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-[0_10px_30px_-12px_rgba(212,175,55,0.35)] focus-visible:border-primary focus-visible:outline-none"
-          >
-            <div className="rounded-md bg-muted/40 py-4"><Mini look={l} /></div>
-            <div className="mt-3 flex items-baseline justify-between gap-2">
-              <h3 className="text-sm font-semibold text-foreground">{l.title}</h3>
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{l.format}</span>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+        {MENU_LOOKS.map((look) => (
+          <Button key={look.key} variant="ghost" aria-label={`Experimentar ${look.title}`}
+            onClick={() => navigate({ to: "/app/demo", search: { task: "menu", look: look.key } })}
+            className="group h-auto min-w-0 flex-col items-stretch justify-start whitespace-normal rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary hover:bg-card focus-visible:border-primary">
+            <div className="flex h-[166px] items-center justify-center">
+              <div className={`menu-sample palette-${look.palette} menu-font-${look.font} h-[150px] overflow-hidden p-2 shadow-md ${look.paper === "DL" ? "w-[72px]" : "w-[106px]"}`}>
+                <div className="menu-sample-heading border-b border-current pb-1 text-center">
+                  {look.logo && <div className="menu-example-logo mx-auto mb-1 flex h-5 w-5 items-center justify-center rounded-full border border-current text-[8px]">ST</div>}
+                  <div className="text-[7px] font-bold">Sabor da Terra</div>
+                  <div className="text-[4px]">CARTA DE VINHOS</div>
+                </div>
+                <div className={look.cols ? "grid grid-cols-2 gap-x-1" : ""}>
+                  {(look.paper === "DL" ? EXAMPLE_MENU.slice(-1) : EXAMPLE_MENU.slice(0, 4)).map((section) => (
+                    <div key={section.title} className="mt-1">
+                      <div className="menu-sample-heading text-[5.5px] font-bold">{section.title}</div>
+                      {section.wines.slice(0, look.cols ? 4 : 3).map((wine) => (
+                        <div key={wine.n} className="flex gap-1 text-[4px] leading-[6px]">
+                          <span className="min-w-0 flex-1 truncate">{wine.name}</span><span>{wine.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <p className="mt-1 text-[12px] text-muted-foreground">{l.style}</p>
-            <p className="mt-1 text-[11px] text-primary">{l.ideal}</p>
-          </button>
+            <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-2">
+              <h3 className="text-xs font-semibold text-foreground">{look.title}</h3>
+              <span className="text-[10px] text-muted-foreground">{look.paper}</span>
+            </div>
+          </Button>
         ))}
       </div>
     </section>

@@ -577,18 +577,22 @@ function WinesSection() {
         .order("closed_at", { ascending: false, nullsFirst: false })
         .limit(1);
       const session = sessions?.[0];
-      const map: Record<string, { qty: number; date: string | null }> = {};
+      const map: Record<string, { qty: number; date: string | null; sessionId?: string; manual?: boolean }> = {};
       if (!session) return map;
       const { data: items } = await supabase
         .from("stock_count_items")
-        .select("wine_id, counted_qty")
+        .select("wine_id, counted_qty, counted_at, flag")
         .eq("session_id", session.id);
       for (const it of items ?? []) {
+        const manual = it.flag === "manual_fix";
         map[it.wine_id] = {
           qty: it.counted_qty ?? 0,
-          date: session.closed_at ?? session.reference_date,
+          date: manual && it.counted_at ? it.counted_at : (session.closed_at ?? session.reference_date),
+          sessionId: session.id,
+          manual,
         };
       }
+      (map as any).__session = session.id;
       return map;
     },
   });
@@ -998,15 +1002,13 @@ function WinesSection() {
                     <td className="px-3 py-3">
                       {isGlassVol(w.volume) ? (
                         "—"
-                      ) : stockMap[w.id] ? (
-                        <>
-                          <div className="font-medium leading-none">{stockMap[w.id].qty}</div>
-                          {stockMap[w.id].date && (
-                            <div className="mt-0.5 text-[10px] text-muted-foreground/80">{fmtDate(stockMap[w.id].date)}</div>
-                          )}
-                        </>
                       ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <StockFixCell
+                          wineId={w.id}
+                          sessionId={(stockMap as any).__session as string | undefined}
+                          current={stockMap[w.id]}
+                          onSaved={() => qc.invalidateQueries({ queryKey: ["last-stock-count-map"] })}
+                        />
                       )}
                     </td>
                   ) : null}
@@ -1363,6 +1365,113 @@ function WineForm({
 }
 
 // Célula editável diretamente na tabela de produtos (código, custo e venda).
+function StockFixCell({
+  wineId,
+  sessionId,
+  current,
+  onSaved,
+}: {
+  wineId: string;
+  sessionId?: string;
+  current?: { qty: number; date: string | null; manual?: boolean };
+  onSaved: () => void;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [editing, setEditing] = useState(false);
+  const [qty, setQty] = useState("");
+  const [date, setDate] = useState(today);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    const n = Number(qty.replace(",", "."));
+    if (!Number.isInteger(n) || n < 0) return toast.error("Informe uma quantidade inteira válida.");
+    if (!date) return toast.error("Informe a data.");
+    if (!sessionId) return toast.error("Feche ao menos uma contagem de estoque antes de corrigir.");
+    setSaving(true);
+    const { data: auth } = await supabase.auth.getUser();
+    const { error } = await supabase.from("stock_count_items").upsert(
+      {
+        session_id: sessionId,
+        wine_id: wineId,
+        previous_qty: current?.qty ?? 0,
+        counted_qty: n,
+        counted_at: new Date(`${date}T12:00:00`).toISOString(),
+        counted_by: auth.user?.id ?? null,
+        flag: "manual_fix",
+        flag_note: `Correção manual no cadastro (antes: ${current?.qty ?? "sem registro"})`,
+      },
+      { onConflict: "session_id,wine_id" },
+    );
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Estoque corrigido");
+    setEditing(false);
+    onSaved();
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        title="Clique para corrigir o estoque"
+        onClick={() => {
+          setQty(current ? String(current.qty) : "");
+          setDate(today);
+          setEditing(true);
+        }}
+        className="w-full rounded px-2 py-1 text-left hover:bg-accent hover:text-primary"
+      >
+        {current ? (
+          <>
+            <div className="font-medium leading-none">{current.qty}</div>
+            {current.date && (
+              <div className="mt-0.5 text-[10px] text-muted-foreground/80">
+                {fmtDate(current.date)}
+                {current.manual ? " · corrigido" : ""}
+              </div>
+            )}
+          </>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex w-32 flex-col gap-1">
+      <input
+        autoFocus
+        type="text"
+        inputMode="numeric"
+        value={qty}
+        onChange={(e) => setQty(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") setEditing(false);
+        }}
+        placeholder="Qtd"
+        className="w-full rounded border border-primary bg-background px-2 py-1 text-sm"
+      />
+      <input
+        type="date"
+        value={date}
+        max={today}
+        onChange={(e) => setDate(e.target.value)}
+        className="w-full rounded border border-border bg-background px-1 py-0.5 text-[11px]"
+      />
+      <div className="flex gap-1">
+        <button type="button" disabled={saving} onClick={save} className="flex-1 rounded bg-primary px-1 py-0.5 text-[11px] text-primary-foreground">
+          {saving ? "..." : "Salvar"}
+        </button>
+        <button type="button" onClick={() => setEditing(false)} className="flex-1 rounded border border-border px-1 py-0.5 text-[11px]">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function InlineCell({
   wineId,
   field,

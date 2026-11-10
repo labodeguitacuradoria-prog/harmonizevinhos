@@ -1427,7 +1427,6 @@ function StockFixCell({
             {current.date && (
               <div className="mt-0.5 text-[10px] text-muted-foreground/80">
                 {fmtDate(current.date)}
-                {current.manual ? " · corrigido" : ""}
               </div>
             )}
           </>

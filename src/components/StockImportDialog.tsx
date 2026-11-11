@@ -7,6 +7,7 @@ import { X, Upload, Loader2, Sparkles, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { WinePicker } from "@/components/WinePicker";
 import { extractStockFromFile, extractStockFromText, type StockImportItem } from "@/lib/stock-import.functions";
 
 type Wine = { id: string; name: string; producer: string | null; vintage: number | null; volume: string | null; internal_code: string | null };
@@ -78,7 +79,7 @@ export function StockImportDialog({ onClose }: { onClose: () => void }) {
       .from("wines")
       .select("id,name,producer,vintage,volume,internal_code")
       .eq("restaurant_id", restaurantId!);
-    const ws = (data ?? []) as Wine[];
+    const ws = ((data ?? []) as Wine[]).sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
     setWines(ws);
     setRows(
       items.map((it, i) => {
@@ -266,14 +267,9 @@ export function StockImportDialog({ onClose }: { onClose: () => void }) {
                         <div className="text-xs text-muted-foreground">{[r.item.produtor, r.item.safra, r.item.volume].filter(Boolean).join(" · ")}</div>
                       </td>
                       <td className="p-2">
-                        <select value={r.wineId}
-                          onChange={(e) => upd(r.key, { wineId: e.target.value, matchBy: e.target.value ? "nome" : "novo" })}
-                          className="w-full rounded border border-input bg-background px-2 py-1 text-xs">
-                          <option value="">{createNew ? "+ Criar novo rótulo" : "— Ignorar (não encontrado)"}</option>
-                          {wines.map((w) => (
-                            <option key={w.id} value={w.id}>{w.internal_code ? `[${w.internal_code}] ` : ""}{w.name}{w.vintage ? ` ${w.vintage}` : ""}</option>
-                          ))}
-                        </select>
+                        <WinePicker wines={wines} value={r.wineId}
+                          emptyLabel={createNew ? "+ Criar novo rótulo" : "— Ignorar (não encontrado)"}
+                          onChange={(id) => upd(r.key, { wineId: id, matchBy: id ? "nome" : "novo" })} />
                         {r.matchBy === "codigo" && <div className="mt-0.5 text-[10px] text-primary">encontrado pelo código</div>}
                       </td>
                       <td className="p-2">

@@ -28,7 +28,18 @@ type Row = {
   revenue: string;
   confidence: string | null;
   score: number;
+  fromDoc: boolean;
 };
+
+function priceOf(wines: SalesWine[], id: string) {
+  return Number(wines.find((w) => w.id === id)?.sale_price ?? 0);
+}
+
+function calcRevenue(wines: SalesWine[], id: string, qty: string) {
+  const p = priceOf(wines, id);
+  const q = Number(qty);
+  return id && p > 0 && q > 0 ? (p * q).toFixed(2) : "";
+}
 
 function norm(s: string | null | undefined) {
   return (s ?? "")
@@ -103,16 +114,18 @@ export function SalesImportDialog({
     const built: Row[] = items.map((it, i) => {
       const m = matchWine(it, wines);
       const qty = it.quantidade != null && it.quantidade > 0 ? String(it.quantidade) : "";
-      const rev = it.faturamento != null && it.faturamento > 0 ? String(it.faturamento) : "";
+      const docRev = it.faturamento != null && it.faturamento > 0 ? String(it.faturamento) : "";
+      const rev = docRev || calcRevenue(wines, m.id, qty);
       return {
         key: `r${i}`,
-        selected: !!m.id && !!qty && (mode === "current" || !!rev),
+        selected: !!m.id && !!qty && !!rev,
         raw: it.nome + (it.safra ? ` ${it.safra}` : "") + (it.volume ? ` · ${it.volume}` : ""),
         wineId: m.id,
         qty,
         revenue: rev,
         confidence: it.confianca,
         score: m.score,
+        fromDoc: !!docRev,
       };
     });
     setRows(built);
@@ -150,11 +163,26 @@ export function SalesImportDialog({
   }
 
   function update(key: string, patch: Partial<Row>) {
-    setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+    setRows((rs) =>
+      rs.map((r) => {
+        if (r.key !== key) return r;
+        const n = { ...r, ...patch };
+        if (patch.revenue !== undefined) n.fromDoc = true;
+        else if (!n.fromDoc && (patch.wineId !== undefined || patch.qty !== undefined)) {
+          n.revenue = calcRevenue(wines, n.wineId, n.qty);
+          if (patch.wineId && n.revenue && Number(n.qty) > 0) n.selected = true;
+        }
+        return n;
+      }),
+    );
   }
 
+  const unmatched = rows.filter((r) => !r.wineId);
+  const noPrice = rows.filter((r) => r.wineId && !r.fromDoc && !(priceOf(wines, r.wineId) > 0));
+  const byPrice = rows.filter((r) => r.wineId && !r.fromDoc && Number(r.revenue) > 0);
+
   const ready = rows.filter(
-    (r) => r.selected && r.wineId && Number(r.qty) > 0 && (mode === "current" || Number(r.revenue) > 0),
+    (r) => r.selected && r.wineId && Number(r.qty) > 0 && Number(r.revenue) > 0,
   );
 
   function apply() {
@@ -252,6 +280,26 @@ export function SalesImportDialog({
               </div>
             </div>
 
+            {(unmatched.length > 0 || noPrice.length > 0 || byPrice.length > 0) && (
+              <div className="mt-3 space-y-1 rounded-md border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-xs">
+                {byPrice.length > 0 && (
+                  <p className="text-muted-foreground">
+                    {byPrice.length} linha(s) sem faturamento no relatório: calculado pelo preço de venda atual cadastrado.
+                  </p>
+                )}
+                {unmatched.length > 0 && (
+                  <p className="text-yellow-500">
+                    ⚠ {unmatched.length} rótulo(s) não encontrado(s) no cadastro. Vincule a um rótulo ou cadastre-o para completar.
+                  </p>
+                )}
+                {noPrice.length > 0 && (
+                  <p className="text-yellow-500">
+                    ⚠ {noPrice.length} rótulo(s) sem preço de venda cadastrado. Informe o faturamento ou complete o preço no cadastro.
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="mt-4 max-h-[55vh] overflow-auto rounded-lg border border-border">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -266,6 +314,7 @@ export function SalesImportDialog({
                 <tbody>
                   {rows.map((r) => {
                     const weak = !r.wineId || r.score < 0.7 || r.confidence === "baixa";
+                    const missingPrice = !!r.wineId && !r.fromDoc && !(priceOf(wines, r.wineId) > 0);
                     return (
                       <tr key={r.key} className="border-b border-border last:border-0">
                         <td className="px-3 py-2">
@@ -314,9 +363,17 @@ export function SalesImportDialog({
                             step="0.01"
                             value={r.revenue}
                             onChange={(e) => update(r.key, { revenue: e.target.value })}
-                            placeholder={mode === "current" ? "opcional" : "obrigatório"}
+                            placeholder={missingPrice ? "sem preço" : "obrigatório"}
                             className="w-28 rounded-md border border-input bg-background px-2 py-1 text-sm no-spin"
                           />
+                          {!r.fromDoc && Number(r.revenue) > 0 && (
+                            <div className="mt-0.5 text-[10px] text-muted-foreground">
+                              preço cadastrado R$ {priceOf(wines, r.wineId).toFixed(2)}/un
+                            </div>
+                          )}
+                          {missingPrice && (
+                            <div className="mt-0.5 text-[10px] text-yellow-500">sem preço no cadastro</div>
+                          )}
                         </td>
                       </tr>
                     );
@@ -327,7 +384,7 @@ export function SalesImportDialog({
             <p className="mt-3 text-xs text-muted-foreground">
               {mode === "current"
                 ? "No mês corrente o faturamento é calculado pelo preço de venda cadastrado; o valor lido serve apenas de referência."
-                : "No modo histórico o faturamento lido é usado para calcular o preço médio de cada rótulo."}
+                : "No modo histórico o faturamento lido é usado para calcular o preço médio; quando o relatório não traz faturamento, usa-se o preço atual cadastrado."}
             </p>
           </div>
         )}

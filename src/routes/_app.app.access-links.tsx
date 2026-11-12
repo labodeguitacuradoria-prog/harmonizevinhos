@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { publicOrigin } from "@/lib/public-origin";
 import { toast } from "sonner";
-import { KeyRound, Copy, Trash2, Ban, Smartphone, Monitor, Unlink } from "lucide-react";
+import { KeyRound, Copy, Trash2, Ban, Smartphone, Monitor, Unlink, Eye } from "lucide-react";
 import {
   createAccessLink,
   revokeAccessLink,
@@ -38,6 +38,10 @@ type LinkRow = {
   last_access_at: string | null;
   created_at: string;
 };
+
+function previewPath(s: LinkRow["scope"]) {
+  return s === "stock_count" ? "/app/stock-counts" : s === "pairings" ? "/app/pairings" : s === "training" ? "/app/training" : "/app/dashboard";
+}
 
 function scopeLabel(s: LinkRow["scope"]) {
   if (s === "dashboard") return "Painel de controle (leitura)";
@@ -291,6 +295,15 @@ function AccessLinksPage() {
                 {status}
               </span>
               <div className="flex gap-2">
+                <a
+                  href={previewPath(l.scope)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Abre em nova aba a tela que este link mostra"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-primary hover:bg-accent"
+                >
+                  <Eye className="h-3.5 w-3.5" /> Visualizar
+                </a>
                 <button
                   onClick={async () => {
                     try {

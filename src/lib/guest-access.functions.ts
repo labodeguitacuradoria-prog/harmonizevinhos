@@ -39,7 +39,9 @@ async function resolveAccess(token: string, kind?: "celular" | "desktop"): Promi
   const userAgent = getRequestHeader("user-agent") ?? "";
   const detected = helpers.detectDeviceKind(userAgent);
   // Fichas de treinamento podem ser abertas em qualquer aparelho.
-  if (link.scope !== "training") {
+  // Visualização do administrador roda dentro de uma janela no computador.
+  const isPreview = link.label.startsWith("__preview__");
+  if (link.scope !== "training" && !isPreview) {
     if (kind) {
       const requested = kind === "celular" ? "mobile" : "desktop";
       if (requested !== link.device_kind) throw new helpers.AccessLinkError("invalid", "Link inválido.");

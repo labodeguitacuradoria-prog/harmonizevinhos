@@ -103,3 +103,43 @@ export const unbindAccessLinkDevices = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** Prefixo dos links temporários usados só para o administrador ver a tela da equipe. */
+export const PREVIEW_LABEL_PREFIX = "__preview__";
+
+export const createPreviewAccessLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), device_kind: z.enum(["mobile", "desktop"]) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const helpers = await import("@/lib/access-links.server");
+    const { data: link } = await supabaseAdmin
+      .from("access_links")
+      .select("restaurant_id, scope")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!link) throw new Error("Link não encontrado.");
+    await assertCanManage(context, link.restaurant_id);
+    // Limpa visualizações antigas deste restaurante.
+    await supabaseAdmin
+      .from("access_links")
+      .delete()
+      .eq("restaurant_id", link.restaurant_id)
+      .like("label", `${PREVIEW_LABEL_PREFIX}%`)
+      .lt("expires_at", new Date().toISOString());
+    const token = helpers.generateToken();
+    const { error } = await supabaseAdmin.from("access_links").insert({
+      restaurant_id: link.restaurant_id,
+      label: `${PREVIEW_LABEL_PREFIX}${data.id}`,
+      scope: link.scope,
+      device_kind: data.device_kind,
+      single_device: false,
+      token_hash: helpers.hashToken(token),
+      expires_at: new Date(Date.now() + 30 * 60000).toISOString(),
+      created_by: context.userId,
+    });
+    if (error) throw new Error(error.message);
+    return { token };
+  });

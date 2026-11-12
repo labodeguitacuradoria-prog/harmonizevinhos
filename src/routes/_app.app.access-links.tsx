@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,6 +12,8 @@ import {
   revokeAccessLink,
   deleteAccessLink,
   unbindAccessLinkDevices,
+  createPreviewAccessLink,
+  PREVIEW_LABEL_PREFIX,
 } from "@/lib/access-links.functions";
 
 export const Route = createFileRoute("/_app/app/access-links")({
@@ -40,10 +42,6 @@ type LinkRow = {
   created_at: string;
 };
 
-function previewPath(s: LinkRow["scope"]) {
-  return s === "stock_count" ? "/app/stock-counts" : s === "pairings" ? "/app/pairings" : s === "training" ? "/app/training" : "/app/dashboard";
-}
-
 function scopeLabel(s: LinkRow["scope"]) {
   if (s === "dashboard") return "Painel de controle (leitura)";
   if (s === "training") return "Fichas de treinamento do staff";
@@ -60,6 +58,24 @@ function AccessLinksPage() {
   const [deviceKind, setDeviceKind] = useState<"mobile" | "desktop">("mobile");
   const [singleDevice, setSingleDevice] = useState(true);
   const [preview, setPreview] = useState<{ row: LinkRow; kind: "mobile" | "desktop" } | null>(null);
+  const [previewToken, setPreviewToken] = useState<string | null>(null);
+  useEffect(() => {
+    if (!preview) {
+      setPreviewToken(null);
+      return;
+    }
+    let alive = true;
+    setPreviewToken(null);
+    createPreviewAccessLink({ data: { id: preview.row.id, device_kind: preview.kind } })
+      .then((r) => alive && setPreviewToken(r.token))
+      .catch((e) => {
+        toast.error(e instanceof Error ? e.message : "Não foi possível abrir a visualização.");
+        setPreview(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [preview?.row.id, preview?.kind]);
   const [days, setDays] = useState(0);
   const [creating, setCreating] = useState(false);
   const [fresh, setFresh] = useState<{ url: string; text: string } | null>(null);
@@ -73,6 +89,7 @@ function AccessLinksPage() {
         .from("access_links")
         .select("id, label, scope, device_kind, single_device, expires_at, revoked_at, last_access_at, created_at")
         .eq("restaurant_id", restaurantId)
+        .not("label", "like", `${PREVIEW_LABEL_PREFIX}%`)
         .order("created_at", { ascending: false });
       if (error) throw new Error(error.message);
       return (data ?? []) as LinkRow[];
@@ -377,11 +394,19 @@ function AccessLinksPage() {
               </button>
             ))}
           </div>
-          {preview && (
+          {preview?.row.scope === "stock_count" && (
+            <p className="text-[11px] text-muted-foreground">
+              Atenção: contagens lançadas nesta visualização são gravadas de verdade.
+            </p>
+          )}
+          {preview && !previewToken && (
+            <div className="flex h-40 items-center justify-center text-xs text-muted-foreground">Carregando a tela da equipe...</div>
+          )}
+          {preview && previewToken && (
             <div className="mx-auto overflow-hidden rounded-2xl border-4 border-border bg-background">
               <iframe
                 title="Visualização do link"
-                src={previewPath(preview.row.scope)}
+                src={`/acesso/${preview.kind === "mobile" ? "celular" : "desktop"}/${previewToken}`}
                 style={
                   preview.kind === "mobile"
                     ? { width: 390, height: "min(75vh, 780px)" }

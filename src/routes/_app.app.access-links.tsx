@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,6 +59,7 @@ function AccessLinksPage() {
   const [scope, setScope] = useState<"dashboard" | "stock_count" | "training" | "pairings">("dashboard");
   const [deviceKind, setDeviceKind] = useState<"mobile" | "desktop">("mobile");
   const [singleDevice, setSingleDevice] = useState(true);
+  const [preview, setPreview] = useState<{ row: LinkRow; kind: "mobile" | "desktop" } | null>(null);
   const [days, setDays] = useState(0);
   const [creating, setCreating] = useState(false);
   const [fresh, setFresh] = useState<{ url: string; text: string } | null>(null);
@@ -295,15 +297,14 @@ function AccessLinksPage() {
                 {status}
               </span>
               <div className="flex gap-2">
-                <a
-                  href={previewPath(l.scope)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Abre em nova aba a tela que este link mostra"
+                <button
+                  type="button"
+                  onClick={() => setPreview({ row: l, kind: l.device_kind })}
+                  title="Mostra aqui a tela que este link entrega"
                   className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-primary hover:bg-accent"
                 >
                   <Eye className="h-3.5 w-3.5" /> Visualizar
-                </a>
+                </button>
                 <button
                   onClick={async () => {
                     try {
@@ -354,6 +355,44 @@ function AccessLinksPage() {
           );
         })}
       </div>
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-[95vw] w-auto">
+          <DialogHeader>
+            <DialogTitle className="text-primary">
+              {preview?.row.label} — {preview ? scopeLabel(preview.row.scope) : ""}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex gap-2">
+            {(["mobile", "desktop"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => preview && setPreview({ ...preview, kind: k })}
+                className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] ${
+                  preview?.kind === k ? "border-primary text-primary" : "border-border text-muted-foreground"
+                }`}
+              >
+                {k === "mobile" ? <Smartphone className="h-3.5 w-3.5" /> : <Monitor className="h-3.5 w-3.5" />}
+                {k === "mobile" ? "Celular" : "Computador"}
+              </button>
+            ))}
+          </div>
+          {preview && (
+            <div className="mx-auto overflow-hidden rounded-2xl border-4 border-border bg-background">
+              <iframe
+                title="Visualização do link"
+                src={previewPath(preview.row.scope)}
+                style={
+                  preview.kind === "mobile"
+                    ? { width: 390, height: "min(75vh, 780px)" }
+                    : { width: "min(88vw, 1200px)", height: "min(75vh, 760px)" }
+                }
+                className="block border-0"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

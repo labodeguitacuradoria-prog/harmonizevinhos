@@ -72,6 +72,8 @@ export function StockImportDialog({ onClose }: { onClose: () => void }) {
   const [wines, setWines] = useState<Wine[]>([]);
   const [useName, setUseName] = useState(true);
   const [createNew, setCreateNew] = useState(true);
+  const [quick, setQuick] = useState<{ key: string; name: string; producer: string; vintage: string; volume: string; code: string; cost: string; sale: string; type: string } | null>(null);
+  const [quickSaving, setQuickSaving] = useState(false);
   const [refDate, setRefDate] = useState(new Date().toISOString().slice(0, 10));
 
   async function process(items: StockImportItem[]) {
@@ -117,6 +119,32 @@ export function StockImportDialog({ onClose }: { onClose: () => void }) {
 
   function upd(key: string, p: Partial<Row>) {
     setRows((r) => r?.map((x) => (x.key === key ? { ...x, ...p } : x)) ?? null);
+  }
+
+  function openQuick(r: Row) {
+    setQuick({ key: r.key, name: r.item.nome ?? "", producer: r.item.produtor ?? "", vintage: r.item.safra ? String(r.item.safra) : "",
+      volume: r.item.volume || "750 ml", code: r.item.codigo ?? "", cost: r.item.custo != null ? String(r.item.custo) : "", sale: "", type: "" });
+  }
+
+  async function saveQuick() {
+    if (!quick || !restaurantId) return;
+    if (!quick.name.trim()) return toast.error("Informe o nome do rótulo.");
+    setQuickSaving(true);
+    const { data, error } = await supabase.from("wines").insert({
+      restaurant_id: restaurantId, name: quick.name.trim(), producer: quick.producer.trim() || null,
+      vintage: quick.vintage ? Number(quick.vintage) : null, volume: quick.volume.trim() || "750 ml",
+      internal_code: quick.code.trim() || null, wine_type: quick.type || null,
+      cost_price: Number(quick.cost.replace(",", ".")) || 0, sale_price: Number(quick.sale.replace(",", ".")) || 0,
+      active_on_menu: true, count_in_stock: true,
+    } as never).select("id,name,producer,vintage,volume,internal_code").single();
+    setQuickSaving(false);
+    if (error) return toast.error(error.message);
+    const w = data as Wine;
+    setWines((ws) => [...ws, w].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })));
+    upd(quick.key, { wineId: w.id, matchBy: "nome", selected: true });
+    qc.invalidateQueries();
+    toast.success("Rótulo criado e vinculado.");
+    setQuick(null);
   }
 
   async function confirm() {
@@ -269,7 +297,8 @@ export function StockImportDialog({ onClose }: { onClose: () => void }) {
                       <td className="p-2">
                         <WinePicker wines={wines} value={r.wineId}
                           emptyLabel={createNew ? "+ Criar novo rótulo" : "— Ignorar (não encontrado)"}
-                          onChange={(id) => upd(r.key, { wineId: id, matchBy: id ? "nome" : "novo" })} />
+                          onChange={(id) => upd(r.key, { wineId: id, matchBy: id ? "nome" : "novo" })}
+                          onCreate={createNew ? () => openQuick(r) : undefined} />
                         {r.matchBy === "codigo" && <div className="mt-0.5 text-[10px] text-primary">encontrado pelo código</div>}
                       </td>
                       <td className="p-2">
@@ -293,6 +322,36 @@ export function StockImportDialog({ onClose }: { onClose: () => void }) {
           </div>
         )}
       </div>
+      {quick && (() => { const F = (k: string, label: string, type = "text") => (
+    <label className="block text-xs text-muted-foreground">{label}
+      <input type={type} value={(quick as Record<string, string>)[k]} onChange={(e) => setQuick((q) => q && { ...q, [k]: e.target.value })}
+        className="mt-1 w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-foreground" />
+    </label>);
+        return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 p-4" onClick={() => !quickSaving && setQuick(null)}>
+          <div className="w-full max-w-md space-y-3 rounded-lg border border-border bg-card p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold uppercase tracking-wider text-primary">Novo rótulo</h3>
+              <button type="button" onClick={() => setQuick(null)}><X className="h-4 w-4" /></button>
+            </div>
+            <p className="text-xs text-muted-foreground">Confira o que foi lido no arquivo e complete os dados.</p>
+            {F("name", "Nome *")}
+            <div className="grid grid-cols-2 gap-3">{F("producer", "Produtor")}{F("vintage", "Safra", "number")}</div>
+            <div className="grid grid-cols-2 gap-3">{F("volume", "Volume")}{F("code", "Código interno")}</div>
+            <label className="block text-xs text-muted-foreground">Tipo
+              <select value={quick.type} onChange={(e) => setQuick({ ...quick, type: e.target.value })}
+                className="mt-1 w-full rounded border border-input bg-background px-2 py-1.5 text-sm text-foreground">
+                <option value="">—</option><option value="red">Tinto</option><option value="white">Branco</option><option value="rose">Rosé</option>
+                <option value="sparkling">Espumante</option><option value="dessert">Sobremesa</option><option value="fortified">Fortificado</option>
+              </select>
+            </label>
+            <div className="grid grid-cols-2 gap-3">{F("cost", "Custo (R$)")}{F("sale", "Preço de venda (R$)")}</div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setQuick(null)} disabled={quickSaving}>Cancelar</Button>
+              <Button onClick={saveQuick} disabled={quickSaving}>{quickSaving && <Loader2 className="h-4 w-4 animate-spin" />} Criar e vincular</Button>
+            </div>
+          </div>
+        </div>); })()}
     </div>
   );
 }

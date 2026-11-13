@@ -7,7 +7,7 @@ type W = { id: string; name: string; producer: string | null; vintage: number | 
 
 const label = (w: W) => `${w.internal_code ? `[${w.internal_code}] ` : ""}${w.name}${w.vintage ? ` ${w.vintage}` : ""}`;
 
-export function WinePicker({ wines, value, onChange, emptyLabel }: { wines: W[]; value: string; onChange: (id: string) => void; emptyLabel: string }) {
+export function WinePicker({ wines, value, onChange, emptyLabel, onCreate }: { wines: W[]; value: string; onChange: (id: string) => void; emptyLabel: string; onCreate?: () => void }) {
   const [open, setOpen] = useState(false);
   const cur = wines.find((w) => w.id === value);
   return (
@@ -24,7 +24,7 @@ export function WinePicker({ wines, value, onChange, emptyLabel }: { wines: W[];
           <CommandList className="max-h-72">
             <CommandEmpty>Nenhum rótulo encontrado.</CommandEmpty>
             <CommandGroup>
-              <CommandItem value="__novo__" onSelect={() => { onChange(""); setOpen(false); }}>
+              <CommandItem value="__novo__" onSelect={() => { setOpen(false); if (onCreate) onCreate(); else onChange(""); }}>
                 <Plus className="h-3 w-3" /> {emptyLabel}
               </CommandItem>
             </CommandGroup>

@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Home, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  INDEX_LINES_PER_PAGE, TYPE_COLOR, bodyDots, clean, producerAbout, producerOf, studyCard, typeLabel, wineTitle,
+  INDEX_LINES_PER_PAGE, bodyDots, clean, producerAbout, producerOf, studyCard, typeBand, typeKey, typeLabel, wineName, wineTitle,
   type BookIndexEntry, type BookWine, type Layout,
 } from "@/lib/training-book";
 
@@ -33,10 +33,10 @@ function CustomImage({ path }: { path: string }) {
 
 function Footer({ n, title, restaurantName, back }: { n: number; title: string; restaurantName: string; back: boolean }) {
   return (
-    <div className="absolute flex items-center justify-between" style={{ left: 18 * MM, right: 18 * MM, bottom: 7 * MM, borderTop: "1px solid #ddd", paddingTop: 6, fontSize: 11, color: MUTED }}>
+    <div className="absolute grid items-center" style={{ gridTemplateColumns: "1fr auto 1fr", left: 18 * MM, right: 18 * MM, bottom: 6 * MM, borderTop: "1px solid #ddd", paddingTop: 7, fontSize: 13.5, color: MUTED }}>
       <span className="truncate">{title} · {restaurantName}</span>
-      {back && <Home size={14} color={GOLD} aria-label="Índice" />}
-      <span>{n}</span>
+      <span style={{ fontWeight: 700 }}>{n}</span>
+      <span className="flex justify-end">{back && <Home size={20} color={GOLD} aria-label="Índice" />}</span>
     </div>
   );
 }
@@ -110,57 +110,57 @@ function PageBody({ l, n, index, wines, title, restaurantName }: { l: Layout; n:
   }
   const w = l.wine;
   const card = studyCard(w);
-  const c = TYPE_COLOR[w.wine_type ?? ""] ?? [160, 125, 30];
-  const col = `rgb(${c.join(",")})`;
-  const soft = `rgba(${c.join(",")},0.12)`;
+  const band = typeBand(w.wine_type);
+  const rgb = (c: number[]) => `rgb(${c.join(",")})`;
+  const col = rgb(band.accent);
+  const soft = `rgba(${band.accent.join(",")},0.14)`;
   const DARK = "rgb(38,52,44)";
-  const num = index.flatMap((e) => e.wines).findIndex((x) => x.id === w.id) + 1;
-  const label = (t: string) => <div style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: 1.5, marginBottom: 8 }}>{t}</div>;
+  const label = (t: string) => <div style={{ color: GOLD, fontWeight: 700, fontSize: 15, letterSpacing: 1.5, marginBottom: 9 }}>{t}</div>;
   const dots = bodyDots(w.body);
   const row = (k: string, v: React.ReactNode) => (
-    <div className="flex items-center" style={{ fontSize: 12, padding: "6px 0", borderBottom: "1px dotted #ccc" }}>
-      <span className="shrink-0 font-bold" style={{ width: 22 * MM, color: MUTED }}>{k}</span><span style={{ color: INK }}>{v}</span>
+    <div className="flex items-start" style={{ fontSize: 14.5, padding: "7px 0", borderBottom: "1px dotted #ccc", lineHeight: 1.35 }}>
+      <span className="shrink-0 font-bold" style={{ width: 27 * MM, color: MUTED }}>{k}</span><span style={{ color: INK }}>{v}</span>
     </div>
   );
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between font-bold" style={{ height: 13 * MM, background: col, color: "#fff", padding: `0 ${pad}px`, fontSize: 12.5, letterSpacing: 2 }}>
+      <div className="flex items-center justify-between font-bold" style={{ height: 15 * MM, background: rgb(band.bg), color: rgb(band.fg), padding: `0 ${pad}px`, fontSize: 15, letterSpacing: 2 }}>
         <span>🍷 {card.header}</span>
-        <span style={{ background: "#fff", color: col, borderRadius: 99, padding: "3px 12px" }}>Nº {String(num).padStart(3, "0")}</span>
+        {card.code && <span style={{ background: "#fff", color: rgb(typeKey(w.wine_type) === "sparkling" ? band.fg : band.bg), borderRadius: 99, padding: "4px 14px", fontSize: 14.5 }}>Nº {card.code}</span>}
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ padding: `${9 * MM}px ${pad}px ${20 * MM}px` }}>
-        <div className="flex" style={{ gap: 9 * MM }}>
-          <div className="flex shrink-0 items-center justify-center" style={{ width: 66 * MM, height: 98 * MM, border: "1px solid #e4e4e4", borderRadius: 10, padding: 4 * MM, boxShadow: "0 4px 14px rgba(0,0,0,.08)", background: "#fff" }}>
-            {w.image_url ? <img src={w.image_url} alt={w.name} className="max-h-full max-w-full object-contain" /> : <span style={{ fontSize: 11, color: MUTED }}>Sem foto</span>}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ padding: `${8 * MM}px ${pad}px ${20 * MM}px` }}>
+        <div className="flex" style={{ gap: 8 * MM }}>
+          <div className="flex shrink-0 items-center justify-center" style={{ width: 64 * MM, height: 96 * MM, border: "1px solid #e4e4e4", borderRadius: 10, padding: 4 * MM, boxShadow: "0 4px 14px rgba(0,0,0,.08)", background: "#fff" }}>
+            {w.image_url ? <img src={w.image_url} alt={w.name} className="max-h-full max-w-full object-contain" /> : <span style={{ fontSize: 13, color: MUTED }}>Sem foto</span>}
           </div>
           <div className="min-w-0 flex-1">
-            <div style={{ color: GOLD, fontWeight: 700, fontSize: 12.5, letterSpacing: 1.5 }}>{producerOf(w).toUpperCase()}</div>
-            <div style={{ fontFamily: "Times New Roman, serif", fontWeight: 700, fontSize: 28, lineHeight: 1.12, color: DARK, marginTop: 6 }}>{wineTitle(w)}</div>
-            {(w.country || w.region) && <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginTop: 8 }}>{[w.country, w.region].filter(Boolean).join(" • ")}</div>}
-            {w.appellation && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>{clean(w.appellation)}</div>}
-            {card.price && <div style={{ fontSize: 20, fontWeight: 700, color: col, marginTop: 8 }}>{card.price}</div>}
-            <div className="flex flex-wrap" style={{ gap: 6, marginTop: 10 }}>
-              {card.grapes.slice(0, 6).map((g) => <span key={g} style={{ background: DARK, color: "#fff", borderRadius: 99, padding: "3px 11px", fontSize: 11.5 }}>{g}</span>)}
+            <div className="truncate" style={{ color: GOLD, fontWeight: 700, fontSize: 14.5, letterSpacing: 1.5 }}>{producerOf(w).toUpperCase()}</div>
+            <div style={{ fontFamily: "Times New Roman, serif", fontWeight: 700, fontSize: 33, lineHeight: 1.1, color: DARK, marginTop: 8 }}>{wineName(w)}</div>
+            {(w.country || w.region) && <div style={{ fontSize: 16.5, fontWeight: 700, color: INK, marginTop: 10 }}>{[w.country, w.region].filter(Boolean).join(" • ")}</div>}
+            {w.appellation && <div style={{ fontSize: 14, color: MUTED, marginTop: 3 }}>{clean(w.appellation)}</div>}
+            {card.price && <div style={{ fontSize: 24, fontWeight: 700, color: col, marginTop: 10 }}>{card.price}</div>}
+            <div className="flex flex-wrap" style={{ gap: 7, marginTop: 12 }}>
+              {card.grapes.slice(0, 6).map((g) => <span key={g} style={{ background: DARK, color: "#fff", borderRadius: 99, padding: "4px 13px", fontSize: 14 }}>{g}</span>)}
             </div>
-            <div style={{ marginTop: 10 }}>
-              {w.body && row("Corpo", <span className="flex items-center gap-2"><span style={{ color: col, letterSpacing: 2 }}>{"●".repeat(dots)}{"○".repeat(5 - dots)}</span>{clean(w.body).toLowerCase()}</span>)}
+            <div style={{ marginTop: 12 }}>
+              {w.body && row("Corpo", <span className="flex items-center gap-2"><span style={{ color: col, letterSpacing: 2, fontSize: 16 }}>{"●".repeat(dots)}{"○".repeat(5 - dots)}</span>{clean(w.body).toLowerCase()}</span>)}
               {w.sugar_level && row("Açúcar", clean(w.sugar_level).toLowerCase())}
-              {card.wood && row("Madeira", card.wood)}
+              {card.maturation && row("Maturação", card.maturation)}
             </div>
           </div>
         </div>
         <div style={{ marginTop: 9 * MM }} className="flex flex-col" >
-          {card.aromas.length > 0 && <div style={{ marginBottom: 6 * MM }}>{label("👃 CHEIRO DE...")}
-            <div className="flex flex-wrap" style={{ gap: 7 }}>{card.aromas.map((a) => <span key={a.label} style={{ border: `1px solid ${col}`, borderRadius: 99, padding: "4px 12px", fontSize: 12.5, color: INK }}>{a.icon} {a.label}</span>)}</div></div>}
-          {card.mouth && <div style={{ marginBottom: 6 * MM }}>{label("🍷 NA BOCA")}<div style={{ fontSize: 14, color: INK, lineHeight: 1.45 }}>{card.mouth}</div></div>}
+          {card.aromas.length > 0 && <div style={{ marginBottom: 6 * MM }}>{label("👃 AROMAS")}
+            <div className="flex flex-wrap" style={{ gap: 8 }}>{card.aromas.map((a) => <span key={a.label} style={{ border: `1px solid ${col}`, borderRadius: 99, padding: "5px 14px", fontSize: 15, color: INK }}>{a.icon} {a.label}</span>)}</div></div>}
+          {card.mouth && <div style={{ marginBottom: 6 * MM }}>{label("🍷 PALADAR")}<div style={{ fontSize: 16.5, color: INK, lineHeight: 1.4 }}>{card.mouth}</div></div>}
           {(card.temp || card.dishes.length > 0) && <div className="flex" style={{ gap: 8 * MM, marginBottom: 6 * MM }}>
-            {card.temp && <div style={{ width: "30%" }}>{label("🌡️ SERVIR A")}<div style={{ fontSize: 17, fontWeight: 700, color: INK }}>{card.temp}</div></div>}
-            {card.dishes.length > 0 && <div className="flex-1">{label("🍽️ COMBINA COM")}<div className="flex flex-wrap" style={{ gap: 7 }}>{card.dishes.map((d) => <span key={d} style={{ background: soft, borderRadius: 99, padding: "4px 12px", fontSize: 12.5, color: INK }}>{d}</span>)}</div></div>}
+            {card.temp && <div style={{ width: "28%" }}>{label("🌡️ SERVIR A")}<div style={{ fontSize: 21, fontWeight: 700, color: INK }}>{card.temp}</div></div>}
+            {card.dishes.length > 0 && <div className="flex-1">{label("🍽️ COMBINA COM")}<div className="flex flex-wrap" style={{ gap: 8 }}>{card.dishes.map((d) => <span key={d} style={{ background: soft, borderRadius: 99, padding: "5px 14px", fontSize: 15, color: INK }}>{d}</span>)}</div></div>}
           </div>}
-          <div style={{ border: `1px solid ${DARK}`, borderRadius: 8, padding: "12px 16px", background: "#fcfcfa", marginBottom: 5 * MM }}>
-            {label("💬 FALE ASSIM NA MESA")}<div style={{ fontStyle: "italic", fontSize: 14, color: INK, lineHeight: 1.45 }}>“{card.say}”</div>
+          <div style={{ border: `1px solid ${DARK}`, borderRadius: 8, padding: "14px 18px", background: "#fcfcfa", marginBottom: 5 * MM }}>
+            {label("💬 FALE ASSIM À MESA")}<div style={{ fontStyle: "italic", fontSize: 16.5, color: INK, lineHeight: 1.4 }}>“{card.say}”</div>
           </div>
-          <div style={{ background: soft, borderRadius: 8, padding: "10px 16px", fontSize: 13, color: INK }}>🧠 <b>Para decorar:</b> {card.remember}</div>
+          <div style={{ background: soft, borderRadius: 8, padding: "12px 18px", fontSize: 15, color: INK }}>🧠 <b>Para decorar:</b> {card.remember}</div>
         </div>
       </div>
       <Footer n={n} title={title} restaurantName={restaurantName} back />

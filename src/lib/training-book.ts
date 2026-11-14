@@ -111,6 +111,11 @@ export function wineTitle(w: Pick<BookWine, "name" | "vintage">) {
   return w.vintage && !w.name.includes(String(w.vintage)) ? `${w.name} ${w.vintage}` : w.name;
 }
 
+/** Nome do vinho sem a safra (remove anos como 2022 que vieram junto do nome). */
+export function wineName(w: Pick<BookWine, "name">) {
+  return w.name.replace(/\s*\b(19|20)\d{2}\b/g, "").replace(/\s{2,}/g, " ").trim() || w.name;
+}
+
 const TYPE_LABEL: Record<string, string> = {
   red: "Tinto",
   white: "Branco",
@@ -118,18 +123,38 @@ const TYPE_LABEL: Record<string, string> = {
   sparkling: "Espumante",
   dessert: "Sobremesa",
   fortified: "Fortificado",
+  orange: "Laranja",
 };
-export const TYPE_COLOR: Record<string, [number, number, number]> = {
-  red: [128, 0, 32],
-  white: [212, 175, 55],
-  rose: [214, 110, 130],
-  sparkling: [150, 150, 150],
-  dessert: [170, 110, 40],
-  fortified: [74, 4, 4],
+const norm = (t: string | null | undefined) =>
+  (t ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+const TYPE_KEY: Record<string, string> = {
+  tinto: "red", red: "red", branco: "white", white: "white", rose: "rose", rosado: "rose",
+  espumante: "sparkling", sparkling: "sparkling", champagne: "sparkling", sobremesa: "dessert", dessert: "dessert",
+  fortificado: "fortified", fortified: "fortified", laranja: "orange", orange: "orange",
 };
+/** Normaliza o tipo do cadastro (em português ou inglês) para uma chave única. */
+export function typeKey(t: string | null | undefined) {
+  return TYPE_KEY[norm(t)] ?? "";
+}
+
+type RGB = [number, number, number];
+/** Cores da faixa superior da ficha: fundo, texto da faixa e cor de destaque na página. */
+export const TYPE_BAND: Record<string, { bg: RGB; fg: RGB; accent: RGB }> = {
+  white: { bg: [160, 125, 30], fg: [255, 255, 255], accent: [160, 125, 30] }, // amarelo palha
+  sparkling: { bg: [236, 214, 120], fg: [80, 62, 10], accent: [176, 145, 40] }, // amarelo claro
+  rose: { bg: [222, 72, 138], fg: [255, 255, 255], accent: [222, 72, 138] }, // pink
+  red: { bg: [176, 22, 40], fg: [255, 255, 255], accent: [176, 22, 40] }, // vermelho
+  dessert: { bg: [176, 112, 36], fg: [255, 255, 255], accent: [176, 112, 36] },
+  fortified: { bg: [92, 14, 22], fg: [255, 255, 255], accent: [92, 14, 22] },
+  orange: { bg: [210, 118, 40], fg: [255, 255, 255], accent: [210, 118, 40] },
+};
+const DEFAULT_BAND = { bg: [160, 125, 30] as RGB, fg: [255, 255, 255] as RGB, accent: [160, 125, 30] as RGB };
+export function typeBand(t: string | null | undefined) {
+  return TYPE_BAND[typeKey(t)] ?? DEFAULT_BAND;
+}
 
 export function typeLabel(t: string | null) {
-  return (t && TYPE_LABEL[t]) || t || "Vinho";
+  return TYPE_LABEL[typeKey(t)] || t || "Vinho";
 }
 
 export function techRows(w: BookWine): [string, string][] {
@@ -196,17 +221,18 @@ export async function buildBookPdf(opts: {
     doc.setDrawColor(220, 220, 220);
     doc.line(M, H - 14, W - M, H - 14);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
+    doc.setFontSize(10);
     doc.setTextColor(...MUTED);
-    doc.text(`${opts.title} · ${opts.restaurantName}`, M, H - 9);
-    doc.text(String(n), W - M, H - 9, { align: "right" });
+    doc.text(doc.splitTextToSize(`${opts.title} · ${opts.restaurantName}`, W / 2 - M - 12)[0] as string, M, H - 8.6);
+    doc.setFont("helvetica", "bold");
+    doc.text(String(n), W / 2, H - 8.6, { align: "center" });
     if (withBack && firstIndexPage > 0) {
-      const cx = W / 2, cy = H - 10.2;
+      const cx = W - M - 3.4, cy = H - 9.8;
       doc.setDrawColor(...GOLD);
-      doc.setLineWidth(0.35);
-      doc.lines([[2.6, -2.4], [2.6, 2.4]], cx - 2.6, cy, [1, 1], "S");
-      doc.rect(cx - 1.8, cy, 3.6, 2.6, "S");
-      doc.link(cx - 4, cy - 3.5, 8, 7, { pageNumber: firstIndexPage });
+      doc.setLineWidth(0.45);
+      doc.lines([[3.4, -3.1], [3.4, 3.1]], cx - 3.4, cy, [1, 1], "S");
+      doc.rect(cx - 2.3, cy, 4.6, 3.3, "S");
+      doc.link(cx - 6, cy - 5, 12, 10, { pageNumber: firstIndexPage });
     }
   };
 
@@ -336,24 +362,30 @@ export async function buildBookPdf(opts: {
     // Página do rótulo — ficha de estudo
     const w = l.wine;
     const card = studyCard(w);
-    const color = TYPE_COLOR[w.wine_type ?? ""] ?? GOLD;
-    const SOFT: [number, number, number] = [color[0] + (255 - color[0]) * 0.88, color[1] + (255 - color[1]) * 0.88, color[2] + (255 - color[2]) * 0.88].map(Math.round) as [number, number, number];
+    const band = typeBand(w.wine_type);
+    const color = band.accent;
+    const SOFT: [number, number, number] = [color[0] + (255 - color[0]) * 0.86, color[1] + (255 - color[1]) * 0.86, color[2] + (255 - color[2]) * 0.86].map(Math.round) as [number, number, number];
     const DARK: [number, number, number] = [38, 52, 44];
-    doc.setFillColor(...color);
-    doc.rect(0, 0, W, 13, "F");
+    const LH = (pt: number, f = 1.35) => pt * 0.3528 * f;
+    const BOTTOM = H - 18;
+    doc.setFillColor(...band.bg);
+    doc.rect(0, 0, W, 15, "F");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9.5);
-    doc.setTextColor(255, 255, 255);
-    doc.text(card.header, M, 8.4, { charSpace: 1.2 });
-    const num = index.flatMap((e) => e.wines).findIndex((x) => x.id === w.id) + 1;
-    const badge = `Nº ${String(num).padStart(3, "0")}`;
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(W - M - 20, 3.5, 20, 6.5, 3.2, 3.2, "F");
-    doc.setTextColor(...color);
-    doc.text(badge, W - M - 10, 8.1, { align: "center" });
+    doc.setFontSize(11.5);
+    doc.setTextColor(...band.fg);
+    doc.text(card.header, M, 9.6, { charSpace: 1.2 });
+    if (card.code) {
+      const badge = `Nº ${card.code}`;
+      doc.setFontSize(11);
+      const bw = Math.max(20, doc.getTextWidth(badge) + 9);
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(W - M - bw, 3.7, bw, 7.6, 3.8, 3.8, "F");
+      doc.setTextColor(...(typeKey(w.wine_type) === "sparkling" ? band.fg : band.bg));
+      doc.text(badge, W - M - bw / 2, 9.1, { align: "center" });
+    }
 
-    const top = 22;
-    const boxW = 66, boxH = 98;
+    const top = 23;
+    const boxW = 64, boxH = 96;
     doc.setFillColor(238, 238, 238);
     doc.roundedRect(M + 1, top + 1.2, boxW, boxH, 3, 3, "F");
     doc.setFillColor(255, 255, 255);
@@ -364,89 +396,97 @@ export async function buildBookPdf(opts: {
       const sc = Math.min((boxW - 8) / img.w, (boxH - 8) / img.h);
       doc.addImage(img.data, "JPEG", M + (boxW - img.w * sc) / 2, top + (boxH - img.h * sc) / 2, img.w * sc, img.h * sc);
     } else {
-      doc.setFontSize(8); doc.setTextColor(...MUTED);
+      doc.setFontSize(10); doc.setTextColor(...MUTED);
       doc.text("Sem foto", M + boxW / 2, top + boxH / 2, { align: "center" });
     }
 
-    const x = M + boxW + 9, cw = W - M - x;
+    const x = M + boxW + 8, cw = W - M - x;
     let y = top + 5;
-    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(...GOLD);
-    doc.text(producerOf(w).toUpperCase(), x, y, { charSpace: 1 });
-    y += 8;
-    doc.setFont("times", "bold"); doc.setFontSize(21); doc.setTextColor(...DARK);
-    const nl = (doc.splitTextToSize(wineTitle(w), cw) as string[]).slice(0, 3);
-    doc.text(nl, x, y); y += nl.length * 7.6;
-    const origin = [w.country, [w.region].filter(Boolean).join("")].filter(Boolean).join(" • ");
-    if (origin) { doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(...INK); doc.text(doc.splitTextToSize(origin, cw)[0] as string, x, y); y += 5; }
-    if (w.appellation) { doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...MUTED); doc.text(doc.splitTextToSize(clean(w.appellation), cw)[0] as string, x, y); y += 5; }
-    if (card.price) { y += 2; doc.setFont("helvetica", "bold"); doc.setFontSize(15); doc.setTextColor(...color); doc.text(card.price, x, y); y += 7; }
+    doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(...GOLD);
+    doc.text(doc.splitTextToSize(producerOf(w).toUpperCase(), cw)[0] as string, x, y, { charSpace: 1 });
+    y += 9.5;
+    doc.setFont("times", "bold"); doc.setFontSize(25); doc.setTextColor(...DARK);
+    const nl = (doc.splitTextToSize(wineName(w), cw) as string[]).slice(0, 3);
+    doc.text(nl, x, y, { lineHeightFactor: 1.1 }); y += nl.length * LH(25, 1.1) + 1.5;
+    const origin = [w.country, w.region].filter(Boolean).join(" • ");
+    if (origin) { doc.setFont("helvetica", "bold"); doc.setFontSize(12.5); doc.setTextColor(...INK); doc.text(doc.splitTextToSize(origin, cw)[0] as string, x, y); y += 6; }
+    if (w.appellation) { doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); doc.setTextColor(...MUTED); doc.text(doc.splitTextToSize(clean(w.appellation), cw)[0] as string, x, y); y += 6; }
+    if (card.price) { y += 2.5; doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(...color); doc.text(card.price, x, y); y += 8.5; }
     // pílulas de uvas
     let px = x;
-    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10.5);
     for (const g of card.grapes.slice(0, 6)) {
-      const tw = doc.getTextWidth(g) + 6;
-      if (px + tw > W - M) { px = x; y += 7.5; }
-      doc.setFillColor(...DARK); doc.roundedRect(px, y - 4.3, tw, 6, 3, 3, "F");
-      doc.setTextColor(255, 255, 255); doc.text(g, px + 3, y);
+      const tw = doc.getTextWidth(g) + 7;
+      if (px + tw > W - M) { px = x; y += 8.6; }
+      doc.setFillColor(...DARK); doc.roundedRect(px, y - 5, tw, 7, 3.5, 3.5, "F");
+      doc.setTextColor(255, 255, 255); doc.text(g, px + 3.5, y);
       px += tw + 2;
     }
-    if (card.grapes.length) y += 9;
+    if (card.grapes.length) y += 10;
     // tabela rápida
-    const row = (k: string, draw: (vx: number) => void) => {
-      doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...MUTED); doc.text(k, x, y);
-      draw(x + 22);
-      doc.setDrawColor(210, 210, 210); doc.setLineDashPattern([0.4, 1], 0); doc.line(x, y + 2.4, W - M, y + 2.4); doc.setLineDashPattern([], 0);
-      y += 7.5;
+    const KW = 27;
+    const row = (k: string, draw: (vx: number) => number) => {
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(...MUTED); doc.text(k, x, y);
+      const lines = draw(x + KW);
+      const yl = y + (lines - 1) * LH(11) + 2.8;
+      doc.setDrawColor(210, 210, 210); doc.setLineDashPattern([0.4, 1], 0); doc.line(x, yl, W - M, yl); doc.setLineDashPattern([], 0);
+      y = yl + 6;
     };
-    const txt = (t: string) => (vx: number) => { doc.setFont("helvetica", "normal"); doc.setTextColor(...INK); doc.text(doc.splitTextToSize(t, W - M - vx)[0] as string, vx, y); };
+    const txt = (t: string, max = 1) => (vx: number) => {
+      doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(...INK);
+      const tl = (doc.splitTextToSize(t, W - M - vx) as string[]).slice(0, max);
+      doc.text(tl, vx, y, { lineHeightFactor: 1.35 });
+      return tl.length;
+    };
     if (w.body) row("Corpo", (vx) => {
       const d = bodyDots(w.body);
-      for (let k = 0; k < 5; k++) { doc.setDrawColor(...color); doc.setFillColor(...color); doc.circle(vx + 1.6 + k * 4.4, y - 1.2, 1.5, k < d ? "FD" : "S"); }
-      txt(clean(w.body).toLowerCase())(vx + 24);
+      for (let k = 0; k < 5; k++) { doc.setDrawColor(...color); doc.setFillColor(...color); doc.circle(vx + 1.9 + k * 5, y - 1.4, 1.8, k < d ? "FD" : "S"); }
+      return txt(clean(w.body).toLowerCase())(vx + 27);
     });
     if (w.sugar_level) row("Açúcar", txt(clean(w.sugar_level).toLowerCase()));
-    if (card.wood) row("Madeira", txt(card.wood));
+    if (card.maturation) row("Maturação", txt(card.maturation, 3));
 
-    y = Math.max(top + boxH, y) + 9;
-    const label = (t: string, lx = M) => { doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...GOLD); doc.text(t, lx, y, { charSpace: 1 }); };
+    y = Math.max(top + boxH, y) + 11;
+    const label = (t: string, lx = M) => { doc.setFont("helvetica", "bold"); doc.setFontSize(11.5); doc.setTextColor(...GOLD); doc.text(t, lx, y, { charSpace: 1 }); };
     const pills = (items: string[], lx: number, maxX: number, fill: boolean) => {
-      let qx = lx; doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+      let qx = lx; doc.setFont("helvetica", "normal"); doc.setFontSize(11.5);
       for (const it of items) {
-        const tw = doc.getTextWidth(it) + 7;
-        if (qx + tw > maxX) { qx = lx; y += 8; }
-        if (fill) { doc.setFillColor(...SOFT); doc.roundedRect(qx, y - 4.6, tw, 6.4, 3.2, 3.2, "F"); }
-        else { doc.setDrawColor(...color); doc.roundedRect(qx, y - 4.6, tw, 6.4, 3.2, 3.2, "S"); }
-        doc.setTextColor(...INK); doc.text(it, qx + 3.5, y); qx += tw + 2.5;
+        const tw = doc.getTextWidth(it) + 8;
+        if (qx + tw > maxX) { qx = lx; y += 9.4; }
+        if (fill) { doc.setFillColor(...SOFT); doc.roundedRect(qx, y - 5.4, tw, 7.6, 3.8, 3.8, "F"); }
+        else { doc.setDrawColor(...color); doc.setLineWidth(0.35); doc.roundedRect(qx, y - 5.4, tw, 7.6, 3.8, 3.8, "S"); }
+        doc.setTextColor(...INK); doc.text(it, qx + 4, y); qx += tw + 2.5;
       }
     };
-    if (card.aromas.length) { label("CHEIRO DE..."); y += 7; pills(card.aromas.map((a) => a.label), M, W - M, false); y += 10; }
+    if (card.aromas.length) { label("AROMAS"); y += 9; pills(card.aromas.map((a) => a.label), M, W - M, false); y += 12; }
     if (card.mouth) {
-      label("NA BOCA"); y += 6;
-      doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); doc.setTextColor(...INK);
-      const ml = (doc.splitTextToSize(card.mouth, W - 2 * M) as string[]).slice(0, 2); doc.text(ml, M, y); y += ml.length * 5 + 6;
+      label("PALADAR"); y += 7.5;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(12.5); doc.setTextColor(...INK);
+      const ml = (doc.splitTextToSize(card.mouth, W - 2 * M) as string[]).slice(0, 6);
+      doc.text(ml, M, y, { lineHeightFactor: 1.35 }); y += ml.length * LH(12.5) + 7;
     }
-    if (card.temp || card.dishes.length) {
-      const y0 = y; const half = M + (W - 2 * M) * 0.32;
-      if (card.temp) { label("SERVIR A"); y += 7; doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(...INK); doc.text(card.temp, M, y); }
+    if ((card.temp || card.dishes.length) && y < BOTTOM - 20) {
+      const y0 = y; const half = M + (W - 2 * M) * 0.3;
+      if (card.temp) { label("SERVIR A"); y += 9; doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(...INK); doc.text(card.temp, M, y); }
       const yT = y; y = y0;
-      if (card.dishes.length) { label("COMBINA COM", half); y += 7; pills(card.dishes, half, W - M, true); }
-      y = Math.max(yT, y) + 10;
+      if (card.dishes.length) { label("COMBINA COM", half); y += 9; pills(card.dishes, half, W - M, true); }
+      y = Math.max(yT, y) + 15;
     }
-    if (y < H - 50) {
-      doc.setFont("helvetica", "italic"); doc.setFontSize(10.5);
-      const sl = (doc.splitTextToSize(`“${card.say}”`, W - 2 * M - 10) as string[]).slice(0, 3);
-      const bh = 10 + sl.length * 5;
+    doc.setFont("helvetica", "italic"); doc.setFontSize(12.5);
+    const sl = (doc.splitTextToSize(`“${card.say}”`, W - 2 * M - 10) as string[]).slice(0, 3);
+    const bh = 14 + sl.length * LH(12.5);
+    if (y + bh < BOTTOM) {
       doc.setFillColor(252, 252, 250); doc.setDrawColor(...DARK); doc.setLineWidth(0.3);
-      doc.roundedRect(M, y - 4, W - 2 * M, bh, 2.5, 2.5, "FD");
-      label("FALE ASSIM NA MESA", M + 5); y += 6;
-      doc.setFont("helvetica", "italic"); doc.setTextColor(...INK); doc.text(sl, M + 5, y);
-      y += sl.length * 5 + 8;
+      doc.roundedRect(M, y - 7.5, W - 2 * M, bh + 1.5, 2.5, 2.5, "FD");
+      label("FALE ASSIM À MESA", M + 5); y += 7.5;
+      doc.setFont("helvetica", "italic"); doc.setFontSize(12.5); doc.setTextColor(...INK); doc.text(sl, M + 5, y, { lineHeightFactor: 1.35 });
+      y += sl.length * LH(12.5) + 12;
     }
-    if (y < H - 30) {
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
-      const rl = (doc.splitTextToSize(`Para decorar: ${card.remember}`, W - 2 * M - 10) as string[]).slice(0, 2);
-      doc.setFillColor(...SOFT); doc.roundedRect(M, y - 4.5, W - 2 * M, 5 + rl.length * 4.8, 2.5, 2.5, "F");
-      doc.setTextColor(...INK); doc.text(rl, M + 5, y);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(11.5);
+    const rl = (doc.splitTextToSize(`Para decorar: ${card.remember}`, W - 2 * M - 10) as string[]).slice(0, 2);
+    if (y + rl.length * LH(11.5) + 2 < BOTTOM) {
+      doc.setFillColor(...SOFT); doc.roundedRect(M, y - 6.4, W - 2 * M, 9 + (rl.length - 1) * LH(11.5), 2.5, 2.5, "F");
+      doc.setTextColor(...INK); doc.text(rl, M + 5, y, { lineHeightFactor: 1.35 });
     }
     footer(n, true);
   }
@@ -493,7 +533,10 @@ const AROMAS: [RegExp, string, string][] = [
   [/tostad|brioche|p[aã]o/i, "tostado / pão", "🍞"], [/especiari|pimenta|cravo|canela/i, "especiarias", "🌶️"],
   [/chocolate|cacau/i, "chocolate", "🍫"], [/caf[eé]\b/i, "café", "☕"], [/carvalho|madeira|defumad/i, "madeira", "🪵"],
   [/ervas|herb|menta|eucalipto/i, "ervas", "🌿"], [/mineral/i, "mineral", "🪨"], [/couro|tabaco/i, "tabaco / couro", "🍂"],
-  [/nozes|am[eê]ndoa|avel[aã]/i, "frutas secas", "🌰"],
+  [/nozes|am[eê]ndoa|avel[aã]|frut[ao]s? sec[ao]s/i, "frutas secas", "🌰"], [/\bcoco\b/i, "coco", "🥥"], [/\bfigo/i, "figo", "🍇"],
+  [/frutas? brancas?/i, "frutas brancas", "🍐"], [/frutas? em calda|compota/i, "frutas em calda", "🍯"],
+  [/manteiga|amanteigad/i, "manteiga", "🧈"], [/caramelo|toffee/i, "caramelo", "🍮"], [/alca[cç]uz/i, "alcaçuz", "🌿"],
+  [/terros|cogumelo|sous-bois/i, "terroso", "🍄"], [/levedura|autólise|autolise/i, "leveduras", "🍞"],
 ];
 
 export function bodyDots(body: string | null) {
@@ -508,15 +551,44 @@ export function bodyDots(body: string | null) {
 
 export type StudyCard = {
   header: string; aromas: { label: string; icon: string }[]; mouth: string; temp: string;
-  dishes: string[]; grapes: string[]; say: string; remember: string; price: string; wood: string;
+  dishes: string[]; grapes: string[]; say: string; remember: string; price: string; maturation: string; code: string;
 };
 
+const ANALYSIS_HEAD = /(?:\*\*|#+[ \t]*)?[ \t]*AN[ÁA]LISE[ \t]+(VISUAL|OLFATIVA|GUSTATIVA)(?:[ \t]*\([^)\n]{0,30}\))?[ \t]*(?:\*\*)?[ \t]*[:\-–]?\s*/gi;
+
+/** Texto de uma seção das notas de degustação (sem o título "ANÁLISE ..."). */
+export function tastingSection(notes: string | null | undefined, kind: "visual" | "olfativa" | "gustativa") {
+  const s = notes ?? "";
+  const heads = [...s.matchAll(ANALYSIS_HEAD)];
+  const i = heads.findIndex((h) => norm(h[1]) === kind);
+  if (i < 0) return "";
+  const from = heads[i].index! + heads[i][0].length;
+  const rest = s.slice(from, heads[i + 1]?.index ?? s.length);
+  const stop = rest.search(/\*\*[^*\n]{3,60}\*\*|\n[ \t]*#+[ \t]|\n[ \t]*(CONCLUS|HARMONIZA|SERVI[CÇ]O)/i);
+  return clean(stop > 0 ? rest.slice(0, stop) : rest);
+}
+
+function clip(s: string, max: number) {
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max);
+  const dot = cut.lastIndexOf(". ");
+  return dot > max * 0.5 ? cut.slice(0, dot + 1) : `${cut.slice(0, cut.lastIndexOf(" "))}…`;
+}
+
 export function studyCard(w: BookWine): StudyCard {
-  const all = `${w.tasting_notes ?? ""} ${w.elaboration ?? ""}`;
-  const aromas: { label: string; icon: string }[] = [];
-  for (const [rx, label, icon] of AROMAS) if (rx.test(all) && !aromas.some((a) => a.label === label)) aromas.push({ label, icon });
-  const wineSent = sentences(w.tasting_notes).filter((s) => !isWinerySentence(s, w.producer));
-  const mouth = (wineSent.find((s) => /boca|paladar|final|taninos?|acidez|textura/i.test(s)) ?? wineSent[0] ?? "").slice(0, 170);
+  const nose = tastingSection(w.tasting_notes, "olfativa");
+  const src = nose || `${w.tasting_notes ?? ""} ${w.elaboration ?? ""}`;
+  const found: { label: string; icon: string; at: number }[] = [];
+  for (const [rx, label, icon] of AROMAS) {
+    const m = rx.exec(src);
+    if (m && !found.some((a) => a.label === label)) found.push({ label, icon, at: m.index });
+  }
+  const aromas = found.sort((a, b) => a.at - b.at).map(({ label, icon }) => ({ label, icon }));
+  const palate = tastingSection(w.tasting_notes, "gustativa");
+  const wineSent = sentences(w.tasting_notes).filter((s) => !isWinerySentence(s, w.producer) && !/^AN[ÁA]LISE\b/i.test(s));
+  const mouth = palate
+    ? clip(palate, 480)
+    : clip(wineSent.find((s) => /boca|paladar|final|taninos?|acidez|textura/i.test(s)) ?? wineSent[0] ?? "", 240);
   const temp = w.serving_temp_min || w.serving_temp_max
     ? `${w.serving_temp_min ?? w.serving_temp_max}${w.serving_temp_max && w.serving_temp_min !== w.serving_temp_max ? ` a ${w.serving_temp_max}` : ""} °C` : "";
   const dishes = clean(w.pairing_notes).replace(/\.$/, "").split(/,|;| e (?=[a-zà-ú])/i).map((s) => s.trim()).filter((s) => s && s.length < 40).slice(0, 5)
@@ -531,8 +603,9 @@ export function studyCard(w: BookWine): StudyCard {
   const where = w.region || w.country || "";
   const a3 = aromas.slice(0, 3).map((a) => a.label);
   const say = `É um ${type.toLowerCase()}${styleWord ? ` ${styleWord}` : ""}${where ? ` de ${where}` : ""}${grapes.length ? `, feito com ${grapes.map((g) => g.replace(/ \d+%$/, "")).slice(0, 2).join(" e ")}` : ""}${a3.length ? `. Lembra ${a3.join(", ")}` : ""}.`;
-  const remember = [w.name, [styleWord || type.toLowerCase(), where, a3[0]].filter(Boolean).join(" + ")].join(" = ");
-  const wood = w.oak_months ? `${String(w.oak_months).replace(".", ",")} meses em carvalho` : clean(w.aging) || (gd.length && gd.every((g) => !g.mesesBarrica) ? "sem madeira" : "");
+  const remember = [wineName(w), [styleWord || type.toLowerCase(), where, a3[0]].filter(Boolean).join(" + ")].join(" = ");
+  const maturation = clip(clean(w.aging), 150) || (w.oak_months ? `${String(w.oak_months).replace(".", ",")} meses em carvalho` : "");
   const price = w.sale_price ? `R$ ${Number(w.sale_price).toFixed(0)}` : "";
-  return { header, aromas: aromas.slice(0, 6), mouth, temp, dishes, grapes, say, remember, price, wood };
+  const code = clean(w.internal_code);
+  return { header, aromas: aromas.slice(0, 8), mouth, temp, dishes, grapes, say, remember, price, maturation, code };
 }

@@ -34,3 +34,33 @@ it("história da vinícola vai para a página do produtor, não para a ficha do 
   assert.equal(studyCard(w).mouth, "Na boca é fresco.");
   assert.equal(producerAbout([w]), "Produzido pela vinícola Casa Y desde 1989.");
 });
+
+describe("ficha do rótulo", async () => {
+  const { studyCard, typeBand, wineName } = await import("./training-book");
+  const notes = `Texto inicial.\n\n**ANÁLISE VISUAL**\nAmarelo palha.\n\n**ANÁLISE OLFATIVA**\nNotas de baunilha, mel e coco, com abacaxi.\n\n**ANÁLISE GUSTATIVA (PALADAR)**\nNo paladar é untuoso e fresco.`;
+  const base = { id: "x", name: "Doracy Chardonnay 2023", vintage: 2022, producer: "P", tasting_notes: notes, wine_type: "Branco" } as never as BookWine;
+
+  it("faixa muda de cor conforme o tipo (branco, espumante, rosé, tinto)", () => {
+    const bg = (t: string) => typeBand(t).bg.join(",");
+    assert.equal(bg("Branco"), "160,125,30");
+    assert.equal(bg("Espumante"), "236,214,120");
+    assert.equal(bg("Rosé"), "222,72,138");
+    assert.equal(bg("Tinto"), "176,22,40");
+  });
+  it("pílula da faixa mostra o código do vinho e some sem código", () => {
+    assert.equal(studyCard({ ...base, internal_code: "042" }).code, "042");
+    assert.equal(studyCard({ ...base, internal_code: null }).code, "");
+  });
+  it("maturação vem do campo Maturação do cadastro", () => {
+    assert.equal(studyCard({ ...base, aging: "12 meses em carvalho francês", oak_months: 6 }).maturation, "12 meses em carvalho francês");
+  });
+  it("aromas saem só da análise olfativa", () => {
+    assert.deepEqual(studyCard(base).aromas.map((a) => a.label), ["baunilha", "mel", "coco", "abacaxi"]);
+  });
+  it("paladar traz a análise gustativa sem o título", () => {
+    assert.equal(studyCard(base).mouth, "No paladar é untuoso e fresco.");
+  });
+  it("título sem safra", () => {
+    assert.equal(wineName(base), "Doracy Chardonnay");
+  });
+});

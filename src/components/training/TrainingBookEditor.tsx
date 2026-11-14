@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { ACCEPT } from "@/lib/file-accept";
+import { BookPreview, type BookPreviewHandle } from "@/components/training/BookPreview";
 import {
   buildBookPdf, defaultPages, layoutBook, producerOf, typeLabel, wineTitle, type BookPage, type BookWine,
 } from "@/lib/training-book";
@@ -44,6 +45,7 @@ async function pdfToPngs(file: File): Promise<Blob[]> {
 export default function TrainingBookEditor({ restaurantId, restaurantName }: { restaurantId: string; restaurantName: string }) {
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<BookPreviewHandle>(null);
   const [pages, setPages] = useState<BookPage[] | null>(null);
   const [title, setTitle] = useState("Livro de Estudos");
   const [busy, setBusy] = useState<string | null>(null);
@@ -82,7 +84,12 @@ export default function TrainingBookEditor({ restaurantId, restaurantName }: { r
   const byId = useMemo(() => new Map(wines.map((w) => [w.id, w])), [wines]);
   const inBook = new Set(list.flatMap((p) => (p.type === "wine" ? [p.wineId] : [])));
   const missing = wines.filter((w) => !inBook.has(w.id));
-  const { layout } = useMemo(() => layoutBook(list, wines), [list, wines]);
+  const { layout, index: bookIndex } = useMemo(() => layoutBook(list, wines), [list, wines]);
+
+  const layoutIndexOf = (p: BookPage) =>
+    layout.findIndex((l) =>
+      p.type === "wine" ? l.kind === "wine" && l.wine.id === p.wineId : p.type === "custom" ? l.kind === "custom" && l.page.id === p.id : l.kind === "index",
+    );
 
   const update = (next: BookPage[]) => {
     setPages(next);
@@ -259,7 +266,8 @@ export default function TrainingBookEditor({ restaurantId, restaurantName }: { r
         Cada rótulo ocupa uma página A4 com os dados do cadastro. Antes do primeiro vinho de cada produtor entra uma página de abertura com o produtor centralizado e os rótulos que ele oferece. O índice no PDF é clicável.
       </p>
 
-      <ol className="space-y-1.5">
+      <div className="grid gap-5 xl:grid-cols-[minmax(340px,440px)_1fr]">
+      <ol className="space-y-1.5 xl:max-h-[calc(100vh-160px)] xl:overflow-y-auto xl:pr-1">
         {list.map((p, i) => {
           const w = p.type === "wine" ? byId.get(p.wineId) : undefined;
           const prevW = i > 0 && list[i - 1].type === "wine" ? byId.get((list[i - 1] as { wineId: string }).wineId) : undefined;
@@ -272,14 +280,14 @@ export default function TrainingBookEditor({ restaurantId, restaurantName }: { r
               <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2">
                 <span className="w-7 text-xs text-muted-foreground tabular-nums">{i + 1}</span>
                 {p.type === "wine" ? <WineIcon className="h-4 w-4 text-primary" /> : p.type === "index" ? <BookOpen className="h-4 w-4 text-primary" /> : <FilePlus2 className="h-4 w-4 text-muted-foreground" />}
-                <div className="flex-1 min-w-0">
+                <button type="button" className="flex-1 min-w-0 text-left" title="Ver no livro" onClick={() => { const k = layoutIndexOf(p); if (k >= 0) previewRef.current?.goTo(k); }}>
                   <div className="truncate text-sm">
                     {p.type === "wine" ? (w ? wineTitle(w) : "Rótulo removido da carta") : p.type === "index" ? "Índice dos rótulos (clicável)" : p.name}
                   </div>
                   <div className="text-[11px] text-muted-foreground">
                     {p.type === "wine" ? (w ? `${typeLabel(w.wine_type)} · ${producerOf(w)}` : "será ignorado") : p.type === "index" ? "gerado automaticamente" : "página inserida"}
                   </div>
-                </div>
+                </button>
                 <Button size="icon" variant="ghost" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Subir"><ArrowUp className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" onClick={() => move(i, 1)} disabled={i === list.length - 1} aria-label="Descer"><ArrowDown className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" onClick={() => remove(i)} aria-label="Excluir página"><Trash2 className="h-4 w-4" /></Button>
@@ -288,6 +296,10 @@ export default function TrainingBookEditor({ restaurantId, restaurantName }: { r
           );
         })}
       </ol>
+      <div className="min-w-0">
+        <BookPreview ref={previewRef} layout={layout} index={bookIndex} wines={wines} title={title.trim() || "Livro de Estudos"} restaurantName={restaurantName} />
+      </div>
+      </div>
     </div>
   );
 }

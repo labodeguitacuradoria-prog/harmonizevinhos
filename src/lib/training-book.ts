@@ -116,7 +116,7 @@ const TYPE_LABEL: Record<string, string> = {
   dessert: "Sobremesa",
   fortified: "Fortificado",
 };
-const TYPE_COLOR: Record<string, [number, number, number]> = {
+export const TYPE_COLOR: Record<string, [number, number, number]> = {
   red: [128, 0, 32],
   white: [212, 175, 55],
   rose: [214, 110, 130],

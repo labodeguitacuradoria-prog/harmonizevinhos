@@ -866,3 +866,34 @@ export const saveGuestQuizAttempt = createServerFn({ method: "POST" })
       return fail(e);
     }
   });
+
+/** Livro de Estudos publicado (índice + endereço do PDF) para o link de treinamento. */
+export const getGuestTrainingBook = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => d as { token?: string; kind?: string })
+  .handler(async ({ data }) => {
+    try {
+      const parsed = TokenSchema.safeParse(data);
+      if (!parsed.success) return fail({ code: "invalid", message: "Link inválido ou incompleto." });
+      const { link, restaurantName } = await resolveAccess(parsed.data.token, parsed.data.kind);
+      if (link.scope !== "training") return fail({ code: "scope", message: "Link sem permissão para o livro de estudos." });
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: book } = await supabaseAdmin
+        .from("training_books")
+        .select("title, book_index, pdf_path, published_at")
+        .eq("restaurant_id", link.restaurant_id)
+        .maybeSingle();
+      return {
+        ok: true as const,
+        restaurantName,
+        book: book?.pdf_path
+          ? {
+              title: book.title as string,
+              publishedAt: book.published_at as string | null,
+              index: (book.book_index ?? []) as { producer: string; page: number; wines: { id: string; name: string; page: number }[] }[],
+            }
+          : null,
+      };
+    } catch (e) {
+      return fail(e);
+    }
+  });

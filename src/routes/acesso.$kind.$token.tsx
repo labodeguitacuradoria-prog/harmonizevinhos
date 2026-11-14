@@ -27,7 +27,7 @@ import {
   closeGuestCount,
 } from "@/lib/guest-access.functions";
 import { DashboardPage } from "@/routes/_app.app.dashboard";
-import StaffTraining from "@/components/training/StaffTraining";
+import StaffBook from "@/components/training/StaffBook";
 import StaffPairings from "@/components/StaffPairings";
 
 
@@ -58,7 +58,7 @@ function GuestAccessPage() {
   if (isLoading) return <Loading />;
   if (!data || !data.ok) return <Blocked message={data?.message ?? "Link inválido."} />;
   if (data.scope === "pairings") return <StaffPairings token={token} />;
-  if (data.scope === "training") return <StaffTraining token={token} />;
+  if (data.scope === "training") return <StaffBook token={token} />;
   if (data.scope === "stock_count") return <GuestStock token={token} />;
   return <GuestDashboard token={token} kind={deviceKind as "celular" | "desktop"} />;
 }

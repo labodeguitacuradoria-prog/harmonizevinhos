@@ -1696,6 +1696,50 @@ export type Database = {
           },
         ]
       }
+      training_books: {
+        Row: {
+          book_index: Json
+          created_at: string
+          id: string
+          pages: Json
+          pdf_path: string | null
+          published_at: string | null
+          restaurant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          book_index?: Json
+          created_at?: string
+          id?: string
+          pages?: Json
+          pdf_path?: string | null
+          published_at?: string | null
+          restaurant_id: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          book_index?: Json
+          created_at?: string
+          id?: string
+          pages?: Json
+          pdf_path?: string | null
+          published_at?: string | null
+          restaurant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_books_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_library_videos: {
         Row: {
           category: string

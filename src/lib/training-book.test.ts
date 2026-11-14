@@ -27,3 +27,10 @@ describe("layoutBook", () => {
     assert.deepEqual(index, [{ producer: "Beta", page: 3, wines: [{ id: "b1", name: "b1", page: 4 }] }]);
   });
 });
+
+it("história da vinícola vai para a página do produtor, não para a ficha do rótulo", async () => {
+  const { studyCard, producerAbout } = await import("./training-book");
+  const w = { id: "x", name: "V", producer: "Casa Y", tasting_notes: "Produzido pela vinícola Casa Y desde 1989. Na boca é fresco.", wine_type: "white" } as never;
+  assert.equal(studyCard(w).mouth, "Na boca é fresco.");
+  assert.equal(producerAbout([w]), "Produzido pela vinícola Casa Y desde 1989.");
+});

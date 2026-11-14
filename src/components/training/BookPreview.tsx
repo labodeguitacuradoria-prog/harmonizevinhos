@@ -1,10 +1,11 @@
+import type React from "react";
 import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  INDEX_LINES_PER_PAGE, TYPE_COLOR, producerOf, techRows, typeLabel, wineTitle,
+  INDEX_LINES_PER_PAGE, TYPE_COLOR, bodyDots, clean, producerAbout, producerOf, studyCard, typeLabel, wineTitle,
   type BookIndexEntry, type BookWine, type Layout,
 } from "@/lib/training-book";
 
@@ -31,7 +32,7 @@ function Footer({ n, title, restaurantName, back }: { n: number; title: string; 
   return (
     <div className="absolute flex items-center justify-between" style={{ left: 18 * MM, right: 18 * MM, bottom: 7 * MM, borderTop: "1px solid #ddd", paddingTop: 6, fontSize: 11, color: MUTED }}>
       <span className="truncate">{title} · {restaurantName}</span>
-      {back && <span style={{ color: GOLD }}>‹ Voltar ao índice</span>}
+      {back && <Home size={14} color={GOLD} aria-label="Índice" />}
       <span>{n}</span>
     </div>
   );
@@ -77,11 +78,16 @@ function PageBody({ l, n, index, wines, title, restaurantName }: { l: Layout; n:
     const ws = l.wineIds.map((id) => wines.find((w) => w.id === id)).filter(Boolean) as BookWine[];
     const pageOf = (id: string) => index.flatMap((e) => e.wines).find((x) => x.id === id)?.page ?? n;
     return (
-      <div className="flex flex-col items-center text-center" style={{ paddingTop: 82 * MM, paddingLeft: pad, paddingRight: pad }}>
+      <div className="flex flex-col items-center text-center" style={{ paddingTop: 42 * MM, paddingLeft: pad, paddingRight: pad }}>
         <div style={{ fontSize: 12, letterSpacing: 4, color: MUTED }}>PRODUTOR</div>
         <div style={{ width: 40 * MM, height: 1.5, background: GOLD, margin: "14px 0 18px" }} />
         <div style={{ fontFamily: "Times New Roman, serif", fontWeight: 700, fontSize: 40, lineHeight: 1.1, color: INK }}>{l.producer}</div>
         <div style={{ fontSize: 12, color: MUTED, marginTop: 16 }}>{ws.length} {ws.length === 1 ? "rótulo" : "rótulos"} neste livro</div>
+        {(() => { const about = producerAbout(ws); return about ? (
+          <div style={{ marginTop: 26, maxWidth: 150 * MM }}>
+            <div style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: 2, marginBottom: 8 }}>SOBRE A VINÍCOLA</div>
+            <div style={{ color: INK, fontSize: 13, lineHeight: 1.55 }}>{about}</div>
+          </div>) : null; })()}
         <div style={{ marginTop: 28 }} className="space-y-4">
           {ws.map((w) => (
             <div key={w.id}>
@@ -95,43 +101,58 @@ function PageBody({ l, n, index, wines, title, restaurantName }: { l: Layout; n:
     );
   }
   const w = l.wine;
+  const card = studyCard(w);
   const c = TYPE_COLOR[w.wine_type ?? ""] ?? [160, 125, 30];
+  const col = `rgb(${c.join(",")})`;
+  const soft = `rgba(${c.join(",")},0.12)`;
+  const DARK = "rgb(38,52,44)";
   const num = index.flatMap((e) => e.wines).findIndex((x) => x.id === w.id) + 1;
-  const origin = [w.region, w.country].filter(Boolean).join(" · ");
-  const blocks: [string, string | null][] = [["Na taça e na boca", w.tasting_notes], ["Como é feito", w.elaboration], ["Combina com", w.pairing_notes]];
+  const label = (t: string) => <div style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: 1.5, marginBottom: 8 }}>{t}</div>;
+  const dots = bodyDots(w.body);
+  const row = (k: string, v: React.ReactNode) => (
+    <div className="flex items-center" style={{ fontSize: 12, padding: "6px 0", borderBottom: "1px dotted #ccc" }}>
+      <span className="shrink-0 font-bold" style={{ width: 22 * MM, color: MUTED }}>{k}</span><span style={{ color: INK }}>{v}</span>
+    </div>
+  );
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between font-bold" style={{ height: 12 * MM, background: `rgb(${c.join(",")})`, color: "#fff", padding: `0 ${pad}px`, fontSize: 12, letterSpacing: 2 }}>
-        <span>{typeLabel(w.wine_type).toUpperCase()}</span>
-        <span>Nº {String(num).padStart(3, "0")}</span>
+      <div className="flex items-center justify-between font-bold" style={{ height: 13 * MM, background: col, color: "#fff", padding: `0 ${pad}px`, fontSize: 12.5, letterSpacing: 2 }}>
+        <span>🍷 {card.header}</span>
+        <span style={{ background: "#fff", color: col, borderRadius: 99, padding: "3px 12px" }}>Nº {String(num).padStart(3, "0")}</span>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col" style={{ padding: `${8 * MM}px ${pad}px ${22 * MM}px` }}>
-        <div className="text-center" style={{ color: GOLD, fontSize: 13, letterSpacing: 2 }}>{producerOf(w).toUpperCase()}</div>
-        <div className="text-center" style={{ fontFamily: "Times New Roman, serif", fontWeight: 700, fontSize: 29, lineHeight: 1.15, color: INK, marginTop: 6 }}>{wineTitle(w)}</div>
-        {origin && <div className="text-center" style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>{origin}</div>}
-        <div className="flex" style={{ gap: 8 * MM, marginTop: 7 * MM }}>
-          <div className="flex shrink-0 items-center justify-center" style={{ width: 60 * MM, height: 100 * MM, border: "1px solid #e6e6e6", borderRadius: 6, padding: 3 * MM }}>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ padding: `${9 * MM}px ${pad}px ${20 * MM}px` }}>
+        <div className="flex" style={{ gap: 9 * MM }}>
+          <div className="flex shrink-0 items-center justify-center" style={{ width: 66 * MM, height: 98 * MM, border: "1px solid #e4e4e4", borderRadius: 10, padding: 4 * MM, boxShadow: "0 4px 14px rgba(0,0,0,.08)", background: "#fff" }}>
             {w.image_url ? <img src={w.image_url} alt={w.name} className="max-h-full max-w-full object-contain" /> : <span style={{ fontSize: 11, color: MUTED }}>Sem foto</span>}
           </div>
-          <div className="min-w-0 flex-1 overflow-hidden" style={{ maxHeight: 100 * MM }}>
-            <div style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: 1.5, marginBottom: 8 }}>FICHA TÉCNICA</div>
-            {techRows(w).map(([k, v]) => (
-              <div key={k} className="flex" style={{ fontSize: 12, marginBottom: 6 }}>
-                <span className="shrink-0 font-bold" style={{ width: 30 * MM, color: MUTED }}>{k}</span>
-                <span style={{ color: INK }}>{v}</span>
-              </div>
-            ))}
+          <div className="min-w-0 flex-1">
+            <div style={{ color: GOLD, fontWeight: 700, fontSize: 12.5, letterSpacing: 1.5 }}>{producerOf(w).toUpperCase()}</div>
+            <div style={{ fontFamily: "Times New Roman, serif", fontWeight: 700, fontSize: 28, lineHeight: 1.12, color: DARK, marginTop: 6 }}>{wineTitle(w)}</div>
+            {(w.country || w.region) && <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginTop: 8 }}>{[w.country, w.region].filter(Boolean).join(" • ")}</div>}
+            {w.appellation && <div style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>{clean(w.appellation)}</div>}
+            {card.price && <div style={{ fontSize: 20, fontWeight: 700, color: col, marginTop: 8 }}>{card.price}</div>}
+            <div className="flex flex-wrap" style={{ gap: 6, marginTop: 10 }}>
+              {card.grapes.slice(0, 6).map((g) => <span key={g} style={{ background: DARK, color: "#fff", borderRadius: 99, padding: "3px 11px", fontSize: 11.5 }}>{g}</span>)}
+            </div>
+            <div style={{ marginTop: 10 }}>
+              {w.body && row("Corpo", <span className="flex items-center gap-2"><span style={{ color: col, letterSpacing: 2 }}>{"●".repeat(dots)}{"○".repeat(5 - dots)}</span>{clean(w.body).toLowerCase()}</span>)}
+              {w.sugar_level && row("Açúcar", clean(w.sugar_level).toLowerCase())}
+              {card.wood && row("Madeira", card.wood)}
+            </div>
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-hidden" style={{ marginTop: 8 * MM }}>
-          {blocks.filter(([, t]) => t?.trim()).map(([k, t]) => (
-            <div key={k} style={{ marginBottom: 6 * MM }}>
-              <div style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: 1.5, marginBottom: 4 }}>{k.toUpperCase()}</div>
-              <div style={{ color: INK, fontSize: 13, lineHeight: 1.45, whiteSpace: "pre-line" }}>{t!.trim()}</div>
-            </div>
-          ))}
-          <div style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: 1.5, marginBottom: 4 }}>MINHAS ANOTAÇÕES</div>
-          {Array.from({ length: 12 }).map((_, i) => <div key={i} style={{ height: 8 * MM, borderBottom: "1px solid #e1e1e1" }} />)}
+        <div style={{ marginTop: 9 * MM }} className="flex flex-col" >
+          {card.aromas.length > 0 && <div style={{ marginBottom: 6 * MM }}>{label("👃 CHEIRO DE...")}
+            <div className="flex flex-wrap" style={{ gap: 7 }}>{card.aromas.map((a) => <span key={a.label} style={{ border: `1px solid ${col}`, borderRadius: 99, padding: "4px 12px", fontSize: 12.5, color: INK }}>{a.icon} {a.label}</span>)}</div></div>}
+          {card.mouth && <div style={{ marginBottom: 6 * MM }}>{label("🍷 NA BOCA")}<div style={{ fontSize: 14, color: INK, lineHeight: 1.45 }}>{card.mouth}</div></div>}
+          {(card.temp || card.dishes.length > 0) && <div className="flex" style={{ gap: 8 * MM, marginBottom: 6 * MM }}>
+            {card.temp && <div style={{ width: "30%" }}>{label("🌡️ SERVIR A")}<div style={{ fontSize: 17, fontWeight: 700, color: INK }}>{card.temp}</div></div>}
+            {card.dishes.length > 0 && <div className="flex-1">{label("🍽️ COMBINA COM")}<div className="flex flex-wrap" style={{ gap: 7 }}>{card.dishes.map((d) => <span key={d} style={{ background: soft, borderRadius: 99, padding: "4px 12px", fontSize: 12.5, color: INK }}>{d}</span>)}</div></div>}
+          </div>}
+          <div style={{ border: `1px solid ${DARK}`, borderRadius: 8, padding: "12px 16px", background: "#fcfcfa", marginBottom: 5 * MM }}>
+            {label("💬 FALE ASSIM NA MESA")}<div style={{ fontStyle: "italic", fontSize: 14, color: INK, lineHeight: 1.45 }}>“{card.say}”</div>
+          </div>
+          <div style={{ background: soft, borderRadius: 8, padding: "10px 16px", fontSize: 13, color: INK }}>🧠 <b>Para decorar:</b> {card.remember}</div>
         </div>
       </div>
       <Footer n={n} title={title} restaurantName={restaurantName} back />

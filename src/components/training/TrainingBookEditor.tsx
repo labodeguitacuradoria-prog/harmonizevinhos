@@ -60,11 +60,18 @@ export default function TrainingBookEditor({ restaurantId, restaurantName }: { r
       const list = (data ?? []) as unknown as BookWine[];
       const keys = [...new Set(list.map((w) => (w.producer ?? "").trim().toLowerCase()).filter(Boolean))];
       if (keys.length) {
-        const { data: ws } = await supabase.from("wineries").select("name_key, about, photos").in("name_key", keys);
+        const { data: ws } = await supabase.from("wineries").select("name, name_key, about, photos, latitude, longitude, map_country, map_label_side, map_svg").in("name_key", keys);
         const map = new Map((ws ?? []).map((x) => [x.name_key, x]));
         for (const w of list) {
           const x = map.get((w.producer ?? "").trim().toLowerCase());
-          if (x) { w.winery_about = x.about; w.winery_photo = x.photos?.[0] ?? null; }
+          if (x) {
+            w.winery_about = x.about;
+            w.winery_photo = x.photos?.[0] ?? null;
+            w.winery_name = x.name;
+            w.winery_map = x.latitude != null && x.longitude != null && x.map_country
+              ? { iso3: x.map_country, lat: x.latitude, lng: x.longitude, side: (x.map_label_side as "auto" | "left" | "right") ?? "auto", svg: x.map_svg }
+              : null;
+          }
         }
       }
       return list;

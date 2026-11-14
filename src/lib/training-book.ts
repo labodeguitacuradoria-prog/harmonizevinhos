@@ -1,4 +1,5 @@
 // Livro de Estudos (A4) montado apenas com os dados já cadastrados nos rótulos.
+import { MAP_COLORS, computeWineryMap, loadCountries, type MapGeom } from "@/lib/winery-map";
 export type BookPage =
   | { id: string; type: "wine"; wineId: string }
   | { id: string; type: "custom"; path: string; name: string }
@@ -32,8 +33,20 @@ export type BookWine = {
   production_method?: string | null;
   winery_about?: string | null;
   winery_photo?: string | null;
+  /** Nome como está no cadastro da vinícola. */
+  winery_name?: string | null;
+  /** Localização salva no cadastro da vinícola (mapa do país com o ponto). */
+  winery_map?: WineryMapRef | null;
   grapes_detail?: { grape: string; pct?: number; mesesBarrica?: number }[] | null;
 };
+
+export type WineryMapRef = { iso3: string; lat: number; lng: number; side: "auto" | "left" | "right"; svg: string | null };
+
+/** Primeiro mapa salvo entre os rótulos do produtor, com o nome oficial da vinícola. */
+export function producerMap(wines: BookWine[], producer: string) {
+  const w = wines.find((x) => x.winery_map);
+  return w?.winery_map ? { ...w.winery_map, name: w.winery_name?.trim() || producer } : null;
+}
 
 export type BookIndexEntry = { producer: string; page: number; wines: { id: string; name: string; page: number }[] };
 
@@ -178,6 +191,47 @@ export function techRows(w: BookWine): [string, string][] {
     ["Preço na carta", w.sale_price ? `R$ ${Number(w.sale_price).toFixed(2).replace(".", ",")}` : ""],
   ];
   return rows.filter(([, v]) => v);
+}
+
+type Pdf = InstanceType<typeof import("jspdf").jsPDF>;
+const hex = (h: string): [number, number, number] => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+
+/** Desenha o mapa vetorial da vinícola no PDF (mesmo desenho da imagem salva no cadastro). */
+function drawWineryMap(doc: Pdf, g: MapGeom, x: number, y: number, sc: number) {
+  const P = (p: [number, number]): [number, number] => [x + p[0] * sc, y + p[1] * sc];
+  doc.setLineWidth(0.25);
+  doc.setDrawColor(...hex(MAP_COLORS.border));
+  doc.setFillColor(...hex(MAP_COLORS.land));
+  for (const r of g.rings) {
+    if (r.length < 3) continue;
+    const [sx, sy] = P(r[0]);
+    const d: [number, number][] = [];
+    for (let i = 1; i < r.length; i++) d.push([(r[i][0] - r[i - 1][0]) * sc, (r[i][1] - r[i - 1][1]) * sc]);
+    doc.lines(d, sx, sy, [1, 1], "FD", true);
+  }
+  doc.setLineWidth(0.2);
+  doc.setDrawColor(...hex(MAP_COLORS.line));
+  for (let i = 1; i < g.line.length; i++) {
+    const a = P(g.line[i - 1]), b = P(g.line[i]);
+    doc.line(a[0], a[1], b[0], b[1]);
+  }
+  const [cx, cy] = P(g.point);
+  doc.setFillColor(238, 214, 220);
+  doc.circle(cx, cy, 10 * sc, "F");
+  doc.setFillColor(...hex(MAP_COLORS.dot));
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(1.5 * sc);
+  doc.circle(cx, cy, 5 * sc, "FD");
+  const [lx, ly] = P([g.label.x, g.label.y]);
+  doc.setFont("times", "bold");
+  doc.setFontSize((g.label.size * sc) / 0.3528);
+  const align = g.label.anchor === "start" ? "left" : "right";
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(4 * sc);
+  doc.text(g.label.text, lx, ly, { align, renderingMode: "stroke" });
+  doc.setTextColor(...hex(MAP_COLORS.ink));
+  doc.text(g.label.text, lx, ly, { align, renderingMode: "fill" });
+  doc.setLineWidth(0.2);
 }
 
 async function toDataUrl(src: string): Promise<{ data: string; w: number; h: number } | null> {
@@ -331,6 +385,7 @@ export async function buildBookPdf(opts: {
       doc.text(`${wines.length} ${wines.length === 1 ? "rótulo" : "rótulos"} neste livro`, W / 2, y, { align: "center" });
       y += 12;
       const about = producerAbout(wines);
+      const pmap = producerMap(wines, l.producer);
       if (about) {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(9);
@@ -340,9 +395,39 @@ export async function buildBookPdf(opts: {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(10);
         doc.setTextColor(...INK);
-        const al = (doc.splitTextToSize(about, W - 2 * M - 20) as string[]).slice(0, 14);
+        const al = (doc.splitTextToSize(about, W - 2 * M - 20) as string[]).slice(0, pmap ? 11 : 14);
         doc.text(al, W / 2, y, { align: "center", lineHeightFactor: 1.45 });
         y += al.length * 5.1 + 10;
+      }
+      const shape = pmap ? (await loadCountries())[pmap.iso3] : null;
+      if (pmap && shape) {
+        // Mapa à esquerda, rótulos à direita.
+        const geom = computeWineryMap(shape, { lat: pmap.lat, lng: pmap.lng, name: pmap.name, side: pmap.side });
+        const mw = Math.min(84, Math.max(46, ((H - 24 - y) * geom.width) / geom.height));
+        const sc = mw / geom.width;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...GOLD);
+        doc.text("ONDE FICA", M, y, { charSpace: 1.2 });
+        drawWineryMap(doc, geom, M, y + 3, sc);
+        let wy = y + 8;
+        const wx = M + mw + 8;
+        const ww = W - M - wx;
+        for (const w of wines) {
+          const page = index.flatMap((e) => e.wines).find((x) => x.id === w.id)?.page ?? n;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(12);
+          doc.setTextColor(...INK);
+          const t = doc.splitTextToSize(wineTitle(w), ww) as string[];
+          doc.textWithLink(t[0], wx, wy, { pageNumber: page });
+          doc.setFontSize(8.5);
+          doc.setTextColor(...MUTED);
+          doc.text(`${typeLabel(w.wine_type)} · página ${page}`, wx, wy + 4.5);
+          wy += 12;
+          if (wy > H - 30) break;
+        }
+        footer(n, true);
+        continue;
       }
       doc.setFontSize(12);
       for (const w of wines) {

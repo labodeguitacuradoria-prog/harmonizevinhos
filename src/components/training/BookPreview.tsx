@@ -5,9 +5,10 @@ import { ChevronLeft, ChevronRight, Home, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  INDEX_LINES_PER_PAGE, bodyDots, clean, producerAbout, producerOf, studyCard, typeBand, typeKey, typeLabel, wineName, wineTitle,
+  INDEX_LINES_PER_PAGE, bodyDots, clean, producerAbout, producerMap, producerOf, studyCard, typeBand, typeKey, typeLabel, wineName, wineTitle,
   type BookIndexEntry, type BookWine, type Layout,
 } from "@/lib/training-book";
+import { computeWineryMap, loadCountries, svgDataUrl, wineryMapSvg } from "@/lib/winery-map";
 
 // Simulação do papel impresso: as cores abaixo reproduzem o PDF (papel branco), não o tema da tela.
 const PAGE_W = 794; // 210mm @96dpi
@@ -29,6 +30,14 @@ function CustomImage({ path }: { path: string }) {
   });
   const data = external ? path : signed;
   return data ? <img src={data} alt="" className="h-full w-full object-contain" /> : <div className="m-auto text-xs" style={{ color: MUTED }}>Carregando página…</div>;
+}
+
+/** Imagem do mapa salva no cadastro da vinícola (redesenhada se ainda não houver imagem salva). */
+function ProducerMapImage({ map }: { map: NonNullable<ReturnType<typeof producerMap>> }) {
+  const { data: shapes } = useQuery({ queryKey: ["country-shapes"], staleTime: Infinity, enabled: !map.svg, queryFn: loadCountries });
+  const shape = shapes?.[map.iso3];
+  const svg = map.svg ?? (shape ? wineryMapSvg(computeWineryMap(shape, { lat: map.lat, lng: map.lng, name: map.name, side: map.side })) : null);
+  return svg ? <img src={svgDataUrl(svg)} alt={`Mapa com a localização de ${map.name}`} className="block h-auto w-full" /> : null;
 }
 
 function Footer({ n, title, restaurantName, back }: { n: number; title: string; restaurantName: string; back: boolean }) {
@@ -96,14 +105,29 @@ function PageBody({ l, n, index, wines, title, restaurantName }: { l: Layout; n:
             <div style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: 2, marginBottom: 8 }}>SOBRE A VINÍCOLA</div>
             <div style={{ color: INK, fontSize: 13, lineHeight: 1.55 }}>{about}</div>
           </div>) : null; })()}
-        <div style={{ marginTop: 28 }} className="space-y-4">
-          {ws.map((w) => (
-            <div key={w.id}>
-              <div style={{ fontSize: 16, color: INK }}>{wineTitle(w)}</div>
-              <div style={{ fontSize: 11, color: MUTED }}>{typeLabel(w.wine_type)} · página {pageOf(w.id)}</div>
+        {(() => {
+          const pmap = producerMap(ws, l.producer);
+          const list = (align: "center" | "left") => (
+            <div className="space-y-4" style={{ textAlign: align }}>
+              {ws.map((w) => (
+                <div key={w.id}>
+                  <div style={{ fontSize: 16, color: INK }}>{wineTitle(w)}</div>
+                  <div style={{ fontSize: 11, color: MUTED }}>{typeLabel(w.wine_type)} · página {pageOf(w.id)}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+          if (!pmap) return <div style={{ marginTop: 28 }}>{list("center")}</div>;
+          return (
+            <div className="flex w-full items-start" style={{ marginTop: 28, gap: 8 * MM, textAlign: "left" }}>
+              <div style={{ width: 84 * MM }} className="shrink-0">
+                <div style={{ color: GOLD, fontWeight: 700, fontSize: 12, letterSpacing: 2, marginBottom: 4 }}>ONDE FICA</div>
+                <ProducerMapImage map={pmap} />
+              </div>
+              <div className="min-w-0 flex-1" style={{ paddingTop: 18 }}>{list("left")}</div>
+            </div>
+          );
+        })()}
         <Footer n={n} title={title} restaurantName={restaurantName} back />
       </div>
     );

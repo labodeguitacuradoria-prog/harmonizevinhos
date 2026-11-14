@@ -2144,10 +2144,18 @@ export type Database = {
       wineries: {
         Row: {
           about: string | null
+          city: string | null
           country: string | null
           created_at: string
           founded: string | null
           id: string
+          latitude: number | null
+          location_label: string | null
+          location_source: string | null
+          longitude: number | null
+          map_country: string | null
+          map_label_side: string
+          map_svg: string | null
           name: string
           name_key: string
           photos: string[]
@@ -2158,10 +2166,18 @@ export type Database = {
         }
         Insert: {
           about?: string | null
+          city?: string | null
           country?: string | null
           created_at?: string
           founded?: string | null
           id?: string
+          latitude?: number | null
+          location_label?: string | null
+          location_source?: string | null
+          longitude?: number | null
+          map_country?: string | null
+          map_label_side?: string
+          map_svg?: string | null
           name: string
           name_key: string
           photos?: string[]
@@ -2172,10 +2188,18 @@ export type Database = {
         }
         Update: {
           about?: string | null
+          city?: string | null
           country?: string | null
           created_at?: string
           founded?: string | null
           id?: string
+          latitude?: number | null
+          location_label?: string | null
+          location_source?: string | null
+          longitude?: number | null
+          map_country?: string | null
+          map_label_side?: string
+          map_svg?: string | null
           name?: string
           name_key?: string
           photos?: string[]

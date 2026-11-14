@@ -106,6 +106,13 @@
       "when": 1794678946523,
       "tag": "0014_create_wineries",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1794681642399,
+      "tag": "0015_restrict_shared_reference_reads",
+      "breakpoints": true
     }
   ]
 }

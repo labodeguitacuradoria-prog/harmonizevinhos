@@ -2402,6 +2402,7 @@ export type Database = {
           wine_id: string
         }[]
       }
+      has_app_access: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

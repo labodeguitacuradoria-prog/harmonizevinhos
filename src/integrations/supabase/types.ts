@@ -2141,6 +2141,51 @@ export type Database = {
           },
         ]
       }
+      wineries: {
+        Row: {
+          about: string | null
+          country: string | null
+          created_at: string
+          founded: string | null
+          id: string
+          name: string
+          name_key: string
+          photos: string[]
+          region: string | null
+          updated_at: string
+          updated_by: string | null
+          website: string | null
+        }
+        Insert: {
+          about?: string | null
+          country?: string | null
+          created_at?: string
+          founded?: string | null
+          id?: string
+          name: string
+          name_key: string
+          photos?: string[]
+          region?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          website?: string | null
+        }
+        Update: {
+          about?: string | null
+          country?: string | null
+          created_at?: string
+          founded?: string | null
+          id?: string
+          name?: string
+          name_key?: string
+          photos?: string[]
+          region?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       wines: {
         Row: {
           acidity: string | null

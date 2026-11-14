@@ -57,7 +57,17 @@ export default function TrainingBookEditor({ restaurantId, restaurantName }: { r
     queryFn: async () => {
       const { data, error } = await supabase.from("wines").select(WINE_COLUMNS).eq("restaurant_id", restaurantId).eq("active_on_menu", true).order("name");
       if (error) throw new Error(error.message);
-      return (data ?? []) as unknown as BookWine[];
+      const list = (data ?? []) as unknown as BookWine[];
+      const keys = [...new Set(list.map((w) => (w.producer ?? "").trim().toLowerCase()).filter(Boolean))];
+      if (keys.length) {
+        const { data: ws } = await supabase.from("wineries").select("name_key, about, photos").in("name_key", keys);
+        const map = new Map((ws ?? []).map((x) => [x.name_key, x]));
+        for (const w of list) {
+          const x = map.get((w.producer ?? "").trim().toLowerCase());
+          if (x) { w.winery_about = x.about; w.winery_photo = x.photos?.[0] ?? null; }
+        }
+      }
+      return list;
     },
   });
   const { data: book, isFetched } = useQuery({

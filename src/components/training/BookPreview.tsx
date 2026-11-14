@@ -79,6 +79,11 @@ function PageBody({ l, n, index, wines, title, restaurantName }: { l: Layout; n:
     const pageOf = (id: string) => index.flatMap((e) => e.wines).find((x) => x.id === id)?.page ?? n;
     return (
       <div className="flex flex-col items-center text-center" style={{ paddingTop: 42 * MM, paddingLeft: pad, paddingRight: pad }}>
+        {ws.find((w) => w.winery_photo)?.winery_photo && (
+          <div style={{ width: 120 * MM, height: 50 * MM, marginTop: -30 * MM, marginBottom: 10 * MM, overflow: "hidden", borderRadius: 8 }}>
+            <CustomImage path={ws.find((w) => w.winery_photo)!.winery_photo!} />
+          </div>
+        )}
         <div style={{ fontSize: 12, letterSpacing: 4, color: MUTED }}>PRODUTOR</div>
         <div style={{ width: 40 * MM, height: 1.5, background: GOLD, margin: "14px 0 18px" }} />
         <div style={{ fontFamily: "Times New Roman, serif", fontWeight: 700, fontSize: 40, lineHeight: 1.1, color: INK }}>{l.producer}</div>

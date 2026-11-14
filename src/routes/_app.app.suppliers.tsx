@@ -1,3 +1,4 @@
+import { WineryPicker } from "@/components/winery/WineryPicker";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -389,6 +390,14 @@ function SupplierForm({
                     catalog_id: c.id as any,
                   } as any));
                   toast.success("Dados do catálogo aplicados. Preencha o restante e salve.");
+                }}
+              />
+            )}
+            {!supplier && (
+              <WineryPicker
+                onPick={(w) => {
+                  setF((s) => ({ ...s, name: w.name, trade_name: s.trade_name || w.name, website: w.website ?? s.website, address_country: w.country ?? s.address_country } as any));
+                  toast.success("Dados da vinícola aplicados. Complete os dados comerciais e salve.");
                 }}
               />
             )}

@@ -29,6 +29,8 @@ export type BookWine = {
   sale_price: number | null;
   image_url: string | null;
   internal_code: string | null;
+  winery_about?: string | null;
+  winery_photo?: string | null;
   grapes_detail?: { grape: string; pct?: number; mesesBarrica?: number }[] | null;
 };
 
@@ -274,6 +276,15 @@ export async function buildBookPdf(opts: {
 
     if (l.kind === "producer") {
       const wines = l.wineIds.map((id) => opts.wines.find((w) => w.id === id)!).filter(Boolean);
+      const photo = wines.find((w) => w.winery_photo)?.winery_photo;
+      if (photo) {
+        const url = await opts.resolveCustomUrl(photo);
+        const img = url ? await toDataUrl(url) : null;
+        if (img) {
+          const sc = Math.min(120 / img.w, 34 / img.h);
+          doc.addImage(img.data, "JPEG", (W - img.w * sc) / 2, 10, img.w * sc, img.h * sc);
+        }
+      }
       doc.setDrawColor(...GOLD);
       doc.setLineWidth(0.4);
       doc.line(W / 2 - 20, 55, W / 2 + 20, 55);
@@ -458,6 +469,8 @@ export function isWinerySentence(s: string, producer?: string | null) {
 
 /** Texto sobre a vinícola, juntando (sem repetir) as frases institucionais de todos os rótulos do produtor. */
 export function producerAbout(wines: BookWine[]) {
+  const official = wines.find((w) => w.winery_about?.trim())?.winery_about;
+  if (official) return clean(official);
   const seen = new Set<string>();
   const out: string[] = [];
   for (const w of wines)

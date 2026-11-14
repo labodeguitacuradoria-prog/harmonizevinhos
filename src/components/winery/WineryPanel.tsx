@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Globe, ImagePlus, Loader2, Save, Sparkles, Trash2 } from "lucide-react";
+import { ChevronDown, Globe, Loader2, Save, Sparkles } from "lucide-react";
+import { MediaGallery } from "@/components/MediaUploader";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { extractWinery } from "@/lib/winery.functions";
@@ -12,20 +13,6 @@ export const wineryKey = (name: string) => name.trim().toLowerCase();
 type Winery = { about: string; website: string; country: string; region: string; founded: string; photos: string[] };
 const EMPTY: Winery = { about: "", website: "", country: "", region: "", founded: "", photos: [] };
 
-function Photo({ path, onRemove }: { path: string; onRemove: () => void }) {
-  const { data } = useQuery({
-    queryKey: ["winery-photo", path],
-    staleTime: 8 * 60 * 1000,
-    queryFn: async () => (await supabase.storage.from("product-media").createSignedUrl(path, 600)).data?.signedUrl ?? null,
-  });
-  return (
-    <div className="relative h-20 w-28 overflow-hidden rounded border border-[#2a2a2a] bg-black">
-      {data && <img src={data} alt="Foto da vinícola" className="h-full w-full object-cover" />}
-      <button type="button" onClick={onRemove} aria-label="Remover foto" className="absolute right-1 top-1 rounded bg-black/70 p-1 text-red-400"><Trash2 className="h-3 w-3" /></button>
-    </div>
-  );
-}
-
 /** Ficha da vinícola compartilhada por todos os rótulos do mesmo produtor. */
 export function WineryPanel({ producer }: { producer: string }) {
   const { restaurantId } = useAuth();
@@ -34,8 +21,8 @@ export function WineryPanel({ producer }: { producer: string }) {
   const extract = useServerFn(extractWinery);
   const [f, setF] = useState<Winery>(EMPTY);
   const [pasted, setPasted] = useState("");
-  const [busy, setBusy] = useState<"" | "ai" | "save" | "photo">("");
-  const picker = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState<"" | "ai" | "save">("");
+  const [open, setOpen] = useState(false);
 
   const { data: row, isFetched } = useQuery({
     queryKey: ["winery", key],
@@ -73,32 +60,25 @@ export function WineryPanel({ producer }: { producer: string }) {
       toast.success("Informações extraídas. Revise e clique em Salvar vinícola.");
     } catch { toast.error("Falha ao extrair informações."); } finally { setBusy(""); }
   }
-  async function upload(files: FileList | null) {
-    if (!files?.length) return;
-    setBusy("photo");
-    try {
-      const added: string[] = [];
-      for (const file of Array.from(files)) {
-        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-        const path = `${restaurantId ? `wines/${restaurantId}` : "catalog"}/wineries/${crypto.randomUUID()}.${ext}`;
-        const { error } = await supabase.storage.from("product-media").upload(path, file, { contentType: file.type || undefined });
-        if (error) throw new Error(error.message);
-        added.push(path);
-      }
-      const next = { ...f, photos: [...f.photos, ...added] };
-      setF(next);
-      await persist(next);
-      toast.success("Fotos adicionadas.");
-    } catch (e) { toast.error((e as Error).message); } finally { setBusy(""); if (picker.current) picker.current.value = ""; }
+  async function setPhotos(photos: string[]) {
+    const next = { ...f, photos };
+    setF(next);
+    try { await persist(next); } catch (e) { toast.error((e as Error).message); }
   }
 
+  const filled = !!(f.about.trim() || f.photos.length);
   const inp = "w-full rounded border border-[#2a2a2a] bg-[#0b0b0b] px-2 py-1.5 text-sm text-white focus:border-[#D4AF37] outline-none";
   return (
-    <div className="space-y-3 rounded-lg border border-[#D4AF37]/40 bg-[#141414] p-3 md:col-span-2">
-      <div className="flex items-center justify-between">
+    <div className="rounded-lg border border-[#D4AF37]/40 bg-[#141414] md:col-span-2">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex w-full items-center justify-between gap-2 p-3 text-left">
         <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">Sobre a vinícola · {producer}</span>
-        <span className="text-[10px] text-[#888]">Compartilhado por todos os rótulos deste produtor</span>
-      </div>
+        <span className="flex items-center gap-2 text-[10px] text-[#888]">
+          {filled ? <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-emerald-400">Preenchida{f.photos.length ? ` · ${f.photos.length} foto${f.photos.length > 1 ? "s" : ""}` : ""}</span> : <span>Não preenchida</span>}
+          <ChevronDown className={`h-4 w-4 text-[#D4AF37] transition-transform ${open ? "rotate-180" : ""}`} />
+        </span>
+      </button>
+      {open && <div className="space-y-3 border-t border-[#2a2a2a] p-3">
+      <p className="text-[10px] text-[#888]">Compartilhado por todos os rótulos deste produtor.</p>
       <div className="grid gap-2 md:grid-cols-[1fr_auto]">
         <input className={inp} placeholder="Site da vinícola (página Sobre / História)" value={f.website} onChange={(e) => setF({ ...f, website: e.target.value })} />
         <button type="button" onClick={runAi} disabled={!!busy} className="flex items-center justify-center gap-1 rounded border border-[#D4AF37] px-3 py-1.5 text-xs font-bold text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black disabled:opacity-50">
@@ -112,14 +92,9 @@ export function WineryPanel({ producer }: { producer: string }) {
         <input className={inp} placeholder="Fundação (ano)" value={f.founded} onChange={(e) => setF({ ...f, founded: e.target.value })} />
       </div>
       <textarea className={inp} rows={5} placeholder="História da vinícola — aparece na página do produtor no Livro de Estudos" value={f.about} onChange={(e) => setF({ ...f, about: e.target.value })} />
-      <div className="flex flex-wrap items-center gap-2">
-        {f.photos.map((p) => (
-          <Photo key={p} path={p} onRemove={() => setF({ ...f, photos: f.photos.filter((x) => x !== p) })} />
-        ))}
-        <button type="button" onClick={() => picker.current?.click()} disabled={!!busy} className="flex h-20 w-28 flex-col items-center justify-center gap-1 rounded border border-dashed border-[#2a2a2a] text-[10px] text-[#888] hover:border-[#D4AF37] hover:text-[#D4AF37]">
-          {busy === "photo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />} Fotos da vinícola
-        </button>
-        <input ref={picker} type="file" multiple accept=".jpg,.jpeg,.png,.webp" className="hidden" onChange={(e) => upload(e.target.files)} />
+      <div>
+        <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">Fotos da vinícola</span>
+        <MediaGallery label="" values={f.photos} onChange={setPhotos} folder={restaurantId ? `wines/${restaurantId}/wineries` : "catalog/wineries"} />
       </div>
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1 text-[10px] text-[#666]"><Globe className="h-3 w-3" /> A primeira foto ilustra a página do produtor no livro.</span>
@@ -127,6 +102,7 @@ export function WineryPanel({ producer }: { producer: string }) {
           {busy === "save" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Salvar vinícola
         </button>
       </div>
+      </div>}
     </div>
   );
 }

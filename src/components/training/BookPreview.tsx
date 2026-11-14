@@ -20,11 +20,14 @@ const MUTED = "rgb(120,120,120)";
 export type BookPreviewHandle = { goTo: (layoutIndex: number) => void };
 
 function CustomImage({ path }: { path: string }) {
-  const { data } = useQuery({
+  const external = /^https?:\/\//.test(path);
+  const { data: signed } = useQuery({
     queryKey: ["book-page-url", path],
+    enabled: !external,
     staleTime: 8 * 60 * 1000,
     queryFn: async () => (await supabase.storage.from("product-media").createSignedUrl(path, 600)).data?.signedUrl ?? null,
   });
+  const data = external ? path : signed;
   return data ? <img src={data} alt="" className="h-full w-full object-contain" /> : <div className="m-auto text-xs" style={{ color: MUTED }}>Carregando página…</div>;
 }
 

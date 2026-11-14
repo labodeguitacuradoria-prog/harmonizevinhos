@@ -278,7 +278,7 @@ export async function buildBookPdf(opts: {
       const wines = l.wineIds.map((id) => opts.wines.find((w) => w.id === id)!).filter(Boolean);
       const photo = wines.find((w) => w.winery_photo)?.winery_photo;
       if (photo) {
-        const url = await opts.resolveCustomUrl(photo);
+        const url = /^https?:\/\//.test(photo) ? photo : await opts.resolveCustomUrl(photo);
         const img = url ? await toDataUrl(url) : null;
         if (img) {
           const sc = Math.min(120 / img.w, 34 / img.h);

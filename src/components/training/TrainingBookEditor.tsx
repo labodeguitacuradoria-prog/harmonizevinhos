@@ -16,7 +16,7 @@ import {
 } from "@/lib/training-book";
 
 const WINE_COLUMNS =
-  "id, name, producer, vintage, volume, wine_type, style, country, region, appellation, grape, alcohol_pct, body, sugar_level, oak_months, aging, serving_temp_min, serving_temp_max, tasting_notes, pairing_notes, elaboration, sale_price, image_url, internal_code, grapes_detail";
+  "id, name, producer, vintage, volume, wine_type, style, country, region, appellation, grape, alcohol_pct, body, sugar_level, oak_months, aging, serving_temp_min, serving_temp_max, tasting_notes, pairing_notes, elaboration, sale_price, image_url, internal_code, grapes_detail, production_method";
 
 const uid = () => crypto.randomUUID();
 

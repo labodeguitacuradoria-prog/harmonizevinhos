@@ -64,3 +64,27 @@ describe("ficha do rótulo", async () => {
     assert.equal(wineName(base), "Doracy Chardonnay");
   });
 });
+
+describe("faixa de espumantes e rosés", async () => {
+  const { studyCard } = await import("./training-book");
+  const mk = (o: Partial<BookWine>) => ({ id: "s", name: "S", producer: "P", tasting_notes: "", ...o } as BookWine);
+
+  it("espumante mostra o método do cadastro, nunca o corpo", () => {
+    assert.equal(studyCard(mk({ wine_type: "Espumante", style: "Espumante Leve", body: "Médio", production_method: "Tradicional" })).header, "ESPUMANTE • MÉTODO TRADICIONAL");
+    assert.equal(studyCard(mk({ wine_type: "Espumante", production_method: "Charmat" })).header, "ESPUMANTE • MÉTODO CHARMAT");
+    assert.equal(studyCard(mk({ wine_type: "Espumante", production_method: "Asti" })).header, "ESPUMANTE • MÉTODO ASTI");
+    assert.equal(studyCard(mk({ wine_type: "Espumante", production_method: "Outro: Sur Lie" })).header, "ESPUMANTE • MÉTODO SUR LIE");
+  });
+  it("espumante sem método cadastrado usa o método citado na ficha, ou só ESPUMANTE", () => {
+    assert.equal(studyCard(mk({ wine_type: "Espumante", elaboration: "Elaborado pelo método Charmat." })).header, "ESPUMANTE • MÉTODO CHARMAT");
+    assert.equal(studyCard(mk({ wine_type: "Espumante", body: "Médio", region: "Asti" })).header, "ESPUMANTE");
+  });
+  it("rosé mostra só ROSÉ, sem leve ou médio", () => {
+    const c = studyCard(mk({ wine_type: "Rosé", style: "Rosé Leve", body: "Médio", region: "Provence" }));
+    assert.equal(c.header, "ROSÉ");
+    assert.equal(c.say, "É um rosé de Provence.");
+  });
+  it("tinto e branco mantêm o estilo do cadastro", () => {
+    assert.equal(studyCard(mk({ wine_type: "Tinto", style: "Tinto Encorpado" })).header, "TINTO • ENCORPADO");
+  });
+});

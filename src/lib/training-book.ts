@@ -29,6 +29,7 @@ export type BookWine = {
   sale_price: number | null;
   image_url: string | null;
   internal_code: string | null;
+  production_method?: string | null;
   winery_about?: string | null;
   winery_photo?: string | null;
   grapes_detail?: { grape: string; pct?: number; mesesBarrica?: number }[] | null;
@@ -575,6 +576,42 @@ function clip(s: string, max: number) {
   return dot > max * 0.5 ? cut.slice(0, dot + 1) : `${cut.slice(0, cut.lastIndexOf(" "))}…`;
 }
 
+const METHODS: [RegExp, string][] = [
+  [/tradicional|champenoise|classico|classique|cap classique/, "tradicional"],
+  [/charmat|martinotti|granvas/, "Charmat"],
+  [/\basti\b/, "Asti"],
+  [/sur ?lie/, "Sur Lie"],
+  [/ancestral|pet[- ]?nat/, "ancestral"],
+];
+// Na ficha em texto livre, exige a palavra "método" quando o termo é ambíguo (ex.: Asti também é região).
+const TEXT_METHODS: [RegExp, string][] = [
+  [/metodo (tradicional|classico|champenoise)|champenoise|methode (traditionnelle|champenoise)|cap classique/, "tradicional"],
+  [/charmat|martinotti|granvas/, "Charmat"],
+  [/metodo asti/, "Asti"],
+  [/sur ?lie/, "Sur Lie"],
+  [/metodo ancestral|methode ancestrale|pet[- ]?nat/, "ancestral"],
+];
+/** Método de elaboração do espumante: do cadastro ou detectado na ficha. Vazio se não houver. */
+export function sparklingMethod(w: Pick<BookWine, "production_method" | "elaboration" | "tasting_notes">) {
+  const own = clean(w.production_method).replace(/^outro:?\s*/i, "").replace(/^m[eé]todo\s+/i, "").trim();
+  const ownKey = norm(own);
+  if (own && ownKey !== "outro") return METHODS.find(([rx]) => rx.test(ownKey))?.[1] ?? own;
+  const text = norm(`${w.elaboration ?? ""} ${w.tasting_notes ?? ""}`);
+  return TEXT_METHODS.find(([rx]) => rx.test(text))?.[1] ?? "";
+}
+
+/** Complemento do tipo na faixa: espumante leva o método; rosé fica só "Rosé"; demais usam o estilo do cadastro. */
+function cardStyleWord(w: BookWine) {
+  const k = typeKey(w.wine_type);
+  if (k === "rose") return "";
+  if (k === "sparkling") {
+    const m = sparklingMethod(w);
+    return m ? `método ${m}` : "";
+  }
+  const type = typeLabel(w.wine_type).toLowerCase();
+  return clean(w.style).toLowerCase().replace(type, "").trim() || clean(w.body).toLowerCase();
+}
+
 export function studyCard(w: BookWine): StudyCard {
   const nose = tastingSection(w.tasting_notes, "olfativa");
   const src = nose || `${w.tasting_notes ?? ""} ${w.elaboration ?? ""}`;
@@ -598,7 +635,7 @@ export function studyCard(w: BookWine): StudyCard {
     ? gd.map((g) => `${g.grape}${g.pct && gd.length > 1 ? ` ${g.pct}%` : ""}`)
     : clean(w.grape).split(/,|\//).map((s) => s.trim()).filter(Boolean);
   const type = typeLabel(w.wine_type);
-  const styleWord = clean(w.style).toLowerCase().replace(type.toLowerCase(), "").trim() || clean(w.body).toLowerCase();
+  const styleWord = cardStyleWord(w);
   const header = [type, styleWord].filter(Boolean).join(" • ").toUpperCase();
   const where = w.region || w.country || "";
   const a3 = aromas.slice(0, 3).map((a) => a.label);

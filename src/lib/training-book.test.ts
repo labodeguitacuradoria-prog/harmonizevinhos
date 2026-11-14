@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import { layoutBook, type BookPage, type BookWine } from "./training-book";
 
 const w = (id: string, producer: string): BookWine => ({ id, name: id, producer } as BookWine);
@@ -13,7 +14,7 @@ describe("layoutBook", () => {
       { id: "3", type: "wine", wineId: "b1" },
     ];
     const { layout } = layoutBook(pages, wines);
-    expect(layout.map((l) => l.kind)).toEqual(["index", "producer", "wine", "wine", "producer", "wine"]);
+    assert.deepEqual(layout.map((l) => l.kind), ["index", "producer", "wine", "wine", "producer", "wine"]);
   });
 
   it("índice aponta para a página real de cada rótulo, contando páginas inseridas", () => {
@@ -23,6 +24,6 @@ describe("layoutBook", () => {
       { id: "3", type: "wine", wineId: "b1" },
     ];
     const { index } = layoutBook(pages, wines);
-    expect(index).toEqual([{ producer: "Beta", page: 3, wines: [{ id: "b1", name: "b1", page: 4 }] }]);
+    assert.deepEqual(index, [{ producer: "Beta", page: 3, wines: [{ id: "b1", name: "b1", page: 4 }] }]);
   });
 });

@@ -1,6 +1,6 @@
 // Guia Rápido de Salão: ficha curta por rótulo para o celular do garçom (palavras-chave, sem parágrafos).
 // Os mesmos cartões alimentam a versão na tela e o PDF offline com links.
-import { bodyDots, clean, studyCard, tastingSection, typeBand, typeKey, typeLabel, wineName, type BookWine } from "@/lib/training-book";
+import { PALATE_RULES as PALATE, VISUAL_RULES as VISUAL, bodyDots, clean, studyCard, tastingSection, typeBand, typeKey, typeLabel, wineName, type BookWine } from "@/lib/training-book";
 
 type RGB = [number, number, number];
 
@@ -40,35 +40,6 @@ const GROUP_LABEL: Record<string, string> = {
   sparkling: "Espumantes", white: "Brancos", rose: "Rosés", orange: "Laranjas", red: "Tintos",
   dessert: "Sobremesa", fortified: "Fortificados", "": "Outros",
 };
-
-const VISUAL: [RegExp, string][] = [
-  [/amarelo[ -]palha/i, "amarelo palha"], [/amarelo[ -]dourado|dourado intenso/i, "amarelo dourado"],
-  [/amarelo[ -]esverdeado/i, "amarelo esverdeado"], [/amarelo[ -]lim[aã]o/i, "amarelo limão"],
-  [/reflexos? (?:\w+ )?dourad/i, "reflexos dourados"], [/reflexos? (?:\w+ )?(?:esverdead|verde)/i, "reflexos esverdeados"],
-  [/[aâ]mbar|ambarad/i, "âmbar"], [/\bouro\b|dourada?\b/i, "dourado"],
-  [/rubi/i, "rubi"], [/granada/i, "granada"], [/viol[aá]ce|violeta/i, "reflexos violáceos"], [/p[uú]rpura/i, "púrpura"],
-  [/atijolad|tijolo/i, "atijolado"], [/vermelho[ -]cereja|cor de cereja/i, "vermelho cereja"],
-  [/salm[aã]o/i, "rosa salmão"], [/casca de cebola/i, "casca de cebola"], [/rosa[ -]p[aá]lido|rosado p[aá]lido/i, "rosa pálido"],
-  [/rosad[oa]|\brosa\b/i, "rosado"],
-  [/l[ií]mpid|limpidez/i, "límpido"], [/brilh/i, "brilhante"], [/cristalin/i, "cristalino"],
-  [/(?:cor|colora[cç][aã]o|tonalidade)[^.]{0,40}(?:intens|profund)/i, "cor intensa"],
-  [/perlage[^.]{0,20}fin|borbulhas? finas?|bolhas? finas?/i, "perlage fino"],
-  [/perlage[^.]{0,40}persistent|borbulhas?[^.]{0,30}persistent/i, "perlage persistente"],
-  [/l[aá]grimas/i, "lágrimas"],
-];
-
-const PALATE: [RegExp, string | ((m: RegExpExecArray) => string)][] = [
-  [/\bsec[oa]\b/i, "seco"], [/\bdoce\b|ado[cç]icad/i, "doce"],
-  [/acidez (alta|vibrante|viva|equilibrada|refrescante|marcante|m[eé]dia|elevada|crocante|suculenta|delicada|presente|baixa)/i, (m) => `acidez ${m[1].toLowerCase()}`],
-  [/taninos? (macios?|sedosos?|firmes?|finos?|aveludados?|maduros?|presentes?|m[eé]dios?|redondos?|elegantes?|integrados?|suaves?|polidos?|marcantes?|delicados?)/i, (m) => `taninos ${m[1].toLowerCase().replace(/([^s])$/, "$1s")}`],
-  [/fresc(?:o|a|or)\b/i, "fresco"], [/cremos|cremosidade/i, "cremoso"], [/untuos/i, "untuoso"], [/sedos/i, "sedoso"],
-  [/aveludad/i, "aveludado"], [/mineral/i, "mineral"], [/salin/i, "salino"], [/frutad|fruta (?:madura|fresca|suculenta)/i, "frutado"],
-  [/equilibr/i, "equilibrado"], [/elegan/i, "elegante"], [/encorpad|corpo (?:robusto|cheio|pleno)/i, "encorpado"],
-  [/\bleve\b|corpo leve/i, "leve"], [/\bmaci[oa]\b|maciez/i, "macio"], [/redond/i, "redondo"], [/complex/i, "complexo"],
-  [/suculent/i, "suculento"], [/amanteigad|manteiga/i, "amanteigado"], [/tostad/i, "tostado"],
-  [/final (longo|persistente|m[eé]dio|curto|prolongado|agrad[aá]vel|marcante|elegante|fresco)/i, (m) => `final ${m[1].toLowerCase()}`],
-  [/persist[eê]n/i, "persistente"],
-];
 
 function pick(text: string, rules: [RegExp, string | ((m: RegExpExecArray) => string)][], max: number) {
   // Regras mais específicas vêm antes; um trecho já usado (ex.: "acidez equilibrada") não gera outra pílula ("equilibrado").

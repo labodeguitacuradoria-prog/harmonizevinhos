@@ -40,11 +40,15 @@ export type BookWine = {
   /** Localização salva no cadastro da vinícola (mapa do país com o ponto). */
   winery_map?: WineryMapRef | null;
   grapes_detail?: { grape: string; pct?: number; mesesBarrica?: number }[] | null;
+  /** Prêmios e pontuações do cadastro. */
+  awards?: string[] | null;
+  /** Pratos do cardápio indicados para este vinho na Harmonização do cardápio. */
+  house_dishes?: string[] | null;
 };
 
 /** Colunas de `wines` usadas pelo Livro de Estudos e pelo Guia Rápido de Salão. */
 export const BOOK_WINE_COLUMNS =
-  "id, name, producer, vintage, volume, wine_type, style, country, region, appellation, grape, alcohol_pct, body, sugar_level, oak_months, aging, serving_temp_min, serving_temp_max, tasting_notes, pairing_notes, elaboration, sale_price, image_url, internal_code, grapes_detail, production_method, table_pitch";
+  "id, name, producer, vintage, volume, wine_type, style, country, region, appellation, grape, alcohol_pct, body, sugar_level, oak_months, aging, serving_temp_min, serving_temp_max, tasting_notes, pairing_notes, elaboration, sale_price, image_url, internal_code, grapes_detail, production_method, table_pitch, awards";
 
 export type WineryMapRef = { iso3: string; lat: number; lng: number; side: "auto" | "left" | "right"; svg: string | null };
 
@@ -285,7 +289,6 @@ export async function buildBookPdf(opts: {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(...MUTED);
-    doc.text(doc.splitTextToSize(`${opts.title} · ${opts.restaurantName}`, W / 2 - M - 12)[0] as string, M, H - 8.6);
     doc.setFont("helvetica", "bold");
     doc.text(String(n), W / 2, H - 8.6, { align: "center" });
     if (withBack && firstIndexPage > 0) {
@@ -457,7 +460,6 @@ export async function buildBookPdf(opts: {
     const card = studyCard(w);
     const band = typeBand(w.wine_type);
     const color = band.accent;
-    const SOFT: [number, number, number] = [color[0] + (255 - color[0]) * 0.86, color[1] + (255 - color[1]) * 0.86, color[2] + (255 - color[2]) * 0.86].map(Math.round) as [number, number, number];
     const DARK: [number, number, number] = [38, 52, 44];
     const LH = (pt: number, f = 1.35) => pt * 0.3528 * f;
     const BOTTOM = H - 18;
@@ -536,44 +538,92 @@ export async function buildBookPdf(opts: {
       for (let k = 0; k < 5; k++) { doc.setDrawColor(...color); doc.setFillColor(...color); doc.circle(vx + 1.9 + k * 5, y - 1.4, 1.8, k < d ? "FD" : "S"); }
       return txt(clean(w.body).toLowerCase())(vx + 27);
     });
-    if (w.sugar_level) row("Açúcar", txt(clean(w.sugar_level).toLowerCase()));
-    if (card.maturation) row("Maturação", txt(card.maturation, 3));
+    if (card.dosage) row("Dosagem", txt(`açúcar: ${card.dosage}`));
+    if (card.maturation) row("Maturação", txt(card.maturation, 4));
 
-    y = Math.max(top + boxH, y) + 11;
-    const label = (t: string, lx = M) => { doc.setFont("helvetica", "bold"); doc.setFontSize(11.5); doc.setTextColor(...GOLD); doc.text(t, lx, y, { charSpace: 1 }); };
-    const pills = (items: string[], lx: number, maxX: number, fill: boolean) => {
-      let qx = lx; doc.setFont("helvetica", "normal"); doc.setFontSize(11.5);
-      for (const it of items) {
-        const tw = doc.getTextWidth(it) + 8;
-        if (qx + tw > maxX) { qx = lx; y += 9.4; }
-        if (fill) { doc.setFillColor(...SOFT); doc.roundedRect(qx, y - 5.4, tw, 7.6, 3.8, 3.8, "F"); }
-        else { doc.setDrawColor(...color); doc.setLineWidth(0.35); doc.roundedRect(qx, y - 5.4, tw, 7.6, 3.8, 3.8, "S"); }
-        doc.setTextColor(...INK); doc.text(it, qx + 4, y); qx += tw + 2.5;
+    y = Math.max(top + boxH, y) + 10;
+    const label = (t: string, lx = M, yy = y) => { doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(...GOLD); doc.text(t, lx, yy, { charSpace: 1 }); };
+    // Parágrafo com expressões-chave em negrito, quebrado palavra a palavra.
+    const rich = (segs: Seg[], lx: number, yy: number, maxW: number, size: number, maxLines: number) => {
+      doc.setFontSize(size);
+      const words: { t: string; b: boolean }[] = [];
+      for (const sg of segs) for (const part of sg.t.split(/(\s+)/)) if (part) words.push({ t: part, b: sg.b });
+      const lines: { t: string; b: boolean }[][] = [[]];
+      let lw = 0;
+      const width = (t: string, b: boolean) => { doc.setFont("helvetica", b ? "bold" : "normal"); return doc.getTextWidth(t); };
+      for (const wd of words) {
+        const ws = /^\s+$/.test(wd.t);
+        const ww = width(ws ? " " : wd.t, wd.b);
+        if (!ws && lw + ww > maxW && lines[lines.length - 1].length) { lines.push([]); lw = 0; }
+        if (ws && lw === 0) continue;
+        lines[lines.length - 1].push(ws ? { t: " ", b: wd.b } : wd);
+        lw += ww;
       }
+      const shown = lines.slice(0, maxLines);
+      if (lines.length > maxLines) { const ln = shown[maxLines - 1]; ln.push({ t: "…", b: false }); }
+      const lh = LH(size, 1.4);
+      doc.setTextColor(...INK);
+      shown.forEach((ln, i) => {
+        let cx = lx;
+        for (const wd of ln) { doc.setFont("helvetica", wd.b ? "bold" : "normal"); doc.text(wd.t, cx, yy + i * lh); cx += doc.getTextWidth(wd.t); }
+      });
+      return shown.length * lh;
     };
-    if (card.aromas.length) { label("AROMAS"); y += 9; pills(card.aromas.map((a) => a.label), M, W - M, false); y += 12; }
-    if (card.mouth) {
-      label("PALADAR"); y += 7.5;
-      doc.setFont("helvetica", "normal"); doc.setFontSize(12.5); doc.setTextColor(...INK);
-      const ml = (doc.splitTextToSize(card.mouth, W - 2 * M) as string[]).slice(0, 6);
-      doc.text(ml, M, y, { lineHeightFactor: 1.35 }); y += ml.length * LH(12.5) + 7;
+    const colGap = 8;
+    const pmap = producerMap([w], producerOf(w));
+    const shape = pmap ? (await loadCountries())[pmap.iso3] : null;
+    const hasRight = !!(pmap && shape) || card.awards.length > 0;
+    const leftW = hasRight ? (W - 2 * M) * 0.6 : W - 2 * M;
+    const rx0 = M + leftW + colGap, rw = W - M - rx0;
+    const y0 = y;
+    const sections: [string, Seg[]][] = [["VISUAL", card.visualText], ["AROMAS", card.noseText], ["PALADAR", card.palateText]];
+    for (const [t, segs] of sections) {
+      if (!segs.length) continue;
+      label(t); y += 6;
+      y += rich(segs, M, y, leftW, 10.5, 6) + 4;
     }
-    if ((card.temp || card.dishes.length) && y < BOTTOM - 20) {
-      const y0 = y; const half = M + (W - 2 * M) * 0.3;
-      if (card.temp) { label("SERVIR A"); y += 9; doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(...INK); doc.text(card.temp, M, y); }
-      const yT = y; y = y0;
-      if (card.dishes.length) { label("COMBINA COM", half); y += 9; pills(card.dishes, half, W - M, true); }
-      y = Math.max(yT, y) + 15;
+    let ry = y0;
+    if (hasRight) {
+      if (pmap && shape) {
+        const geom = computeWineryMap(shape, { lat: pmap.lat, lng: pmap.lng, name: pmap.name, side: pmap.side });
+        const sc = Math.min(rw / geom.width, 62 / geom.height);
+        label("ONDE FICA", rx0, ry);
+        drawWineryMap(doc, geom, rx0, ry + 3, sc);
+        ry += 3 + geom.height * sc + 9;
+      }
+      if (card.awards.length) {
+        label("PRÊMIOS", rx0, ry); ry += 6;
+        doc.setFontSize(10); doc.setTextColor(...INK);
+        for (const aw of card.awards) {
+          doc.setFont("helvetica", "bold"); doc.setTextColor(...GOLD); doc.text("•", rx0, ry);
+          doc.setFont("helvetica", "normal"); doc.setTextColor(...INK);
+          const al = (doc.splitTextToSize(aw, rw - 4) as string[]).slice(0, 3);
+          doc.text(al, rx0 + 4, ry, { lineHeightFactor: 1.35 });
+          ry += al.length * LH(10) + 2.5;
+          if (ry > BOTTOM - 40) break;
+        }
+      }
     }
-    doc.setFont("helvetica", "italic"); doc.setFontSize(12.5);
+    y = Math.max(y, ry) + 4;
+    if (card.dishes.length && y < BOTTOM - 30) {
+      label("COMBINA COM"); y += 6;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(...INK);
+      const dl = (doc.splitTextToSize(card.dishes.join(" • "), W - 2 * M) as string[]).slice(0, 3);
+      doc.text(dl, M, y, { lineHeightFactor: 1.35 }); y += dl.length * LH(11) + 9;
+    }
+    doc.setFont("helvetica", "italic"); doc.setFontSize(12);
     const sl = (doc.splitTextToSize(`“${card.say}”`, W - 2 * M - 10) as string[]).slice(0, 3);
-    const bh = 14 + sl.length * LH(12.5);
-    if (y + bh < BOTTOM) {
+    const bh = 13 + sl.length * LH(12);
+    if (y + bh < BOTTOM - (card.temp ? 8 : 0)) {
       doc.setFillColor(252, 252, 250); doc.setDrawColor(...DARK); doc.setLineWidth(0.3);
-      doc.roundedRect(M, y - 7.5, W - 2 * M, bh + 1.5, 2.5, 2.5, "FD");
-      label("FALE ASSIM À MESA", M + 5); y += 7.5;
-      doc.setFont("helvetica", "italic"); doc.setFontSize(12.5); doc.setTextColor(...INK); doc.text(sl, M + 5, y, { lineHeightFactor: 1.35 });
-      y += sl.length * LH(12.5) + 12;
+      doc.roundedRect(M, y - 7, W - 2 * M, bh + 1.5, 2.5, 2.5, "FD");
+      label("FALE ASSIM À MESA", M + 5); y += 7;
+      doc.setFont("helvetica", "italic"); doc.setFontSize(12); doc.setTextColor(...INK); doc.text(sl, M + 5, y, { lineHeightFactor: 1.35 });
+      y += sl.length * LH(12) + 10;
+    }
+    if (card.temp && y < BOTTOM) {
+      label("TEMPERATURA DE SERVIÇO");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(...INK); doc.text(card.temp, W - M, y, { align: "right" });
     }
     footer(n, true);
   }
@@ -626,6 +676,71 @@ const AROMAS: [RegExp, string, string][] = [
   [/terros|cogumelo|sous-bois/i, "terroso", "🍄"], [/levedura|autólise|autolise/i, "leveduras", "🍞"],
 ];
 
+export const VISUAL_RULES: [RegExp, string][] = [
+  [/amarelo[ -]palha/i, "amarelo palha"], [/amarelo[ -]dourado|dourado intenso/i, "amarelo dourado"],
+  [/amarelo[ -]esverdeado/i, "amarelo esverdeado"], [/amarelo[ -]lim[aã]o/i, "amarelo limão"],
+  [/reflexos? (?:\w+ )?dourad/i, "reflexos dourados"], [/reflexos? (?:\w+ )?(?:esverdead|verde)/i, "reflexos esverdeados"],
+  [/[aâ]mbar|ambarad/i, "âmbar"], [/\bouro\b|dourada?\b/i, "dourado"],
+  [/rubi/i, "rubi"], [/granada/i, "granada"], [/viol[aá]ce|violeta/i, "reflexos violáceos"], [/p[uú]rpura/i, "púrpura"],
+  [/atijolad|tijolo/i, "atijolado"], [/vermelho[ -]cereja|cor de cereja/i, "vermelho cereja"],
+  [/salm[aã]o/i, "rosa salmão"], [/casca de cebola/i, "casca de cebola"], [/rosa[ -]p[aá]lido|rosado p[aá]lido/i, "rosa pálido"],
+  [/rosad[oa]|\brosa\b/i, "rosado"],
+  [/l[ií]mpid|limpidez/i, "límpido"], [/brilh/i, "brilhante"], [/cristalin/i, "cristalino"],
+  [/(?:cor|colora[cç][aã]o|tonalidade)[^.]{0,40}(?:intens|profund)/i, "cor intensa"],
+  [/perlage[^.]{0,20}fin|borbulhas? finas?|bolhas? finas?/i, "perlage fino"],
+  [/perlage[^.]{0,40}persistent|borbulhas?[^.]{0,30}persistent/i, "perlage persistente"],
+  [/l[aá]grimas/i, "lágrimas"],
+];
+
+export const PALATE_RULES: [RegExp, string | ((m: RegExpExecArray) => string)][] = [
+  [/\bsec[oa]\b/i, "seco"], [/\bdoce\b|ado[cç]icad/i, "doce"],
+  [/acidez (alta|vibrante|viva|equilibrada|refrescante|marcante|m[eé]dia|elevada|crocante|suculenta|delicada|presente|baixa)/i, (m) => `acidez ${m[1].toLowerCase()}`],
+  [/taninos? (macios?|sedosos?|firmes?|finos?|aveludados?|maduros?|presentes?|m[eé]dios?|redondos?|elegantes?|integrados?|suaves?|polidos?|marcantes?|delicados?)/i, (m) => `taninos ${m[1].toLowerCase().replace(/([^s])$/, "$1s")}`],
+  [/fresc(?:o|a|or)\b/i, "fresco"], [/cremos|cremosidade/i, "cremoso"], [/untuos/i, "untuoso"], [/sedos/i, "sedoso"],
+  [/aveludad/i, "aveludado"], [/mineral/i, "mineral"], [/salin/i, "salino"], [/frutad|fruta (?:madura|fresca|suculenta)/i, "frutado"],
+  [/equilibr/i, "equilibrado"], [/elegan/i, "elegante"], [/encorpad|corpo (?:robusto|cheio|pleno)/i, "encorpado"],
+  [/\bleve\b|corpo leve/i, "leve"], [/\bmaci[oa]\b|maciez/i, "macio"], [/redond/i, "redondo"], [/complex/i, "complexo"],
+  [/suculent/i, "suculento"], [/amanteigad|manteiga/i, "amanteigado"], [/tostad/i, "tostado"],
+  [/final (longo|persistente|m[eé]dio|curto|prolongado|agrad[aá]vel|marcante|elegante|fresco)/i, (m) => `final ${m[1].toLowerCase()}`],
+  [/persist[eê]n/i, "persistente"],
+];
+
+export type Seg = { t: string; b: boolean };
+
+/** Divide o texto em trechos, marcando em negrito as expressões-chave (as mesmas das pílulas do Guia Rápido). */
+export function highlightSegments(text: string, rules: RegExp[]): Seg[] {
+  if (!text) return [];
+  const spans: [number, number][] = [];
+  const isL = (c: string | undefined) => !!c && /[\p{L}]/u.test(c);
+  for (const r of rules) {
+    const rx = new RegExp(r.source, r.flags.includes("g") ? r.flags : r.flags + "g");
+    for (const m of text.matchAll(rx)) {
+      if (!m[0].trim()) continue;
+      let a = m.index!, e = a + m[0].length;
+      while (a > 0 && isL(text[a - 1])) a--;
+      while (e < text.length && isL(text[e])) e++;
+      if (e - a > 40) continue;
+      spans.push([a, e]);
+    }
+  }
+  spans.sort((x, y) => x[0] - y[0]);
+  const merged: [number, number][] = [];
+  for (const sp of spans) {
+    const last = merged[merged.length - 1];
+    if (last && sp[0] <= last[1]) last[1] = Math.max(last[1], sp[1]);
+    else merged.push([...sp]);
+  }
+  const out: Seg[] = [];
+  let i = 0;
+  for (const [a, e] of merged) {
+    if (a > i) out.push({ t: text.slice(i, a), b: false });
+    out.push({ t: text.slice(a, e), b: true });
+    i = e;
+  }
+  if (i < text.length) out.push({ t: text.slice(i), b: false });
+  return out;
+}
+
 export function bodyDots(body: string | null) {
   const b = (body ?? "").toLowerCase();
   if (!b) return 0;
@@ -639,6 +754,11 @@ export function bodyDots(body: string | null) {
 export type StudyCard = {
   header: string; aromas: { label: string; icon: string }[]; mouth: string; temp: string;
   dishes: string[]; grapes: string[]; say: string; price: string; maturation: string; code: string;
+  /** Parágrafos da ficha com as expressões-chave marcadas. */
+  visualText: Seg[]; noseText: Seg[]; palateText: Seg[];
+  /** Apenas espumantes: Nature, Brut, Demi-sec… */
+  dosage: string;
+  awards: string[];
 };
 
 const ANALYSIS_HEAD = /(?:\*\*|#+[ \t]*)?[ \t]*AN[ÁA]LISE[ \t]+(VISUAL|OLFATIVA|GUSTATIVA)(?:[ \t]*\([^)\n]{0,30}\))?[ \t]*(?:\*\*)?[ \t]*[:\-–]?\s*/gi;
@@ -714,7 +834,8 @@ export function studyCard(w: BookWine): StudyCard {
     : clip(wineSent.find((s) => /boca|paladar|final|taninos?|acidez|textura/i.test(s)) ?? wineSent[0] ?? "", 240);
   const temp = w.serving_temp_min || w.serving_temp_max
     ? `${w.serving_temp_min ?? w.serving_temp_max}${w.serving_temp_max && w.serving_temp_min !== w.serving_temp_max ? ` a ${w.serving_temp_max}` : ""} °C` : "";
-  const dishes = clean(w.pairing_notes).replace(/\.$/, "").split(/,|;| e (?=[a-zà-ú])/i).map((s) => s.trim()).filter((s) => s && s.length < 40).slice(0, 5)
+  const house = (w.house_dishes ?? []).map(clean).filter(Boolean);
+  const dishes = house.length ? house.slice(0, 5) : clean(w.pairing_notes).replace(/\.$/, "").split(/,|;| e (?=[a-zà-ú])/i).map((s) => s.trim()).filter((s) => s && s.length < 40).slice(0, 5)
     .map((s) => s[0].toUpperCase() + s.slice(1));
   const gd = Array.isArray(w.grapes_detail) ? w.grapes_detail : [];
   const grapes = gd.length
@@ -727,8 +848,19 @@ export function studyCard(w: BookWine): StudyCard {
   const a3 = aromas.slice(0, 3).map((a) => a.label);
   const own = clean(w.table_pitch);
   const say = own ? own.replace(/^["“]|["”]$/g, "") : `É um ${type.toLowerCase()}${styleWord ? ` ${styleWord}` : ""}${where ? ` de ${where}` : ""}${grapes.length ? `, feito com ${grapes.map((g) => g.replace(/ \d+%$/, "")).slice(0, 2).join(" e ")}` : ""}${a3.length ? `. Lembra ${a3.join(", ")}` : ""}.`;
-  const maturation = clip(clean(w.aging), 150) || (w.oak_months ? `${String(w.oak_months).replace(".", ",")} meses em carvalho` : "");
+  const maturation = clip(clean(w.aging), 320) || (w.oak_months ? `${String(w.oak_months).replace(".", ",")} meses em carvalho` : "");
   const price = w.sale_price ? `R$ ${Number(w.sale_price).toFixed(0)}` : "";
   const code = clean(w.internal_code);
-  return { header, aromas: aromas.slice(0, 8), mouth, temp, dishes, grapes, say, price, maturation, code };
+  const visual = clip(tastingSection(w.tasting_notes, "visual"), 360);
+  const noseTxt = clip(nose, 560);
+  const palateTxt = palate ? clip(palate, 560) : mouth;
+  const aromaRx = AROMAS.map(([rx]) => rx);
+  return {
+    header, aromas: aromas.slice(0, 8), mouth, temp, dishes, grapes, say, price, maturation, code,
+    visualText: highlightSegments(visual, VISUAL_RULES.map(([rx]) => rx)),
+    noseText: highlightSegments(noseTxt, aromaRx),
+    palateText: highlightSegments(palateTxt, PALATE_RULES.map(([rx]) => rx)),
+    dosage: typeKey(w.wine_type) === "sparkling" ? clean(w.sugar_level) : "",
+    awards: (w.awards ?? []).map(clean).filter(Boolean).slice(0, 6),
+  };
 }

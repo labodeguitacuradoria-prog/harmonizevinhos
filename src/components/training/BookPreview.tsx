@@ -43,7 +43,7 @@ function ProducerMapImage({ map }: { map: NonNullable<ReturnType<typeof producer
 function Footer({ n, title, restaurantName, back }: { n: number; title: string; restaurantName: string; back: boolean }) {
   return (
     <div className="absolute grid items-center" style={{ gridTemplateColumns: "1fr auto 1fr", left: 18 * MM, right: 18 * MM, bottom: 6 * MM, borderTop: "1px solid #ddd", paddingTop: 7, fontSize: 13.5, color: MUTED }}>
-      <span className="truncate">{title} · {restaurantName}</span>
+      <span />
       <span style={{ fontWeight: 700 }}>{n}</span>
       <span className="flex justify-end">{back && <Home size={20} color={GOLD} aria-label="Índice" />}</span>
     </div>
@@ -137,10 +137,11 @@ function PageBody({ l, n, index, wines, title, restaurantName }: { l: Layout; n:
   const band = typeBand(w.wine_type);
   const rgb = (c: number[]) => `rgb(${c.join(",")})`;
   const col = rgb(band.accent);
-  const soft = `rgba(${band.accent.join(",")},0.14)`;
   const DARK = "rgb(38,52,44)";
   const label = (t: string) => <div style={{ color: GOLD, fontWeight: 700, fontSize: 15, letterSpacing: 1.5, marginBottom: 9 }}>{t}</div>;
   const dots = bodyDots(w.body);
+  const pmap = producerMap([w], producerOf(w));
+  const hasRight = !!pmap || card.awards.length > 0;
   const row = (k: string, v: React.ReactNode) => (
     <div className="flex items-start" style={{ fontSize: 14.5, padding: "7px 0", borderBottom: "1px dotted #ccc", lineHeight: 1.35 }}>
       <span className="shrink-0 font-bold" style={{ width: 27 * MM, color: MUTED }}>{k}</span><span style={{ color: INK }}>{v}</span>
@@ -168,22 +169,44 @@ function PageBody({ l, n, index, wines, title, restaurantName }: { l: Layout; n:
             </div>
             <div style={{ marginTop: 12 }}>
               {w.body && row("Corpo", <span className="flex items-center gap-2"><span style={{ color: col, letterSpacing: 2, fontSize: 16 }}>{"●".repeat(dots)}{"○".repeat(5 - dots)}</span>{clean(w.body).toLowerCase()}</span>)}
-              {w.sugar_level && row("Açúcar", clean(w.sugar_level).toLowerCase())}
+              {card.dosage && row("Dosagem", `açúcar: ${card.dosage}`)}
               {card.maturation && row("Maturação", card.maturation)}
             </div>
           </div>
         </div>
-        <div style={{ marginTop: 9 * MM }} className="flex flex-col" >
-          {card.aromas.length > 0 && <div style={{ marginBottom: 6 * MM }}>{label("👃 AROMAS")}
-            <div className="flex flex-wrap" style={{ gap: 8 }}>{card.aromas.map((a) => <span key={a.label} style={{ border: `1px solid ${col}`, borderRadius: 99, padding: "5px 14px", fontSize: 15, color: INK }}>{a.icon} {a.label}</span>)}</div></div>}
-          {card.mouth && <div style={{ marginBottom: 6 * MM }}>{label("🍷 PALADAR")}<div style={{ fontSize: 16.5, color: INK, lineHeight: 1.4 }}>{card.mouth}</div></div>}
-          {(card.temp || card.dishes.length > 0) && <div className="flex" style={{ gap: 8 * MM, marginBottom: 6 * MM }}>
-            {card.temp && <div style={{ width: "28%" }}>{label("🌡️ SERVIR A")}<div style={{ fontSize: 21, fontWeight: 700, color: INK }}>{card.temp}</div></div>}
-            {card.dishes.length > 0 && <div className="flex-1">{label("🍽️ COMBINA COM")}<div className="flex flex-wrap" style={{ gap: 8 }}>{card.dishes.map((d) => <span key={d} style={{ background: soft, borderRadius: 99, padding: "5px 14px", fontSize: 15, color: INK }}>{d}</span>)}</div></div>}
-          </div>}
-          <div style={{ border: `1px solid ${DARK}`, borderRadius: 8, padding: "14px 18px", background: "#fcfcfa", marginBottom: 5 * MM }}>
-            {label("💬 FALE ASSIM À MESA")}<div style={{ fontStyle: "italic", fontSize: 16.5, color: INK, lineHeight: 1.4 }}>“{card.say}”</div>
+        <div className="flex" style={{ marginTop: 8 * MM, gap: 8 * MM }}>
+          <div className="min-w-0" style={{ flex: hasRight ? "0 0 60%" : "1 1 auto" }}>
+            {([["VISUAL", card.visualText], ["AROMAS", card.noseText], ["PALADAR", card.palateText]] as const).map(([t, segs]) =>
+              segs.length ? (
+                <div key={t} style={{ marginBottom: 4 * MM }}>
+                  {label(t)}
+                  <p style={{ fontSize: 13.5, color: INK, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 6, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    {segs.map((sg, i) => (sg.b ? <b key={i}>{sg.t}</b> : <span key={i}>{sg.t}</span>))}
+                  </p>
+                </div>
+              ) : null,
+            )}
           </div>
+          {hasRight && (
+            <div className="min-w-0 flex-1">
+              {pmap && <div style={{ marginBottom: 6 * MM }}>{label("ONDE FICA")}<ProducerMapImage map={pmap} /></div>}
+              {card.awards.length > 0 && (
+                <div>
+                  {label("PRÊMIOS")}
+                  <ul style={{ fontSize: 13.5, color: INK, lineHeight: 1.4 }}>
+                    {card.awards.map((a) => <li key={a} className="flex gap-2" style={{ marginBottom: 6 }}><span style={{ color: GOLD, fontWeight: 700 }}>•</span><span>{a}</span></li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col" style={{ marginTop: 2 * MM }}>
+          {card.dishes.length > 0 && <div style={{ marginBottom: 6 * MM }}>{label("COMBINA COM")}<div style={{ fontSize: 15, color: INK, lineHeight: 1.4 }}>{card.dishes.join(" • ")}</div></div>}
+          <div style={{ border: `1px solid ${DARK}`, borderRadius: 8, padding: "14px 18px", background: "#fcfcfa", marginBottom: 5 * MM }}>
+            {label("FALE ASSIM À MESA")}<div style={{ fontStyle: "italic", fontSize: 16, color: INK, lineHeight: 1.4 }}>“{card.say}”</div>
+          </div>
+          {card.temp && <div className="flex items-baseline justify-between">{label("TEMPERATURA DE SERVIÇO")}<span style={{ fontSize: 18, fontWeight: 700, color: INK }}>{card.temp}</span></div>}
         </div>
       </div>
       <Footer n={n} title={title} restaurantName={restaurantName} back />

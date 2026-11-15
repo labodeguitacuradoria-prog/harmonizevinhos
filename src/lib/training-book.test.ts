@@ -88,3 +88,14 @@ describe("faixa de espumantes e rosés", async () => {
     assert.equal(studyCard(mk({ wine_type: "Tinto", style: "Tinto Encorpado" })).header, "TINTO • ENCORPADO");
   });
 });
+
+it("Livro de Estudos: parágrafos com negrito, dosagem só em espumante, pratos da casa e prêmios", async () => {
+  const { studyCard, highlightSegments } = await import("./training-book");
+  const segs = highlightSegments("Notas de abacaxi e baunilha.", [/abacaxi/i, /baunilha/i]);
+  assert.deepEqual(segs.filter((s) => s.b).map((s) => s.t), ["abacaxi", "baunilha"]);
+  const base = { id: "1", name: "X", producer: "P", vintage: null, volume: null, wine_type: "Espumante", style: null, country: null, region: null, appellation: null, grape: null, alcohol_pct: null, body: null, sugar_level: "Nature", oak_months: null, aging: null, serving_temp_min: null, serving_temp_max: null, tasting_notes: null, pairing_notes: "Peixe", elaboration: null, sale_price: null, image_url: null, internal_code: null };
+  assert.equal(studyCard(base).dosage, "Nature");
+  assert.equal(studyCard({ ...base, wine_type: "Tinto" }).dosage, "");
+  assert.deepEqual(studyCard({ ...base, house_dishes: ["Risoto de camarão"] }).dishes, ["Risoto de camarão"]);
+  assert.deepEqual(studyCard({ ...base, awards: ["92 pts Descorchados"] }).awards, ["92 pts Descorchados"]);
+});

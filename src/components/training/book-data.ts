@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { houseDishesByWine } from "@/lib/quick-guide";
 import { BOOK_WINE_COLUMNS, type BookWine } from "@/lib/training-book";
 
 /** Rótulos ativos na carta com a ficha da vinícola (nome, história, foto e mapa). Compartilhado pelo Livro e pelo Guia. */
@@ -26,6 +27,10 @@ export const bookWinesQuery = (restaurantId: string) =>
           }
         }
       }
+      // Pratos da casa vindos da Harmonização do cardápio (usados no "Combina com" do Livro).
+      const { data: guides } = await supabase.from("restaurant_menu_pairing_guides").select("results").eq("restaurant_id", restaurantId);
+      const house = houseDishesByWine((guides ?? []) as { results: unknown }[]);
+      for (const w of list) w.house_dishes = house.get(w.id) ?? null;
       return list;
     },
   });

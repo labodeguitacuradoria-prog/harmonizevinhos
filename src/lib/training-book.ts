@@ -575,12 +575,6 @@ export async function buildBookPdf(opts: {
       doc.setFont("helvetica", "italic"); doc.setFontSize(12.5); doc.setTextColor(...INK); doc.text(sl, M + 5, y, { lineHeightFactor: 1.35 });
       y += sl.length * LH(12.5) + 12;
     }
-    doc.setFont("helvetica", "normal"); doc.setFontSize(11.5);
-    const rl = (doc.splitTextToSize(`Para decorar: ${card.remember}`, W - 2 * M - 10) as string[]).slice(0, 2);
-    if (y + rl.length * LH(11.5) + 2 < BOTTOM) {
-      doc.setFillColor(...SOFT); doc.roundedRect(M, y - 6.4, W - 2 * M, 9 + (rl.length - 1) * LH(11.5), 2.5, 2.5, "F");
-      doc.setTextColor(...INK); doc.text(rl, M + 5, y, { lineHeightFactor: 1.35 });
-    }
     footer(n, true);
   }
   opts.onProgress?.(layout.length, layout.length);
@@ -644,7 +638,7 @@ export function bodyDots(body: string | null) {
 
 export type StudyCard = {
   header: string; aromas: { label: string; icon: string }[]; mouth: string; temp: string;
-  dishes: string[]; grapes: string[]; say: string; remember: string; price: string; maturation: string; code: string;
+  dishes: string[]; grapes: string[]; say: string; price: string; maturation: string; code: string;
 };
 
 const ANALYSIS_HEAD = /(?:\*\*|#+[ \t]*)?[ \t]*AN[ÁA]LISE[ \t]+(VISUAL|OLFATIVA|GUSTATIVA)(?:[ \t]*\([^)\n]{0,30}\))?[ \t]*(?:\*\*)?[ \t]*[:\-–]?\s*/gi;
@@ -733,9 +727,8 @@ export function studyCard(w: BookWine): StudyCard {
   const a3 = aromas.slice(0, 3).map((a) => a.label);
   const own = clean(w.table_pitch);
   const say = own ? own.replace(/^["“]|["”]$/g, "") : `É um ${type.toLowerCase()}${styleWord ? ` ${styleWord}` : ""}${where ? ` de ${where}` : ""}${grapes.length ? `, feito com ${grapes.map((g) => g.replace(/ \d+%$/, "")).slice(0, 2).join(" e ")}` : ""}${a3.length ? `. Lembra ${a3.join(", ")}` : ""}.`;
-  const remember = [wineName(w), [styleWord || type.toLowerCase(), where, a3[0]].filter(Boolean).join(" + ")].join(" = ");
   const maturation = clip(clean(w.aging), 150) || (w.oak_months ? `${String(w.oak_months).replace(".", ",")} meses em carvalho` : "");
   const price = w.sale_price ? `R$ ${Number(w.sale_price).toFixed(0)}` : "";
   const code = clean(w.internal_code);
-  return { header, aromas: aromas.slice(0, 8), mouth, temp, dishes, grapes, say, remember, price, maturation, code };
+  return { header, aromas: aromas.slice(0, 8), mouth, temp, dishes, grapes, say, price, maturation, code };
 }

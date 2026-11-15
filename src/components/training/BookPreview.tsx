@@ -184,7 +184,6 @@ function PageBody({ l, n, index, wines, title, restaurantName }: { l: Layout; n:
           <div style={{ border: `1px solid ${DARK}`, borderRadius: 8, padding: "14px 18px", background: "#fcfcfa", marginBottom: 5 * MM }}>
             {label("💬 FALE ASSIM À MESA")}<div style={{ fontStyle: "italic", fontSize: 16.5, color: INK, lineHeight: 1.4 }}>“{card.say}”</div>
           </div>
-          <div style={{ background: soft, borderRadius: 8, padding: "12px 18px", fontSize: 15, color: INK }}>🧠 <b>Para decorar:</b> {card.remember}</div>
         </div>
       </div>
       <Footer n={n} title={title} restaurantName={restaurantName} back />

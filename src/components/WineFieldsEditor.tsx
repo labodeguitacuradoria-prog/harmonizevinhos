@@ -50,6 +50,7 @@ export type WineFields = {
   serving_temp_max?: number | null;
   tasting_notes?: string | null;
   pairing_notes?: string | null;
+  table_pitch?: string | null;
   awards?: string[] | null;
   image_url?: string | null;
   gallery_urls?: string[] | null;
@@ -540,6 +541,7 @@ export function WineFieldsEditor({
           <NumberInput label="Temp. máx. serviço (°C)" hint="Temperatura máxima recomendada." placeholder="Ex: 18" value={item.serving_temp_max ?? null} onChange={(v) => set("serving_temp_max", v)} />
           <TextArea label="Notas de degustação" hint="Cor, aromas, paladar e final." placeholder="Ex: Rubi intenso. Aromas de frutas negras..." value={item.tasting_notes ?? ""} onChange={(v) => set("tasting_notes", v)} className="md:col-span-2" />
           <TextArea label="Harmonização" hint="Sugestões gastronômicas." placeholder="Ex: Carnes vermelhas grelhadas, cordeiro, queijos curados." value={item.pairing_notes ?? ""} onChange={(v) => set("pairing_notes", v)} className="md:col-span-2" />
+          <TextArea label="Fale assim à mesa" hint="Frase curta (1 a 2 linhas) que o garçom usa para apresentar o vinho. Aparece no Guia Rápido de Salão." placeholder="Ex: Branco cremoso e elegante, ótimo com peixes e massas ao molho branco." value={item.table_pitch ?? ""} onChange={(v) => set("table_pitch", v)} className="md:col-span-2" />
           <div className="md:col-span-2">
             <FieldLabel hint="Até 10 premiações. Use um campo por prêmio.">Premiações ({awards.length}/10)</FieldLabel>
             <div className="mt-2 space-y-2">

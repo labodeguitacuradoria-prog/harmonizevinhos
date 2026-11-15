@@ -1,3 +1,4 @@
+import type { QuickCard } from "@/lib/quick-guide";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -879,7 +880,7 @@ export const getGuestTrainingBook = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: book } = await supabaseAdmin
         .from("training_books")
-        .select("title, book_index, pdf_path, published_at")
+        .select("title, book_index, pdf_path, published_at, quick_title, quick_cards, quick_pdf_path, quick_published_at")
         .eq("restaurant_id", link.restaurant_id)
         .maybeSingle();
       return {
@@ -890,6 +891,13 @@ export const getGuestTrainingBook = createServerFn({ method: "POST" })
               title: book.title as string,
               publishedAt: book.published_at as string | null,
               index: (book.book_index ?? []) as { producer: string; page: number; wines: { id: string; name: string; page: number }[] }[],
+            }
+          : null,
+        guide: book?.quick_pdf_path
+          ? {
+              title: (book.quick_title as string | null) || "Guia Rápido de Salão",
+              publishedAt: book.quick_published_at as string | null,
+              cards: (Array.isArray(book.quick_cards) ? book.quick_cards : []) as unknown as QuickCard[],
             }
           : null,
       };

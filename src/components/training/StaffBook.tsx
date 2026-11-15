@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, Download, Search } from "lucide-react";
+import { BookOpen, Download, Search, Smartphone } from "lucide-react";
+import { QuickGuideViewer } from "@/components/training/QuickGuideViewer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getGuestTrainingBook } from "@/lib/guest-access.functions";
 
 export default function StaffBook({ token }: { token: string }) {
+  const [view, setView] = useState<"guide" | "book" | null>(null);
   const [term, setTerm] = useState("");
   const [page, setPage] = useState(1);
   const { data, isLoading } = useQuery({
@@ -25,12 +27,47 @@ export default function StaffBook({ token }: { token: string }) {
 
   if (isLoading) return <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">Abrindo o livro…</div>;
   if (!data || !data.ok) return <div className="flex min-h-screen items-center justify-center bg-background p-6 text-sm">{(data as { message?: string })?.message ?? "Link inválido."}</div>;
-  if (!data.book)
+  if (!data.book && !data.guide)
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
-        <div><BookOpen className="mx-auto h-8 w-8 text-primary" /><p className="mt-3 text-sm">O Livro de Estudos de {data.restaurantName} ainda não foi publicado.</p></div>
+        <div><BookOpen className="mx-auto h-8 w-8 text-primary" /><p className="mt-3 text-sm">O material de treinamento de {data.restaurantName} ainda não foi publicado.</p></div>
       </div>
     );
+
+  const current = view ?? (data.guide ? "guide" : "book");
+  const switcher = data.book && data.guide && (
+    <div className="mb-4 grid grid-cols-2 gap-2">
+      {([["guide", Smartphone, "Guia Rápido de Salão"], ["book", BookOpen, "Livro de Estudos"]] as const).map(([v, Icon, label]) => (
+        <button key={v} type="button" onClick={() => setView(v)}
+          className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold uppercase tracking-wider ${current === v ? "border-primary bg-accent text-primary" : "border-border bg-card text-muted-foreground"}`}>
+          <Icon className="h-4 w-4" /> {label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (current === "guide" && data.guide) {
+    const guide = data.guide;
+    return (
+      <div className="min-h-screen bg-background p-3 md:p-6">
+        <div className="mx-auto max-w-[460px]">
+          {switcher}
+          <header className="mb-3 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="truncate text-base uppercase tracking-[0.12em] text-primary">{guide.title}</h1>
+              <p className="text-xs text-muted-foreground">{data.restaurantName}</p>
+            </div>
+            <Button size="sm" asChild>
+              <a href={`${pdfUrl}&file=guia&download=1`}><Download className="h-4 w-4" /> Baixar PDF</a>
+            </Button>
+          </header>
+          <p className="mb-3 text-xs text-muted-foreground">Baixe o PDF no celular para consultar sem internet durante o serviço.</p>
+          <QuickGuideViewer cards={guide.cards} photoUrl={(c) => `/api/public/training-book?token=${encodeURIComponent(token)}&photo=${c.id}`} />
+        </div>
+      </div>
+    );
+  }
+  if (!data.book) return null;
 
   const open = (p: number) => {
     setPage(p);
@@ -39,6 +76,7 @@ export default function StaffBook({ token }: { token: string }) {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
+      {switcher}
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
         <div>
           <h1 className="text-lg uppercase tracking-[0.15em] text-primary">{data.book.title}</h1>

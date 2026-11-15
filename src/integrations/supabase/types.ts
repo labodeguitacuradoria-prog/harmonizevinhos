@@ -1704,6 +1704,10 @@ export type Database = {
           pages: Json
           pdf_path: string | null
           published_at: string | null
+          quick_cards: Json
+          quick_pdf_path: string | null
+          quick_published_at: string | null
+          quick_title: string | null
           restaurant_id: string
           title: string
           updated_at: string
@@ -1715,6 +1719,10 @@ export type Database = {
           pages?: Json
           pdf_path?: string | null
           published_at?: string | null
+          quick_cards?: Json
+          quick_pdf_path?: string | null
+          quick_published_at?: string | null
+          quick_title?: string | null
           restaurant_id: string
           title?: string
           updated_at?: string
@@ -1726,6 +1734,10 @@ export type Database = {
           pages?: Json
           pdf_path?: string | null
           published_at?: string | null
+          quick_cards?: Json
+          quick_pdf_path?: string | null
+          quick_published_at?: string | null
+          quick_title?: string | null
           restaurant_id?: string
           title?: string
           updated_at?: string
@@ -1912,6 +1924,7 @@ export type Database = {
           sugar_level: string | null
           suggested_retail_price: number | null
           suppliers: string[] | null
+          table_pitch: string | null
           tannin: string | null
           tasting_notes: string | null
           tech_sheet_url: string | null
@@ -1965,6 +1978,7 @@ export type Database = {
           sugar_level?: string | null
           suggested_retail_price?: number | null
           suppliers?: string[] | null
+          table_pitch?: string | null
           tannin?: string | null
           tasting_notes?: string | null
           tech_sheet_url?: string | null
@@ -2018,6 +2032,7 @@ export type Database = {
           sugar_level?: string | null
           suggested_retail_price?: number | null
           suppliers?: string[] | null
+          table_pitch?: string | null
           tannin?: string | null
           tasting_notes?: string | null
           tech_sheet_url?: string | null
@@ -2256,6 +2271,7 @@ export type Database = {
           suggested_retail_price: number | null
           supplier_id: string | null
           suppliers: string[] | null
+          table_pitch: string | null
           tannin: string | null
           tasting_notes: string | null
           tech_sheet_url: string | null
@@ -2311,6 +2327,7 @@ export type Database = {
           suggested_retail_price?: number | null
           supplier_id?: string | null
           suppliers?: string[] | null
+          table_pitch?: string | null
           tannin?: string | null
           tasting_notes?: string | null
           tech_sheet_url?: string | null
@@ -2366,6 +2383,7 @@ export type Database = {
           suggested_retail_price?: number | null
           supplier_id?: string | null
           suppliers?: string[] | null
+          table_pitch?: string | null
           tannin?: string | null
           tasting_notes?: string | null
           tech_sheet_url?: string | null

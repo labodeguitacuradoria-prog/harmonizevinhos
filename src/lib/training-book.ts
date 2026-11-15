@@ -31,6 +31,8 @@ export type BookWine = {
   image_url: string | null;
   internal_code: string | null;
   production_method?: string | null;
+  /** Frase "Fale assim à mesa" escrita no cadastro do vinho. */
+  table_pitch?: string | null;
   winery_about?: string | null;
   winery_photo?: string | null;
   /** Nome como está no cadastro da vinícola. */
@@ -39,6 +41,10 @@ export type BookWine = {
   winery_map?: WineryMapRef | null;
   grapes_detail?: { grape: string; pct?: number; mesesBarrica?: number }[] | null;
 };
+
+/** Colunas de `wines` usadas pelo Livro de Estudos e pelo Guia Rápido de Salão. */
+export const BOOK_WINE_COLUMNS =
+  "id, name, producer, vintage, volume, wine_type, style, country, region, appellation, grape, alcohol_pct, body, sugar_level, oak_months, aging, serving_temp_min, serving_temp_max, tasting_notes, pairing_notes, elaboration, sale_price, image_url, internal_code, grapes_detail, production_method, table_pitch";
 
 export type WineryMapRef = { iso3: string; lat: number; lng: number; side: "auto" | "left" | "right"; svg: string | null };
 
@@ -234,12 +240,13 @@ function drawWineryMap(doc: Pdf, g: MapGeom, x: number, y: number, sc: number) {
   doc.setLineWidth(0.2);
 }
 
-async function toDataUrl(src: string): Promise<{ data: string; w: number; h: number } | null> {
+/** Converte uma imagem em JPEG com fundo branco (para PDF). */
+export async function toDataUrl(src: string, maxSide = 1600): Promise<{ data: string; w: number; h: number } | null> {
   try {
     const blob = await (await fetch(src)).blob();
     const bmp = await createImageBitmap(blob);
     const canvas = document.createElement("canvas");
-    const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
     canvas.width = Math.round(bmp.width * scale);
     canvas.height = Math.round(bmp.height * scale);
     const ctx = canvas.getContext("2d")!;
@@ -724,7 +731,8 @@ export function studyCard(w: BookWine): StudyCard {
   const header = [type, styleWord].filter(Boolean).join(" • ").toUpperCase();
   const where = w.region || w.country || "";
   const a3 = aromas.slice(0, 3).map((a) => a.label);
-  const say = `É um ${type.toLowerCase()}${styleWord ? ` ${styleWord}` : ""}${where ? ` de ${where}` : ""}${grapes.length ? `, feito com ${grapes.map((g) => g.replace(/ \d+%$/, "")).slice(0, 2).join(" e ")}` : ""}${a3.length ? `. Lembra ${a3.join(", ")}` : ""}.`;
+  const own = clean(w.table_pitch);
+  const say = own ? own.replace(/^["“]|["”]$/g, "") : `É um ${type.toLowerCase()}${styleWord ? ` ${styleWord}` : ""}${where ? ` de ${where}` : ""}${grapes.length ? `, feito com ${grapes.map((g) => g.replace(/ \d+%$/, "")).slice(0, 2).join(" e ")}` : ""}${a3.length ? `. Lembra ${a3.join(", ")}` : ""}.`;
   const remember = [wineName(w), [styleWord || type.toLowerCase(), where, a3[0]].filter(Boolean).join(" + ")].join(" = ");
   const maturation = clip(clean(w.aging), 150) || (w.oak_months ? `${String(w.oak_months).replace(".", ",")} meses em carvalho` : "");
   const price = w.sale_price ? `R$ ${Number(w.sale_price).toFixed(0)}` : "";

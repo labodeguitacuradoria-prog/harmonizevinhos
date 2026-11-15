@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// Entrega o PDF publicado do Livro de Estudos para quem tem um link de treinamento válido.
+// Entrega o PDF publicado do Livro de Estudos, o PDF do Guia Rápido (file=guia) e as fotos do guia (photo=<id>)
+// para quem tem um link de treinamento válido do mesmo restaurante.
 export const Route = createFileRoute("/api/public/training-book")({
   server: {
     handlers: {
@@ -19,15 +20,30 @@ export const Route = createFileRoute("/api/public/training-book")({
         if (!link || link.scope !== "training" || link.revoked_at || expired) return new Response("not found", { status: 404 });
         const { data: book } = await supabaseAdmin
           .from("training_books")
-          .select("pdf_path, title")
+          .select("pdf_path, title, quick_pdf_path, quick_title, quick_cards")
           .eq("restaurant_id", link.restaurant_id)
           .maybeSingle();
-        const path = book?.pdf_path;
-        if (!path || !path.startsWith(`training-books/${link.restaurant_id}/`)) return new Response("not published", { status: 404 });
-        const { data, error } = await supabaseAdmin.storage.from("product-media").download(path);
+        const base = `training-books/${link.restaurant_id}/`;
+        const store = supabaseAdmin.storage.from("product-media");
+
+        // Foto da garrafa do Guia Rápido: só rótulos publicados no guia deste restaurante.
+        const photo = url.searchParams.get("photo")?.trim() ?? "";
+        if (photo) {
+          const cards = Array.isArray(book?.quick_cards) ? (book.quick_cards as { id?: string; hasPhoto?: boolean }[]) : [];
+          if (!/^[0-9a-f-]{36}$/i.test(photo) || !cards.some((c) => c?.id === photo && c.hasPhoto)) return new Response("not found", { status: 404 });
+          const { data, error } = await store.download(`${base}guia/${photo}.jpg`);
+          if (error || !data) return new Response("not found", { status: 404 });
+          return new Response(data, { headers: { "content-type": "image/jpeg", "cache-control": "private, max-age=3600" } });
+        }
+
+        const guide = url.searchParams.get("file") === "guia";
+        const path = guide ? book?.quick_pdf_path : book?.pdf_path;
+        if (!path || !path.startsWith(base)) return new Response("not published", { status: 404 });
+        const { data, error } = await store.download(path);
         if (error || !data) return new Response("not found", { status: 404 });
         const download = url.searchParams.get("download") === "1";
-        const safe = (book?.title || "livro-de-estudos").replace(/[^\w\- ]+/g, "").trim() || "livro";
+        const name = guide ? book?.quick_title || "guia-rapido-de-salao" : book?.title || "livro-de-estudos";
+        const safe = name.replace(/[^\w\- ]+/g, "").trim() || "livro";
         return new Response(data, {
           headers: {
             "content-type": "application/pdf",

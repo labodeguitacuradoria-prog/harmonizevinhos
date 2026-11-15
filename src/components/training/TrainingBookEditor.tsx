@@ -11,12 +11,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { ACCEPT } from "@/lib/file-accept";
 import { BookPreview, type BookPreviewHandle } from "@/components/training/BookPreview";
+import { bookWinesQuery } from "@/components/training/book-data";
 import {
   buildBookPdf, defaultPages, layoutBook, producerOf, typeLabel, wineTitle, type BookPage, type BookWine,
 } from "@/lib/training-book";
 
-const WINE_COLUMNS =
-  "id, name, producer, vintage, volume, wine_type, style, country, region, appellation, grape, alcohol_pct, body, sugar_level, oak_months, aging, serving_temp_min, serving_temp_max, tasting_notes, pairing_notes, elaboration, sale_price, image_url, internal_code, grapes_detail, production_method";
 
 const uid = () => crypto.randomUUID();
 
@@ -52,31 +51,7 @@ export default function TrainingBookEditor({ restaurantId, restaurantName }: { r
   const [dirty, setDirty] = useState(false);
   const [addTerm, setAddTerm] = useState("");
 
-  const { data: wines = [], isFetched: winesFetched } = useQuery({
-    queryKey: ["book-wines", restaurantId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("wines").select(WINE_COLUMNS).eq("restaurant_id", restaurantId).eq("active_on_menu", true).order("name");
-      if (error) throw new Error(error.message);
-      const list = (data ?? []) as unknown as BookWine[];
-      const keys = [...new Set(list.map((w) => (w.producer ?? "").trim().toLowerCase()).filter(Boolean))];
-      if (keys.length) {
-        const { data: ws } = await supabase.from("wineries").select("name, name_key, about, photos, latitude, longitude, map_country, map_label_side, map_svg").in("name_key", keys);
-        const map = new Map((ws ?? []).map((x) => [x.name_key, x]));
-        for (const w of list) {
-          const x = map.get((w.producer ?? "").trim().toLowerCase());
-          if (x) {
-            w.winery_about = x.about;
-            w.winery_photo = x.photos?.[0] ?? null;
-            w.winery_name = x.name;
-            w.winery_map = x.latitude != null && x.longitude != null && x.map_country
-              ? { iso3: x.map_country, lat: x.latitude, lng: x.longitude, side: (x.map_label_side as "auto" | "left" | "right") ?? "auto", svg: x.map_svg }
-              : null;
-          }
-        }
-      }
-      return list;
-    },
-  });
+  const { data: wines = [], isFetched: winesFetched } = useQuery(bookWinesQuery(restaurantId));
   const { data: book, isFetched } = useQuery({
     queryKey: ["training-book", restaurantId],
     queryFn: async () => {

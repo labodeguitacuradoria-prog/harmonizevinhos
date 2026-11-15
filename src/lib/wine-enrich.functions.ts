@@ -57,7 +57,7 @@ REGRAS:
 - "appellation": denominação oficial para vinhos europeus (ex: "AOC Saint-Émilion Grand Cru", "DOCG Barolo", "DO Rioja", "DOC Douro"). Para vinhos não europeus, null.
 - "wine_type": um de "Tinto", "Branco", "Espumante", "Rosé", "Doce", "Fortificado".
 - "style": um de "ESPUMANTE", "BRANCO LEVE", "BRANCO AROMÁTICO", "BRANCO ENCORPADO", "ROSÉ", "TINTO LEVE", "TINTO MÉDIO", "TINTO ENCORPADO", "FORTIFICADO".
-- "sugar_level": "Seco", "Meio-seco", "Suave" ou "Doce". "body": "Leve", "Médio" ou "Encorpado". "tannin"/"acidity": "Baixo", "Médio" ou "Alto".
+- "sugar_level": vinhos tranquilos: "Seco", "Meio-seco", "Suave" ou "Doce". ESPUMANTES nunca usam essa escala: use a dosagem do rótulo — "Nature / Brut Nature", "Extra Brut", "Brut", "Sec / Seco / Extra Sec", "Demi-Sec / Meio-Doce" ou "Doce / Doux / Moscatel" (null se não souber). "body": "Leve", "Médio" ou "Encorpado". "tannin"/"acidity": "Baixo", "Médio" ou "Alto".
 - "sommelier_weights": inteiros de 1 a 10 (corpo, acidez, taninos, docura, estagioBarrica, intensidadeAromatica) — preencha sempre.
 - "confidence": 0 a 100, sua confiança geral na identificação do rótulo.
 - NÃO invente prêmios: "awards" apenas se realmente conhecidos; caso contrário [].

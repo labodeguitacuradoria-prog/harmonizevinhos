@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { enrichWineFromWeb } from "@/lib/wine-enrich.functions";
+import { isSparkling, sparklingDosage } from "@/lib/sparkling-dosage";
 import { Database, Plus, Edit, Trash2, Info, Check, X as XIcon, Clock, ShieldCheck, Ban, Sparkles, FileText, AlertTriangle, ExternalLink, ChevronDown, ChevronUp, Wand2, Loader2, ImageOff, ImageIcon, GraduationCap } from "lucide-react";
 
 import {
@@ -388,6 +389,11 @@ function CatalogAdmin() {
         for (const f of ENRICH_FIELDS) {
           const incoming = (res as any)[f];
           if (isEmptyValue((item as any)[f]) && !isEmptyValue(incoming)) patch[f] = incoming;
+        }
+        if (isSparkling(item.wine_type ?? (patch['wine_type'] as string | null))) {
+          const dosage = sparklingDosage({ name: item.name, style: item.style, sugar_g_l: (item.sugar_g_l ?? patch['sugar_g_l'] ?? null) as number | null, sugar_level: (patch['sugar_level'] ?? item.sugar_level ?? null) as string | null });
+          if (dosage && dosage !== item.sugar_level) patch['sugar_level'] = dosage;
+          else if (!dosage) delete patch['sugar_level'];
         }
         const note = [res.notes, res.price_rationale ? `Preço estimado: ${res.price_rationale}` : null]
           .filter(Boolean)

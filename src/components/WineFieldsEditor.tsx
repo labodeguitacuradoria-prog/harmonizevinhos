@@ -85,20 +85,19 @@ export const INTENSITY = ["Baixo", "Médio", "Alto"];
 export const BODY = ["Leve", "Médio", "Encorpado"];
 export const VOLUMES = ["750 ml", "375 ml", "187 ml", "1500 ml", "Taça", "Outro"];
 
-const SPARKLING_SUGAR_TABLE: { label: string; max: number }[] = [
-  { label: "Nature / Brut Nature", max: 3 },
-  { label: "Extra Brut", max: 8 },
-  { label: "Brut", max: 15 },
-  { label: "Sec / Seco / Extra Sec", max: 20 },
-  { label: "Demi-Sec / Meio-Doce", max: 60 },
-  { label: "Doce / Doux / Moscatel", max: Infinity },
-];
-export const SPARKLING_SUGAR_LABELS = SPARKLING_SUGAR_TABLE.map((t) => t.label);
+import { SPARKLING_SUGAR_LABELS, classifySparklingSugar, isSparkling, sparklingDosage } from "@/lib/sparkling-dosage";
+export { SPARKLING_SUGAR_LABELS, classifySparklingSugar };
 
-export function classifySparklingSugar(g: number | null | undefined): string | null {
-  if (g == null || !Number.isFinite(g)) return null;
-  for (const row of SPARKLING_SUGAR_TABLE) if (g <= row.max) return row.label;
-  return null;
+/** Espumantes usam a dosagem (Nature, Brut...), nunca a escala Seco/Suave dos vinhos tranquilos. */
+function extractedSugarLevel(e: ExtractedWine, item: WineFields, typeMap: Record<string, string>): string | null {
+  const type = e.tipo ? (typeMap[e.tipo] ?? e.tipo) : item.wine_type ?? null;
+  const fromAi = e.nivelAcucar || item.sugar_level || null;
+  if (!isSparkling(type)) return fromAi;
+  return (
+    sparklingDosage({ name: item.name || e.rotulo, style: e.estilo || item.style, sugar_g_l: e.acucar ?? item.sugar_g_l ?? null, sugar_level: e.nivelAcucar }) ??
+    sparklingDosage({ sugar_level: item.sugar_level }) ??
+    null
+  );
 }
 
 export function toProxiedFileUrl(u: string | null | undefined): string | null {
@@ -250,7 +249,7 @@ export function applyExtractedToWine(item: WineFields, e: ExtractedWine, meta?: 
     sugar_g_l: e.acucar ?? item.sugar_g_l ?? null,
     acidity_g_l: e.acidezVal ?? item.acidity_g_l ?? null,
     acidity_ph: e.ph ?? item.acidity_ph ?? null,
-    sugar_level: e.nivelAcucar || item.sugar_level || null,
+    sugar_level: extractedSugarLevel(e, item, typeMap),
     body: e.conceitoCorpo || item.body || null,
     tannin: e.conceitoTaninos || item.tannin || null,
     acidity: e.conceitoAcidez || item.acidity || null,

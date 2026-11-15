@@ -1,5 +1,6 @@
 // Livro de Estudos (A4) montado apenas com os dados já cadastrados nos rótulos.
 import { MAP_COLORS, computeWineryMap, loadCountries, type MapGeom } from "@/lib/winery-map";
+import { dosageShortLabel, sparklingDosage } from "@/lib/sparkling-dosage";
 export type BookPage =
   | { id: string; type: "wine"; wineId: string }
   | { id: string; type: "custom"; path: string; name: string }
@@ -20,6 +21,7 @@ export type BookWine = {
   alcohol_pct: number | null;
   body: string | null;
   sugar_level: string | null;
+  sugar_g_l?: number | null;
   oak_months: number | null;
   aging: string | null;
   serving_temp_min: number | null;
@@ -48,7 +50,7 @@ export type BookWine = {
 
 /** Colunas de `wines` usadas pelo Livro de Estudos e pelo Guia Rápido de Salão. */
 export const BOOK_WINE_COLUMNS =
-  "id, name, producer, vintage, volume, wine_type, style, country, region, appellation, grape, alcohol_pct, body, sugar_level, oak_months, aging, serving_temp_min, serving_temp_max, tasting_notes, pairing_notes, elaboration, sale_price, image_url, internal_code, grapes_detail, production_method, table_pitch, awards";
+  "id, name, producer, vintage, volume, wine_type, style, country, region, appellation, grape, alcohol_pct, body, sugar_level, sugar_g_l, oak_months, aging, serving_temp_min, serving_temp_max, tasting_notes, pairing_notes, elaboration, sale_price, image_url, internal_code, grapes_detail, production_method, table_pitch, awards";
 
 export type WineryMapRef = { iso3: string; lat: number; lng: number; side: "auto" | "left" | "right"; svg: string | null };
 
@@ -195,7 +197,7 @@ export function techRows(w: BookWine): [string, string][] {
     ["Volume", w.volume ?? ""],
     ["Teor alcoólico", w.alcohol_pct ? `${String(w.alcohol_pct).replace(".", ",")}%` : ""],
     ["Corpo", w.body ?? ""],
-    ["Açúcar", w.sugar_level ?? ""],
+    typeKey(w.wine_type) === "sparkling" ? ["Dosagem", dosageShortLabel(sparklingDosage(w), w.name)] : ["Açúcar", w.sugar_level ?? ""],
     ["Madeira", w.oak_months ? `${String(w.oak_months).replace(".", ",")} meses` : w.aging ?? ""],
     ["Servir a", temp],
     ["Preço na carta", w.sale_price ? `R$ ${Number(w.sale_price).toFixed(2).replace(".", ",")}` : ""],
@@ -860,7 +862,7 @@ export function studyCard(w: BookWine): StudyCard {
     visualText: highlightSegments(visual, VISUAL_RULES.map(([rx]) => rx)),
     noseText: highlightSegments(noseTxt, aromaRx),
     palateText: highlightSegments(palateTxt, PALATE_RULES.map(([rx]) => rx)),
-    dosage: typeKey(w.wine_type) === "sparkling" ? clean(w.sugar_level) : "",
+    dosage: typeKey(w.wine_type) === "sparkling" ? dosageShortLabel(sparklingDosage(w), w.name) : "",
     awards: (w.awards ?? []).map(clean).filter(Boolean).slice(0, 6),
   };
 }

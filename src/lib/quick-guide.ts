@@ -1,6 +1,7 @@
 // Guia Rápido de Salão: ficha curta por rótulo para o celular do garçom (palavras-chave, sem parágrafos).
 // Os mesmos cartões alimentam a versão na tela e o PDF offline com links.
 import { PALATE_RULES as PALATE, VISUAL_RULES as VISUAL, bodyDots, clean, studyCard, tastingSection, typeBand, typeKey, typeLabel, wineName, type BookWine } from "@/lib/training-book";
+import { dosageShortLabel, sparklingDosage } from "@/lib/sparkling-dosage";
 
 type RGB = [number, number, number];
 
@@ -112,7 +113,7 @@ export function quickCard(w: BookWine, houseDishes?: string[]): QuickCard {
     grapes: s.grapes.join(" · "),
     body: clean(w.body),
     bodyDots: bodyDots(w.body),
-    dosage: k === "sparkling" ? clean(w.sugar_level) : "",
+    dosage: k === "sparkling" ? dosageShortLabel(sparklingDosage(w), w.name) : "",
     maturation: clean(w.aging) || (w.oak_months ? `${String(w.oak_months).replace(".", ",")} meses em carvalho` : ""),
     visual: visualWords(w.tasting_notes),
     nose,

@@ -15,6 +15,7 @@ import {
 } from "@/components/WineFieldsEditor";
 import GlobalTrainingCardEditor from "@/components/training/GlobalTrainingCardEditor";
 import TrainingLibraryManager from "@/components/training/TrainingLibraryManager";
+import ImageStorageTool from "@/components/ImageStorageTool";
 import { Button } from "@/components/ui/button";
 
 export { classifySparklingSugar, toProxiedFileUrl };
@@ -434,6 +435,7 @@ function CatalogAdmin() {
         {isAdmin && (
           <div className="flex flex-wrap items-center gap-2">
           <TrainingLibraryManager admin presentation="dialog" />
+          <ImageStorageTool onDone={fetchCatalog} />
           <Button onClick={() => setEditing({ name: "", status: "approved" })}>
             <Plus className="h-4 w-4" /> Novo Rótulo
           </Button>

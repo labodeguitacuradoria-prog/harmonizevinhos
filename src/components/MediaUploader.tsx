@@ -3,6 +3,9 @@ import { extensionAccept } from "@/lib/file-accept";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, X, FileText, Image as ImageIcon, Link2, Loader2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { importImageFromUrl } from "@/lib/image-import.functions";
+import { MEDIA_BUCKET, SIGNED_URL_SECONDS, classifyImageUrl } from "@/lib/image-storage";
 
 type Props = {
   label: string;
@@ -24,18 +27,19 @@ export function MediaUploader({
   const [uploading, setUploading] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const pickerRef = useRef<HTMLInputElement>(null);
+  const importFromUrl = useServerFn(importImageFromUrl);
 
   async function uploadBlob(blob: Blob, ext: string) {
     const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("product-media").upload(path, blob, {
+    const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(path, blob, {
       cacheControl: "3600",
       upsert: false,
       contentType: blob.type || undefined,
     });
     if (error) throw error;
     const { data } = await supabase.storage
-      .from("product-media")
-      .createSignedUrl(path, 60 * 60 * 24 * 365);
+      .from(MEDIA_BUCKET)
+      .createSignedUrl(path, SIGNED_URL_SECONDS);
     return data?.signedUrl ?? null;
   }
 
@@ -83,7 +87,27 @@ export function MediaUploader({
     if (!v) return;
     setUploading(true);
     try {
-      onChange(v);
+      // Fotos sempre ficam no armazenamento do aplicativo: links de outros sites
+      // são baixados e salvos aqui, para nunca sumirem e saírem nos PDFs.
+      const k = classifyImageUrl(v);
+      if (kind !== "image" || k === "internal") {
+        onChange(v);
+      } else if (k === "data") {
+        const blob = await (await fetch(v)).blob();
+        const url = await uploadBlob(blob, (blob.type.split("/")[1] || "png").replace("jpeg", "jpg"));
+        if (url) onChange(url);
+      } else if (k === "external") {
+        const res = await importFromUrl({ data: { url: v, folder } });
+        if (!res.ok) {
+          toast.error(`${res.error} Salve a foto no computador e use “Selecionar arquivo”.`);
+          return;
+        }
+        onChange(res.url);
+        toast.success("Foto copiada para o sistema.");
+      } else {
+        toast.error("Cole um endereço que comece com https://");
+        return;
+      }
       setUrlInput("");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível usar a URL.");
@@ -131,7 +155,7 @@ export function MediaUploader({
           >
             {uploading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Processando...
+                <Loader2 className="h-4 w-4 animate-spin" /> {urlInput.trim() ? "Copiando a foto para o sistema..." : "Processando..."}
               </>
             ) : (
               <>

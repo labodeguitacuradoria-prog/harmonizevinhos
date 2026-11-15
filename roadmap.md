@@ -23,5 +23,7 @@
 
 - [x] Corrigir o congelamento da janela "Abrir" do Windows em todos os botões que enviam PDF ou imagem.
 
+- [x] Guardar todas as fotos de vinhos no sistema: cópia em lote das fotos externas e cópia automática de links colados.
+
 ## Backlog
 - [x] Guia interativo por missões na Carta impressa

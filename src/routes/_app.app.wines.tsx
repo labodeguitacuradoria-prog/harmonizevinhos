@@ -397,11 +397,13 @@ type ColFilters = {
   stock: string;
   monthly: string;
   alert: "" | "comprar" | "ok" | "sem";
+  supplier: string;
 };
 const EMPTY_FILTERS: ColFilters = {
   internal_code: "", name: "", vintage: "", wine_type: "", volume: "", country: "", grape: "",
-  cost_price: "", sale_price: "", markup: "", stock: "", monthly: "", alert: "",
+  cost_price: "", sale_price: "", markup: "", stock: "", monthly: "", alert: "", supplier: "",
 };
+const NO_SUPPLIER = "__none__";
 
 function matchNum(filter: string, value: number | null | undefined): boolean {
   const s = filter.trim();
@@ -438,6 +440,16 @@ function matchText(filter: string, value: string | null | undefined): boolean {
   const s = filter.trim().toLowerCase();
   if (!s) return true;
   return (value ?? "").toLowerCase().includes(s);
+}
+// Filtro por fornecedor: o valor é o nome do fornecedor. Um rótulo conta se o
+// seu vínculo principal tiver esse nome ou se ele aparecer na lista de
+// fornecedores do cadastro. "sem fornecedor" = sem vínculo nenhum.
+function matchSupplier(filter: string, w: Wine, names: Map<string, string>): boolean {
+  if (!filter) return true;
+  if (filter === NO_SUPPLIER) return !w.supplier_id && !(w.suppliers?.length ?? 0);
+  const main = w.supplier_id ? names.get(w.supplier_id) : undefined;
+  if (main && foldText(main) === foldText(filter)) return true;
+  return (w.suppliers ?? []).some((n) => foldText(n) === foldText(filter));
 }
 
 function WinesSection() {
@@ -650,6 +662,27 @@ function WinesSection() {
   });
 
 
+  // Filtros de fornecedor: uma opção por fornecedor (nome como chave), unindo o
+  // vínculo principal do rótulo e a lista de fornecedores do cadastro.
+  const supplierNames = new Map<string, string>();
+  for (const s of suppliers) supplierNames.set(s.id, s.name);
+  const supplierOptions = (() => {
+    const seen = new Map<string, string>();
+    const add = (raw: string | null | undefined) => {
+      const t = (raw ?? "").trim();
+      if (!t) return;
+      const k = foldText(t);
+      if (!seen.has(k)) seen.set(k, t);
+    };
+    for (const w of wines) {
+      add(w.supplier_id ? supplierNames.get(w.supplier_id) : null);
+      for (const n of w.suppliers ?? []) add(n);
+    }
+    return Array.from(seen.values())
+      .sort((a, b) => a.localeCompare(b, "pt-BR"))
+      .map((label) => ({ value: label, label }));
+  })();
+
   const filteredWines = wines
     .filter((w) => (onlyActive ? w.active_on_menu : true))
     .filter((w) => !quick.trim() || matchText(quick, w.name) || matchText(quick, w.producer) || matchText(quick, w.internal_code))
@@ -663,6 +696,7 @@ function WinesSection() {
           (filters.volume === "" || filters.volume === (w.volume ?? "")) &&
           matchText(filters.country, w.country) &&
           matchGrape(filters.grape, w) &&
+          matchSupplier(filters.supplier, w, supplierNames) &&
           matchNum(filters.sale_price, Number(w.sale_price))
         );
       }
@@ -683,6 +717,7 @@ function WinesSection() {
         (filters.wine_type === "" || filters.wine_type === wineTypeLabel(w.wine_type)) &&
         (filters.volume === "" || filters.volume === (w.volume ?? "")) &&
         matchGrape(filters.grape, w) &&
+        matchSupplier(filters.supplier, w, supplierNames) &&
         matchNum(filters.cost_price, Number(w.cost_price)) &&
         matchNum(filters.sale_price, Number(w.sale_price)) &&
         matchNum(filters.markup, markup) &&
@@ -746,6 +781,13 @@ function WinesSection() {
                   </FilterField>
                   <FilterField label="Safra"><FilterInput value={filters.vintage} onChange={(v) => setF("vintage", v)} placeholder="ex. 2020" /></FilterField>
                   <FilterField label="Uva"><FilterInput value={filters.grape} onChange={(v) => setF("grape", v)} placeholder="ex. Malbec" /></FilterField>
+                  <FilterField label="Fornecedor">
+                    <select value={filters.supplier} onChange={(e) => setF("supplier", e.target.value)} className={filterCls}>
+                      <option value="">Todos</option>
+                      {supplierOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                      <option value={NO_SUPPLIER}>Sem fornecedor</option>
+                    </select>
+                  </FilterField>
                   {printOnly ? <FilterField label="País"><FilterInput value={filters.country} onChange={(v) => setF("country", v)} placeholder="ex. Brasil" /></FilterField> : null}
                   <FilterField label="Preço de venda"><FilterInput value={filters.sale_price} onChange={(v) => setF("sale_price", v)} placeholder=">100 ou 50-150" /></FilterField>
                   {!printOnly ? (

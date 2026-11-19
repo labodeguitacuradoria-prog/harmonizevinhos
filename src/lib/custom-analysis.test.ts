@@ -42,11 +42,11 @@ describe("explorador de análises", () => {
     const a = rows.find((r) => r.id === "a")!;
     assert.equal(a.sold, 24);
     assert.equal(a.revenue, 7200);
-    assert.ok(Math.abs(a.cmv - ((24 * 80) / 7200 * 100)) < 1e-6);
+    assert.ok(Math.abs(a.cmv! - ((24 * 80) / 7200 * 100)) < 1e-6);
   });
 
   it("cobertura em dias = estoque ÷ venda diária do período", () => {
-    assert.ok(Math.abs(rows.find((r) => r.id === "a")!.coverageDays - (14 / (24 / 92))) < 1e-6);
+    assert.ok(Math.abs(rows.find((r) => r.id === "a")!.coverageDays! - (14 / (24 / 92))) < 1e-6);
     assert.equal(rows.find((r) => r.id === "b")!.coverageDays, null);
   });
 

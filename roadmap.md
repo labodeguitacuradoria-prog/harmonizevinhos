@@ -25,5 +25,7 @@
 
 - [x] Guardar todas as fotos de vinhos no sistema: cópia em lote das fotos externas e cópia automática de links colados.
 
+- [x] Botão "Outras análises" no Painel com explorador de análises customizadas (filtros combinados, visões rápidas, resumo agrupado, Excel e impressão); validado com Brique e Pousada do Engenho em computador e celular.
+
 ## Backlog
 - [x] Guia interativo por missões na Carta impressa

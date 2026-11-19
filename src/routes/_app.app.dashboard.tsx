@@ -19,7 +19,7 @@ import {
   FileText,
   CalendarRange,
   Calculator,
-
+  SlidersHorizontal,
 } from "lucide-react";
 import DashboardTargetsEditor, {
   targetsFor,
@@ -27,6 +27,7 @@ import DashboardTargetsEditor, {
   type IndicatorKey,
 } from "@/components/DashboardTargetsEditor";
 import SalesDiagnosticReport from "@/components/SalesDiagnosticReport";
+import CustomAnalysisExplorer from "@/components/CustomAnalysisExplorer";
 import ModuleGate from "@/components/ModuleGate";
 import StockHistoryChart from "@/components/StockHistoryChart";
 import { fetchStockHistory, stockHistoryRange, type StockHistoryPoint } from "@/lib/stock-history";
@@ -184,6 +185,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
   const [tab, setTab] = useState<TabKey>("faturamento");
   const [metasOpen, setMetasOpen] = useState(false);
   const [diagOpen, setDiagOpen] = useState(false);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [period, setPeriod] = useState<{ year: number; month: number; mode?: "year" } | null>(null);
   const [unitMenuOpen, setUnitMenuOpen] = useState(false);
@@ -801,7 +803,7 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
             {mobilePeriodLabel}
           </p>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="grid grid-cols-2 gap-1.5">
           <button
             onClick={() => setDiagOpen(true)}
             className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-primary bg-card px-1 text-[9px] font-semibold uppercase tracking-wider text-primary"
@@ -836,6 +838,12 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
               <Target size={11} /> Metas
             </button>
           )}
+          <button
+            onClick={() => setAnalysisOpen(true)}
+            className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-primary bg-card px-1 text-[9px] font-semibold uppercase tracking-wider text-primary"
+          >
+            <SlidersHorizontal size={11} /> Outras análises
+          </button>
         </div>
       </header>
 
@@ -964,6 +972,13 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
               </>
             )}
           </div>
+          <button
+            onClick={() => setAnalysisOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-primary bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-primary transition hover:bg-primary hover:text-primary-foreground"
+            title="Monte análises customizadas cruzando cadastro, vendas e estoque"
+          >
+            <SlidersHorizontal size={14} /> Outras análises
+          </button>
         </div>
 
       </header>
@@ -1240,6 +1255,18 @@ export function DashboardPage({ guest }: { guest?: GuestDashboardData } = {}) {
         previousYear={previousYear}
         currentMonth={currentMonth}
       />
+      {analysisOpen && (
+        <CustomAnalysisExplorer
+          open={analysisOpen}
+          onClose={() => setAnalysisOpen(false)}
+          wines={wines}
+          movements={movements}
+          stockMap={stockMap}
+          stockDate={stockData.lastDate}
+          scopeIds={guest ? [] : scopeIds}
+          guest={!!guest}
+        />
+      )}
 
     </div>
   );

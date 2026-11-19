@@ -502,6 +502,17 @@ input[type="number"]::-webkit-inner-spin-button {
   .printed-menu section {
     break-inside: avoid;
   }
+  /* Outras análises: relatório limpo em preto sobre branco */
+  .analysis-print,
+  .analysis-print * {
+    color: #111 !important;
+    background: transparent !important;
+    border-color: #ccc !important;
+    box-shadow: none !important;
+  }
+  .analysis-print tr {
+    break-inside: avoid;
+  }
 }
 
 /* Aparência de folha A4 na pré-visualização */
